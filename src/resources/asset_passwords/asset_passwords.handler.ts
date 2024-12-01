@@ -1,4 +1,9 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods, NodeOperationError } from 'n8n-workflow';
+import {
+	IExecuteFunctions,
+	IDataObject,
+	IHttpRequestMethods,
+	NodeOperationError,
+} from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
 import { AssetPasswordOperation } from './asset_passwords.types';
 
@@ -34,11 +39,7 @@ export async function handleAssetPasswordOperation(
 				if (!id) {
 					throw new NodeOperationError(this.getNode(), 'Password ID is required');
 				}
-				responseData = await huduApiRequest.call(
-					this,
-					'GET',
-					`/asset_passwords/${id}`,
-				);
+				responseData = await huduApiRequest.call(this, 'GET', `/asset_passwords/${id}`);
 				break;
 			}
 
@@ -61,12 +62,7 @@ export async function handleAssetPasswordOperation(
 					},
 				};
 
-				responseData = await huduApiRequest.call(
-					this,
-					'POST',
-					'/asset_passwords',
-					body,
-				);
+				responseData = await huduApiRequest.call(this, 'POST', '/asset_passwords', body);
 				break;
 			}
 
@@ -81,12 +77,7 @@ export async function handleAssetPasswordOperation(
 					asset_password: updateFields,
 				};
 
-				responseData = await huduApiRequest.call(
-					this,
-					'PUT',
-					`/asset_passwords/${id}`,
-					body,
-				);
+				responseData = await huduApiRequest.call(this, 'PUT', `/asset_passwords/${id}`, body);
 				break;
 			}
 
@@ -95,11 +86,7 @@ export async function handleAssetPasswordOperation(
 				if (!id) {
 					throw new NodeOperationError(this.getNode(), 'Password ID is required');
 				}
-				responseData = await huduApiRequest.call(
-					this,
-					'DELETE',
-					`/asset_passwords/${id}`,
-				);
+				responseData = await huduApiRequest.call(this, 'DELETE', `/asset_passwords/${id}`);
 				break;
 			}
 
@@ -108,11 +95,7 @@ export async function handleAssetPasswordOperation(
 				if (!id) {
 					throw new NodeOperationError(this.getNode(), 'Password ID is required');
 				}
-				responseData = await huduApiRequest.call(
-					this,
-					'PUT',
-					`/asset_passwords/${id}/archive`,
-				);
+				responseData = await huduApiRequest.call(this, 'PUT', `/asset_passwords/${id}/archive`);
 				break;
 			}
 
@@ -121,11 +104,7 @@ export async function handleAssetPasswordOperation(
 				if (!id) {
 					throw new NodeOperationError(this.getNode(), 'Password ID is required');
 				}
-				responseData = await huduApiRequest.call(
-					this,
-					'PUT',
-					`/asset_passwords/${id}/unarchive`,
-				);
+				responseData = await huduApiRequest.call(this, 'PUT', `/asset_passwords/${id}/unarchive`);
 				break;
 			}
 
@@ -148,4 +127,4 @@ export async function handleAssetPasswordOperation(
 			{ description: error.description || 'An unexpected error occurred' },
 		);
 	}
-} 
+}

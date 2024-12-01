@@ -106,7 +106,8 @@ export const expirationsFields: INodeProperties[] = [
 					},
 				],
 				default: '',
-				description: 'Filter expirations by expiration type (undeclared, domain, ssl_certificate, warranty, asset_field, article_expiration)',
+				description:
+					'Filter expirations by expiration type (undeclared, domain, ssl_certificate, warranty, asset_field, article_expiration)',
 			},
 			{
 				displayName: 'Resource ID',
@@ -120,8 +121,9 @@ export const expirationsFields: INodeProperties[] = [
 				name: 'resource_type',
 				type: 'string',
 				default: '',
-				description: 'Filter logs by resource type (Asset, AssetPassword, Company, Article, etc.); must be coupled with resource ID',
+				description:
+					'Filter logs by resource type (Asset, AssetPassword, Company, Article, etc.); must be coupled with resource ID',
 			},
 		],
 	},
-]; 
+];

@@ -40,4 +40,4 @@ export interface IpAddressCreateParams {
 
 export interface IpAddressUpdateParams extends IpAddressCreateParams {
 	id: number;
-} 
+}

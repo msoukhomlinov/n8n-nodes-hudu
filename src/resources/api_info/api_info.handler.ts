@@ -10,12 +10,8 @@ export async function handleApiInfoOperation(
 	let responseData;
 
 	if (operation === 'get') {
-		responseData = await huduApiRequest.call(
-			this,
-			'GET',
-			'/api_info',
-		);
+		responseData = await huduApiRequest.call(this, 'GET', '/api_info');
 	}
 
 	return responseData;
-} 
+}

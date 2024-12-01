@@ -13,7 +13,7 @@ export async function handleActivityLogsOperation(
 		// Handle get all activity logs
 		const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 		const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-		const limit = returnAll ? 1000 : this.getNodeParameter('limit', i, 25) as number;
+		const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i, 25) as number);
 		const params: IDataObject = {
 			...additionalFields,
 			page_size: limit,
@@ -33,7 +33,6 @@ export async function handleActivityLogsOperation(
 			{},
 			params,
 		);
-
 	} else if (operation === 'delete') {
 		// Handle delete activity logs
 		const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
@@ -52,4 +51,4 @@ export async function handleActivityLogsOperation(
 	}
 
 	return responseData;
-} 
+}

@@ -31,14 +31,10 @@ export async function handleUserOperation(
 
 		case 'get': {
 			const id = this.getNodeParameter('id', i) as number;
-			responseData = await huduApiRequest.call(
-				this,
-				'GET' as IHttpRequestMethods,
-				`/users/${id}`,
-			);
+			responseData = await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, `/users/${id}`);
 			break;
 		}
 	}
 
 	return responseData;
-} 
+}

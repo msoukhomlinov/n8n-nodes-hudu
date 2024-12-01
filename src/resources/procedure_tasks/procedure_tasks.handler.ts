@@ -18,13 +18,13 @@ export async function handleProcedureTasksOperation(
 			};
 
 			const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-			
+
 			// Handle assigned_users conversion from comma-separated string to array
 			if (additionalFields.assigned_users) {
 				additionalFields.assigned_users = (additionalFields.assigned_users as string)
 					.split(',')
-					.map(id => parseInt(id.trim(), 10))
-					.filter(id => !isNaN(id));
+					.map((id) => parseInt(id.trim(), 10))
+					.filter((id) => !isNaN(id));
 			}
 
 			// Only add non-empty additional fields
@@ -93,7 +93,7 @@ export async function handleProcedureTasksOperation(
 				'GET' as IHttpRequestMethods,
 				'/procedure_tasks',
 				undefined,
-					qs,
+				qs,
 			);
 
 			// Return the procedure_tasks array from the response
@@ -108,8 +108,8 @@ export async function handleProcedureTasksOperation(
 			if (updateFields.assigned_users) {
 				updateFields.assigned_users = (updateFields.assigned_users as string)
 					.split(',')
-					.map(id => parseInt(id.trim(), 10))
-					.filter(id => !isNaN(id));
+					.map((id) => parseInt(id.trim(), 10))
+					.filter((id) => !isNaN(id));
 			}
 
 			// Only include non-empty update fields
@@ -131,4 +131,4 @@ export async function handleProcedureTasksOperation(
 	}
 
 	return responseData;
-} 
+}

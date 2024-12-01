@@ -15,9 +15,4 @@ export interface IFolderResponse extends IDataObject {
 	folder: IFolder;
 }
 
-export type FolderOperation =
-	| 'getAll'
-	| 'get'
-	| 'create'
-	| 'update'
-	| 'delete'; 
+export type FolderOperation = 'getAll' | 'get' | 'create' | 'update' | 'delete';

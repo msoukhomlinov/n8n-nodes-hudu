@@ -172,4 +172,4 @@ export const userFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

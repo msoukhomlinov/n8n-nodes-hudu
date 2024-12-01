@@ -44,7 +44,7 @@ export async function handleWebsitesOperation(
 				website: {
 					name: this.getNodeParameter('name', i) as string,
 					company_id: this.getNodeParameter('companyId', i) as number,
-					...this.getNodeParameter('additionalFields', i) as IDataObject,
+					...(this.getNodeParameter('additionalFields', i) as IDataObject),
 				},
 			};
 			responseData = await huduApiRequest.call(
@@ -60,7 +60,7 @@ export async function handleWebsitesOperation(
 			const id = this.getNodeParameter('id', i) as number;
 			const body = {
 				website: {
-					...this.getNodeParameter('updateFields', i) as IDataObject,
+					...(this.getNodeParameter('updateFields', i) as IDataObject),
 				},
 			};
 			responseData = await huduApiRequest.call(
@@ -84,4 +84,4 @@ export async function handleWebsitesOperation(
 	}
 
 	return responseData;
-} 
+}

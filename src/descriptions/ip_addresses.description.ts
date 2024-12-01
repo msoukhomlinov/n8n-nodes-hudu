@@ -57,7 +57,8 @@ export const ipAddressFields: INodeProperties[] = [
 		name: 'returnAll',
 		type: 'boolean',
 		default: false,
-		description: 'Whether to return all results or only up to a given limit. Use with caution - may return very high number of records',
+		description:
+			'Whether to return all results or only up to a given limit. Use with caution - may return very high number of records',
 		displayOptions: {
 			show: {
 				resource: ['ipAddresses'],
@@ -94,7 +95,8 @@ export const ipAddressFields: INodeProperties[] = [
 				operation: ['getAll'],
 			},
 		},
-		description: 'All filters are combined using AND logic and use exact matching unless specified otherwise',
+		description:
+			'All filters are combined using AND logic and use exact matching unless specified otherwise',
 		options: [
 			{
 				displayName: 'Address',
@@ -122,7 +124,8 @@ export const ipAddressFields: INodeProperties[] = [
 				name: 'created_at',
 				type: 'string',
 				default: '',
-				description: 'Filter by creation date (ISO 8601 format). Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match',
+				description:
+					'Filter by creation date (ISO 8601 format). Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match',
 			},
 			{
 				displayName: 'FQDN',
@@ -176,7 +179,8 @@ export const ipAddressFields: INodeProperties[] = [
 				name: 'updated_at',
 				type: 'string',
 				default: '',
-				description: 'Filter by last update date (ISO 8601 format). Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match',
+				description:
+					'Filter by last update date (ISO 8601 format). Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match',
 			},
 		],
 	},
@@ -435,4 +439,4 @@ export const ipAddressFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

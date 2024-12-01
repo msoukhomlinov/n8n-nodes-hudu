@@ -160,7 +160,7 @@ export const assetPasswordFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Type of the related object for the password (e.g., \'Asset\', \'Website\')',
+		description: "Type of the related object for the password (e.g., 'Asset', 'Website')",
 	},
 	{
 		displayName: 'OTP Secret',
@@ -291,7 +291,8 @@ export const assetPasswordFields: INodeProperties[] = [
 				name: 'updated_at',
 				type: 'string',
 				default: '',
-				description: 'Filter asset passwords updated within a range or at an exact time. Format: \'start_datetime,end_datetime\' for range, \'exact_datetime\' for exact match. Both \'start_datetime\' and \'end_datetime\' should be in ISO 8601 format.',
+				description:
+					"Filter asset passwords updated within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match. Both 'start_datetime' and 'end_datetime' should be in ISO 8601 format.",
 			},
 		],
 	},
@@ -343,7 +344,7 @@ export const assetPasswordFields: INodeProperties[] = [
 				name: 'passwordable_id',
 				type: 'number',
 				default: undefined,
-				description: 'ID of the related object (e.g., \'Website\') for the password',
+				description: "ID of the related object (e.g., 'Website') for the password",
 			},
 			{
 				displayName: 'Slug',
@@ -354,4 +355,4 @@ export const assetPasswordFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

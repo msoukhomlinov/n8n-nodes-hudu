@@ -20,7 +20,7 @@ export async function handleNetworksOperation(
 			};
 
 			const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-			
+
 			// Only add non-empty additional fields
 			Object.entries(additionalFields).forEach(([key, value]) => {
 				if (value !== undefined && value !== null && value !== '') {
@@ -28,22 +28,15 @@ export async function handleNetworksOperation(
 				}
 			});
 
-			responseData = await huduApiRequest.call(
-				this,
-				'POST' as IHttpRequestMethods,
-				'/networks',
-				{ network: body },
-			);
+			responseData = await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/networks', {
+				network: body,
+			});
 			return responseData;
 		}
 
 		case 'delete': {
 			const networkId = this.getNodeParameter('networkId', i) as string;
-			await huduApiRequest.call(
-				this,
-				'DELETE' as IHttpRequestMethods,
-				`/networks/${networkId}`,
-			);
+			await huduApiRequest.call(this, 'DELETE' as IHttpRequestMethods, `/networks/${networkId}`);
 			return { success: true };
 		}
 
@@ -152,4 +145,4 @@ export async function handleNetworksOperation(
 	}
 
 	return responseData;
-} 
+}

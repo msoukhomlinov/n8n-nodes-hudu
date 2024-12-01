@@ -76,7 +76,8 @@ export const rackStorageItemFields: INodeProperties[] = [
 				name: 'created_at',
 				type: 'string',
 				default: '',
-				description: 'Filter rack storage items created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+				description:
+					'Filter rack storage items created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
 			},
 			{
 				displayName: 'End Unit',
@@ -118,7 +119,8 @@ export const rackStorageItemFields: INodeProperties[] = [
 				name: 'updated_at',
 				type: 'string',
 				default: '',
-				description: 'Filter rack storage items updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+				description:
+					'Filter rack storage items updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
 			},
 		],
 	},
@@ -346,4 +348,4 @@ export const rackStorageItemFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

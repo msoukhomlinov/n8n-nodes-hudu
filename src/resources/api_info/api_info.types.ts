@@ -5,4 +5,4 @@ export interface IApiInfo extends IDataObject {
 	date: string;
 }
 
-export type ApiInfoOperation = 'get'; 
+export type ApiInfoOperation = 'get';

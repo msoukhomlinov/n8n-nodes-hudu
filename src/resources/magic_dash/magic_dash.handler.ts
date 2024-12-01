@@ -31,7 +31,7 @@ export async function handleMagicDashOperation(
 				undefined,
 				queryParams,
 			);
-			
+
 			if (!returnAll && responseData.length > limit) {
 				responseData = responseData.slice(0, limit);
 			}
@@ -77,7 +77,7 @@ export async function handleMagicDashOperation(
 		case 'delete': {
 			const title = this.getNodeParameter('title', i) as string;
 			const companyName = this.getNodeParameter('companyName', i) as string;
-			
+
 			const body = {
 				title,
 				company_name: companyName,
@@ -105,4 +105,4 @@ export async function handleMagicDashOperation(
 	}
 
 	return responseData;
-} 
+}

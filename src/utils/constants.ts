@@ -27,4 +27,4 @@ export const RESOURCES_WITH_PAGE_SIZE = [
 	'relations',
 	'users',
 	'websites',
-] as const; 
+] as const;

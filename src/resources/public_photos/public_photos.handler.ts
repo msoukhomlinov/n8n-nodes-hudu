@@ -29,4 +29,4 @@ export async function handlePublicPhotoOperation(
 	}
 
 	return responseData;
-} 
+}

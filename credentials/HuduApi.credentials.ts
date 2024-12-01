@@ -45,4 +45,4 @@ export class HuduApi implements ICredentialType {
 			method: 'GET',
 		},
 	};
-} 
+}

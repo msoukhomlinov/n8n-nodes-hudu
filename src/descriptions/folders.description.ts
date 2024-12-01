@@ -251,4 +251,4 @@ export const folderFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

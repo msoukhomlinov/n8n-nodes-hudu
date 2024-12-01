@@ -52,7 +52,8 @@ export const matchersFields: INodeProperties[] = [
 			},
 		},
 		default: 0,
-		description: 'The ID of the integration, which can be found in the URL when editing an integration',
+		description:
+			'The ID of the integration, which can be found in the URL when editing an integration',
 	},
 	{
 		displayName: 'Return All',
@@ -109,7 +110,8 @@ export const matchersFields: INodeProperties[] = [
 				name: 'identifier',
 				type: 'string',
 				default: '',
-				description: 'Filter by the identifier in the integration (used if the integration\'s ID is a string)',
+				description:
+					"Filter by the identifier in the integration (used if the integration's ID is a string)",
 			},
 			{
 				displayName: 'Matched',
@@ -123,7 +125,8 @@ export const matchersFields: INodeProperties[] = [
 				name: 'sync_id',
 				type: 'number',
 				default: undefined,
-				description: 'Filter by the ID of the record in the integration (used if the integration\'s ID is an integer)',
+				description:
+					"Filter by the ID of the record in the integration (used if the integration's ID is an integer)",
 			},
 		],
 	},
@@ -188,4 +191,4 @@ export const matchersFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

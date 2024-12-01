@@ -18,7 +18,7 @@ function extractErrorMessage(error: any): string {
 	}
 
 	const data = error.response.data;
-	
+
 	// Handle case where the message includes status code and JSON
 	if (typeof data === 'string' && data.includes(' - {')) {
 		try {
@@ -42,12 +42,12 @@ function extractErrorMessage(error: any): string {
 			return data;
 		}
 	}
-	
+
 	// Handle JSON response
 	if (typeof data === 'object') {
 		if (data.error) return data.error;
 		if (data.message) return data.message;
-		
+
 		try {
 			return JSON.stringify(data, null, 2);
 		} catch {
@@ -79,28 +79,34 @@ function createApiError(
 			case 401:
 				return new NodeApiError(node.getNode(), error, {
 					message: message || 'Bad credentials',
-					description: message || 'The API credentials are invalid. Please check your API key and base URL.',
+					description:
+						message || 'The API credentials are invalid. Please check your API key and base URL.',
 					httpCode: '401',
 				});
 
 			case 404:
 				return new NodeApiError(node.getNode(), error, {
 					message: message || 'Resource not found',
-					description: message || 'The requested resource could not be found. Please verify the ID or endpoint.',
+					description:
+						message ||
+						'The requested resource could not be found. Please verify the ID or endpoint.',
 					httpCode: '404',
 				});
 
 			case 422:
 				return new NodeApiError(node.getNode(), error, {
 					message: message || `Validation error: ${message}`,
-					description: message || 'The request could not be processed. Please check the provided data.',
+					description:
+						message || 'The request could not be processed. Please check the provided data.',
 					httpCode: '422',
 				});
 
 			default:
 				return new NodeApiError(node.getNode(), error, {
 					message: message || `Request failed: ${message}`,
-					description: message || 'An unexpected error occurred. Please check the error details and try again.',
+					description:
+						message ||
+						'An unexpected error occurred. Please check the error details and try again.',
 					httpCode: status?.toString() || 'unknown',
 				});
 		}
@@ -137,7 +143,7 @@ export async function huduApiRequest(
 		body,
 		qs,
 		url: `${credentials.baseUrl}${HUDU_API_CONSTANTS.BASE_API_PATH}${endpoint}`,
-		
+
 		json: true,
 		headers: {
 			'x-api-key': credentials.apiKey as string,
@@ -279,4 +285,4 @@ export async function handleListing(
 		}
 		throw createApiError(this, error);
 	}
-} 
+}

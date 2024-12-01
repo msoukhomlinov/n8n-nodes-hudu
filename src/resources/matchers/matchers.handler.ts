@@ -50,7 +50,7 @@ export async function handleMatcherOperation(
 
 			// Extract the matchers array from the response
 			responseData = response.matchers;
-			
+
 			if (!returnAll && responseData.length > limit) {
 				responseData = responseData.slice(0, limit);
 			}
@@ -99,4 +99,4 @@ export async function handleMatcherOperation(
 	}
 
 	return responseData;
-} 
+}

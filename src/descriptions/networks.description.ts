@@ -88,7 +88,8 @@ export const networksFields: INodeProperties[] = [
 				operation: ['getAll'],
 			},
 		},
-		description: 'Filter networks created within a range or at an exact time. Format: \'start_datetime,end_datetime\' for range, \'exact_datetime\' for exact match. Both \'start_datetime\' and \'end_datetime\' should be in ISO 8601 format.',
+		description:
+			"Filter networks created within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match. Both 'start_datetime' and 'end_datetime' should be in ISO 8601 format.",
 		placeholder: '2023-06-01T12:34:56Z,2023-06-07T12:34:56Z',
 	},
 	{
@@ -154,7 +155,8 @@ export const networksFields: INodeProperties[] = [
 				operation: ['getAll'],
 			},
 		},
-		description: 'Filter networks updated within a range or at an exact time. Format: \'start_datetime,end_datetime\' for range, \'exact_datetime\' for exact match. Both \'start_datetime\' and \'end_datetime\' should be in ISO 8601 format.',
+		description:
+			"Filter networks updated within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match. Both 'start_datetime' and 'end_datetime' should be in ISO 8601 format.",
 		placeholder: '2023-06-01T12:34:56Z,2023-06-07T12:34:56Z',
 	},
 

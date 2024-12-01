@@ -155,7 +155,8 @@ export const magicDashFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'The title attribute, used for matching existing Magic Dash Items with the same title and company name',
+		description:
+			'The title attribute, used for matching existing Magic Dash Items with the same title and company name',
 	},
 	{
 		displayName: 'Content',
@@ -171,7 +172,8 @@ export const magicDashFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'HTML content (tables, images, videos, etc.) to be displayed in the Magic Dash Item',
+		description:
+			'HTML content (tables, images, videos, etc.) to be displayed in the Magic Dash Item',
 	},
 	{
 		displayName: 'Additional Fields',
@@ -198,14 +200,15 @@ export const magicDashFields: INodeProperties[] = [
 				name: 'content_link',
 				type: 'string',
 				default: '',
-				description: 'A link to an external website associated with the Magic Dash Item\'s content',
+				description: "A link to an external website associated with the Magic Dash Item's content",
 			},
 			{
 				displayName: 'Icon',
 				name: 'icon',
 				type: 'string',
 				default: '',
-				description: 'A FontAwesome icon for the header of the Magic Dash Item (e.g., fas fa-circle)',
+				description:
+					'A FontAwesome icon for the header of the Magic Dash Item (e.g., fas fa-circle)',
 			},
 			{
 				displayName: 'Image URL',
@@ -219,7 +222,8 @@ export const magicDashFields: INodeProperties[] = [
 				name: 'shade',
 				type: 'string',
 				default: '',
-				description: 'An optional color for the Magic Dash Item to represent different contextual states (e.g., success, danger)',
+				description:
+					'An optional color for the Magic Dash Item to represent different contextual states (e.g., success, danger)',
 			},
 		],
 	},
@@ -241,4 +245,4 @@ export const magicDashFields: INodeProperties[] = [
 		required: true,
 		description: 'The ID of the Magic Dash item to delete',
 	},
-]; 
+];

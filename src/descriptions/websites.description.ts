@@ -121,7 +121,8 @@ export const websitesFields: INodeProperties[] = [
 				name: 'updated_at',
 				type: 'string',
 				default: '',
-				description: 'Filter websites updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+				description:
+					'Filter websites updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
 			},
 		],
 	},
@@ -293,4 +294,4 @@ export const websitesFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

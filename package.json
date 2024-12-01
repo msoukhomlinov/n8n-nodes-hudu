@@ -28,9 +28,9 @@
     "build": "tsc && gulp build:icons && gulp copy:files",
     "dev": "tsc --watch",
     "format": "prettier src nodes credentials --write",
-    "lint": "eslint src nodes credentials package.json",
-    "lintfix": "eslint src nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js src nodes credentials package.json",
+    "lint": "eslint *.ts package.json",
+    "lintfix": "eslint *.ts package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js *.ts package.json",
     "test": "jest",
     "clean": "rimraf dist"
   },

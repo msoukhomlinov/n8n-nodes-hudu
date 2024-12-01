@@ -41,7 +41,7 @@ export async function handleRackStorageItemOperation(
 					end_unit: this.getNodeParameter('end_unit', i) as number,
 					status: this.getNodeParameter('status', i) as number,
 					side: this.getNodeParameter('side', i) as number,
-					...this.getNodeParameter('additionalFields', i) as IDataObject,
+					...(this.getNodeParameter('additionalFields', i) as IDataObject),
 				},
 			};
 			responseData = await huduApiRequest.call(
@@ -57,7 +57,7 @@ export async function handleRackStorageItemOperation(
 			const id = this.getNodeParameter('id', i) as number;
 			const body = {
 				rack_storage_item: {
-					...this.getNodeParameter('updateFields', i) as IDataObject,
+					...(this.getNodeParameter('updateFields', i) as IDataObject),
 				},
 			};
 			responseData = await huduApiRequest.call(
@@ -81,4 +81,4 @@ export async function handleRackStorageItemOperation(
 	}
 
 	return responseData;
-} 
+}

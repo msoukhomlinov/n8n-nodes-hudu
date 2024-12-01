@@ -88,4 +88,4 @@ export const uploadsFields: INodeProperties[] = [
 		required: true,
 		description: 'ID of the upload',
 	},
-]; 
+];

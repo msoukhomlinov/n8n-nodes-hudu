@@ -30,11 +30,7 @@ export async function handleFolderOperation(
 
 		case 'get': {
 			const folderId = this.getNodeParameter('folderId', i) as number;
-			responseData = await huduApiRequest.call(
-				this,
-				'GET',
-				`/folders/${folderId}`,
-			);
+			responseData = await huduApiRequest.call(this, 'GET', `/folders/${folderId}`);
 			break;
 		}
 
@@ -47,12 +43,7 @@ export async function handleFolderOperation(
 				company_id: this.getNodeParameter('companyId', i, null) as number | null,
 			};
 
-			responseData = await huduApiRequest.call(
-				this,
-				'POST',
-				'/folders',
-				{ folder: body },
-			);
+			responseData = await huduApiRequest.call(this, 'POST', '/folders', { folder: body });
 			break;
 		}
 
@@ -60,25 +51,18 @@ export async function handleFolderOperation(
 			const folderId = this.getNodeParameter('folderId', i) as number;
 			const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
-			responseData = await huduApiRequest.call(
-				this,
-				'PUT',
-				`/folders/${folderId}`,
-				{ folder: updateFields },
-			);
+			responseData = await huduApiRequest.call(this, 'PUT', `/folders/${folderId}`, {
+				folder: updateFields,
+			});
 			break;
 		}
 
 		case 'delete': {
 			const folderId = this.getNodeParameter('folderId', i) as number;
-			responseData = await huduApiRequest.call(
-				this,
-				'DELETE',
-				`/folders/${folderId}`,
-			);
+			responseData = await huduApiRequest.call(this, 'DELETE', `/folders/${folderId}`);
 			break;
 		}
 	}
 
 	return responseData;
-} 
+}

@@ -30,37 +30,27 @@ export async function handleAssetLayoutOperation(
 
 		case 'get': {
 			const id = this.getNodeParameter('id', i) as string;
-			responseData = await huduApiRequest.call(
-				this,
-				'GET',
-				`/asset_layouts/${id}`,
-			);
+			responseData = await huduApiRequest.call(this, 'GET', `/asset_layouts/${id}`);
 			break;
 		}
 
 		case 'create': {
 			const body = this.getNodeParameter('body', i) as IDataObject;
-			responseData = await huduApiRequest.call(
-				this,
-				'POST',
-				'/asset_layouts',
-				{ asset_layout: body },
-			);
+			responseData = await huduApiRequest.call(this, 'POST', '/asset_layouts', {
+				asset_layout: body,
+			});
 			break;
 		}
 
 		case 'update': {
 			const id = this.getNodeParameter('id', i) as string;
 			const body = this.getNodeParameter('body', i) as IDataObject;
-			responseData = await huduApiRequest.call(
-				this,
-				'PUT',
-				`/asset_layouts/${id}`,
-				{ asset_layout: body },
-			);
+			responseData = await huduApiRequest.call(this, 'PUT', `/asset_layouts/${id}`, {
+				asset_layout: body,
+			});
 			break;
 		}
 	}
 
 	return responseData;
-} 
+}

@@ -23,4 +23,4 @@ export const apiInfoOperations: INodeProperties[] = [
 	},
 ];
 
-export const apiInfoFields: INodeProperties[] = []; 
+export const apiInfoFields: INodeProperties[] = [];

@@ -19,22 +19,15 @@ export async function handleCompaniesOperation(
 				...additionalFields,
 			};
 
-			responseData = await huduApiRequest.call(
-				this,
-				'POST' as IHttpRequestMethods,
-				'/companies',
-				{ company: body },
-			);
+			responseData = await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/companies', {
+				company: body,
+			});
 			break;
 		}
 
 		case 'delete': {
 			const companyId = this.getNodeParameter('id', i) as string;
-			await huduApiRequest.call(
-				this,
-				'DELETE' as IHttpRequestMethods,
-				`/companies/${companyId}`,
-			);
+			await huduApiRequest.call(this, 'DELETE' as IHttpRequestMethods, `/companies/${companyId}`);
 			responseData = { success: true };
 			break;
 		}
@@ -72,7 +65,7 @@ export async function handleCompaniesOperation(
 				'/companies',
 				'companies',
 				{},
-				 qs,
+				qs,
 				returnAll,
 				limit,
 			);
@@ -86,7 +79,7 @@ export async function handleCompaniesOperation(
 			responseData = await huduApiRequest.call(
 				this,
 				'PUT' as IHttpRequestMethods,
-				 `/companies/${companyId}`,
+				`/companies/${companyId}`,
 				{ company: updateFields },
 			);
 			break;
@@ -166,7 +159,7 @@ export async function handleCompaniesOperation(
 			const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
 			const qs: IDataObject = {
-				 integration_slug: integrationSlug,
+				integration_slug: integrationSlug,
 			};
 
 			if (additionalFields.integrationId) {
@@ -189,4 +182,4 @@ export async function handleCompaniesOperation(
 	}
 
 	return responseData;
-} 
+}

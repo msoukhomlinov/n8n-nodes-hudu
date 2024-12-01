@@ -245,7 +245,8 @@ export const rackStorageFields: INodeProperties[] = [
 				operation: ['getAll'],
 			},
 		},
-		description: 'All filters are combined using AND logic and use exact matching unless specified otherwise',
+		description:
+			'All filters are combined using AND logic and use exact matching unless specified otherwise',
 		options: [
 			{
 				displayName: 'Company ID',
@@ -287,15 +288,17 @@ export const rackStorageFields: INodeProperties[] = [
 				name: 'created_at',
 				type: 'string',
 				default: '',
-				description: 'Filter rack storages created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+				description:
+					'Filter rack storages created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
 			},
 			{
 				displayName: 'Updated At',
 				name: 'updated_at',
 				type: 'string',
 				default: '',
-				description: 'Filter rack storages updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+				description:
+					'Filter rack storages updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
 			},
 		],
 	},
-]; 
+];

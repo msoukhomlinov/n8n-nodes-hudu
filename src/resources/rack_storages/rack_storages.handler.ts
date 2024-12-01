@@ -37,7 +37,7 @@ export async function handleRackStorageOperation(
 				rack_storage: {
 					name: this.getNodeParameter('name', i) as string,
 					location_id: this.getNodeParameter('locationId', i) as number,
-					...this.getNodeParameter('additionalFields', i) as IDataObject,
+					...(this.getNodeParameter('additionalFields', i) as IDataObject),
 				},
 			};
 			responseData = await huduApiRequest.call(
@@ -78,4 +78,4 @@ export async function handleRackStorageOperation(
 	}
 
 	return responseData;
-} 
+}

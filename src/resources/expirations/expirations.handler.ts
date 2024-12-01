@@ -31,4 +31,4 @@ export async function handleExpirationOperation(
 	}
 
 	return responseData;
-} 
+}

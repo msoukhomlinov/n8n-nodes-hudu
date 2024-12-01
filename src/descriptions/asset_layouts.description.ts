@@ -299,4 +299,4 @@ export const assetLayoutFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

@@ -40,11 +40,7 @@ export async function handleIpAddressOperation(
 
 		case 'delete': {
 			const id = this.getNodeParameter('id', i) as number;
-			await huduApiRequest.call(
-				this,
-				'DELETE' as IHttpRequestMethods,
-				`/ip_addresses/${id}`,
-			);
+			await huduApiRequest.call(this, 'DELETE' as IHttpRequestMethods, `/ip_addresses/${id}`);
 			return { success: true };
 		}
 
@@ -97,4 +93,4 @@ export async function handleIpAddressOperation(
 			return responseData;
 		}
 	}
-} 
+}

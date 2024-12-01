@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants'
+import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const proceduresOperations: INodeProperties[] = [
 	{
@@ -431,4 +431,4 @@ export const proceduresFields: INodeProperties[] = [
 			},
 		],
 	},
-]; 
+];

@@ -24,4 +24,4 @@ export interface IActivityLog {
 	action_message: string;
 	created_at: string;
 	updated_at: string;
-} 
+}

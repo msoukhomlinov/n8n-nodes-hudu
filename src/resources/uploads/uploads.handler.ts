@@ -15,11 +15,7 @@ export async function handleUploadOperation(
 			const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 			const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-			responseData = await huduApiRequest.call(
-				this,
-				'GET' as IHttpRequestMethods,
-				'/uploads',
-			);
+			responseData = await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, '/uploads');
 
 			if (!returnAll && responseData.length > limit) {
 				responseData = responseData.slice(0, limit);
@@ -49,4 +45,4 @@ export async function handleUploadOperation(
 	}
 
 	return responseData;
-} 
+}

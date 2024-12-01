@@ -119,14 +119,14 @@ export const assetsFields: INodeProperties[] = [
 				name: 'asset_layout_id',
 				type: 'number',
 				default: undefined,
-				description: 'Filter assets by their associated asset layout\'s ID',
+				description: "Filter assets by their associated asset layout's ID",
 			},
 			{
 				displayName: 'Company ID',
 				name: 'company_id',
 				type: 'number',
 				default: undefined,
-				description: 'Filter assets by the parent company\'s ID',
+				description: "Filter assets by the parent company's ID",
 			},
 			{
 				displayName: 'ID',
@@ -182,8 +182,9 @@ export const assetsFields: INodeProperties[] = [
 				name: 'updated_at',
 				type: 'string',
 				default: '',
-				description: 'Filter assets updated within a range or at an exact time. Format: \'start_datetime,end_datetime\' for range, \'exact_datetime\' for exact match. Both \'start_datetime\' and \'end_datetime\' should be in ISO 8601 format.',
+				description:
+					"Filter assets updated within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match. Both 'start_datetime' and 'end_datetime' should be in ISO 8601 format.",
 			},
 		],
 	},
-]; 
+];
