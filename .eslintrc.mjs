@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 	parser: '@typescript-eslint/parser',
 	plugins: ['@typescript-eslint', 'prettier', 'n8n-nodes-base'],
 	extends: [
@@ -18,7 +18,7 @@ module.exports = {
 			'error',
 			{
 				endOfLine: 'auto',
-				useTabs: true,
+				useTabs: false,
 			},
 		],
 		'n8n-nodes-base/node-param-description-missing-for-return-all': 'off',

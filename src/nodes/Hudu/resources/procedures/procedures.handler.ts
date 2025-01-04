@@ -47,7 +47,7 @@ export async function handleProceduresOperation(
         'GET' as IHttpRequestMethods,
         `/procedures/${procedureId}`,
       );
-      break;
+      return responseData;
     }
 
     case 'getAll': {

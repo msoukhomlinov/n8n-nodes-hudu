@@ -166,40 +166,122 @@ export async function huduApiRequest(
 }
 
 /**
+ * Type for resources that support page_size parameter
+ */
+export type ResourceWithPageSize = typeof RESOURCES_WITH_PAGE_SIZE[number];
+
+/**
+ * Configuration for paginated requests
+ */
+interface PaginationConfig {
+  page: number;
+  page_size?: number;
+  resourcePath: string;
+  supportsPageSize: boolean;
+}
+
+/**
+ * Type for pagination query parameters
+ */
+interface PaginationQueryParams extends IDataObject {
+  page: number;
+  page_size?: number;
+}
+
+/**
+ * Create pagination parameters based on resource and configuration
+ */
+function createPaginationParams(
+  endpoint: string,
+  limit?: number,
+): PaginationConfig {
+  // Remove leading slash and split path
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  const parts = cleanEndpoint.split('/');
+  let resourcePath = parts[0];
+  
+  // Special case for /companies/{id}/assets which supports pagination
+  if (parts.length > 2 && parts[0] === 'companies' && parts[2] === 'assets') {
+    resourcePath = 'companies/assets';
+  }
+
+  const supportsPageSize = RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as ResourceWithPageSize);
+  
+  const config: PaginationConfig = {
+    page: 1,
+    resourcePath,
+    supportsPageSize,
+  };
+
+  if (supportsPageSize && limit) {
+    config.page_size = limit;
+  }
+
+  return config;
+}
+
+/**
  * Make an API request to fetch all items from paginated endpoints
  */
 export async function huduApiRequestAllItems(
   this: IExecuteFunctions | ILoadOptionsFunctions,
   method: IHttpRequestMethods,
   endpoint: string,
-  resourceName: string,
+  resourceName?: string,
   body: IDataObject = {},
   query: IDataObject = {},
+  limit?: number,
 ): Promise<IDataObject[]> {
   const returnData: IDataObject[] = [];
-  let responseData: IDataObject = {};
-
-  const resourcePath = endpoint.split('/')[1];
-  const supportsPageSize = RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any);
-
-  query.page = 1;
-  if (supportsPageSize) {
-    query.page_size = 1000;
+  const paginationConfig = createPaginationParams(endpoint);
+  const queryParams: PaginationQueryParams = { 
+    ...query, 
+    page: paginationConfig.page,
+  };
+  
+  if (paginationConfig.supportsPageSize) {
+    queryParams.page_size = HUDU_API_CONSTANTS.PAGE_SIZE;
   }
 
   try {
-    do {
-      responseData = await huduApiRequest.call(this, method, endpoint, body, query);
-      const items = responseData[resourceName] as IDataObject[];
-      if (items && Array.isArray(items)) {
-        returnData.push(...items);
+    let hasMorePages = true;
+    while (hasMorePages) {
+      // If we have a limit and we're close to it, adjust page_size for the last batch
+      if (limit && paginationConfig.supportsPageSize) {
+        const remaining = limit - returnData.length;
+        if (remaining <= 0) {
+          break;
+        }
+        if (remaining < HUDU_API_CONSTANTS.PAGE_SIZE) {
+          queryParams.page_size = remaining;
+        }
       }
-      query.page++;
-    } while (
-      responseData[resourceName] &&
-      (responseData[resourceName] as IDataObject[]).length > 0 &&
-      (supportsPageSize ? (responseData[resourceName] as IDataObject[]).length === 1000 : true)
-    );
+
+      const responseData = await huduApiRequest.call(this, method, endpoint, body, queryParams);
+      const items = resourceName ? responseData[resourceName] as IDataObject[] : responseData as IDataObject[];
+      
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        hasMorePages = false;
+        continue;
+      }
+
+      returnData.push(...items);
+      queryParams.page++;
+
+      // Stop if we've reached the limit
+      if (limit && returnData.length >= limit) {
+        hasMorePages = false;
+        continue;
+      }
+
+      // Check if we've reached the end of pagination
+      hasMorePages = items.length === (queryParams.page_size || HUDU_API_CONSTANTS.PAGE_SIZE);
+    }
+
+    // If we have a limit, ensure we don't return more than requested
+    if (limit && returnData.length > limit) {
+      return returnData.slice(0, limit);
+    }
 
     return returnData;
   } catch (error) {
@@ -230,55 +312,51 @@ export async function handleListing(
   this: IExecuteFunctions | ILoadOptionsFunctions,
   method: IHttpRequestMethods,
   endpoint: string,
-  resourceName: string,
+  resourceName?: string,
   body: IDataObject = {},
   query: IDataObject = {},
   returnAll = false,
   limit = 0,
 ): Promise<IDataObject[]> {
   try {
-    if (returnAll) {
-      const items = await huduApiRequestAllItems.call(
+    // If returnAll is true or limit > PAGE_SIZE, use pagination
+    if (returnAll || (limit > HUDU_API_CONSTANTS.PAGE_SIZE)) {
+      return await huduApiRequestAllItems.call(
         this,
         method,
         endpoint,
         resourceName,
         body,
         query,
+        returnAll ? undefined : limit,
       );
-      return items;
     }
 
-    const queryParams: IDataObject = {
-      page: 1,
+    // Handle single page request
+    const paginationConfig = createPaginationParams(endpoint);
+    const queryParams: PaginationQueryParams = {
+      ...query,
+      page: paginationConfig.page,
     };
 
-    // Add filters to query parameters with proper formatting
-    Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined && value !== '') {
-        queryParams[key] = value;
-      }
-    });
-
-    const resourcePath = endpoint.split('/')[1];
-    const supportsPageSize = RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any);
-
-    if (limit > HUDU_API_CONSTANTS.PAGE_SIZE && supportsPageSize) {
-      queryParams.page_size = limit;
-      const responseData = await huduApiRequest.call(this, method, endpoint, body, queryParams);
-      const items = responseData[resourceName] as IDataObject[];
-      if (items && Array.isArray(items)) {
-        return items;
-      }
-      return [];
+    if (paginationConfig.supportsPageSize) {
+      queryParams.page_size = limit > 0 ? Math.min(limit, HUDU_API_CONSTANTS.PAGE_SIZE) : HUDU_API_CONSTANTS.PAGE_SIZE;
     }
 
     const responseData = await huduApiRequest.call(this, method, endpoint, body, queryParams);
-    const items = responseData[resourceName] as IDataObject[];
-    if (items && Array.isArray(items)) {
-      return items;
+    const items = resourceName ? responseData[resourceName] as IDataObject[] : responseData as IDataObject[];
+    
+    if (!items || !Array.isArray(items)) {
+      return [];
     }
-    return [];
+
+    // If a limit is specified and we got more items than the limit,
+    // manually limit the results
+    if (limit > 0 && items.length > limit) {
+      return items.slice(0, limit);
+    }
+
+    return items;
   } catch (error) {
     if (error.name === 'NodeApiError') {
       throw error;

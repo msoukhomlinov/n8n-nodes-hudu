@@ -51,64 +51,15 @@ export async function handleNetworksOperation(
     }
 
     case 'getAll': {
+      const filters = this.getNodeParameter('filters', i) as IDataObject;
       const qs: IDataObject = {};
 
-      // Only try to get parameters that were explicitly set by the user
-      try {
-        const address = this.getNodeParameter('address', i);
-        if (address !== '') {
-          qs.address = address;
+      // Add all non-empty filters to query parameters
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          qs[key] = value;
         }
-      } catch {}
-
-      try {
-        const companyId = this.getNodeParameter('company_id', i);
-        if (companyId !== undefined && companyId !== null) {
-          qs.company_id = companyId;
-        }
-      } catch {}
-
-      try {
-        const createdAt = this.getNodeParameter('created_at', i);
-        if (createdAt !== '') {
-          qs.created_at = createdAt;
-        }
-      } catch {}
-
-      try {
-        const locationId = this.getNodeParameter('location_id', i);
-        if (locationId !== undefined && locationId !== null) {
-          qs.location_id = locationId;
-        }
-      } catch {}
-
-      try {
-        const name = this.getNodeParameter('name', i);
-        if (name !== '') {
-          qs.name = name;
-        }
-      } catch {}
-
-      try {
-        const networkType = this.getNodeParameter('network_type', i);
-        if (networkType !== undefined && networkType !== null) {
-          qs.network_type = networkType;
-        }
-      } catch {}
-
-      try {
-        const slug = this.getNodeParameter('slug', i);
-        if (slug !== '') {
-          qs.slug = slug;
-        }
-      } catch {}
-
-      try {
-        const updatedAt = this.getNodeParameter('updated_at', i);
-        if (updatedAt !== '') {
-          qs.updated_at = updatedAt;
-        }
-      } catch {}
+      });
 
       responseData = await huduApiRequest.call(
         this,
@@ -118,7 +69,6 @@ export async function handleNetworksOperation(
         qs,
       );
 
-      // Return the networks array directly
       return responseData;
     }
 

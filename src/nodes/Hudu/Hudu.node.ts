@@ -1,5 +1,10 @@
 import type { IExecuteFunctions } from 'n8n-core';
-import type { INodeExecutionData, INodeType, INodeTypeDescription, IDataObject } from 'n8n-workflow';
+import type {
+  INodeExecutionData,
+  INodeType,
+  INodeTypeDescription,
+  IDataObject,
+} from 'n8n-workflow';
 
 // Import all descriptions
 import * as descriptions from './descriptions';
@@ -157,7 +162,7 @@ export class Hudu implements INodeType {
       ...descriptions.passwordFoldersOperations,
       ...descriptions.proceduresOperations,
       ...descriptions.procedureTasksOperations,
-      ...descriptions.publicPhotoOperations,
+      ...descriptions.publicPhotosOperations,
       ...descriptions.rackStorageOperations,
       ...descriptions.rackStorageItemOperations,
       ...descriptions.relationsOperations,
@@ -182,7 +187,7 @@ export class Hudu implements INodeType {
       ...descriptions.passwordFoldersFields,
       ...descriptions.proceduresFields,
       ...descriptions.procedureTasksFields,
-      ...descriptions.publicPhotoFields,
+      ...descriptions.publicPhotosFields,
       ...descriptions.rackStorageFields,
       ...descriptions.rackStorageItemFields,
       ...descriptions.relationsFields,
@@ -196,7 +201,7 @@ export class Hudu implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
-    let operation: 
+    let operation:
       | resources.ActivityLogsOperation
       | resources.ApiInfoOperation
       | resources.ArticlesOperation
@@ -272,7 +277,7 @@ export class Hudu implements INodeType {
             );
             break;
           case 'cards':
-            responseData = await resources.handleCardsOperation.call(
+            responseData = await resources.handleCardOperation.call(
               this,
               operation as resources.CardsOperation,
               i,
@@ -300,7 +305,7 @@ export class Hudu implements INodeType {
             );
             break;
           case 'ipAddresses':
-            responseData = await resources.handleIpAddressOperation.call(
+            responseData = await resources.handleIpAddressesOperation.call(
               this,
               operation as resources.IpAddressOperations,
               i,
@@ -404,7 +409,7 @@ export class Hudu implements INodeType {
         // Handle array responses
         if (Array.isArray(responseData)) {
           returnData.push(
-            ...responseData.map(item => ({
+            ...responseData.map((item) => ({
               json: item,
               pairedItem: { item: i },
             })),

@@ -1,5 +1,6 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import { IExecuteFunctions } from 'n8n-core';
+import { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
 import { RackStorageOperation } from './rack_storages.types';
 
 export async function handleRackStorageOperation(
@@ -11,13 +12,19 @@ export async function handleRackStorageOperation(
 
   switch (operation) {
     case 'getAll': {
+      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      responseData = await huduApiRequest.call(
+      const limit = this.getNodeParameter('limit', i, 25) as number;
+
+      responseData = await handleListing.call(
         this,
         'GET' as IHttpRequestMethods,
         '/rack_storages',
+        '',
         {},
         filters,
+        returnAll,
+        limit,
       );
       break;
     }

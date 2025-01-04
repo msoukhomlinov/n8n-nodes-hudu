@@ -23,8 +23,8 @@ export async function handleProcedureTasksOperation(
       if (additionalFields.assigned_users) {
         additionalFields.assigned_users = (additionalFields.assigned_users as string)
           .split(',')
-          .map(id => parseInt(id.trim(), 10))
-          .filter(id => !isNaN(id));
+          .map((id) => parseInt(id.trim(), 10))
+          .filter((id) => !isNaN(id));
       }
 
       // Only add non-empty additional fields
@@ -64,29 +64,11 @@ export async function handleProcedureTasksOperation(
     }
 
     case 'getAll': {
-      const qs: IDataObject = {};
+      const filters = this.getNodeParameter('filters', i) as IDataObject;
 
-      // Add filters if they are set
-      try {
-        const procedureId = this.getNodeParameter('procedure_id', i);
-        if (procedureId !== undefined && procedureId !== null) {
-          qs.procedure_id = procedureId;
-        }
-      } catch {}
-
-      try {
-        const name = this.getNodeParameter('name', i);
-        if (name !== '') {
-          qs.name = name;
-        }
-      } catch {}
-
-      try {
-        const companyId = this.getNodeParameter('company_id', i);
-        if (companyId !== undefined && companyId !== null) {
-          qs.company_id = companyId;
-        }
-      } catch {}
+      const qs: IDataObject = {
+        ...filters,
+      };
 
       const response = await huduApiRequest.call(
         this,
@@ -108,8 +90,8 @@ export async function handleProcedureTasksOperation(
       if (updateFields.assigned_users) {
         updateFields.assigned_users = (updateFields.assigned_users as string)
           .split(',')
-          .map(id => parseInt(id.trim(), 10))
-          .filter(id => !isNaN(id));
+          .map((id) => parseInt(id.trim(), 10))
+          .filter((id) => !isNaN(id));
       }
 
       // Only include non-empty update fields

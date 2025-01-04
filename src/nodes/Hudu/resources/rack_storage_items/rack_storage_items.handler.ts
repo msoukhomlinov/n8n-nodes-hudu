@@ -1,4 +1,5 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import { IExecuteFunctions } from 'n8n-core';
+import { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
 import { RackStorageItemOperation } from './rack_storage_items.types';
 
@@ -12,6 +13,7 @@ export async function handleRackStorageItemOperation(
   switch (operation) {
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
+
       responseData = await huduApiRequest.call(
         this,
         'GET' as IHttpRequestMethods,
@@ -19,7 +21,13 @@ export async function handleRackStorageItemOperation(
         {},
         filters,
       );
-      break;
+
+      // If the response is not an array, return an empty array
+      if (!Array.isArray(responseData)) {
+        return [];
+      }
+
+      return responseData;
     }
 
     case 'get': {

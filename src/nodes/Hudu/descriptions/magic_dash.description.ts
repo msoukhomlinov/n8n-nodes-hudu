@@ -20,6 +20,12 @@ export const magicDashOperations: INodeProperties[] = [
         action: 'Get all Magic Dash items',
       },
       {
+        name: 'Get',
+        value: 'get',
+        description: 'Get a Magic Dash item by ID',
+        action: 'Get a Magic Dash item',
+      },
+      {
         name: 'Create',
         value: 'create',
         description: 'Create a Magic Dash item',
@@ -244,5 +250,23 @@ export const magicDashFields: INodeProperties[] = [
     default: 0,
     required: true,
     description: 'The ID of the Magic Dash item to delete',
+  },
+
+  // ----------------------------------
+  //         get
+  // ----------------------------------
+  {
+    displayName: 'ID',
+    name: 'id',
+    type: 'number',
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['get'],
+      },
+    },
+    default: 0,
+    required: true,
+    description: 'The ID of the Magic Dash item to get',
   },
 ];

@@ -14,13 +14,14 @@ export async function handleActivityLogsOperation(
     const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
     const returnAll = this.getNodeParameter('returnAll', i) as boolean;
     const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i, 25) as number);
+    
     const params: IDataObject = {
       ...additionalFields,
       page_size: limit,
     };
 
-    // Remove empty parameters
-    Object.keys(params).forEach(key => {
+    // Remove empty parameters, but keep numeric zeros
+    Object.keys(params).forEach((key) => {
       if (params[key] === undefined || params[key] === '') {
         delete params[key];
       }

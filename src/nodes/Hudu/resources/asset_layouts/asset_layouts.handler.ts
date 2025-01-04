@@ -20,7 +20,7 @@ export async function handleAssetLayoutOperation(
         'GET' as IHttpRequestMethods,
         '/asset_layouts',
         'asset_layouts',
-        {},
+        undefined,
         filters,
         returnAll,
         limit,

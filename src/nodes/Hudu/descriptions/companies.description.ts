@@ -668,3 +668,4 @@ export const companiesFields: INodeProperties[] = [
     ],
   },
 ];
+

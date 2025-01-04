@@ -1,6 +1,6 @@
-import { IExecuteFunctions } from 'n8n-workflow';
+import { IExecuteFunctions, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
-import type { ApiInfoOperation } from './api_info.types';
+import { ApiInfoOperation } from './api_info.types';
 
 export async function handleApiInfoOperation(
   this: IExecuteFunctions,
@@ -9,8 +9,15 @@ export async function handleApiInfoOperation(
 ): Promise<any> {
   let responseData;
 
-  if (operation === 'get') {
-    responseData = await huduApiRequest.call(this, 'GET', '/api_info');
+  switch (operation) {
+    case 'get': {
+      responseData = await huduApiRequest.call(
+        this,
+        'GET' as IHttpRequestMethods,
+        '/api_info',
+      );
+      return responseData;
+    }
   }
 
   return responseData;

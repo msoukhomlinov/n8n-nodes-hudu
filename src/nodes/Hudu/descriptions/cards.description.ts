@@ -1,5 +1,4 @@
 import { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const cardsOperations: INodeProperties[] = [
   {
@@ -45,38 +44,6 @@ export const cardsFields: INodeProperties[] = [
     },
     default: '',
     description: 'Name of the external integration type (e.g. autotask)',
-  },
-  {
-    displayName: 'Return All (⚠️ Caution)',
-    name: 'returnAll',
-    type: 'boolean',
-    displayOptions: {
-      show: {
-        resource: ['cards'],
-        operation: ['lookup'],
-      },
-    },
-    default: false,
-    description:
-      'Whether to return all results or only up to a given limit. Use with caution - may return very high number of records',
-  },
-  {
-    displayName: 'Limit',
-    name: 'limit',
-    type: 'number',
-    displayOptions: {
-      show: {
-        resource: ['cards'],
-        operation: ['lookup'],
-        returnAll: [false],
-      },
-    },
-    typeOptions: {
-      minValue: 1,
-      maxValue: 500,
-    },
-    default: HUDU_API_CONSTANTS.PAGE_SIZE,
-    description: 'Max number of results to return (max: 500, it returns large amount of data!)',
   },
   {
     displayName: 'Additional Fields',

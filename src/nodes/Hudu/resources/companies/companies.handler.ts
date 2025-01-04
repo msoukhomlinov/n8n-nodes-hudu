@@ -91,17 +91,13 @@ export async function handleCompaniesOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
 
-      const qs: IDataObject = {
-        ...filters,
-      };
-
       responseData = await handleListing.call(
         this,
         'GET' as IHttpRequestMethods,
         `/companies/${companyId}/assets`,
         'assets',
-        {},
-        qs,
+        undefined,
+        filters,
         returnAll,
         limit,
       );

@@ -160,7 +160,7 @@ export const proceduresFields: INodeProperties[] = [
   {
     displayName: 'Procedure ID',
     name: 'id',
-    type: 'string',
+    type: 'number',
     required: true,
     displayOptions: {
       show: {
@@ -168,7 +168,7 @@ export const proceduresFields: INodeProperties[] = [
         operation: ['get', 'delete', 'update'],
       },
     },
-    default: '',
+    default: 0,
     description: 'The ID of the procedure',
   },
 

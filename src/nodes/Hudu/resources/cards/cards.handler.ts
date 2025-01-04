@@ -1,8 +1,8 @@
 import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { CardsOperation } from './cards.types';
+import { huduApiRequest } from '../../utils/GenericFunctions';
+import { CardsOperation, ICardResponse } from './cards.types';
 
-export async function handleCardsOperation(
+export async function handleCardOperation(
   this: IExecuteFunctions,
   operation: CardsOperation,
   i: number,
@@ -11,27 +11,23 @@ export async function handleCardsOperation(
 
   switch (operation) {
     case 'lookup': {
-      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const integrationSlug = this.getNodeParameter('integration_slug', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
 
       const queryParams: IDataObject = {
         integration_slug: integrationSlug,
         ...additionalFields,
       };
 
-      responseData = await handleListing.call(
+      const response = await huduApiRequest.call(
         this,
         'GET' as IHttpRequestMethods,
         '/cards/lookup',
-        'integrator_cards',
-        {},
+        undefined,
         queryParams,
-        returnAll,
-        limit,
-      );
-      break;
+      ) as ICardResponse;
+      
+      return response.integrator_cards || [];
     }
 
     case 'jump': {
@@ -49,10 +45,10 @@ export async function handleCardsOperation(
         this,
         'GET' as IHttpRequestMethods,
         '/cards/jump',
-        {},
+        undefined,
         queryParams,
       );
-      break;
+      return responseData;
     }
   }
 

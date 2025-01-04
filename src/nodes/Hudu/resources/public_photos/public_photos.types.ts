@@ -11,4 +11,4 @@ export interface IPublicPhotoResponse extends IDataObject {
   public_photo: IPublicPhoto;
 }
 
-export type PublicPhotoOperation = 'getAll';
+export type PublicPhotoOperation = 'getAll' | 'create' | 'update';

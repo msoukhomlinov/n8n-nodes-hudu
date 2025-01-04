@@ -1,4 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
+import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const rackStorageOperations: INodeProperties[] = [
   {
@@ -234,6 +235,36 @@ export const rackStorageFields: INodeProperties[] = [
   //         getAll
   // ----------------------------------
   {
+    displayName: 'Return All',
+    name: 'returnAll',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['rack_storages'],
+        operation: ['getAll'],
+      },
+    },
+    default: false,
+    description: 'Whether to return all results or only up to a given limit',
+  },
+  {
+    displayName: 'Limit',
+    name: 'limit',
+    type: 'number',
+    displayOptions: {
+      show: {
+        resource: ['rack_storages'],
+        operation: ['getAll'],
+        returnAll: [false],
+      },
+    },
+    typeOptions: {
+      minValue: 1,
+    },
+    default: HUDU_API_CONSTANTS.PAGE_SIZE,
+    description: 'Max number of results to return',
+  },
+  {
     displayName: 'Filters',
     name: 'filters',
     type: 'collection',
@@ -289,7 +320,7 @@ export const rackStorageFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description:
-          'Filter rack storages created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+          'Filter rack storages created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format. If "start_datetime" is provided and "end_datetime" is blank, it filters from "start_datetime" until now. Example: "2023-06-07T12:34:56Z," If "end_datetime" is provided and "start_datetime" is blank, it filters from the past until "end_datetime". Example: ",2023-06-07T12:34:56Z"',
       },
       {
         displayName: 'Updated At',
@@ -297,7 +328,7 @@ export const rackStorageFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description:
-          'Filter rack storages updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+          'Filter rack storages updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format. If "start_datetime" is provided and "end_datetime" is blank, it filters from "start_datetime" until now. Example: "2023-06-07T12:34:56Z," If "end_datetime" is provided and "start_datetime" is blank, it filters from the past until "end_datetime". Example: ",2023-06-07T12:34:56Z"',
       },
     ],
   },

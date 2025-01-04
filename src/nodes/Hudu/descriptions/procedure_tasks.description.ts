@@ -52,43 +52,70 @@ export const procedureTasksFields: INodeProperties[] = [
   //         procedure_tasks:getAll
   // ----------------------------------
   {
-    displayName: 'Procedure ID',
-    name: 'procedure_id',
-    type: 'number',
-    default: undefined,
+    displayName: 'Return All',
+    name: 'returnAll',
+    type: 'boolean',
     displayOptions: {
       show: {
         resource: ['procedure_tasks'],
         operation: ['getAll'],
       },
     },
-    description: 'Filter by the procedure ID',
+    default: false,
+    description: 'Whether to return all results or only up to a given limit',
   },
   {
-    displayName: 'Name',
-    name: 'name',
-    type: 'string',
-    default: '',
+    displayName: 'Limit',
+    name: 'limit',
+    type: 'number',
     displayOptions: {
       show: {
         resource: ['procedure_tasks'],
         operation: ['getAll'],
+        returnAll: [false],
       },
     },
-    description: 'Filter by the name of the task',
+    typeOptions: {
+      minValue: 1,
+    },
+    default: 25,
+    description: 'Max number of results to return',
   },
   {
-    displayName: 'Company ID',
-    name: 'company_id',
-    type: 'number',
-    default: undefined,
+    displayName: 'Filters',
+    name: 'filters',
+    type: 'collection',
+    placeholder: 'Add Filter',
+    default: {},
     displayOptions: {
       show: {
         resource: ['procedure_tasks'],
         operation: ['getAll'],
       },
     },
-    description: 'Filter by the company ID',
+    options: [
+      {
+        displayName: 'Procedure ID',
+        name: 'procedure_id',
+        type: 'number',
+        default: undefined,
+        description: 'Filter by the procedure ID',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'Filter by the name of the task',
+      },
+      {
+        displayName: 'Company ID',
+        name: 'company_id',
+        type: 'number',
+        default: undefined,
+        description: 'Filter by the company ID',
+      },
+    ],
   },
 
   // ----------------------------------
@@ -338,3 +365,4 @@ export const procedureTasksFields: INodeProperties[] = [
     ],
   },
 ];
+

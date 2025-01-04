@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import { HUDU_API_CONSTANTS, RESOURCE_TYPES } from '../utils/constants';
 
 export const expirationsOperations: INodeProperties[] = [
   {
@@ -119,10 +119,13 @@ export const expirationsFields: INodeProperties[] = [
       {
         displayName: 'Resource Type',
         name: 'resource_type',
-        type: 'string',
+        type: 'options',
+        options: RESOURCE_TYPES.map(type => ({
+          name: type,
+          value: type,
+        })),
         default: '',
-        description:
-          'Filter logs by resource type (Asset, AssetPassword, Company, Article, etc.); must be coupled with resource ID',
+        description: 'Filter logs by resource type; must be coupled with resource ID',
       },
     ],
   },

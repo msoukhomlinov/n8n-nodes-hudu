@@ -1,5 +1,4 @@
 import { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const ipAddressOperations: INodeProperties[] = [
   {
@@ -16,7 +15,7 @@ export const ipAddressOperations: INodeProperties[] = [
       {
         name: 'Get All',
         value: 'getAll',
-        description: 'Retrieve a list of IP addresses',
+        description: '⚠️ Retrieve all IP addresses (no pagination support - may return large datasets)',
         action: 'Get all IP addresses',
       },
       {
@@ -52,37 +51,6 @@ export const ipAddressFields: INodeProperties[] = [
   // ----------------------------------
   //         ipAddresses:getAll
   // ----------------------------------
-  {
-    displayName: 'Return All (⚠️ Caution)',
-    name: 'returnAll',
-    type: 'boolean',
-    default: false,
-    description:
-      'Whether to return all results or only up to a given limit. Use with caution - may return very high number of records',
-    displayOptions: {
-      show: {
-        resource: ['ipAddresses'],
-        operation: ['getAll'],
-      },
-    },
-  },
-  {
-    displayName: 'Limit',
-    name: 'limit',
-    type: 'number',
-    default: HUDU_API_CONSTANTS.PAGE_SIZE,
-    description: 'Max number of results to return',
-    typeOptions: {
-      minValue: 1,
-    },
-    displayOptions: {
-      show: {
-        resource: ['ipAddresses'],
-        operation: ['getAll'],
-        returnAll: [false],
-      },
-    },
-  },
   {
     displayName: 'Filters',
     name: 'filters',

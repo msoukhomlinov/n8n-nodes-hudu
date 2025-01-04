@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import { HUDU_API_CONSTANTS, ACTIVITY_LOG_ACTIONS, RESOURCE_TYPES } from '../utils/constants';
 
 export const activityLogsOperations: INodeProperties[] = [
   {
@@ -51,10 +51,9 @@ export const activityLogsFields: INodeProperties[] = [
     name: 'limit',
     type: 'number',
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
-    description: 'Max number of results to return (max: 1000)',
+    description: 'Max number of results to return',
     typeOptions: {
       minValue: 1,
-      maxValue: 1000,
     },
     displayOptions: {
       show: {
@@ -81,7 +80,11 @@ export const activityLogsFields: INodeProperties[] = [
       {
         displayName: 'Action Message',
         name: 'action_message',
-        type: 'string',
+        type: 'options',
+        options: ACTIVITY_LOG_ACTIONS.map(action => ({
+          name: action,
+          value: action,
+        })),
         default: '',
         description: 'Filter by exact action message match',
       },
@@ -90,15 +93,18 @@ export const activityLogsFields: INodeProperties[] = [
         name: 'resource_id',
         type: 'number',
         default: 0,
-        description: 'Filter by resource ID (must be used with Resource Type)',
+        description: 'Filter by resource ID (must be used together with Resource Type)',
       },
       {
         displayName: 'Resource Type',
         name: 'resource_type',
-        type: 'string',
+        type: 'options',
+        options: RESOURCE_TYPES.map(type => ({
+          name: type,
+          value: type,
+        })),
         default: '',
-        description:
-          'Filter by exact resource type match (e.g., Asset, AssetPassword, Company, Article)',
+        description: 'Filter by resource type (must be used together with Resource ID)',
       },
       {
         displayName: 'Start Date',

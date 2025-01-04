@@ -16,26 +16,61 @@ export async function handleMagicDashOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-      const queryParams: IDataObject = {};
-      if (filters.title) {
-        queryParams.title = filters.title;
-      }
-      if (filters.company_id) {
-        queryParams.company_id = filters.company_id;
+      let allItems: IDataObject[] = [];
+      let page = 1;
+      const pageSize = HUDU_API_CONSTANTS.PAGE_SIZE;
+
+      do {
+        const qs: IDataObject = {
+          ...filters,
+          page,
+          page_size: pageSize,
+        };
+
+        const response = await huduApiRequest.call(
+          this,
+          'GET' as IHttpRequestMethods,
+          '/magic_dash',
+          {},
+          qs,
+        );
+
+        const items = Array.isArray(response) ? response : [];
+        allItems.push(...items);
+
+        if (items.length < pageSize) {
+          break;
+        }
+
+        if (!returnAll && allItems.length >= limit) {
+          break;
+        }
+
+        page++;
+      } while (true);
+
+      if (!returnAll) {
+        allItems = allItems.slice(0, limit);
       }
 
-      responseData = await huduApiRequest.call(
+      return allItems;
+    }
+
+    case 'get': {
+      const id = this.getNodeParameter('id', i) as number;
+      const response = await huduApiRequest.call(
         this,
         'GET' as IHttpRequestMethods,
         '/magic_dash',
-        undefined,
-        queryParams,
       );
-
-      if (!returnAll && responseData.length > limit) {
-        responseData = responseData.slice(0, limit);
+      
+      const items = Array.isArray(response) ? response : [];
+      const item = items.find(item => item.id === id);
+      
+      if (!item) {
+        throw new Error(`Magic Dash item with ID ${id} not found`);
       }
-      break;
+      return item;
     }
 
     case 'create':

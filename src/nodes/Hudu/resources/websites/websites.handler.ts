@@ -20,7 +20,7 @@ export async function handleWebsitesOperation(
         this,
         'GET' as IHttpRequestMethods,
         '/websites',
-        'websites',
+        undefined,
         {},
         filters,
         returnAll,

@@ -20,7 +20,7 @@ export async function handleAssetsOperation(
         'GET' as IHttpRequestMethods,
         '/assets',
         'assets',
-        {},
+        undefined,
         filters,
         returnAll,
         limit,
