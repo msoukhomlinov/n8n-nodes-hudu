@@ -1,0 +1,18 @@
+{
+  "node": "n8n-nodes-base.hudu",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["Documentation"],
+  "resources": {
+    "credentialDocumentation": [
+      {
+        "url": "https://support.hudu.com/hc/en-us/articles/11422780787735-REST-API"
+      }
+    ],
+    "primaryDocumentation": [
+      {
+        "url": "https://github.com/msoukhomlinov/n8n-nodes-hudu"
+      }
+    ]
+  }
+}

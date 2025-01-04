@@ -2,9 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2025-01-04
+
+### Changed
+
+- Restructured project to follow n8n node development best practices:
+  - Moved node files into `src/nodes/Hudu` directory
+  - Organized supporting modules (descriptions, resources, utils) into subdirectories
+  - Updated build process to maintain correct file structure
+  - Changed icon from `hudu.png` to `hudu.svg`
+
 ## [1.0.0] - 2024-12-01
 
 ### Added
+
 - Initial release of the n8n Hudu integration node
 - Full support for Hudu API V2.34.4
 - Comprehensive implementation of Hudu API endpoints including:

@@ -1,8 +1,12 @@
 {
-	"singleQuote": true,
-	"trailingComma": "all",
-	"endOfLine": "lf",
-	"printWidth": 100,
-	"proseWrap": "always",
-	"useTabs": true
-} 
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "endOfLine": "auto",
+  "semi": true,
+  "tabWidth": 2,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "useTabs": false,
+  "parser": "typescript"
+}

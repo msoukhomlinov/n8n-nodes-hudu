@@ -17,29 +17,37 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 ## Supported Resources & Operations
 
 ### Activity Logs
+
 - Get all activity logs
 
 ### API Info
+
 - Get API information
 
 ### Articles
+
 - Create, read, update, and delete articles
 - List all articles with pagination support
 
 ### Asset Layouts
+
 - Manage asset layout templates
 
 ### Asset Passwords
+
 - Manage asset-related passwords
 
 ### Assets
+
 - Create and manage assets
 - Link assets to companies
 
 ### Cards
+
 - Manage cards in the system
 
 ### Companies
+
 - Create a company
 - Delete a company
 - Get a company
@@ -47,6 +55,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 - Update a company
 
 ### Expirations
+
 - Get all expirations with filtering support for:
   - Company ID
   - Expiration type
@@ -54,52 +63,66 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
   - Resource type
 
 ### Folders
+
 - Manage document folders
 
 ### IP Addresses
+
 - Track and manage IP addresses
 
 ### Magic Dash
+
 - Access Magic Dash functionality
 
 ### Matchers
+
 - Configure and manage matchers
 
 ### Networks
+
 - Manage network information
 
 ### Password Folders
+
 - Organise and manage password folders
 
 ### Procedures
+
 - Create and manage procedures
 - Handle procedure tasks
 
 ### Public Photos
+
 - Manage public photos
 
 ### Rack Storage
+
 - Manage rack storage
 - Handle rack storage items
 
 ### Relations
+
 - Manage relationships between resources
 
 ### Uploads
+
 - Handle file uploads
 - Get upload information
 - Delete uploads
 
 ### Users
+
 - Get user information
 - List all users
 
 ### Websites
+
 - Manage website records
 
 ## Credentials
 
 To use this node, you need to:
+
 1. Have a Hudu instance
 2. Generate an API key in your Hudu settings
 3. Configure the node with:
@@ -116,9 +139,9 @@ To use this node, you need to:
 
 ## Resources
 
-* [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
-* [Hudu API Documentation](https://your-hudu-instance.com/api-docs)
-* [GitHub Repository](https://github.com/msoukhomlinov/n8n-nodes-hudu)
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+- [Hudu API Documentation](https://your-hudu-instance.com/api-docs)
+- [GitHub Repository](https://github.com/msoukhomlinov/n8n-nodes-hudu)
 
 ## Contributing
 
@@ -131,9 +154,10 @@ Contributions are welcome! If you'd like to contribute to this project:
 5. Open a Pull Request
 
 Please ensure your PR:
+
 - Clearly describes the changes
 - Includes any relevant documentation updates
 - Follows the existing code style
 - Includes tests if applicable
 
-For bug reports or feature requests, please use the GitHub issues section. 
+For bug reports or feature requests, please use the GitHub issues section.
