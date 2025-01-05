@@ -1,13 +1,13 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
-import { CardsOperation, ICardResponse } from './cards.types';
+import type { CardsOperation, ICardResponse } from './cards.types';
 
 export async function handleCardOperation(
   this: IExecuteFunctions,
   operation: CardsOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'lookup': {
@@ -19,14 +19,14 @@ export async function handleCardOperation(
         ...additionalFields,
       };
 
-      const response = await huduApiRequest.call(
+      const response = (await huduApiRequest.call(
         this,
         'GET' as IHttpRequestMethods,
         '/cards/lookup',
         undefined,
         queryParams,
-      ) as ICardResponse;
-      
+      )) as ICardResponse;
+
       return response.integrator_cards || [];
     }
 

@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const folderOperations: INodeProperties[] = [
@@ -96,11 +96,14 @@ export const folderFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter folders by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the folder',
       },
       {
         displayName: 'In Company',
@@ -168,11 +171,14 @@ export const folderFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
-        name: 'companyId',
-        type: 'number',
-        default: undefined,
-        description: 'ID of the associated company',
+        displayName: 'Company',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the folder',
       },
       {
         displayName: 'Description',
@@ -215,11 +221,14 @@ export const folderFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'ID of the associated company',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the folder',
       },
       {
         displayName: 'Description',

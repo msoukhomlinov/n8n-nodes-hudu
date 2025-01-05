@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const matchersOperations: INodeProperties[] = [
@@ -162,11 +162,14 @@ export const matchersFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'The updated company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the matcher',
       },
       {
         displayName: 'Identifier',

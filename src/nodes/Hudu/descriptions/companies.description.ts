@@ -1,5 +1,5 @@
-import { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import type { INodeProperties } from 'n8n-workflow';
+import { HUDU_API_CONSTANTS, INTEGRATION_SLUGS } from '../utils/constants';
 
 export const companiesOperations: INodeProperties[] = [
   {
@@ -173,11 +173,14 @@ export const companiesFields: INodeProperties[] = [
         description: 'Additional notes about the company',
       },
       {
-        displayName: 'Parent Company ID',
+        displayName: 'Parent Company',
         name: 'parent_company_id',
-        type: 'number',
-        default: 0,
-        description: "The parent company's ID, if applicable",
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The parent company to associate with this company',
       },
       {
         displayName: 'Phone Number',
@@ -626,16 +629,20 @@ export const companiesFields: INodeProperties[] = [
   {
     displayName: 'Integration Slug',
     name: 'integrationSlug',
-    type: 'string',
+    type: 'options',
     required: true,
     default: '',
+    description: 'The integration type to use (e.g. autotask, cw_manage)',
+    options: INTEGRATION_SLUGS.map((slug) => ({
+      name: slug,
+      value: slug,
+    })),
     displayOptions: {
       show: {
         resource: ['companies'],
         operation: ['jump'],
       },
     },
-    description: "Identifier of the external integration (e.g., 'cw_manage')",
   },
   {
     displayName: 'Additional Fields',
@@ -655,17 +662,15 @@ export const companiesFields: INodeProperties[] = [
         name: 'integrationId',
         type: 'string',
         default: '',
-        description: 'ID of the company in the external integration',
+        description: 'ID in the external integration',
       },
       {
         displayName: 'Integration Identifier',
         name: 'integrationIdentifier',
         type: 'string',
         default: '',
-        description:
-          'Identifier of the company in the external integration (used if integration_id is not set)',
+        description: 'Identifier in the external integration (used if Integration ID is not set)',
       },
     ],
   },
 ];
-

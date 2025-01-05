@@ -1,13 +1,13 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { PasswordFoldersOperations } from './password_folders.types';
+import type { PasswordFoldersOperations } from './password_folders.types';
 
 export async function handlePasswordFoldersOperation(
   this: IExecuteFunctions,
   operation: PasswordFoldersOperations,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'get': {

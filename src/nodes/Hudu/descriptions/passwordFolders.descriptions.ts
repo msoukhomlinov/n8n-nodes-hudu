@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 
 export const passwordFoldersOperations: INodeProperties[] = [
   {
@@ -88,11 +88,14 @@ export const passwordFoldersFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'Filter folders by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the password folder',
       },
       {
         displayName: 'Name',

@@ -1,14 +1,14 @@
-import { IExecuteFunctions } from 'n8n-core';
-import { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions } from 'n8n-core';
+import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
-import { ProcedureTasksOperations } from './procedure_tasks.types';
+import type { ProcedureTasksOperations } from './procedure_tasks.types';
 
 export async function handleProcedureTasksOperation(
   this: IExecuteFunctions,
   operation: ProcedureTasksOperations,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'create': {
@@ -19,20 +19,12 @@ export async function handleProcedureTasksOperation(
 
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      // Handle assigned_users conversion from comma-separated string to array
-      if (additionalFields.assigned_users) {
-        additionalFields.assigned_users = (additionalFields.assigned_users as string)
-          .split(',')
-          .map((id) => parseInt(id.trim(), 10))
-          .filter((id) => !isNaN(id));
-      }
-
       // Only add non-empty additional fields
-      Object.entries(additionalFields).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(additionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
           body[key] = value;
         }
-      });
+      }
 
       responseData = await huduApiRequest.call(
         this,
@@ -79,28 +71,20 @@ export async function handleProcedureTasksOperation(
       );
 
       // Return the procedure_tasks array from the response
-      return response.procedure_tasks || [];
+      return Array.isArray(response) ? response : (response as IDataObject).procedure_tasks as IDataObject[] || [];
     }
 
     case 'update': {
       const taskId = this.getNodeParameter('taskId', i) as string;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
-      // Handle assigned_users conversion from comma-separated string to array
-      if (updateFields.assigned_users) {
-        updateFields.assigned_users = (updateFields.assigned_users as string)
-          .split(',')
-          .map((id) => parseInt(id.trim(), 10))
-          .filter((id) => !isNaN(id));
-      }
-
       // Only include non-empty update fields
       const body: IDataObject = {};
-      Object.entries(updateFields).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
           body[key] = value;
         }
-      });
+      }
 
       responseData = await huduApiRequest.call(
         this,

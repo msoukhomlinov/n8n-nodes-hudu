@@ -1,13 +1,13 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { handleListing } from '../../utils/GenericFunctions';
-import { AssetsOperations } from './assets.types';
+import type { AssetsOperations } from './assets.types';
 
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
   operation: AssetsOperations,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'getAll': {

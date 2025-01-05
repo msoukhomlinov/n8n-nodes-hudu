@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 
 export const networksOperations: INodeProperties[] = [
   {
@@ -72,18 +72,22 @@ export const networksFields: INodeProperties[] = [
         description: 'Filter by network address',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'Filter by company',
       },
       {
         displayName: 'Created At',
         name: 'created_at',
         type: 'string',
         default: '',
-        description: 'Filter networks created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format.',
+        description:
+          'Filter networks created within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format.',
         placeholder: '2023-06-01T12:34:56Z,2023-06-07T12:34:56Z',
       },
       {
@@ -119,7 +123,8 @@ export const networksFields: INodeProperties[] = [
         name: 'updated_at',
         type: 'string',
         default: '',
-        description: 'Filter networks updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format.',
+        description:
+          'Filter networks updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format.',
         placeholder: '2023-06-01T12:34:56Z,2023-06-07T12:34:56Z',
       },
     ],
@@ -184,11 +189,14 @@ export const networksFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'The ID of the company that owns this network',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the network',
       },
       {
         displayName: 'Location ID',
@@ -270,11 +278,14 @@ export const networksFields: INodeProperties[] = [
         description: 'The type of network',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'The ID of the company that owns this network',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the network',
       },
       {
         displayName: 'Location ID',

@@ -1,18 +1,14 @@
-import {
-  IExecuteFunctions,
-  IDataObject,
-  IHttpRequestMethods,
-  NodeOperationError,
-} from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { AssetPasswordOperation } from './asset_passwords.types';
+import type { AssetPasswordOperation } from './asset_passwords.types';
 
 export async function handleAssetPasswordOperation(
   this: IExecuteFunctions,
   operation: AssetPasswordOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   try {
     switch (operation) {

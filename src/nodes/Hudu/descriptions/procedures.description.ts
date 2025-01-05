@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const proceduresOperations: INodeProperties[] = [
@@ -119,11 +119,14 @@ export const proceduresFields: INodeProperties[] = [
         description: 'Filter by the name of the procedure',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
         default: '',
-        description: 'Filter by the associated company ID',
+        description: 'Filter by company',
       },
       {
         displayName: 'Slug',
@@ -208,11 +211,14 @@ export const proceduresFields: INodeProperties[] = [
         description: 'Description of the procedure',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
         default: '',
-        description: 'The ID of the company this procedure should be transferred to',
+        description: 'The company to associate with the procedure',
       },
       {
         displayName: 'Company Template',
@@ -260,11 +266,14 @@ export const proceduresFields: INodeProperties[] = [
         description: 'When true, sets both template and remove_completion_ability to true',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
         default: '',
-        description: 'The ID of the company this procedure should be transferred to',
+        description: 'The company to associate with the procedure',
       },
       {
         displayName: 'Archived',

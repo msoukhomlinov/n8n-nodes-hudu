@@ -1,13 +1,13 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { AssetLayoutOperation } from './asset_layouts.types';
+import type { AssetLayoutOperation } from './asset_layouts.types';
 
 export async function handleAssetLayoutOperation(
   this: IExecuteFunctions,
   operation: AssetLayoutOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'getAll': {

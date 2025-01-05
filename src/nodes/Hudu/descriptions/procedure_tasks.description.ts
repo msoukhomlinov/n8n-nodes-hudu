@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 
 export const procedureTasksOperations: INodeProperties[] = [
   {
@@ -109,11 +109,18 @@ export const procedureTasksFields: INodeProperties[] = [
         description: 'Filter by the name of the task',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsDependencies: ['includeBlank'],
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
         default: undefined,
-        description: 'Filter by the company ID',
+        description: 'Filter by the company',
       },
     ],
   },
@@ -177,11 +184,14 @@ export const procedureTasksFields: INodeProperties[] = [
         description: 'The position of the task in the procedure',
       },
       {
-        displayName: 'User ID',
+        displayName: 'User',
         name: 'user_id',
-        type: 'number',
-        default: undefined,
-        description: 'The ID of the user assigned to the task',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+        },
+        default: '',
+        description: 'The user assigned to the task',
       },
       {
         displayName: 'Due Date',
@@ -222,9 +232,16 @@ export const procedureTasksFields: INodeProperties[] = [
       {
         displayName: 'Assigned Users',
         name: 'assigned_users',
-        type: 'string',
-        default: '',
-        description: 'Comma-separated list of user IDs assigned to the task',
+        type: 'multiOptions',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+          loadOptionsDependencies: ['includeBlank'],
+          loadOptionsParameters: {
+            includeBlank: false,
+          },
+        },
+        default: [],
+        description: 'The users assigned to the task',
       },
     ],
   },
@@ -313,11 +330,14 @@ export const procedureTasksFields: INodeProperties[] = [
         description: 'The position of the task in the procedure',
       },
       {
-        displayName: 'User ID',
+        displayName: 'User',
         name: 'user_id',
-        type: 'number',
-        default: undefined,
-        description: 'The ID of the user assigned to the task',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+        },
+        default: '',
+        description: 'The user assigned to the task',
       },
       {
         displayName: 'Due Date',
@@ -358,11 +378,17 @@ export const procedureTasksFields: INodeProperties[] = [
       {
         displayName: 'Assigned Users',
         name: 'assigned_users',
-        type: 'string',
-        default: '',
-        description: 'Comma-separated list of user IDs assigned to the task',
+        type: 'multiOptions',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+          loadOptionsDependencies: ['includeBlank'],
+          loadOptionsParameters: {
+            includeBlank: false,
+          },
+        },
+        default: [],
+        description: 'The users assigned to the task',
       },
     ],
   },
 ];
-

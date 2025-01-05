@@ -1,14 +1,14 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { MatcherOperation } from './matchers.types';
+import type { MatcherOperation } from './matchers.types';
 
 export async function handleMatcherOperation(
   this: IExecuteFunctions,
   operation: MatcherOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'getAll': {
@@ -49,7 +49,9 @@ export async function handleMatcherOperation(
       );
 
       // Extract the matchers array from the response
-      responseData = response.matchers;
+      responseData = Array.isArray(response)
+        ? response
+        : ((response as IDataObject).matchers as IDataObject[]) || [];
 
       if (!returnAll && responseData.length > limit) {
         responseData = responseData.slice(0, limit);

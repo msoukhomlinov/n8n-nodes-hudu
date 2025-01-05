@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const rackStorageOperations: INodeProperties[] = [
@@ -147,11 +147,14 @@ export const rackStorageFields: INodeProperties[] = [
         description: 'The width of the rack storage',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'The ID of the company that owns the rack storage',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the rack storage',
       },
     ],
   },
@@ -222,11 +225,14 @@ export const rackStorageFields: INodeProperties[] = [
         description: 'The width of the rack storage',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'The ID of the company that owns the rack storage',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the rack storage',
       },
     ],
   },
@@ -280,11 +286,14 @@ export const rackStorageFields: INodeProperties[] = [
       'All filters are combined using AND logic and use exact matching unless specified otherwise',
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'Filter by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'Filter by company',
       },
       {
         displayName: 'Location ID',

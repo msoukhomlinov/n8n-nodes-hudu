@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const articlesOperations: INodeProperties[] = [
@@ -175,11 +175,14 @@ export const articlesFields: INodeProperties[] = [
         description: 'The unique folder ID where the article lives',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'The unique company ID for non-global articles',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the article',
       },
       {
         displayName: 'Slug',
@@ -207,11 +210,14 @@ export const articlesFields: INodeProperties[] = [
     description: 'All filters are combined using AND logic with the search parameter',
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the article',
       },
       {
         displayName: 'Draft',
@@ -251,11 +257,174 @@ export const articlesFields: INodeProperties[] = [
       {
         displayName: 'Updated At',
         name: 'updated_at',
-        type: 'string',
-        default: '',
-        description:
-          'Filter articles updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match. Both "start_datetime" and "end_datetime" should be in ISO 8601 format.',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {
+          range: {
+            mode: 'preset',
+            preset: 'last7d'
+          }
+        },
+        description: 'Filter articles updated within a range or at an exact time',
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Filter Type',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Specific Date',
+                    value: 'exact',
+                  },
+                  {
+                    name: 'Custom Range',
+                    value: 'range',
+                  },
+                  {
+                    name: 'Quick Select',
+                    value: 'preset',
+                  },
+                ],
+                default: 'preset',
+                description: 'Choose how to filter by date',
+              },
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range (inclusive)',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range (inclusive)',
+              },
+              {
+                displayName: 'Preset Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the past 24 hours',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the past 48 hours',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the past 7 days',
+                  },
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the past 14 days',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the past 30 days',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the past 60 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the past 90 days',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+            ],
+          },
+        ],
       },
     ],
   },
 ];
+

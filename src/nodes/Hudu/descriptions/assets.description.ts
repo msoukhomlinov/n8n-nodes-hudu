@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const assetsOperations: INodeProperties[] = [
@@ -122,11 +122,14 @@ export const assetsFields: INodeProperties[] = [
         description: "Filter assets by their associated asset layout's ID",
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: "Filter assets by the parent company's ID",
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'Filter assets by the parent company',
       },
       {
         displayName: 'ID',

@@ -1,15 +1,14 @@
-import { IExecuteFunctions } from 'n8n-core';
-import { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-
+import type { IExecuteFunctions } from 'n8n-core';
+import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
-import { NetworksOperations } from './networks.types';
+import type { NetworksOperations } from './networks.types';
 
 export async function handleNetworksOperation(
   this: IExecuteFunctions,
   operation: NetworksOperations,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'create': {
@@ -22,11 +21,11 @@ export async function handleNetworksOperation(
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
       // Only add non-empty additional fields
-      Object.entries(additionalFields).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(additionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
           body[key] = value;
         }
-      });
+      }
 
       responseData = await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/networks', {
         network: body,
@@ -55,11 +54,11 @@ export async function handleNetworksOperation(
       const qs: IDataObject = {};
 
       // Add all non-empty filters to query parameters
-      Object.entries(filters).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(filters)) {
         if (value !== undefined && value !== null && value !== '') {
           qs[key] = value;
         }
-      });
+      }
 
       responseData = await huduApiRequest.call(
         this,
@@ -78,11 +77,11 @@ export async function handleNetworksOperation(
 
       // Only include non-empty update fields
       const body: IDataObject = {};
-      Object.entries(updateFields).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
           body[key] = value;
         }
-      });
+      }
 
       responseData = await huduApiRequest.call(
         this,

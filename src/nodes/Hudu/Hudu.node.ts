@@ -12,6 +12,10 @@ import * as descriptions from './descriptions';
 // Import all resource types and handlers
 import * as resources from './resources';
 
+// Import option loaders
+import { getUsers } from './optionLoaders/users';
+import { getCompanies } from './optionLoaders/companies';
+
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Hudu',
@@ -197,6 +201,13 @@ export class Hudu implements INodeType {
     ],
   };
 
+  methods = {
+    loadOptions: {
+      getUsers,
+      getCompanies,
+    },
+  };
+
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
@@ -245,7 +256,6 @@ export class Hudu implements INodeType {
             responseData = await resources.handleApiInfoOperation.call(
               this,
               operation as resources.ApiInfoOperation,
-              i,
             );
             break;
           case 'articles':

@@ -5,10 +5,44 @@ export const HUDU_API_CONSTANTS = {
 } as const;
 
 /**
+ * Comprehensive list of available integration slugs in Hudu
+ */
+export const INTEGRATION_SLUGS = [
+  'office_365',
+  'autotask',
+  'cw_manage',
+  'bms',
+  'syncro',
+  'domotz',
+  'quickpass',
+  'cloudradial',
+  'auvik',
+  'liongard',
+  'ninja',
+  'dattormm',
+  'atera',
+  'nsight',
+  'halo',
+  'pulseway_rmm',
+  'repairshopr',
+  'datto',
+  'watchman',
+  'mapbox',
+  'openai',
+  'superops',
+  'unifi',
+  'ncentral',
+  'meraki',
+  'addigy',
+  'cloudflare',
+  'level',
+] as const;
+
+/**
  * Resources that support the page_size parameter in their GET/List operations.
  * This parameter can be used in combination with pagination to control the number
  * of records returned per page (up to the default limit of 25).
- * 
+ *
  * Note: For /companies endpoints, only the main listing endpoint and the nested assets endpoint
  * support pagination (i.e., /companies and /companies/{id}/assets).
  * Other nested endpoints under /companies do not support pagination.
@@ -18,7 +52,7 @@ export const RESOURCES_WITH_PAGE_SIZE = [
   'articles',
   'assets',
   'asset_layouts',
-  'asset_passwords',  
+  'asset_passwords',
   'companies',
   'companies/assets',
   'expirations',

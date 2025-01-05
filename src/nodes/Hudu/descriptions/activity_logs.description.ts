@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, ACTIVITY_LOG_ACTIONS, RESOURCE_TYPES } from '../utils/constants';
 
 export const activityLogsOperations: INodeProperties[] = [
@@ -33,7 +33,7 @@ export const activityLogsOperations: INodeProperties[] = [
 export const activityLogsFields: INodeProperties[] = [
   // Fields for getAll operation
   {
-    displayName: 'Return All (⚠️ Caution)',
+    displayName: 'Return All ⚠️',
     name: 'returnAll',
     type: 'boolean',
     default: false,
@@ -81,7 +81,7 @@ export const activityLogsFields: INodeProperties[] = [
         displayName: 'Action Message',
         name: 'action_message',
         type: 'options',
-        options: ACTIVITY_LOG_ACTIONS.map(action => ({
+        options: ACTIVITY_LOG_ACTIONS.map((action) => ({
           name: action,
           value: action,
         })),
@@ -99,7 +99,7 @@ export const activityLogsFields: INodeProperties[] = [
         displayName: 'Resource Type',
         name: 'resource_type',
         type: 'options',
-        options: RESOURCE_TYPES.map(type => ({
+        options: RESOURCE_TYPES.map((type) => ({
           name: type,
           value: type,
         })),
@@ -121,10 +121,13 @@ export const activityLogsFields: INodeProperties[] = [
         description: 'Filter by exact user email match',
       },
       {
-        displayName: 'User ID',
+        displayName: 'User',
         name: 'user_id',
-        type: 'number',
-        default: 0,
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+        },
+        default: '',
         description: 'Filter by user ID',
       },
     ],

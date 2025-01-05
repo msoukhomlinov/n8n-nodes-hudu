@@ -1,4 +1,5 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
+import { INTEGRATION_SLUGS } from '../utils/constants';
 
 export const cardsOperations: INodeProperties[] = [
   {
@@ -21,8 +22,14 @@ export const cardsOperations: INodeProperties[] = [
       {
         name: 'Jump',
         value: 'jump',
-        description: 'Jump to an asset with integration details',
-        action: 'Jump to an asset with integration details',
+        description: 'Jump to a card by integration ID',
+        action: 'Jump to a card by integration ID',
+      },
+      {
+        name: 'Jump By Identifier',
+        value: 'jumpByIdentifier',
+        description: 'Jump to a card by integration identifier',
+        action: 'Jump to a card by integration identifier',
       },
     ],
     default: 'lookup',
@@ -34,16 +41,20 @@ export const cardsFields: INodeProperties[] = [
   {
     displayName: 'Integration Slug',
     name: 'integration_slug',
-    type: 'string',
+    type: 'options',
     required: true,
+    default: '',
+    description: 'The integration type to use (e.g. autotask, cw_manage)',
+    options: INTEGRATION_SLUGS.map((slug) => ({
+      name: slug,
+      value: slug,
+    })),
     displayOptions: {
       show: {
         resource: ['cards'],
         operation: ['lookup'],
       },
     },
-    default: '',
-    description: 'Name of the external integration type (e.g. autotask)',
   },
   {
     displayName: 'Additional Fields',
@@ -78,33 +89,68 @@ export const cardsFields: INodeProperties[] = [
 
   // Fields for Jump operation
   {
+    displayName: 'Integration Slug',
+    name: 'integration_slug',
+    type: 'options',
+    required: true,
+    default: '',
+    description: 'The integration type to use (e.g. autotask, cw_manage)',
+    options: INTEGRATION_SLUGS.map((slug) => ({
+      name: slug,
+      value: slug,
+    })),
+    displayOptions: {
+      show: {
+        resource: ['cards'],
+        operation: ['jump'],
+      },
+    },
+  },
+  {
+    displayName: 'Integration ID',
+    name: 'integration_id',
+    type: 'string',
+    required: true,
+    default: '',
+    description: 'The integration ID to use',
+    displayOptions: {
+      show: {
+        resource: ['cards'],
+        operation: ['jump'],
+      },
+    },
+  },
+  {
     displayName: 'Integration Type',
     name: 'integration_type',
     type: 'string',
     required: true,
+    default: '',
+    description: 'The integration type to use',
     displayOptions: {
       show: {
         resource: ['cards'],
         operation: ['jump'],
       },
     },
-    default: '',
-    description:
-      'Type of card. Contact support@usehudu.com for a list of types for specific integrations.',
   },
   {
     displayName: 'Integration Slug',
     name: 'integration_slug',
-    type: 'string',
+    type: 'options',
     required: true,
+    default: '',
+    description: 'The integration type to use (e.g. autotask, cw_manage)',
+    options: INTEGRATION_SLUGS.map((slug) => ({
+      name: slug,
+      value: slug,
+    })),
     displayOptions: {
       show: {
         resource: ['cards'],
-        operation: ['jump'],
+        operation: ['jumpByIdentifier'],
       },
     },
-    default: '',
-    description: 'Identifier of the external integration.',
   },
   {
     displayName: 'Additional Fields',

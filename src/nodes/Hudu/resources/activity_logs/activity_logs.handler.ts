@@ -1,4 +1,4 @@
-import { IDataObject, IExecuteFunctions, IHttpRequestMethods } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
 import type { ActivityLogsOperation } from './activity_logs.types';
 
@@ -6,26 +6,26 @@ export async function handleActivityLogsOperation(
   this: IExecuteFunctions,
   operation: ActivityLogsOperation,
   i: number,
-) {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   if (operation === 'getAll') {
     // Handle get all activity logs
     const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
     const returnAll = this.getNodeParameter('returnAll', i) as boolean;
     const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i, 25) as number);
-    
+
     const params: IDataObject = {
       ...additionalFields,
       page_size: limit,
     };
 
     // Remove empty parameters, but keep numeric zeros
-    Object.keys(params).forEach((key) => {
+    for (const key of Object.keys(params)) {
       if (params[key] === undefined || params[key] === '') {
         delete params[key];
       }
-    });
+    }
 
     responseData = await huduApiRequest.call(
       this,

@@ -1,14 +1,14 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { handleListing, huduApiRequest } from '../../utils/GenericFunctions';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { WebsiteOperation } from './websites.types';
+import type { WebsiteOperation } from './websites.types';
 
 export async function handleWebsitesOperation(
   this: IExecuteFunctions,
   operation: WebsiteOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
     case 'getAll': {

@@ -1,13 +1,13 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
-import { IpAddressOperations } from './ip_addresses.types';
+import type { IpAddressOperations } from './ip_addresses.types';
 
 export async function handleIpAddressesOperation(
   this: IExecuteFunctions,
   operation: IpAddressOperations,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData;
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'getAll': {
@@ -16,17 +16,19 @@ export async function handleIpAddressesOperation(
         ...filters,
       };
 
-      responseData = await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, '/ip_addresses', {}, qs);
+      responseData = await huduApiRequest.call(
+        this,
+        'GET' as IHttpRequestMethods,
+        '/ip_addresses',
+        {},
+        qs,
+      );
       return responseData;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as string;
-      return await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/ip_addresses/${id}`,
-      );
+      return await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, `/ip_addresses/${id}`);
     }
 
     case 'create': {
@@ -42,24 +44,18 @@ export async function handleIpAddressesOperation(
         ...additionalFields,
       };
 
-      return await huduApiRequest.call(
-        this,
-        'POST' as IHttpRequestMethods,
-        '/ip_addresses',
-        { ip_address: body },
-      );
+      return await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/ip_addresses', {
+        ip_address: body,
+      });
     }
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as string;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
-      return await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/ip_addresses/${id}`,
-        { ip_address: updateFields },
-      );
+      return await huduApiRequest.call(this, 'PUT' as IHttpRequestMethods, `/ip_addresses/${id}`, {
+        ip_address: updateFields,
+      });
     }
 
     case 'delete': {

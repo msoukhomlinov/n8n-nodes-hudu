@@ -22,7 +22,8 @@ function copyNodeFiles() {
     'src/nodes/Hudu/**/*',
     'src/nodes/Hudu/descriptions/**/*',
     'src/nodes/Hudu/resources/**/*',
-    'src/nodes/Hudu/utils/**/*'
+    'src/nodes/Hudu/utils/**/*',
+    'src/nodes/Hudu/optionLoaders/**/*'
   ]).pipe(dest('dist/nodes/Hudu'));
 }
 
@@ -51,6 +52,12 @@ function moveCompiledFiles(cb) {
   if (fs.existsSync('dist/src/nodes/Hudu/utils')) {
     fs.mkdirSync('dist/nodes/Hudu/utils', { recursive: true });
     fs.cpSync('dist/src/nodes/Hudu/utils', 'dist/nodes/Hudu/utils', { recursive: true });
+  }
+
+  // Move optionLoaders
+  if (fs.existsSync('dist/src/nodes/Hudu/optionLoaders')) {
+    fs.mkdirSync('dist/nodes/Hudu/optionLoaders', { recursive: true });
+    fs.cpSync('dist/src/nodes/Hudu/optionLoaders', 'dist/nodes/Hudu/optionLoaders', { recursive: true });
   }
   
   // Clean up src directory in dist

@@ -1,14 +1,14 @@
-import { IExecuteFunctions, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { handleListing, huduApiRequest } from '../../utils/GenericFunctions';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { RelationOperation } from './relations.types';
+import type { RelationOperation } from './relations.types';
 
 export async function handleRelationsOperation(
   this: IExecuteFunctions,
   operation: RelationOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
     case 'getAll': {

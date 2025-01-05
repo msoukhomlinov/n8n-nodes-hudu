@@ -1,14 +1,14 @@
-import { IExecuteFunctions } from 'n8n-core';
-import { IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions } from 'n8n-core';
+import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { PublicPhotoOperation } from './public_photos.types';
+import type { PublicPhotoOperation } from './public_photos.types';
 
 export async function handlePublicPhotoOperation(
   this: IExecuteFunctions,
   operation: PublicPhotoOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
     case 'create': {

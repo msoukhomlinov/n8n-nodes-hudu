@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const websitesOperations: INodeProperties[] = [
@@ -163,18 +163,21 @@ export const websitesFields: INodeProperties[] = [
     description: 'The URL of the website',
   },
   {
-    displayName: 'Company ID',
-    name: 'companyId',
-    type: 'number',
+    displayName: 'Company',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+    },
     displayOptions: {
       show: {
         resource: ['websites'],
         operation: ['create'],
       },
     },
-    default: 0,
     required: true,
-    description: 'ID of the company to associate the website with',
+    default: '',
+    description: 'The company to associate with the website',
   },
   {
     displayName: 'Additional Fields',
@@ -244,11 +247,14 @@ export const websitesFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'ID of the company to associate the website with',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the website',
       },
       {
         displayName: 'Name',

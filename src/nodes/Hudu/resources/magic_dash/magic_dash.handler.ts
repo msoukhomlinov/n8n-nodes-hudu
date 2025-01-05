@@ -1,14 +1,14 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest } from '../../utils/GenericFunctions';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { MagicDashOperation } from './magic_dash.types';
+import type { MagicDashOperation } from './magic_dash.types';
 
 export async function handleMagicDashOperation(
   this: IExecuteFunctions,
   operation: MagicDashOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'getAll': {
@@ -20,6 +20,7 @@ export async function handleMagicDashOperation(
       let page = 1;
       const pageSize = HUDU_API_CONSTANTS.PAGE_SIZE;
 
+      let hasMorePages = true;
       do {
         const qs: IDataObject = {
           ...filters,
@@ -38,16 +39,12 @@ export async function handleMagicDashOperation(
         const items = Array.isArray(response) ? response : [];
         allItems.push(...items);
 
-        if (items.length < pageSize) {
-          break;
+        if (items.length < pageSize || (!returnAll && allItems.length >= limit)) {
+          hasMorePages = false;
+        } else {
+          page++;
         }
-
-        if (!returnAll && allItems.length >= limit) {
-          break;
-        }
-
-        page++;
-      } while (true);
+      } while (hasMorePages);
 
       if (!returnAll) {
         allItems = allItems.slice(0, limit);
@@ -58,15 +55,11 @@ export async function handleMagicDashOperation(
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      const response = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        '/magic_dash',
-      );
-      
+      const response = await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, '/magic_dash');
+
       const items = Array.isArray(response) ? response : [];
-      const item = items.find(item => item.id === id);
-      
+      const item = items.find((item) => item.id === id);
+
       if (!item) {
         throw new Error(`Magic Dash item with ID ${id} not found`);
       }

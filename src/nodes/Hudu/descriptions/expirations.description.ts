@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, RESOURCE_TYPES } from '../utils/constants';
 
 export const expirationsOperations: INodeProperties[] = [
@@ -69,11 +69,14 @@ export const expirationsFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter expirations by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the expiration',
       },
       {
         displayName: 'Expiration Type',
@@ -120,7 +123,7 @@ export const expirationsFields: INodeProperties[] = [
         displayName: 'Resource Type',
         name: 'resource_type',
         type: 'options',
-        options: RESOURCE_TYPES.map(type => ({
+        options: RESOURCE_TYPES.map((type) => ({
           name: type,
           value: type,
         })),

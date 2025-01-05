@@ -1,4 +1,4 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 export interface IRackStorageItem extends IDataObject {
   id?: number; // The unique ID of the rack storage item

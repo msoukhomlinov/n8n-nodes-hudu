@@ -1,4 +1,4 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 export interface IMagicDash extends IDataObject {
   id: number; // The unique identifier for the MagicDash item (required)

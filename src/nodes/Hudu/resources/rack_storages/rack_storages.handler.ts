@@ -1,14 +1,14 @@
-import { IExecuteFunctions } from 'n8n-core';
-import { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions } from 'n8n-core';
+import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { RackStorageOperation } from './rack_storages.types';
+import type { RackStorageOperation } from './rack_storages.types';
 
 export async function handleRackStorageOperation(
   this: IExecuteFunctions,
   operation: RackStorageOperation,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
     case 'getAll': {

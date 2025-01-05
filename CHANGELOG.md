@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+#------ CURRENT DEVELOPMENT ------#
+
+## [Unreleased]
+
+### TODO
+- Implement standardised date range filters for all resources that support it:
+  - Articles (✓ completed)
+  - Asset Layouts
+  - Asset Passwords
+  - Assets
+  - Companies
+  - IP Addresses (both created_at and updated_at)
+  - Networks (both created_at and updated_at)
+  - Rack Storages (both created_at and updated_at)
+  - Rack Storage Items (both created_at and updated_at)
+  - Websites
+  Each implementation should include:
+  - Exact date matching
+  - Date range with start and end
+  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
+  - Proper date format handling (ISO 8601)
+
+#------ RELEASED VERSIONS ------#
+
+## [1.0.3] - 2025-01-05
+
+### Added
+- Added full list of integration slugs as `INTEGRATION_SLUGS` constant
+- Converted integration_slug fields to use picklist with predefined values from `INTEGRATION_SLUGS`
+- Added dynamic user selection with searchable dropdown for user_id fields
+- Added dynamic company selection with searchable dropdown for company_id fields
+- Added option loaders infrastructure with initial support for user and company loading
+- Converted assigned_users field from comma-separated string to proper multi-select user dropdown
+
+### Changed
+- Updated cards description and types to use the new integration_slug picklist
+- Updated companies description to use the new integration_slug picklist for jump operation
+- Updated activity logs description to use dynamic user selection for user_id field
+- Updated procedure tasks description to use dynamic company selection for company_id field
+- Improved field descriptions and documentation for integration-related parameters
+- Improved user and company selection UI with proper default values and configurable blank option
+- Fixed value type warnings in user selection fields
+- Enhanced company selection across all resources to use dynamic company picker while preserving existing display options and filters:
+  - Updated company_id fields in articles, ip_addresses, magic_dash, networks, procedures, rack_storages, users, and websites descriptions
+  - Maintained existing filter options and display conditions while adding dynamic company selection
+  - Standardized company selection behavior across create, update, and filter operations
+
 ## [1.0.2] - 2025-01-04
 
 ### Added

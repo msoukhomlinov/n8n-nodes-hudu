@@ -1,13 +1,13 @@
-import { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
-import { CompaniesOperations } from './companies.types';
+import type { CompaniesOperations } from './companies.types';
 
 export async function handleCompaniesOperation(
   this: IExecuteFunctions,
   operation: CompaniesOperations,
   i: number,
-): Promise<any> {
-  let responseData;
+): Promise<IDataObject | IDataObject[]> {
+  let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
     case 'create': {
@@ -117,8 +117,9 @@ export async function handleCompaniesOperation(
       };
 
       if (additionalFields.customFields) {
-        body.custom_fields = additionalFields.customFields;
-        delete body.customFields;
+        const { customFields, ...rest } = additionalFields;
+        body.custom_fields = customFields;
+        Object.assign(body, rest);
       }
 
       responseData = await huduApiRequest.call(

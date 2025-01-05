@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const userOperations: INodeProperties[] = [
@@ -120,11 +120,14 @@ export const userFields: INodeProperties[] = [
         description: 'Filter users by last name',
       },
       {
-        displayName: 'Portal Member Company ID',
+        displayName: 'Portal Member Company',
         name: 'portal_member_company_id',
-        type: 'number',
-        default: 0,
-        description: 'Filter users by company ID (only portal members have a company ID)',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'The company to associate with the portal member',
       },
       {
         displayName: 'Search',

@@ -1,8 +1,8 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 interface IRackStorageItem {
   has_items: boolean;
-  items: any[] | null;
+  items: IDataObject[] | null;
   number: number;
 }
 

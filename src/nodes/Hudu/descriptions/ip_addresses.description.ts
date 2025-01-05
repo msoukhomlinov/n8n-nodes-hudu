@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 
 export const ipAddressOperations: INodeProperties[] = [
   {
@@ -15,7 +15,8 @@ export const ipAddressOperations: INodeProperties[] = [
       {
         name: 'Get All',
         value: 'getAll',
-        description: '⚠️ Retrieve all IP addresses (no pagination support - may return large datasets)',
+        description:
+          '⚠️ Retrieve all IP addresses (no pagination support - may return large datasets)',
         action: 'Get all IP addresses',
       },
       {
@@ -211,18 +212,21 @@ export const ipAddressFields: INodeProperties[] = [
     description: 'The status of the IP address',
   },
   {
-    displayName: 'Company ID',
+    displayName: 'Company',
     name: 'company_id',
-    type: 'number',
-    required: true,
-    default: 0,
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+    },
     displayOptions: {
       show: {
         resource: ['ipAddresses'],
         operation: ['create'],
       },
     },
-    description: 'The identifier of the company that owns this IP address',
+    required: true,
+    default: '',
+    description: 'The company to associate with the IP address',
   },
   {
     displayName: 'Additional Fields',

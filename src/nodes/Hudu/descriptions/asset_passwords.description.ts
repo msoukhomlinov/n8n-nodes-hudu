@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
 export const assetPasswordOperations: INodeProperties[] = [
@@ -135,9 +135,12 @@ export const assetPasswordFields: INodeProperties[] = [
     description: 'Description or notes related to the password',
   },
   {
-    displayName: 'Company ID',
+    displayName: 'Company',
     name: 'company_id',
-    type: 'number',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+    },
     required: true,
     displayOptions: {
       show: {
@@ -145,8 +148,8 @@ export const assetPasswordFields: INodeProperties[] = [
         operation: ['create', 'update'],
       },
     },
-    default: 0,
-    description: 'Identifier of the company to which the password belongs',
+    default: '',
+    description: 'The company to associate with the password',
   },
   {
     displayName: 'Passwordable Type',
