@@ -6,7 +6,7 @@ This is an n8n community node that lets you use Hudu in your n8n workflows.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-This node was built against Hudu v2.34.4 and is currently at version 1.0.4. Future versions of Hudu may not be 100% compatible without node updates.
+This node was built against Hudu v2.34.4. Future versions of Hudu may not be 100% compatible without node updates.
 
 ## Installation
 

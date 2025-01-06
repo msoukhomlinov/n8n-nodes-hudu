@@ -7,6 +7,63 @@ All notable changes to this project will be documented in this file.
 
 #------ RELEASED VERSIONS ------#
 
+## [1.1.0] - 2025-01-06
+
+### Added
+- Implemented comprehensive date range filtering across all supported resources:
+  - Articles
+  - Asset Layouts
+  - Asset Passwords
+  - Assets
+  - Companies
+  - IP Addresses
+  - Networks
+  - Rack Storages
+  - Rack Storage Items
+  - Websites
+
+  Each implementation includes:
+  - Exact date matching with ISO 8601 format
+  - Flexible date range filtering with start and end dates
+  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
+  - Support for both created_at and updated_at fields where applicable
+- Added full list of integration slugs as `INTEGRATION_SLUGS` constant
+- Converted integration_slug fields to use picklist with predefined values from `INTEGRATION_SLUGS`
+- Added dynamic user selection with searchable dropdown for user_id fields
+- Added dynamic company selection with searchable dropdown for company_id fields
+- Added option loaders infrastructure with initial support for user and company loading
+- Converted assigned_users field from comma-separated string to proper multi-select user dropdown
+- Added comprehensive list of activity log actions as `ACTIVITY_LOG_ACTIONS` constant
+- Added comprehensive list of resource types as `RESOURCE_TYPES` constant
+
+### Changed
+- Enhanced code quality by removing console logging statements from:
+  - GenericFunctions.ts
+  - articles.handler.ts
+  - asset_layouts.handler.ts
+- Standardised date range filter structure across all resources for consistent behaviour
+- Unified date filtering implementation to match the Articles resource pattern
+- Updated cards description and types to use the new integration_slug picklist
+- Updated companies description to use the new integration_slug picklist for jump operation
+- Updated activity logs description to use dynamic user selection for user_id field
+- Updated procedure tasks description to use dynamic company selection for company_id field
+- Improved field descriptions and documentation for integration-related parameters
+- Improved user and company selection UI with proper default values and configurable blank option
+- Fixed value type warnings in user selection fields
+- Enhanced company selection across all resources to use dynamic company picker
+- Updated activity logs and related resources to use standardised constants
+- Fixed pagination behavior for resources that support pagination
+- Removed pagination options from resources that don't support it
+- Fixed various resource-specific operations and response handling
+
+### Fixed
+- Fixed activity logs resource type filter
+- Fixed magic dash pagination and returnAll functionality
+- Fixed procedures "get" operation
+- Fixed pagination and filter handling in multiple handlers
+- Fixed response handling for rack storages and rack storage items
+- Fixed users and websites "get all" operations
+
 ## [1.0.4] - 2025-01-06
 
 ### Added
