@@ -1,41 +1,68 @@
-# Dependency directories
+# Cursor specific
+.cursorcache
+.cursorconfig
+.cursorignore
+.cursor/
+.cursor-rules/
+.cursor-search-cache
+.cursor-settings.json
+.cursor-keybindings.json
+
+# Optional Cursor team files (uncomment if not sharing)
+.cursor-snippets/
+.cursor-prompts/
+
+# Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
 
-# Build output
+# Build outputs
 dist/
+build/
+*.tsbuildinfo
+*.map
+*.d.ts
 
-# IDE
-.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-.vscode/*
+# Test coverage
+coverage/
+.nyc_output/
 
-# System Files
+# IDE and editor
+.idea/*
+.vscode
+*.sublime-*
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.editorconfig
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS specific
 .DS_Store
 Thumbs.db
 
-# npm
-npm-debug.log*
-.npm
-.npmrc
+# Database
+*.sqlite
+*.sqlite3
 
-# Environment
-.env
-.env.test
+# Temporary files
+.tmp/
+.temp/
+*.tmp
 
-# TypeScript cache
-*.tsbuildinfo
+# Documentation
+.docs/
 
-# Optional eslint cache
-.eslintcache
-
-# Additional log files
-*.log
-
-# Temporary directories
-temp/
-tmp/ 
+# Cache
+.cache/

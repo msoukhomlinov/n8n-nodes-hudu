@@ -1,6 +1,5 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import { huduApiRequest, processDateRange } from '../../utils/GenericFunctions';
 import type { NetworksOperations } from './networks.types';
 
 export async function handleNetworksOperation(
@@ -12,31 +11,29 @@ export async function handleNetworksOperation(
 
   switch (operation) {
     case 'create': {
-      const body: IDataObject = {
-        name: this.getNodeParameter('name', i) as string,
-        address: this.getNodeParameter('address', i) as string,
-        network_type: this.getNodeParameter('network_type', i) as number,
-      };
-
+      const name = this.getNodeParameter('name', i) as string;
+      const address = this.getNodeParameter('address', i) as string;
+      const networkType = this.getNodeParameter('network_type', i) as number;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      // Only add non-empty additional fields
-      for (const [key, value] of Object.entries(additionalFields)) {
-        if (value !== undefined && value !== null && value !== '') {
-          body[key] = value;
-        }
-      }
+      const body: IDataObject = {
+        name,
+        address,
+        network_type: networkType,
+        ...additionalFields,
+      };
 
       responseData = await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/networks', {
         network: body,
       });
-      return responseData;
+      break;
     }
 
     case 'delete': {
       const networkId = this.getNodeParameter('networkId', i) as string;
       await huduApiRequest.call(this, 'DELETE' as IHttpRequestMethods, `/networks/${networkId}`);
-      return { success: true };
+      responseData = { success: true };
+      break;
     }
 
     case 'get': {
@@ -46,17 +43,56 @@ export async function handleNetworksOperation(
         'GET' as IHttpRequestMethods,
         `/networks/${networkId}`,
       );
-      return responseData;
+      break;
     }
 
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const qs: IDataObject = {};
+      const qs: IDataObject = {
+        ...filters,
+      };
 
-      // Add all non-empty filters to query parameters
-      for (const [key, value] of Object.entries(filters)) {
-        if (value !== undefined && value !== null && value !== '') {
-          qs[key] = value;
+      if (filters.created_at) {
+        const createdAtFilter = filters.created_at as IDataObject;
+
+        if (createdAtFilter.range) {
+          const rangeObj = createdAtFilter.range as IDataObject;
+
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          });
+
+          qs.created_at = dateRange || undefined;
+        } else {
+          qs.created_at = undefined;
+        }
+      }
+
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          });
+
+          qs.updated_at = dateRange || undefined;
+        } else {
+          qs.updated_at = undefined;
         }
       }
 
@@ -67,29 +103,20 @@ export async function handleNetworksOperation(
         undefined,
         qs,
       );
-
-      return responseData;
+      break;
     }
 
     case 'update': {
       const networkId = this.getNodeParameter('networkId', i) as string;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
-      // Only include non-empty update fields
-      const body: IDataObject = {};
-      for (const [key, value] of Object.entries(updateFields)) {
-        if (value !== undefined && value !== null && value !== '') {
-          body[key] = value;
-        }
-      }
-
       responseData = await huduApiRequest.call(
         this,
         'PUT' as IHttpRequestMethods,
         `/networks/${networkId}`,
-        { network: body },
+        { network: updateFields },
       );
-      return responseData;
+      break;
     }
   }
 

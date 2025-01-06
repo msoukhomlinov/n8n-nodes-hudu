@@ -1,6 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-core';
 import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import { huduApiRequest, handleListing, processDateRange } from '../../utils/GenericFunctions';
 import type { RackStorageOperation } from './rack_storages.types';
 
 export async function handleRackStorageOperation(
@@ -15,6 +15,35 @@ export async function handleRackStorageOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
+
+      // Process date range filters
+      if (filters.created_at) {
+        filters.created_at = processDateRange(
+          filters.created_at as {
+            range?: {
+              mode: 'exact' | 'range' | 'preset';
+              exact?: string;
+              start?: string;
+              end?: string;
+              preset?: string;
+            };
+          },
+        );
+      }
+
+      if (filters.updated_at) {
+        filters.updated_at = processDateRange(
+          filters.updated_at as {
+            range?: {
+              mode: 'exact' | 'range' | 'preset';
+              exact?: string;
+              start?: string;
+              end?: string;
+              preset?: string;
+            };
+          },
+        );
+      }
 
       responseData = await handleListing.call(
         this,

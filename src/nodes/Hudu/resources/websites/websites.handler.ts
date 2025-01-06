@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { handleListing, huduApiRequest } from '../../utils/GenericFunctions';
+import { handleListing, huduApiRequest, processDateRange } from '../../utils/GenericFunctions';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { WebsiteOperation } from './websites.types';
 
@@ -15,6 +15,35 @@ export async function handleWebsitesOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+
+      // Process date range filters
+      if (filters.created_at) {
+        filters.created_at = processDateRange(
+          filters.created_at as {
+            range?: {
+              mode: 'exact' | 'range' | 'preset';
+              exact?: string;
+              start?: string;
+              end?: string;
+              preset?: string;
+            };
+          },
+        );
+      }
+
+      if (filters.updated_at) {
+        filters.updated_at = processDateRange(
+          filters.updated_at as {
+            range?: {
+              mode: 'exact' | 'range' | 'preset';
+              exact?: string;
+              start?: string;
+              end?: string;
+              preset?: string;
+            };
+          },
+        );
+      }
 
       responseData = await handleListing.call(
         this,

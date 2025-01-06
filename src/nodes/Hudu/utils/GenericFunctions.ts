@@ -28,19 +28,6 @@ export async function huduApiRequest(
     });
   }
 
-  // Debug logging for query parameters
-  console.log('API Request Debug:', {
-    method,
-    endpoint,
-    queryParams: qs,
-    body: Object.keys(body).length > 0 ? body : 'empty'
-  });
-
-  // Handle updated_at parameter specifically
-  if (qs.updated_at) {
-    console.log('Updated At Filter:', qs.updated_at);
-  }
-
   const options: IHttpRequestOptions = {
     method,
     qs,
@@ -61,17 +48,8 @@ export async function huduApiRequest(
     throw new Error('Request helper not available');
   }
 
-  // Log the final request URL with query parameters
-  const finalUrl = new URL(options.url);
-  for (const [key, value] of Object.entries(qs)) {
-    if (value !== undefined && value !== null) {
-      finalUrl.searchParams.append(key, value.toString());
-    }
-  }
-  console.log('Final Request URL:', finalUrl.toString());
-
-  const response = await helpers.request(options) || {};
-  return Array.isArray(response) ? response : response as IDataObject;
+  const response = (await helpers.request(options)) || {};
+  return Array.isArray(response) ? response : (response as IDataObject);
 }
 
 /**
@@ -164,7 +142,7 @@ export async function huduApiRequestAllItems(
 
     const responseData = await huduApiRequest.call(this, method, endpoint, body, queryParams);
     let items: IDataObject[];
-    
+
     if (resourceName && !Array.isArray(responseData)) {
       const data = responseData as IDataObject;
       const resourceData = data[resourceName];
@@ -233,7 +211,8 @@ export async function handleListing(
 
   // Add pagination size if supported
   if (paginationConfig.supportsPageSize) {
-    queryParams.page_size = limit > 0 ? Math.min(limit, HUDU_API_CONSTANTS.PAGE_SIZE) : HUDU_API_CONSTANTS.PAGE_SIZE;
+    queryParams.page_size =
+      limit > 0 ? Math.min(limit, HUDU_API_CONSTANTS.PAGE_SIZE) : HUDU_API_CONSTANTS.PAGE_SIZE;
   }
 
   // Add other query parameters
@@ -243,11 +222,9 @@ export async function handleListing(
     }
   }
 
-  console.log('Final query parameters:', queryParams);
-
   const responseData = await huduApiRequest.call(this, method, endpoint, body, queryParams);
   let items: IDataObject[];
-  
+
   if (resourceName && !Array.isArray(responseData)) {
     const data = responseData as IDataObject;
     const resourceData = data[resourceName];
@@ -281,10 +258,7 @@ export function processDateRange(dateRange: {
     preset?: string;
   };
 }): string | undefined {
-  console.log('processDateRange input:', JSON.stringify(dateRange, null, 2));
-  
   if (!dateRange.range) {
-    console.log('No range found in dateRange');
     return undefined;
   }
 
@@ -292,126 +266,111 @@ export function processDateRange(dateRange: {
 
   switch (dateRange.range.mode) {
     case 'exact':
-      console.log('Processing exact date:', dateRange.range.exact);
       result = dateRange.range.exact;
       break;
     case 'range':
-      console.log('Processing date range:', {
-        start: dateRange.range.start,
-        end: dateRange.range.end
-      });
       // Handle partial ranges - if either start or end is provided
       if (dateRange.range.start || dateRange.range.end) {
         result = `${dateRange.range.start || ''},${dateRange.range.end || ''}`;
       }
       break;
-    case 'preset': {
-      console.log('Processing preset:', dateRange.range.preset);
-      const now = new Date();
-      const startDate = new Date();
-      
-      switch (dateRange.range.preset) {
-        case 'today':
-          startDate.setHours(0, 0, 0, 0);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'yesterday': {
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          const endDate = new Date(startDate);
-          endDate.setHours(23, 59, 59, 999);
-          result = `${startDate.toISOString()},${endDate.toISOString()}`;
-          break;
-        }
-        case 'last24h':
-          startDate.setHours(startDate.getHours() - 24);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'last48h':
-          startDate.setHours(startDate.getHours() - 48);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'last7d':
-          console.log('Processing last7d preset');
-          startDate.setDate(startDate.getDate() - 7);
-          startDate.setHours(0, 0, 0, 0);
-          console.log('Start date:', startDate.toISOString());
-          console.log('End date:', now.toISOString());
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'last14d':
-          startDate.setDate(startDate.getDate() - 14);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'last30d':
-          startDate.setDate(startDate.getDate() - 30);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'last60d':
-          startDate.setDate(startDate.getDate() - 60);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'last90d':
-          startDate.setDate(startDate.getDate() - 90);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'thisWeek':
-          startDate.setDate(startDate.getDate() - startDate.getDay());
-          startDate.setHours(0, 0, 0, 0);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'lastWeek': {
-          startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
-          startDate.setHours(0, 0, 0, 0);
-          const endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 6);
-          endDate.setHours(23, 59, 59, 999);
-          result = `${startDate.toISOString()},${endDate.toISOString()}`;
-          break;
-        }
-        case 'thisMonth':
-          startDate.setDate(1);
-          startDate.setHours(0, 0, 0, 0);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'lastMonth': {
-          startDate.setMonth(startDate.getMonth() - 1);
-          startDate.setDate(1);
-          startDate.setHours(0, 0, 0, 0);
-          const endDate = new Date(startDate);
-          endDate.setMonth(endDate.getMonth() + 1);
-          endDate.setDate(0);
-          endDate.setHours(23, 59, 59, 999);
-          result = `${startDate.toISOString()},${endDate.toISOString()}`;
-          break;
-        }
-        case 'thisYear':
-          startDate.setMonth(0, 1);
-          startDate.setHours(0, 0, 0, 0);
-          result = `${startDate.toISOString()},${now.toISOString()}`;
-          break;
-        case 'lastYear': {
-          startDate.setFullYear(startDate.getFullYear() - 1);
-          startDate.setMonth(0, 1);
-          startDate.setHours(0, 0, 0, 0);
-          const endDate = new Date(startDate);
-          endDate.setMonth(11, 31);
-          endDate.setHours(23, 59, 59, 999);
-          result = `${startDate.toISOString()},${endDate.toISOString()}`;
-          break;
-        }
-        default:
-          return undefined;
-      }
-      console.log('Processed preset result:', result);
-    }
-    break;
-  }
+    case 'preset':
+      {
+        const now = new Date();
+        const startDate = new Date();
 
-  if (result) {
-    console.log('Final processed date range:', result);
-  } else {
-    console.log('No result produced from date range processing');
+        switch (dateRange.range.preset) {
+          case 'today':
+            startDate.setHours(0, 0, 0, 0);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'yesterday': {
+            startDate.setDate(startDate.getDate() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(startDate);
+            endDate.setHours(23, 59, 59, 999);
+            result = `${startDate.toISOString()},${endDate.toISOString()}`;
+            break;
+          }
+          case 'last24h':
+            startDate.setHours(startDate.getHours() - 24);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'last48h':
+            startDate.setHours(startDate.getHours() - 48);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'last7d':
+            startDate.setDate(startDate.getDate() - 7);
+            startDate.setHours(0, 0, 0, 0);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'last14d':
+            startDate.setDate(startDate.getDate() - 14);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'last30d':
+            startDate.setDate(startDate.getDate() - 30);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'last60d':
+            startDate.setDate(startDate.getDate() - 60);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'last90d':
+            startDate.setDate(startDate.getDate() - 90);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'thisWeek':
+            startDate.setDate(startDate.getDate() - startDate.getDay());
+            startDate.setHours(0, 0, 0, 0);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'lastWeek': {
+            startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 6);
+            endDate.setHours(23, 59, 59, 999);
+            result = `${startDate.toISOString()},${endDate.toISOString()}`;
+            break;
+          }
+          case 'thisMonth':
+            startDate.setDate(1);
+            startDate.setHours(0, 0, 0, 0);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'lastMonth': {
+            startDate.setMonth(startDate.getMonth() - 1);
+            startDate.setDate(1);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 1);
+            endDate.setDate(0);
+            endDate.setHours(23, 59, 59, 999);
+            result = `${startDate.toISOString()},${endDate.toISOString()}`;
+            break;
+          }
+          case 'thisYear':
+            startDate.setMonth(0, 1);
+            startDate.setHours(0, 0, 0, 0);
+            result = `${startDate.toISOString()},${now.toISOString()}`;
+            break;
+          case 'lastYear': {
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            startDate.setMonth(0, 1);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(startDate);
+            endDate.setMonth(11, 31);
+            endDate.setHours(23, 59, 59, 999);
+            result = `${startDate.toISOString()},${endDate.toISOString()}`;
+            break;
+          }
+          default:
+            return undefined;
+        }
+      }
+      break;
   }
 
   return result;

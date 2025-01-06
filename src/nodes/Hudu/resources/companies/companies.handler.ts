@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import { huduApiRequest, handleListing, processDateRange } from '../../utils/GenericFunctions';
 import type { CompaniesOperations } from './companies.types';
 
 export async function handleCompaniesOperation(
@@ -51,8 +51,26 @@ export async function handleCompaniesOperation(
         ...filters,
       };
 
-      if (filters.updatedAt) {
-        qs.updated_at = filters.updatedAt;
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          });
+
+          qs.updated_at = dateRange || undefined;
+        } else {
+          qs.updated_at = undefined;
+        }
       }
 
       if (filters.idInIntegration) {

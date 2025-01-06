@@ -42,21 +42,12 @@ export async function handleArticlesOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
 
-      console.log('Initial filters:', JSON.stringify(filters, null, 2));
-
       // Process date range if present
       if (filters.updated_at) {
-        console.log('Raw updated_at filter:', JSON.stringify(filters.updated_at, null, 2));
         const updatedAtFilter = filters.updated_at as IDataObject;
-        
+
         if (updatedAtFilter.range) {
-          console.log('Range object:', JSON.stringify(updatedAtFilter.range, null, 2));
           const rangeObj = updatedAtFilter.range as IDataObject;
-          
-          // Special logging for last7d
-          if (rangeObj.mode === 'preset' && rangeObj.preset === 'last7d') {
-            console.log('Last 7 Days filter detected');
-          }
 
           const dateRange = processDateRange({
             range: {
@@ -68,22 +59,11 @@ export async function handleArticlesOperation(
             },
           });
 
-          if (dateRange) {
-            console.log('Processed date range:', dateRange);
-            filters.updated_at = dateRange;
-          } else {
-            console.log('Date range processing returned undefined');
-            filters.updated_at = undefined;
-          }
+          filters.updated_at = dateRange || undefined;
         } else {
-          console.log('No range found in updated_at filter');
           filters.updated_at = undefined;
         }
-      } else {
-        console.log('No updated_at filter found in filters object');
       }
-
-      console.log('Final filters:', JSON.stringify(filters, null, 2));
 
       responseData = await handleListing.call(
         this,

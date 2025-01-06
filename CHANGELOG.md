@@ -4,27 +4,37 @@ All notable changes to this project will be documented in this file.
 
 #------ CURRENT DEVELOPMENT ------#
 
-## [Unreleased]
 
-### TODO
-- Implement standardised date range filters for all resources that support it:
-  - Articles (✓ completed)
+#------ RELEASED VERSIONS ------#
+
+## [1.0.4] - 2025-01-06
+
+### Added
+- Implemented comprehensive date range filtering across all supported resources:
+  - Articles
   - Asset Layouts
   - Asset Passwords
   - Assets
   - Companies
-  - IP Addresses (both created_at and updated_at)
-  - Networks (both created_at and updated_at)
-  - Rack Storages (both created_at and updated_at)
-  - Rack Storage Items (both created_at and updated_at)
+  - IP Addresses
+  - Networks
+  - Rack Storages
+  - Rack Storage Items
   - Websites
-  Each implementation should include:
-  - Exact date matching
-  - Date range with start and end
-  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
-  - Proper date format handling (ISO 8601)
 
-#------ RELEASED VERSIONS ------#
+  Each implementation includes:
+  - Exact date matching with ISO 8601 format
+  - Flexible date range filtering with start and end dates
+  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
+  - Support for both created_at and updated_at fields where applicable
+
+### Changed
+- Enhanced code quality by removing console logging statements from:
+  - GenericFunctions.ts
+  - articles.handler.ts
+  - asset_layouts.handler.ts
+- Standardised date range filter structure across all resources for consistent behaviour
+- Unified date filtering implementation to match the Articles resource pattern
 
 ## [1.0.3] - 2025-01-05
 

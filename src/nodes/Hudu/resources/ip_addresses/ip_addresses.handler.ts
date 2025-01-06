@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import { huduApiRequest, processDateRange } from '../../utils/GenericFunctions';
 import type { IpAddressOperations } from './ip_addresses.types';
 
 export async function handleIpAddressesOperation(
@@ -15,6 +15,50 @@ export async function handleIpAddressesOperation(
       const qs: IDataObject = {
         ...filters,
       };
+
+      if (filters.created_at) {
+        const createdAtFilter = filters.created_at as IDataObject;
+
+        if (createdAtFilter.range) {
+          const rangeObj = createdAtFilter.range as IDataObject;
+
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          });
+
+          qs.created_at = dateRange || undefined;
+        } else {
+          qs.created_at = undefined;
+        }
+      }
+
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          });
+
+          qs.updated_at = dateRange || undefined;
+        } else {
+          qs.updated_at = undefined;
+        }
+      }
 
       responseData = await huduApiRequest.call(
         this,
