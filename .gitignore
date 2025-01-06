@@ -63,6 +63,7 @@ Thumbs.db
 
 # Documentation
 .docs/
+release-steps.md
 
 # Cache
 .cache/

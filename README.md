@@ -1,14 +1,12 @@
 # n8n-nodes-hudu
 
-This is an n8n community node (v1.0.0). It lets you use Hudu in your n8n workflows.
+This is an n8n community node that lets you use Hudu in your n8n workflows.
 
 [Hudu](https://www.hudu.com/) is a modern documentation platform for IT.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-This node was built against Hudu v2.34.4. Future versions of Hudu may not be 100% compatible without node updates.
-
-> **Note:** This is version 1.0.0, so some bugs are expected. Please report any issues on the [GitHub repository](https://github.com/msoukhomlinov/n8n-nodes-hudu).
+This node was built against Hudu v2.34.4 and is currently at version 1.0.4. Future versions of Hudu may not be 100% compatible without node updates.
 
 ## Installation
 
@@ -131,11 +129,23 @@ To use this node, you need to:
 
 ## Features
 
+- Comprehensive date range filtering across resources:
+  - Articles: Filter by `created_at` and `updated_at`
+  - Asset Layouts: Filter by `created_at` and `updated_at`
+  - Asset Passwords: Filter by `created_at` and `updated_at`
+  - Assets: Filter by `created_at` and `updated_at`
+  - Companies: Filter by `created_at` and `updated_at`
+  - IP Addresses: Filter by `created_at` and `updated_at`
+  - Networks: Filter by `created_at` and `updated_at`
+  - Rack Storages: Filter by `created_at` and `updated_at`
+  - Rack Storage Items: Filter by `created_at` and `updated_at`
+  - Websites: Filter by `created_at` and `updated_at`
 - Pagination support for applicable resources
 - Comprehensive error handling
-- Filtering capabilities for relevant operations
+- Advanced filtering capabilities for all resources
 - Supports both single and bulk operations
 - Automatic rate limiting and request optimisation
+- Standardised date range filter structure across all resources
 
 ## Resources
 
