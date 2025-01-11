@@ -14,10 +14,10 @@ export const matchersOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Get all matchers for an integration',
-        action: 'Get all matchers',
+        description: 'Get many matchers for an integration',
+        action: 'Get many matchers',
       },
       {
         name: 'Update',
@@ -99,11 +99,17 @@ export const matchersFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company Name or ID',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Identifier',
@@ -117,8 +123,8 @@ export const matchersFields: INodeProperties[] = [
         displayName: 'Matched',
         name: 'matched',
         type: 'boolean',
-        default: undefined,
-        description: 'Filter by whether the company has already been matched',
+        default: false,
+        description: 'Whether the company has already been matched',
       },
       {
         displayName: 'Sync ID',
@@ -162,14 +168,17 @@ export const matchersFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the matcher',
+        description: 'The company to associate with the matcher. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Identifier',
@@ -179,11 +188,17 @@ export const matchersFields: INodeProperties[] = [
         description: 'The updated identifier',
       },
       {
-        displayName: 'Potential Company ID',
+        displayName: 'Potential Company Name or ID',
         name: 'potential_company_id',
-        type: 'number',
-        default: undefined,
-        description: 'The updated potential company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'The potential company to be matched. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Sync ID',

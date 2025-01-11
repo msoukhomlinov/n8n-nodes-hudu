@@ -5,6 +5,7 @@ import type {
   INodeTypeDescription,
   IDataObject,
 } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 // Import all descriptions
 import * as descriptions from './descriptions';
@@ -15,6 +16,7 @@ import * as resources from './resources';
 // Import option loaders
 import { getUsers } from './optionLoaders/users';
 import { getCompanies } from './optionLoaders/companies';
+import { getAssetLayouts, getAssetLayoutFields, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -36,6 +38,12 @@ export class Hudu implements INodeType {
         required: true,
       },
     ],
+    codex: {
+      categories: ['Communication'],
+      subcategories: {
+        Communication: ['Documentation']
+      },
+    },
     requestDefaults: {
       baseURL: '={{$credentials.baseUrl}}/api/v1',
       headers: {
@@ -50,7 +58,7 @@ export class Hudu implements INodeType {
         noDataExpression: true,
         options: [
           {
-            name: 'Activity Logs',
+            name: 'Activity Log',
             value: 'activity_logs',
           },
           {
@@ -58,84 +66,36 @@ export class Hudu implements INodeType {
             value: 'api_info',
           },
           {
-            name: 'Articles',
+            name: 'Article',
             value: 'articles',
-          },
-          {
-            name: 'Asset Layout',
-            value: 'asset_layouts',
-          },
-          {
-            name: 'Asset Password',
-            value: 'asset_passwords',
           },
           {
             name: 'Asset',
             value: 'assets',
           },
           {
-            name: 'Card',
-            value: 'cards',
+            name: 'Asset Layout',
+            value: 'asset_layouts',
+          },
+          {
+            name: 'Asset Layout Field',
+            value: 'asset_layout_fields',
+          },
+          {
+            name: 'Asset Password',
+            value: 'asset_passwords',
           },
           {
             name: 'Company',
             value: 'companies',
           },
           {
-            name: 'Expiration',
-            value: 'expirations',
-          },
-          {
             name: 'Folder',
             value: 'folders',
           },
           {
-            name: 'IP Address',
-            value: 'ipAddresses',
-          },
-          {
-            name: 'Magic Dash',
-            value: 'magic_dash',
-          },
-          {
-            name: 'Matcher',
-            value: 'matchers',
-          },
-          {
-            name: 'Network',
-            value: 'networks',
-          },
-          {
-            name: 'Password Folder',
-            value: 'password_folders',
-          },
-          {
-            name: 'Procedure',
-            value: 'procedures',
-          },
-          {
-            name: 'Procedure Task',
-            value: 'procedure_tasks',
-          },
-          {
-            name: 'Public Photo',
-            value: 'public_photos',
-          },
-          {
-            name: 'Rack Storage',
-            value: 'rack_storages',
-          },
-          {
-            name: 'Rack Storage Item',
-            value: 'rack_storage_items',
-          },
-          {
             name: 'Relation',
             value: 'relations',
-          },
-          {
-            name: 'Upload',
-            value: 'uploads',
           },
           {
             name: 'User',
@@ -153,6 +113,7 @@ export class Hudu implements INodeType {
       ...descriptions.apiInfoOperations,
       ...descriptions.articlesOperations,
       ...descriptions.assetLayoutOperations,
+      ...descriptions.assetLayoutFieldOperations,
       ...descriptions.assetPasswordOperations,
       ...descriptions.assetsOperations,
       ...descriptions.cardsOperations,
@@ -178,6 +139,7 @@ export class Hudu implements INodeType {
       ...descriptions.apiInfoFields,
       ...descriptions.articlesFields,
       ...descriptions.assetLayoutFields,
+      ...descriptions.assetLayoutFieldFields,
       ...descriptions.assetPasswordFields,
       ...descriptions.assetsFields,
       ...descriptions.cardsFields,
@@ -205,6 +167,9 @@ export class Hudu implements INodeType {
     loadOptions: {
       getUsers,
       getCompanies,
+      getAssetLayouts,
+      getAssetLayoutFields,
+      getAssetLayoutFieldValues,
     },
   };
 
@@ -212,37 +177,12 @@ export class Hudu implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
-    let operation:
-      | resources.ActivityLogsOperation
-      | resources.ApiInfoOperation
-      | resources.ArticlesOperation
-      | resources.AssetLayoutOperation
-      | resources.AssetPasswordOperation
-      | resources.AssetsOperations
-      | resources.CardsOperation
-      | resources.CompaniesOperations
-      | resources.ExpirationsOperations
-      | resources.FolderOperation
-      | resources.IpAddressOperations
-      | resources.MagicDashOperation
-      | resources.MatcherOperation
-      | resources.NetworksOperations
-      | resources.PasswordFoldersOperations
-      | resources.ProceduresOperations
-      | resources.ProcedureTasksOperations
-      | resources.PublicPhotoOperation
-      | resources.RackStorageOperation
-      | resources.RackStorageItemOperation
-      | resources.RelationOperation
-      | resources.UploadOperation
-      | resources.UserOperation
-      | resources.WebsiteOperation;
-
     for (let i = 0; i < items.length; i++) {
+      const resource = this.getNodeParameter('resource', i) as string;
+      const operation = this.getNodeParameter('operation', i) as string;
+
       try {
-        let responseData: IDataObject | IDataObject[];
-        const resource = this.getNodeParameter('resource', i) as string;
-        operation = this.getNodeParameter('operation', i) as typeof operation;
+        let responseData: IDataObject | IDataObject[] = {};
 
         switch (resource) {
           case 'activity_logs':
@@ -269,6 +209,13 @@ export class Hudu implements INodeType {
             responseData = await resources.handleAssetLayoutOperation.call(
               this,
               operation as resources.AssetLayoutOperation,
+              i,
+            );
+            break;
+          case 'asset_layout_fields':
+            responseData = await resources.handleAssetLayoutFieldOperation.call(
+              this,
+              operation as resources.AssetLayoutFieldOperation,
               i,
             );
             break;
@@ -413,30 +360,21 @@ export class Hudu implements INodeType {
             );
             break;
           default:
-            throw new Error(`The resource "${resource}" is not known!`);
+            throw new NodeOperationError(this.getNode(), `The resource "${resource}" is not known!`);
         }
 
-        // Handle array responses
-        if (Array.isArray(responseData)) {
-          returnData.push(
-            ...responseData.map((item) => ({
-              json: item,
-              pairedItem: { item: i },
-            })),
-          );
-        } else {
-          // Handle single item responses
-          returnData.push({
-            json: responseData,
-            pairedItem: { item: i },
-          });
-        }
+        const executionData = this.helpers.returnJsonArray(responseData).map((item) => ({
+          ...item,
+          pairedItem: { item: i },
+        }));
+        returnData.push(...executionData);
       } catch (error) {
         if (this.continueOnFail()) {
-          returnData.push({
-            json: { error: error.message },
+          const executionErrorData = this.helpers.returnJsonArray({ error: error.message }).map((item) => ({
+            ...item,
             pairedItem: { item: i },
-          });
+          }));
+          returnData.push(...executionErrorData);
           continue;
         }
         throw error;

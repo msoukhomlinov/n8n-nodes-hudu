@@ -20,10 +20,10 @@ export const publicPhotosOperations: INodeProperties[] = [
         action: 'Create a public photo',
       },
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Retrieve all public photos',
-        action: 'Get all public photos',
+        description: 'Retrieve many public photos',
+        action: 'Get many public photos',
       },
       {
         name: 'Update',
@@ -161,7 +161,6 @@ export const publicPhotosFields: INodeProperties[] = [
         operation: ['update'],
       },
     },
-    required: true,
     default: '',
     description: 'The updated type of record the photo is associated with (e.g., Article)',
   },
@@ -175,8 +174,7 @@ export const publicPhotosFields: INodeProperties[] = [
         operation: ['update'],
       },
     },
-    required: true,
     default: 0,
-    description: 'The updated ID of the record the photo is associated with',
+    description: 'The ID of the record the photo will be associated with',
   },
 ];

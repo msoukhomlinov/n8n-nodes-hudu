@@ -13,13 +13,6 @@ export const ipAddressOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description:
-          '⚠️ Retrieve all IP addresses (no pagination support - may return large datasets)',
-        action: 'Get all IP addresses',
-      },
-      {
         name: 'Create',
         value: 'create',
         description: 'Create a new IP address',
@@ -36,6 +29,12 @@ export const ipAddressOperations: INodeProperties[] = [
         value: 'get',
         description: 'Retrieve a single IP address',
         action: 'Get an IP address',
+      },
+      {
+        name: 'Get Many',
+        value: 'getAll',
+        description: '⚠️ Retrieve many IP addresses (no pagination support - may return large datasets)',
+        action: 'Get many IP addresses',
       },
       {
         name: 'Update',
@@ -82,19 +81,155 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'Filter by asset ID',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company Name or ID',
         name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'Filter by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Created At',
         name: 'created_at',
-        type: 'string',
-        default: '',
-        description:
-          'Filter by creation date (ISO 8601 format). Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Filter Type',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter IP addresses created within a range or at an exact time',
       },
       {
         displayName: 'FQDN',
@@ -114,19 +249,11 @@ export const ipAddressFields: INodeProperties[] = [
         displayName: 'Status',
         name: 'status',
         type: 'options',
-        default: '',
+        default: 'unassigned',
         options: [
-          {
-            name: 'Unassigned',
-            value: 'unassigned',
-          },
           {
             name: 'Assigned',
             value: 'assigned',
-          },
-          {
-            name: 'Reserved',
-            value: 'reserved',
           },
           {
             name: 'Deprecated',
@@ -137,8 +264,16 @@ export const ipAddressFields: INodeProperties[] = [
             value: 'dhcp',
           },
           {
+            name: 'Reserved',
+            value: 'reserved',
+          },
+          {
             name: 'SLAAC',
             value: 'slaac',
+          },
+          {
+            name: 'Unassigned',
+            value: 'unassigned',
           },
         ],
         description: 'Filter by IP address status',
@@ -146,10 +281,170 @@ export const ipAddressFields: INodeProperties[] = [
       {
         displayName: 'Updated At',
         name: 'updated_at',
-        type: 'string',
-        default: '',
-        description:
-          'Filter by last update date (ISO 8601 format). Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Mode',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the last 14 days',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the last 24 hours',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the last 30 days',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the last 48 hours',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the last 60 days',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the last 90 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter IP addresses updated within a range or at an exact time',
       },
     ],
   },
@@ -179,16 +474,8 @@ export const ipAddressFields: INodeProperties[] = [
     default: 'unassigned',
     options: [
       {
-        name: 'Unassigned',
-        value: 'unassigned',
-      },
-      {
         name: 'Assigned',
         value: 'assigned',
-      },
-      {
-        name: 'Reserved',
-        value: 'reserved',
       },
       {
         name: 'Deprecated',
@@ -199,8 +486,16 @@ export const ipAddressFields: INodeProperties[] = [
         value: 'dhcp',
       },
       {
+        name: 'Reserved',
+        value: 'reserved',
+      },
+      {
         name: 'SLAAC',
         value: 'slaac',
+      },
+      {
+        name: 'Unassigned',
+        value: 'unassigned',
       },
     ],
     displayOptions: {
@@ -212,21 +507,24 @@ export const ipAddressFields: INodeProperties[] = [
     description: 'The status of the IP address',
   },
   {
-    displayName: 'Company',
+    displayName: 'Company Name or ID',
     name: 'company_id',
     type: 'options',
     typeOptions: {
       loadOptionsMethod: 'getCompanies',
-    },
-    displayOptions: {
-      show: {
-        resource: ['ipAddresses'],
-        operation: ['create'],
+      loadOptionsParameters: {
+        includeBlank: true,
       },
     },
     required: true,
     default: '',
-    description: 'The company to associate with the IP address',
+    displayOptions: {
+      show: {
+        resource: ['ipAddresses'],
+        operation: ['create', 'update'],
+      },
+    },
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   {
     displayName: 'Additional Fields',
@@ -242,25 +540,11 @@ export const ipAddressFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'FQDN',
-        name: 'fqdn',
+        displayName: 'Address',
+        name: 'address',
         type: 'string',
         default: '',
-        description: 'The Fully Qualified Domain Name associated with the IP address',
-      },
-      {
-        displayName: 'Description',
-        name: 'description',
-        type: 'string',
-        default: '',
-        description: 'A brief description of the IP address',
-      },
-      {
-        displayName: 'Comments',
-        name: 'comments',
-        type: 'string',
-        default: '',
-        description: 'Additional comments about the IP address',
+        description: 'The IP address',
       },
       {
         displayName: 'Asset ID',
@@ -270,11 +554,78 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'The identifier of the asset associated with this IP address',
       },
       {
+        displayName: 'Comments',
+        name: 'comments',
+        type: 'string',
+        default: '',
+        description: 'Additional comments about the IP address',
+      },
+      {
+        displayName: 'Company Name or ID',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+      },
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'A brief description of the IP address',
+      },
+      {
+        displayName: 'FQDN',
+        name: 'fqdn',
+        type: 'string',
+        default: '',
+        description: 'The Fully Qualified Domain Name associated with the IP address',
+      },
+      {
         displayName: 'Network ID',
         name: 'network_id',
         type: 'number',
         default: 0,
         description: 'The identifier of the network to which this IP address belongs',
+      },
+      {
+        displayName: 'Status',
+        name: 'status',
+        type: 'options',
+        default: 'unassigned',
+        options: [
+          {
+            name: 'Assigned',
+            value: 'assigned',
+          },
+          {
+            name: 'Deprecated',
+            value: 'deprecated',
+          },
+          {
+            name: 'DHCP',
+            value: 'dhcp',
+          },
+          {
+            name: 'Reserved',
+            value: 'reserved',
+          },
+          {
+            name: 'SLAAC',
+            value: 'slaac',
+          },
+          {
+            name: 'Unassigned',
+            value: 'unassigned',
+          },
+        ],
+        description: 'The status of the IP address',
       },
     ],
   },
@@ -335,22 +686,62 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'The IP address',
       },
       {
+        displayName: 'Asset ID',
+        name: 'asset_id',
+        type: 'number',
+        default: 0,
+        description: 'The identifier of the asset associated with this IP address',
+      },
+      {
+        displayName: 'Comments',
+        name: 'comments',
+        type: 'string',
+        default: '',
+        description: 'Additional comments about the IP address',
+      },
+      {
+        displayName: 'Company Name or ID',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+      },
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'A brief description of the IP address',
+      },
+      {
+        displayName: 'FQDN',
+        name: 'fqdn',
+        type: 'string',
+        default: '',
+        description: 'The Fully Qualified Domain Name associated with the IP address',
+      },
+      {
+        displayName: 'Network ID',
+        name: 'network_id',
+        type: 'number',
+        default: 0,
+        description: 'The identifier of the network to which this IP address belongs',
+      },
+      {
         displayName: 'Status',
         name: 'status',
         type: 'options',
-        default: '',
+        default: 'unassigned',
         options: [
-          {
-            name: 'Unassigned',
-            value: 'unassigned',
-          },
           {
             name: 'Assigned',
             value: 'assigned',
-          },
-          {
-            name: 'Reserved',
-            value: 'reserved',
           },
           {
             name: 'Deprecated',
@@ -361,53 +752,19 @@ export const ipAddressFields: INodeProperties[] = [
             value: 'dhcp',
           },
           {
+            name: 'Reserved',
+            value: 'reserved',
+          },
+          {
             name: 'SLAAC',
             value: 'slaac',
           },
+          {
+            name: 'Unassigned',
+            value: 'unassigned',
+          },
         ],
         description: 'The status of the IP address',
-      },
-      {
-        displayName: 'FQDN',
-        name: 'fqdn',
-        type: 'string',
-        default: '',
-        description: 'The Fully Qualified Domain Name associated with the IP address',
-      },
-      {
-        displayName: 'Description',
-        name: 'description',
-        type: 'string',
-        default: '',
-        description: 'A brief description of the IP address',
-      },
-      {
-        displayName: 'Comments',
-        name: 'comments',
-        type: 'string',
-        default: '',
-        description: 'Additional comments about the IP address',
-      },
-      {
-        displayName: 'Asset ID',
-        name: 'asset_id',
-        type: 'number',
-        default: 0,
-        description: 'The identifier of the asset associated with this IP address',
-      },
-      {
-        displayName: 'Network ID',
-        name: 'network_id',
-        type: 'number',
-        default: 0,
-        description: 'The identifier of the network to which this IP address belongs',
-      },
-      {
-        displayName: 'Company ID',
-        name: 'company_id',
-        type: 'number',
-        default: 0,
-        description: 'The identifier of the company that owns this IP address',
       },
     ],
   },

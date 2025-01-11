@@ -1,5 +1,5 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { handleListing } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { handleGetAllOperation } from '../../utils/operations';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { ExpirationsOperations } from './expirations.types';
 
@@ -8,6 +8,7 @@ export async function handleExpirationOperation(
   operation: ExpirationsOperations,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
+  const resourceEndpoint = '/expirations';
   let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
@@ -16,12 +17,10 @@ export async function handleExpirationOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-      responseData = await handleListing.call(
+      responseData = await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/expirations',
+        resourceEndpoint,
         'expirations',
-        {},
         filters,
         returnAll,
         limit,

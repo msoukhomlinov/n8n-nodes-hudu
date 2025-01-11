@@ -1,6 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-core';
 import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import { huduApiRequest, handleListing } from '../../utils';
 import type { PublicPhotoOperation } from './public_photos.types';
 
 export async function handlePublicPhotoOperation(
@@ -55,7 +55,7 @@ export async function handlePublicPhotoOperation(
         this,
         'PUT' as IHttpRequestMethods,
         `/public_photos/${id}`,
-        formData,
+        { public_photo: formData },
       );
       break;
     }

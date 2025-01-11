@@ -14,10 +14,10 @@ export const uploadsOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Get all uploads',
-        action: 'Get all uploads',
+        description: 'Get many uploads',
+        action: 'Get many uploads',
       },
       {
         name: 'Get',

@@ -14,12 +14,6 @@ export const assetsOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Retrieve a list of assets',
-        action: 'Retrieve a list of assets',
-      },
-      {
         name: 'Archive',
         value: 'archive',
         description: 'Archive an asset',
@@ -44,6 +38,12 @@ export const assetsOperations: INodeProperties[] = [
         action: 'Get an asset',
       },
       {
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Retrieve a list of assets',
+        action: 'Retrieve a list of assets',
+      },
+      {
         name: 'Unarchive',
         value: 'unarchive',
         description: 'Unarchive an asset',
@@ -61,7 +61,67 @@ export const assetsOperations: INodeProperties[] = [
 ];
 
 export const assetsFields: INodeProperties[] = [
-  // Return All option for GetAll operation
+  // ----------------------------------
+  //         assets:create
+  // ----------------------------------
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create'],
+      },
+    },
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
+  {
+    displayName: 'Asset Layout Name or ID',
+    name: 'asset_layout_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getAssetLayouts',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create'],
+      },
+    },
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
+  {
+    displayName: 'Name',
+    name: 'name',
+    type: 'string',
+    required: true,
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create'],
+      },
+    },
+    description: 'The name of the new asset',
+  },
+
+  // ----------------------------------
+  //         assets:getAll
+  // ----------------------------------
   {
     displayName: 'Return All',
     name: 'returnAll',
@@ -93,7 +153,47 @@ export const assetsFields: INodeProperties[] = [
     description: 'Max number of results to return',
   },
 
-  // Filters for GetAll operation
+  // ----------------------------------
+  //         assets:single operations
+  // ----------------------------------
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['get', 'update', 'delete', 'archive', 'unarchive'],
+      },
+    },
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
+  {
+    displayName: 'Asset ID',
+    name: 'id',
+    type: 'number',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['get', 'update', 'delete', 'archive', 'unarchive'],
+      },
+    },
+    default: 0,
+    description: 'The ID of the asset to operate on',
+  },
+
+  // ----------------------------------
+  //         assets:filters
+  // ----------------------------------
   {
     displayName: 'Filters',
     name: 'filters',
@@ -112,52 +212,40 @@ export const assetsFields: INodeProperties[] = [
         name: 'archived',
         type: 'boolean',
         default: false,
-        description: 'Set to true to display only archived assets',
+        description: 'Whether to display only archived assets',
       },
       {
-        displayName: 'Asset Layout ID',
+        displayName: 'Asset Layout Name or ID',
         name: 'asset_layout_id',
-        type: 'number',
-        default: undefined,
-        description: "Filter assets by their associated asset layout's ID",
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getAssetLayouts',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'Filter assets by the parent company',
-      },
-      {
-        displayName: 'ID',
-        name: 'id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter assets by their ID',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Name',
         name: 'name',
         type: 'string',
         default: '',
-        description: 'Filter assets by their name',
-      },
-      {
-        displayName: 'Page',
-        name: 'page',
-        type: 'number',
-        default: HUDU_API_CONSTANTS.DEFAULT_PAGE,
-        description: 'Specify the page number of results to return',
-      },
-      {
-        displayName: 'Page Size',
-        name: 'page_size',
-        type: 'number',
-        default: HUDU_API_CONSTANTS.PAGE_SIZE,
-        description: 'Limit the number of assets returned per page',
+        description: 'Filter assets by name',
       },
       {
         displayName: 'Primary Serial',
@@ -183,11 +271,353 @@ export const assetsFields: INodeProperties[] = [
       {
         displayName: 'Updated At',
         name: 'updated_at',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Filter Type',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the last 14 days',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the last 24 hours',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the last 30 days',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the last 48 hours',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the last 60 days',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the last 90 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter assets updated within a range or at an exact time',
+      },
+    ],
+  },
+
+  // ----------------------------------
+  //         assets:create/update fields
+  // ----------------------------------
+  {
+    displayName: 'Additional Fields',
+    name: 'additionalFields',
+    type: 'collection',
+    placeholder: 'Add Field',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create', 'update'],
+      },
+    },
+    options: [
+      {
+        displayName: 'Custom Fields',
+        name: 'customFields',
+        placeholder: 'Add Custom Field',
+        type: 'fixedCollection',
+        typeOptions: {
+          multipleValues: true,
+        },
+        default: {},
+        options: [
+          {
+            name: 'field',
+            displayName: 'Field',
+            values: [
+              {
+                displayName: 'Field Name',
+                name: 'label',
+                type: 'string',
+                default: '',
+                description: 'Name of the custom field',
+              },
+              {
+                displayName: 'Field Type',
+                name: 'type',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Checkbox',
+                    value: 'checkbox',
+                  },
+                  {
+                    name: 'Date',
+                    value: 'date',
+                  },
+                  {
+                    name: 'Email',
+                    value: 'email',
+                  },
+                  {
+                    name: 'Number',
+                    value: 'number',
+                  },
+                  {
+                    name: 'Password',
+                    value: 'password',
+                  },
+                  {
+                    name: 'Rich Text',
+                    value: 'rich_text',
+                  },
+                  {
+                    name: 'Text',
+                    value: 'text',
+                  },
+                  {
+                    name: 'URL',
+                    value: 'url',
+                  },
+                ],
+                default: 'text',
+                description: 'Type of the custom field',
+              },
+              // Text value (shown for text, rich_text, email, url)
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'string',
+                displayOptions: {
+                  show: {
+                    type: ['text', 'rich_text', 'email', 'url'],
+                  },
+                },
+                default: '',
+                description: 'Value for the text field',
+              },
+              // Number value
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'number',
+                displayOptions: {
+                  show: {
+                    type: ['number'],
+                  },
+                },
+                default: 0,
+                description: 'Value for the number field',
+              },
+              // Date value
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    type: ['date'],
+                  },
+                },
+                default: '',
+                description: 'Value for the date field',
+              },
+              // Checkbox value
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'boolean',
+                displayOptions: {
+                  show: {
+                    type: ['checkbox'],
+                  },
+                },
+                default: false,
+                description: 'Whether to check this field',
+              },
+              // Password value
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'string',
+                typeOptions: {
+                  password: true,
+                },
+                displayOptions: {
+                  show: {
+                    type: ['password'],
+                  },
+                },
+                default: '',
+                description: 'Value for the password field',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        displayName: 'Primary Mail',
+        name: 'primary_mail',
         type: 'string',
         default: '',
-        description:
-          "Filter assets updated within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match. Both 'start_datetime' and 'end_datetime' should be in ISO 8601 format.",
+        description: 'The primary email associated with the asset',
+      },
+      {
+        displayName: 'Primary Manufacturer',
+        name: 'primary_manufacturer',
+        type: 'string',
+        default: '',
+        description: 'The primary manufacturer of the asset',
+      },
+      {
+        displayName: 'Primary Model',
+        name: 'primary_model',
+        type: 'string',
+        default: '',
+        description: 'The primary model of the asset',
+      },
+      {
+        displayName: 'Primary Serial',
+        name: 'primary_serial',
+        type: 'string',
+        default: '',
+        description: 'The primary serial number of the asset',
       },
     ],
   },
 ];
+

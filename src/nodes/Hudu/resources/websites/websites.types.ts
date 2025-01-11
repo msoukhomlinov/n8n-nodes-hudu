@@ -1,4 +1,4 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 export interface IWebsite extends IDataObject {
   id?: number; // The unique identifier of the website

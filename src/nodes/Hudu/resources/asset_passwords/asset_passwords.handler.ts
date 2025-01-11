@@ -1,13 +1,23 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import { processDateRange } from '../../utils/index';
+import {
+  handleGetAllOperation,
+  handleGetOperation,
+  handleCreateOperation,
+  handleUpdateOperation,
+  handleDeleteOperation,
+  handleArchiveOperation,
+} from '../../utils/operations';
 import type { AssetPasswordOperation } from './asset_passwords.types';
+import type { DateRangePreset } from '../../utils/dateUtils';
 
 export async function handleAssetPasswordOperation(
   this: IExecuteFunctions,
   operation: AssetPasswordOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
+  const resourceEndpoint = '/asset_passwords';
   let responseData: IDataObject | IDataObject[] = {};
 
   try {
@@ -17,12 +27,33 @@ export async function handleAssetPasswordOperation(
         const filters = this.getNodeParameter('filters', i) as IDataObject;
         const limit = this.getNodeParameter('limit', i, 25) as number;
 
-        responseData = await handleListing.call(
+        // Process date range if present
+        if (filters.updated_at) {
+          const updatedAtFilter = filters.updated_at as IDataObject;
+
+          if (updatedAtFilter.range) {
+            const rangeObj = updatedAtFilter.range as IDataObject;
+
+            const dateRange = processDateRange({
+              range: {
+                mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+                exact: rangeObj.exact as string,
+                start: rangeObj.start as string,
+                end: rangeObj.end as string,
+                preset: rangeObj.preset as DateRangePreset,
+              },
+            });
+
+            filters.updated_at = dateRange || undefined;
+          } else {
+            filters.updated_at = undefined;
+          }
+        }
+
+        responseData = await handleGetAllOperation.call(
           this,
-          'GET' as IHttpRequestMethods,
-          '/asset_passwords',
+          resourceEndpoint,
           'asset_passwords',
-          {},
           filters,
           returnAll,
           limit,
@@ -35,7 +66,7 @@ export async function handleAssetPasswordOperation(
         if (!id) {
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
-        responseData = await huduApiRequest.call(this, 'GET', `/asset_passwords/${id}`);
+        responseData = await handleGetOperation.call(this, resourceEndpoint, id);
         break;
       }
 
@@ -50,15 +81,13 @@ export async function handleAssetPasswordOperation(
 
         // Combine all fields
         const body = {
-          asset_password: {
-            name,
-            password,
-            company_id: companyId,
-            ...additionalFields,
-          },
+          name,
+          password,
+          company_id: companyId,
+          ...additionalFields,
         };
 
-        responseData = await huduApiRequest.call(this, 'POST', '/asset_passwords', body);
+        responseData = await handleCreateOperation.call(this, resourceEndpoint, { asset_password: body });
         break;
       }
 
@@ -69,11 +98,7 @@ export async function handleAssetPasswordOperation(
         }
 
         const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
-        const body = {
-          asset_password: updateFields,
-        };
-
-        responseData = await huduApiRequest.call(this, 'PUT', `/asset_passwords/${id}`, body);
+        responseData = await handleUpdateOperation.call(this, resourceEndpoint, id, { asset_password: updateFields });
         break;
       }
 
@@ -82,7 +107,7 @@ export async function handleAssetPasswordOperation(
         if (!id) {
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
-        responseData = await huduApiRequest.call(this, 'DELETE', `/asset_passwords/${id}`);
+        responseData = await handleDeleteOperation.call(this, resourceEndpoint, id);
         break;
       }
 
@@ -91,7 +116,7 @@ export async function handleAssetPasswordOperation(
         if (!id) {
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
-        responseData = await huduApiRequest.call(this, 'PUT', `/asset_passwords/${id}/archive`);
+        responseData = await handleArchiveOperation.call(this, resourceEndpoint, id, true);
         break;
       }
 
@@ -100,7 +125,7 @@ export async function handleAssetPasswordOperation(
         if (!id) {
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
-        responseData = await huduApiRequest.call(this, 'PUT', `/asset_passwords/${id}/unarchive`);
+        responseData = await handleArchiveOperation.call(this, resourceEndpoint, id, false);
         break;
       }
 

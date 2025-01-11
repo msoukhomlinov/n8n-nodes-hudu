@@ -1,6 +1,13 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { processDateRange } from '../../utils';
+import type { IDateRange } from '../../utils';
+import {
+  handleCreateOperation,
+  handleDeleteOperation,
+  handleGetOperation,
+  handleGetAllOperation,
+  handleUpdateOperation,
+} from '../../utils/operations';
 import type { RackStorageOperation } from './rack_storages.types';
 
 export async function handleRackStorageOperation(
@@ -8,7 +15,7 @@ export async function handleRackStorageOperation(
   operation: RackStorageOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData: IDataObject | IDataObject[];
+  const resourceEndpoint = '/rack_storages';
 
   switch (operation) {
     case 'getAll': {
@@ -16,73 +23,96 @@ export async function handleRackStorageOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
 
-      responseData = await handleListing.call(
+      if (filters.company_id) {
+        filters.company_id = Number.parseInt(filters.company_id as string, 10);
+      }
+
+      // Process date range filters
+      if (filters.created_at) {
+        const createdAtFilter = filters.created_at as IDataObject;
+        if (createdAtFilter.range) {
+          const rangeObj = createdAtFilter.range as IDataObject;
+          filters.created_at = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          } as IDateRange);
+        }
+      }
+
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+          filters.updated_at = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as string,
+            },
+          } as IDateRange);
+        }
+      }
+
+      return await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/rack_storages',
+        resourceEndpoint,
         '',
-        {},
         filters,
         returnAll,
         limit,
       );
-      break;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/rack_storages/${id}`,
-      );
-      break;
+      return await handleGetOperation.call(this, resourceEndpoint, id);
     }
 
     case 'create': {
+      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+      if (additionalFields.company_id) {
+        additionalFields.company_id = Number.parseInt(additionalFields.company_id as string, 10);
+      }
+
       const body = {
         rack_storage: {
           name: this.getNodeParameter('name', i) as string,
           location_id: this.getNodeParameter('locationId', i) as number,
-          ...(this.getNodeParameter('additionalFields', i) as IDataObject),
+          ...additionalFields,
         },
       };
-      responseData = await huduApiRequest.call(
-        this,
-        'POST' as IHttpRequestMethods,
-        '/rack_storages',
-        body,
-      );
-      break;
+      return await handleCreateOperation.call(this, resourceEndpoint, body);
     }
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+
+      if (updateFields.company_id) {
+        updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+      }
+
       const body = {
         rack_storage: {
           ...updateFields,
         },
       };
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/rack_storages/${id}`,
-        body,
-      );
-      break;
+      return await handleUpdateOperation.call(this, resourceEndpoint, id, body);
     }
 
     case 'delete': {
       const id = this.getNodeParameter('id', i) as number;
-      responseData = await huduApiRequest.call(
-        this,
-        'DELETE' as IHttpRequestMethods,
-        `/rack_storages/${id}`,
-      );
-      break;
+      return await handleDeleteOperation.call(this, resourceEndpoint, id);
     }
   }
 
-  return responseData;
+  // This should never be reached due to TypeScript's exhaustive check
+  throw new Error(`Unsupported operation ${operation}`);
 }

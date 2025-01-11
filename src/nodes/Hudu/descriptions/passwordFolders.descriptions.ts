@@ -19,10 +19,10 @@ export const passwordFoldersOperations: INodeProperties[] = [
         action: 'Get a password folder',
       },
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Get all password folders',
-        action: 'Get all password folders',
+        description: 'Get many password folders',
+        action: 'Get many password folders',
       },
     ],
     default: 'getAll',
@@ -71,7 +71,7 @@ export const passwordFoldersFields: INodeProperties[] = [
     typeOptions: {
       minValue: 1,
     },
-    default: 25,
+    default: 50,
     description: 'Max number of results to return',
   },
   {
@@ -88,14 +88,17 @@ export const passwordFoldersFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the password folder',
+        description: 'The company to associate with the password folder. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Name',

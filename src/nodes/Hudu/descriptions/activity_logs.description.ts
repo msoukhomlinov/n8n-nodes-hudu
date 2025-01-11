@@ -14,10 +14,10 @@ export const activityLogsOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
         description: 'Retrieve a list of activity logs',
-        action: 'Get all activity logs',
+        action: 'Get many activity logs',
       },
       {
         name: 'Delete',
@@ -38,7 +38,7 @@ export const activityLogsFields: INodeProperties[] = [
     type: 'boolean',
     default: false,
     description:
-      'Whether to return all results or only up to a given limit. Use with caution - may return very high number of records',
+      'Whether to return all results or only up to a given limit. Use with caution - may return very high number of records.',
     displayOptions: {
       show: {
         resource: ['activity_logs'],
@@ -121,14 +121,14 @@ export const activityLogsFields: INodeProperties[] = [
         description: 'Filter by exact user email match',
       },
       {
-        displayName: 'User',
+        displayName: 'User Name or ID',
         name: 'user_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getUsers',
         },
         default: '',
-        description: 'Filter by user ID',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
     ],
   },

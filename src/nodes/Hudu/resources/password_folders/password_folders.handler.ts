@@ -1,5 +1,5 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { handleGetOperation, handleGetAllOperation } from '../../utils/operations';
 import type { PasswordFoldersOperations } from './password_folders.types';
 
 export async function handlePasswordFoldersOperation(
@@ -7,16 +7,13 @@ export async function handlePasswordFoldersOperation(
   operation: PasswordFoldersOperations,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
+  const resourceEndpoint = '/password_folders';
   let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'get': {
       const folderId = this.getNodeParameter('id', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/password_folders/${folderId}`,
-      );
+      responseData = await handleGetOperation.call(this, resourceEndpoint, folderId);
       break;
     }
 
@@ -29,12 +26,10 @@ export async function handlePasswordFoldersOperation(
         ...filters,
       };
 
-      responseData = await handleListing.call(
+      responseData = await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/password_folders',
+        resourceEndpoint,
         'password_folders',
-        {},
         qs,
         returnAll,
         limit,

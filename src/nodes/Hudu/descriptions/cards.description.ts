@@ -75,7 +75,7 @@ export const cardsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description:
-          'ID in the external integration. Must be present unless Integration Identifier is set',
+          'ID in the external integration. Must be present unless Integration Identifier is set.',
       },
       {
         displayName: 'Integration Identifier',
@@ -170,7 +170,7 @@ export const cardsFields: INodeProperties[] = [
         name: 'integration_id',
         type: 'string',
         default: '',
-        description: 'ID of the entity in the external integration.',
+        description: 'ID of the entity in the external integration',
       },
       {
         displayName: 'Integration Identifier',
@@ -178,7 +178,7 @@ export const cardsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description:
-          'Identifier of the entity in the external integration (if integration_id is not set).',
+          'Identifier of the entity in the external integration (if integration_id is not set)',
       },
     ],
   },

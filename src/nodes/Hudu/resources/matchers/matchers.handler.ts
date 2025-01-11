@@ -1,5 +1,6 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { handleUpdateOperation, handleDeleteOperation } from '../../utils/operations';
+import { handleMatcherGetAllOperation } from '../../utils/operations/matchers';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { MatcherOperation } from './matchers.types';
 
@@ -8,6 +9,7 @@ export async function handleMatcherOperation(
   operation: MatcherOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
+  const resourceEndpoint = '/matchers';
   let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
@@ -15,47 +17,15 @@ export async function handleMatcherOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
-
-      // integration_id is required
       const integrationId = this.getNodeParameter('integrationId', i) as number;
 
-      const queryParams: IDataObject = {
-        integration_id: integrationId,
-      };
-
-      // Add optional filters
-      if (filters.matched !== undefined) {
-        queryParams.matched = filters.matched;
-      }
-      if (filters.sync_id !== undefined) {
-        queryParams.sync_id = filters.sync_id;
-      }
-      if (filters.identifier !== undefined) {
-        queryParams.identifier = filters.identifier;
-      }
-      if (filters.company_id !== undefined) {
-        queryParams.company_id = filters.company_id;
-      }
-      if (!returnAll) {
-        queryParams.page_size = limit;
-      }
-
-      const response = await huduApiRequest.call(
+      responseData = await handleMatcherGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/matchers',
-        undefined,
-        queryParams,
+        integrationId,
+        filters,
+        returnAll,
+        limit,
       );
-
-      // Extract the matchers array from the response
-      responseData = Array.isArray(response)
-        ? response
-        : ((response as IDataObject).matchers as IDataObject[]) || [];
-
-      if (!returnAll && responseData.length > limit) {
-        responseData = responseData.slice(0, limit);
-      }
       break;
     }
 
@@ -67,10 +37,13 @@ export async function handleMatcherOperation(
       const matcherUpdate: IDataObject = {};
 
       if (updateFields.company_id !== undefined) {
-        matcherUpdate.company_id = updateFields.company_id;
+        matcherUpdate.company_id = Number.parseInt(updateFields.company_id as string, 10);
       }
       if (updateFields.potential_company_id !== undefined) {
-        matcherUpdate.potential_company_id = updateFields.potential_company_id;
+        matcherUpdate.potential_company_id = Number.parseInt(
+          updateFields.potential_company_id as string,
+          10,
+        );
       }
       if (updateFields.sync_id !== undefined) {
         matcherUpdate.sync_id = updateFields.sync_id;
@@ -79,23 +52,13 @@ export async function handleMatcherOperation(
         matcherUpdate.identifier = updateFields.identifier;
       }
 
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/matchers/${id}`,
-        { matcher: matcherUpdate },
-      );
+      responseData = await handleUpdateOperation.call(this, resourceEndpoint, id, { matcher: matcherUpdate });
       break;
     }
 
     case 'delete': {
       const id = this.getNodeParameter('id', i) as number;
-
-      responseData = await huduApiRequest.call(
-        this,
-        'DELETE' as IHttpRequestMethods,
-        `/matchers/${id}`,
-      );
+      responseData = await handleDeleteOperation.call(this, resourceEndpoint, id);
       break;
     }
   }

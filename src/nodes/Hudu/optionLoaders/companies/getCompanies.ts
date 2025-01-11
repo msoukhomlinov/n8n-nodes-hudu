@@ -1,6 +1,5 @@
 import type { ILoadOptionsFunctions, IDataObject } from 'n8n-workflow';
-import { LoggerProxy } from 'n8n-workflow';
-import { handleListing } from '../../utils/GenericFunctions';
+import { handleListing } from '../../utils';
 
 interface CompanyOption {
   name: string;
@@ -30,6 +29,10 @@ export async function getCompanies(this: ILoadOptionsFunctions) {
       0,
     )) as HuduCompany[];
 
+    if (!Array.isArray(companies)) {
+      return [];
+    }
+
     const mappedCompanies = companies
       .map((company) => ({
         name: `${company.name} (${company.id})`,
@@ -49,7 +52,6 @@ export async function getCompanies(this: ILoadOptionsFunctions) {
 
     return mappedCompanies;
   } catch (error) {
-    LoggerProxy.error('Error loading companies from Hudu API', { error });
     return [];
   }
 }

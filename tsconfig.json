@@ -26,6 +26,6 @@
     },
     "preserveSymlinks": true
   },
-  "include": ["credentials/**/*", "src/**/*", "index.ts"],
+  "include": ["credentials/**/*", "src/**/*", "index.ts", "tests/**/*"],
   "exclude": ["node_modules/**/*", "dist/**/*"]
 }

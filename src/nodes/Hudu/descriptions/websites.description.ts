@@ -14,10 +14,16 @@ export const websitesOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Get all websites',
-        action: 'Get all websites',
+        name: 'Create',
+        value: 'create',
+        description: 'Create a new website',
+        action: 'Create a new website',
+      },
+      {
+        name: 'Delete',
+        value: 'delete',
+        description: 'Delete a website',
+        action: 'Delete a website',
       },
       {
         name: 'Get',
@@ -26,22 +32,16 @@ export const websitesOperations: INodeProperties[] = [
         action: 'Get a website by ID',
       },
       {
-        name: 'Create',
-        value: 'create',
-        description: 'Create a new website',
-        action: 'Create a new website',
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Get many websites',
+        action: 'Get many websites',
       },
       {
         name: 'Update',
         value: 'update',
         description: 'Update a website',
         action: 'Update a website',
-      },
-      {
-        name: 'Delete',
-        value: 'delete',
-        description: 'Delete a website',
-        action: 'Delete a website',
       },
     ],
     default: 'getAll',
@@ -96,6 +96,150 @@ export const websitesFields: INodeProperties[] = [
     },
     options: [
       {
+        displayName: 'Created At',
+        name: 'created_at',
+        type: 'fixedCollection',
+        default: {},
+        description: 'Filter by creation date',
+        options: [
+          {
+            displayName: 'Date Range',
+            name: 'range',
+            values: [
+											{
+												displayName: 'End Date',
+												name: 'end',
+												type: 'dateTime',
+												default: '',
+												description: 'End date of the range (inclusive)',
+											},
+											{
+												displayName: 'Exact Date',
+												name: 'exact',
+												type: 'dateTime',
+												default: '',
+												description: 'The exact date to match',
+											},
+											{
+												displayName: 'Mode',
+												name: 'mode',
+												type: 'options',
+												options: [
+													{
+														name: 'Exact Date',
+														value: 'exact',
+														description: 'Match an exact date',
+													},
+													{
+														name: 'Date Range',
+														value: 'range',
+														description: 'Match a date range',
+													},
+													{
+														name: 'Preset Range',
+														value: 'preset',
+														description: 'Match a preset date range',
+													},
+												],
+												default: 'preset',
+												description: 'The mode to use for date filtering',
+											},
+											{
+												displayName: 'Preset Range',
+												name: 'preset',
+												type: 'options',
+												options: [
+													{
+														name: 'Last 14 Days',
+														value: 'last14d',
+														description: 'Created in the last 14 days',
+													},
+													{
+														name: 'Last 24 Hours',
+														value: 'last24h',
+														description: 'Created in the last 24 hours',
+													},
+													{
+														name: 'Last 30 Days',
+														value: 'last30d',
+														description: 'Created in the last 30 days',
+													},
+													{
+														name: 'Last 48 Hours',
+														value: 'last48h',
+														description: 'Created in the last 48 hours',
+													},
+													{
+														name: 'Last 60 Days',
+														value: 'last60d',
+														description: 'Created in the last 60 days',
+													},
+													{
+														name: 'Last 7 Days',
+														value: 'last7d',
+														description: 'Created in the last 7 days',
+													},
+													{
+														name: 'Last 90 Days',
+														value: 'last90d',
+														description: 'Created in the last 90 days',
+													},
+													{
+														name: 'Last Month',
+														value: 'lastMonth',
+														description: 'Created last month',
+													},
+													{
+														name: 'Last Week',
+														value: 'lastWeek',
+														description: 'Created last week',
+													},
+													{
+														name: 'Last Year',
+														value: 'lastYear',
+														description: 'Created last year',
+													},
+													{
+														name: 'This Month',
+														value: 'thisMonth',
+														description: 'Created this month',
+													},
+													{
+														name: 'This Week',
+														value: 'thisWeek',
+														description: 'Created this week',
+													},
+													{
+														name: 'This Year',
+														value: 'thisYear',
+														description: 'Created this year',
+													},
+													{
+														name: 'Today',
+														value: 'today',
+														description: 'Created today',
+													},
+													{
+														name: 'Yesterday',
+														value: 'yesterday',
+														description: 'Created yesterday',
+													},
+													],
+												default: 'today',
+												description: 'The preset range to match',
+											},
+											{
+												displayName: 'Start Date',
+												name: 'start',
+												type: 'dateTime',
+												default: '',
+												description: 'Start date of the range (inclusive)',
+											},
+									],
+          },
+        ],
+      },
+      {
         displayName: 'Name',
         name: 'name',
         type: 'string',
@@ -119,10 +263,170 @@ export const websitesFields: INodeProperties[] = [
       {
         displayName: 'Updated At',
         name: 'updated_at',
-        type: 'string',
-        default: '',
-        description:
-          'Filter websites updated within a range or at an exact time. Format: "start_datetime,end_datetime" for range, "exact_datetime" for exact match.',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Mode',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the last 14 days',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the last 24 hours',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the last 30 days',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the last 48 hours',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the last 60 days',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the last 90 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter websites updated within a range or at an exact time',
       },
     ],
   },
@@ -163,11 +467,14 @@ export const websitesFields: INodeProperties[] = [
     description: 'The URL of the website',
   },
   {
-    displayName: 'Company',
+    displayName: 'Company Name or ID',
     name: 'company_id',
     type: 'options',
     typeOptions: {
       loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
     },
     displayOptions: {
       show: {
@@ -177,7 +484,7 @@ export const websitesFields: INodeProperties[] = [
     },
     required: true,
     default: '',
-    description: 'The company to associate with the website',
+    description: 'The company to associate with the website. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',
@@ -192,20 +499,6 @@ export const websitesFields: INodeProperties[] = [
       },
     },
     options: [
-      {
-        displayName: 'Notes',
-        name: 'notes',
-        type: 'string',
-        default: '',
-        description: 'Additional notes about the website',
-      },
-      {
-        displayName: 'Paused',
-        name: 'paused',
-        type: 'boolean',
-        default: false,
-        description: 'Whether website monitoring is paused',
-      },
       {
         displayName: 'Disable DNS',
         name: 'disable_dns',
@@ -226,6 +519,20 @@ export const websitesFields: INodeProperties[] = [
         type: 'boolean',
         default: false,
         description: 'Whether WHOIS monitoring is disabled',
+      },
+      {
+        displayName: 'Notes',
+        name: 'notes',
+        type: 'string',
+        default: '',
+        description: 'Additional notes about the website',
+      },
+      {
+        displayName: 'Paused',
+        name: 'paused',
+        type: 'boolean',
+        default: false,
+        description: 'Whether website monitoring is paused',
       },
     ],
   },
@@ -247,35 +554,17 @@ export const websitesFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the website',
-      },
-      {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
-        default: '',
-        description: 'The URL of the website',
-      },
-      {
-        displayName: 'Notes',
-        name: 'notes',
-        type: 'string',
-        default: '',
-        description: 'Additional notes about the website',
-      },
-      {
-        displayName: 'Paused',
-        name: 'paused',
-        type: 'boolean',
-        default: false,
-        description: 'Whether website monitoring is paused',
+        description: 'The company to associate with the website. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Disable DNS',
@@ -297,6 +586,27 @@ export const websitesFields: INodeProperties[] = [
         type: 'boolean',
         default: false,
         description: 'Whether WHOIS monitoring is disabled',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'The URL of the website',
+      },
+      {
+        displayName: 'Notes',
+        name: 'notes',
+        type: 'string',
+        default: '',
+        description: 'Additional notes about the website',
+      },
+      {
+        displayName: 'Paused',
+        name: 'paused',
+        type: 'boolean',
+        default: false,
+        description: 'Whether website monitoring is paused',
       },
     ],
   },

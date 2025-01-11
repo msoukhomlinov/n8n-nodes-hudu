@@ -4,27 +4,134 @@ All notable changes to this project will be documented in this file.
 
 #------ CURRENT DEVELOPMENT ------#
 
-## [Unreleased]
 
-### TODO
-- Implement standardised date range filters for all resources that support it:
-  - Articles (✓ completed)
+#------ RELEASED VERSIONS ------#
+## [1.2.0] - 2025-01-08
+
+### Added
+- Aligned the node better with n8n node best practices and naming conventions
+- Added post-processing filters for enhanced filtering capabilities:
+  - Articles: Filter by folder_id
+  - Folders: Filter by parent_folder_id and child folder status
+  - Relations: Filter by fromable_type, fromable_id, toable_type, toable_id, and is_inverse
+- Enhanced dynamic picklists with contextual secondary options:
+  - Asset Layout Field updates now show relevant field names based on selected Asset Layout
+- Added Articles Version History operation to retrieve the complete revision history of an article
+
+### Fixed
+- Fixed incomplete Assets resource operations by adding missing fields
+
+## [1.1.1] - 2025-01-07
+
+### Added
+- Added dynamic asset layout selection with searchable dropdown for asset_layout_id fields
+- Added option loader for asset layouts
+- Added enhanced folder filtering capabilities:
+  - Filter by parent folder ID
+  - Filter by child folder status (yes/no)
+  - Improved pagination handling for filtered results
+- Added post-processing filter for folder_id in Articles resource to enable filtering by folder
+
+### Changed
+- Fixed inconsistent naming of asset_layout_id field in companies resource to match API specs
+- Moved asset creation from companies resource to assets resource for better organisation and consistency
+- Removed redundant get assets operation from companies resource as it's available in assets resource
+- Updated remaining company_id fields to use dynamic company selection in ip_addresses, asset_passwords (including filter field), magic_dash, procedures resources (including createFromTemplate and duplicate operations), parent_company_id in companies update fields, and matchers fields (company_id filter and potential_company_id)
+
+### Fixed
+- Fixed missing asset operations implementation (get single, update, delete, archive/unarchive)
+- Fixed magic dash company_id filter by properly converting the dynamic selection value to a number
+- Fixed all dynamic company_id fields to properly convert from string to number when sending to API
+- Added proper company_id string-to-number conversion in rack_storages resource for filters, create and update operations
+- Fixed relation filtering to properly handle case-insensitive type comparisons
+- Improved pagination handling with post-processing filters
+- Fixed pagination to continue fetching when using post-processing filters until the requested limit is reached
+
+## [1.1.0] - 2025-01-06
+
+### Added
+- Implemented comprehensive date range filtering across all supported resources:
+  - Articles
   - Asset Layouts
   - Asset Passwords
   - Assets
   - Companies
-  - IP Addresses (both created_at and updated_at)
-  - Networks (both created_at and updated_at)
-  - Rack Storages (both created_at and updated_at)
-  - Rack Storage Items (both created_at and updated_at)
+  - IP Addresses
+  - Networks
+  - Rack Storages
+  - Rack Storage Items
   - Websites
-  Each implementation should include:
-  - Exact date matching
-  - Date range with start and end
-  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
-  - Proper date format handling (ISO 8601)
 
-#------ RELEASED VERSIONS ------#
+  Each implementation includes:
+  - Exact date matching with ISO 8601 format
+  - Flexible date range filtering with start and end dates
+  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
+  - Support for both created_at and updated_at fields where applicable
+- Added full list of integration slugs as `INTEGRATION_SLUGS` constant
+- Converted integration_slug fields to use picklist with predefined values from `INTEGRATION_SLUGS`
+- Added dynamic user selection with searchable dropdown for user_id fields
+- Added dynamic company selection with searchable dropdown for company_id fields
+- Added option loaders infrastructure with initial support for user and company loading
+- Converted assigned_users field from comma-separated string to proper multi-select user dropdown
+- Added comprehensive list of activity log actions as `ACTIVITY_LOG_ACTIONS` constant
+- Added comprehensive list of resource types as `RESOURCE_TYPES` constant
+
+### Changed
+- Enhanced code quality by removing console logging statements from:
+  - GenericFunctions.ts
+  - articles.handler.ts
+  - asset_layouts.handler.ts
+- Standardised date range filter structure across all resources for consistent behaviour
+- Unified date filtering implementation to match the Articles resource pattern
+- Updated cards description and types to use the new integration_slug picklist
+- Updated companies description to use the new integration_slug picklist for jump operation
+- Updated activity logs description to use dynamic user selection for user_id field
+- Updated procedure tasks description to use dynamic company selection for company_id field
+- Improved field descriptions and documentation for integration-related parameters
+- Improved user and company selection UI with proper default values and configurable blank option
+- Fixed value type warnings in user selection fields
+- Enhanced company selection across all resources to use dynamic company picker
+- Updated activity logs and related resources to use standardised constants
+- Fixed pagination behavior for resources that support pagination
+- Removed pagination options from resources that don't support it
+- Fixed various resource-specific operations and response handling
+
+### Fixed
+- Fixed activity logs resource type filter
+- Fixed magic dash pagination and returnAll functionality
+- Fixed procedures "get" operation
+- Fixed pagination and filter handling in multiple handlers
+- Fixed response handling for rack storages and rack storage items
+- Fixed users and websites "get all" operations
+
+## [1.0.4] - 2025-01-06
+
+### Added
+- Implemented comprehensive date range filtering across all supported resources:
+  - Articles
+  - Asset Layouts
+  - Asset Passwords
+  - Assets
+  - Companies
+  - IP Addresses
+  - Networks
+  - Rack Storages
+  - Rack Storage Items
+  - Websites
+
+  Each implementation includes:
+  - Exact date matching with ISO 8601 format
+  - Flexible date range filtering with start and end dates
+  - Quick select presets (Today, Yesterday, Last 7 Days, etc.)
+  - Support for both created_at and updated_at fields where applicable
+
+### Changed
+- Enhanced code quality by removing console logging statements from:
+  - GenericFunctions.ts
+  - articles.handler.ts
+  - asset_layouts.handler.ts
+- Standardised date range filter structure across all resources for consistent behaviour
+- Unified date filtering implementation to match the Articles resource pattern
 
 ## [1.0.3] - 2025-01-05
 

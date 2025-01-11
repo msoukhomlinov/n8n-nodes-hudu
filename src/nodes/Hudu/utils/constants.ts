@@ -5,6 +5,46 @@ export const HUDU_API_CONSTANTS = {
 } as const;
 
 /**
+ * Comprehensive list of field types available in Hudu asset layouts
+ */
+export const ASSET_LAYOUT_FIELD_TYPES = {
+  TEXT: 'Text',
+  RICH_TEXT: 'RichText',
+  HEADING: 'Heading',
+  CHECKBOX: 'CheckBox',
+  WEBSITE: 'Website',
+  PASSWORD: 'Password',
+  NUMBER: 'Number',
+  DATE: 'Date',
+  LIST_SELECT: 'ListSelect',
+  EMBED: 'Embed',
+  EMAIL: 'Email',
+  PHONE: 'Phone',
+  ASSET_TAG: 'AssetTag',
+  ADDRESS_DATA: 'AddressData',
+} as const;
+
+/**
+ * Default labels for field types in Hudu asset layouts
+ */
+export const ASSET_LAYOUT_FIELD_LABELS = {
+  [ASSET_LAYOUT_FIELD_TYPES.TEXT]: 'Text',
+  [ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT]: 'Rich Text',
+  [ASSET_LAYOUT_FIELD_TYPES.HEADING]: 'Heading',
+  [ASSET_LAYOUT_FIELD_TYPES.CHECKBOX]: 'Check Box',
+  [ASSET_LAYOUT_FIELD_TYPES.WEBSITE]: 'Link',
+  [ASSET_LAYOUT_FIELD_TYPES.PASSWORD]: 'Confidential Text',
+  [ASSET_LAYOUT_FIELD_TYPES.NUMBER]: 'Number',
+  [ASSET_LAYOUT_FIELD_TYPES.DATE]: 'Date',
+  [ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT]: 'List',
+  [ASSET_LAYOUT_FIELD_TYPES.EMBED]: 'Embed',
+  [ASSET_LAYOUT_FIELD_TYPES.EMAIL]: 'Copyable Text',
+  [ASSET_LAYOUT_FIELD_TYPES.PHONE]: 'Phone',
+  [ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG]: 'Asset Link',
+  [ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA]: 'Address',
+} as const;
+
+/**
  * Comprehensive list of available integration slugs in Hudu
  */
 export const INTEGRATION_SLUGS = [

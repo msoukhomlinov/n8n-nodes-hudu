@@ -2,6 +2,7 @@ export * from './activity_logs.description';
 export * from './api_info.description';
 export * from './articles.description';
 export * from './asset_layouts.description';
+export * from './asset_layout_fields.description';
 export * from './asset_passwords.description';
 export * from './assets.description';
 export * from './cards.description';

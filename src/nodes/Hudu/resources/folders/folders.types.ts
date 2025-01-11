@@ -1,4 +1,5 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
+import type { FilterMapping } from '../../utils';
 
 export interface IFolder extends IDataObject {
   id: number;
@@ -15,4 +16,20 @@ export interface IFolderResponse extends IDataObject {
   folder: IFolder;
 }
 
-export type FolderOperation = 'getAll' | 'get' | 'create' | 'update' | 'delete';
+export interface IFolderPostProcessFilters {
+  parent_folder_id?: number;
+  childFolder?: 'yes' | 'no' | '';
+  [key: string]: unknown;
+}
+
+// Define how each filter should be applied
+export const folderFilterMapping: FilterMapping<IFolderPostProcessFilters> = {
+  parent_folder_id: (item: IDataObject, value: unknown) => item.parent_folder_id === value,
+  childFolder: (item: IDataObject, value: unknown) => {
+    if (value === 'yes') return item.parent_folder_id !== null;
+    if (value === 'no') return item.parent_folder_id === null;
+    return true;
+  },
+};
+
+export type FolderOperation = 'create' | 'get' | 'getAll' | 'update' | 'delete';

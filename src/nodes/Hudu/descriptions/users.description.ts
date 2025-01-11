@@ -14,10 +14,10 @@ export const userOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Get all users',
-        action: 'Get all users',
+        description: 'Get many users',
+        action: 'Get many users',
       },
       {
         name: 'Get',
@@ -96,12 +96,13 @@ export const userFields: INodeProperties[] = [
         name: 'archived',
         type: 'boolean',
         default: false,
-        description: 'Filter by archived status',
+        description: 'Whether the user is archived',
       },
       {
         displayName: 'Email',
         name: 'email',
         type: 'string',
+								placeholder: 'name@email.com',
         default: '',
         description: 'Filter users by email address',
       },
@@ -120,14 +121,17 @@ export const userFields: INodeProperties[] = [
         description: 'Filter users by last name',
       },
       {
-        displayName: 'Portal Member Company',
+        displayName: 'Portal Member Company Name or ID',
         name: 'portal_member_company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the portal member',
+        description: 'The company to associate with the portal member. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Search',
@@ -142,35 +146,35 @@ export const userFields: INodeProperties[] = [
         type: 'options',
         options: [
           {
-            name: 'Super Admin',
-            value: 'super_admin',
-          },
-          {
             name: 'Admin',
             value: 'admin',
-          },
-          {
-            name: 'Spectator',
-            value: 'spectator',
-          },
-          {
-            name: 'Editor',
-            value: 'editor',
           },
           {
             name: 'Author',
             value: 'author',
           },
           {
-            name: 'Portal Member',
-            value: 'portal_member',
+            name: 'Editor',
+            value: 'editor',
           },
           {
             name: 'Portal Admin',
             value: 'portal_admin',
           },
+          {
+            name: 'Portal Member',
+            value: 'portal_member',
+          },
+          {
+            name: 'Spectator',
+            value: 'spectator',
+          },
+          {
+            name: 'Super Admin',
+            value: 'super_admin',
+          },
         ],
-        default: '',
+        default: 'super_admin',
         description: 'Filter users by security level',
       },
     ],

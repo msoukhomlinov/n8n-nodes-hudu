@@ -14,10 +14,10 @@ export const assetLayoutOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
         description: 'Get a list of asset layouts',
-        action: 'Get a list of asset layouts',
+        action: 'Get many asset layouts',
       },
       {
         name: 'Create',
@@ -45,9 +45,12 @@ export const assetLayoutOperations: INodeProperties[] = [
 export const assetLayoutFields: INodeProperties[] = [
   // ID field for single operations
   {
-    displayName: 'Asset Layout ID',
+    displayName: 'Asset Layout Name or ID',
     name: 'id',
-    type: 'number',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getAssetLayouts',
+    },
     required: true,
     displayOptions: {
       show: {
@@ -55,11 +58,13 @@ export const assetLayoutFields: INodeProperties[] = [
         operation: ['get', 'update'],
       },
     },
-    default: 0,
-    description: 'The unique identifier for the layout',
+    default: '',
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
 
-  // Return All option for GetAll operation
+  // ----------------------------------
+  //         asset_layouts:getAll
+  // ----------------------------------
   {
     displayName: 'Return All',
     name: 'returnAll',
@@ -110,14 +115,182 @@ export const assetLayoutFields: INodeProperties[] = [
         name: 'name',
         type: 'string',
         default: '',
-        description: 'Filter by layout name',
+        description: 'Filter by the name of the Asset Layout',
       },
       {
-        displayName: 'Active',
-        name: 'active',
-        type: 'boolean',
-        default: undefined,
-        description: 'Filter by active status',
+        displayName: 'Page',
+        name: 'page',
+        type: 'number',
+        default: 1,
+        description: 'Get the current page of results',
+      },
+      {
+        displayName: 'Updated At',
+        name: 'updated_at',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Mode',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the last 14 days',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the last 24 hours',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the last 30 days',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the last 48 hours',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the last 60 days',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the last 90 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter asset layouts updated within a range or at an exact time',
       },
     ],
   },
@@ -131,11 +304,11 @@ export const assetLayoutFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['asset_layouts'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     default: '',
-    description: 'The name of the layout',
+    description: 'Name of the Asset Layout',
   },
 
   // Additional Fields
@@ -157,75 +330,71 @@ export const assetLayoutFields: INodeProperties[] = [
         name: 'active',
         type: 'boolean',
         default: true,
-        description: 'Whether the layout is active',
+        description: 'Whether the Asset Layout is active',
       },
       {
         displayName: 'Color',
         name: 'color',
-        type: 'string',
+        type: 'color',
         default: '',
-        description: 'The color for the layout',
+        description: 'Hex code for the background color',
       },
       {
         displayName: 'Icon',
         name: 'icon',
         type: 'string',
         default: '',
-        description: 'The icon for the layout',
+        description: 'Font Awesome icon code (e.g. fa-home). Search for icons at <a href="https://fontawesome.com/search">Font Awesome</a>.',
       },
       {
         displayName: 'Icon Color',
         name: 'icon_color',
-        type: 'string',
+        type: 'color',
         default: '',
-        description: 'The icon color for the layout',
+        description: 'Hex code for the icon color',
       },
       {
         displayName: 'Include Comments',
         name: 'include_comments',
         type: 'boolean',
         default: true,
-        description: 'Whether to include comments section',
+        description: 'Whether to include comments in the Asset Layout',
       },
       {
         displayName: 'Include Files',
         name: 'include_files',
         type: 'boolean',
         default: true,
-        description: 'Whether to include files section',
+        description: 'Whether to include files in the Asset Layout',
       },
       {
         displayName: 'Include Passwords',
         name: 'include_passwords',
         type: 'boolean',
         default: true,
-        description: 'Whether to include passwords section',
+        description: 'Whether to include passwords in the Asset Layout',
       },
       {
         displayName: 'Include Photos',
         name: 'include_photos',
         type: 'boolean',
         default: true,
-        description: 'Whether to include photos section',
+        description: 'Whether to include photos in the Asset Layout',
       },
       {
-        displayName: 'Sidebar Folder ID',
-        name: 'sidebar_folder_id',
-        type: 'number',
-        default: undefined,
-        description: 'The folder ID for the sidebar',
-      },
-      {
-        displayName: 'Slug',
-        name: 'slug',
+        displayName: 'Password Types',
+        name: 'password_types',
         type: 'string',
+        typeOptions: {
+          password: true,
+        },
         default: '',
-        description: 'The URL slug for the layout',
+        description: 'List of password types, separated with new line characters',
       },
     ],
   },
 
-  // Fields for Create and Update operations
+  // Fields Collection
   {
     displayName: 'Fields',
     name: 'fields',
@@ -247,13 +416,6 @@ export const assetLayoutFields: INodeProperties[] = [
         name: 'field',
         values: [
           {
-            displayName: 'Label',
-            name: 'label',
-            type: 'string',
-            default: '',
-            description: 'The label of the field',
-          },
-          {
             displayName: 'Field Type',
             name: 'field_type',
             type: 'string',
@@ -261,25 +423,11 @@ export const assetLayoutFields: INodeProperties[] = [
             description: 'The type of the field',
           },
           {
-            displayName: 'Show in List',
-            name: 'show_in_list',
-            type: 'boolean',
-            default: false,
-            description: 'Whether to show this field in the list view',
-          },
-          {
-            displayName: 'Required',
-            name: 'required',
-            type: 'boolean',
-            default: false,
-            description: 'Whether the field is required',
-          },
-          {
-            displayName: 'Hint',
-            name: 'hint',
+            displayName: 'Label',
+            name: 'label',
             type: 'string',
             default: '',
-            description: 'Help text for the field',
+            description: 'The label of the field',
           },
           {
             displayName: 'Position',
@@ -289,11 +437,18 @@ export const assetLayoutFields: INodeProperties[] = [
             description: 'The position of the field in the layout',
           },
           {
-            displayName: 'Expiration',
-            name: 'expiration',
+            displayName: 'Required',
+            name: 'required',
             type: 'boolean',
             default: false,
-            description: 'Whether this field represents an expiration date',
+            description: 'Whether the field is required',
+          },
+          {
+            displayName: 'Show in List',
+            name: 'show_in_list',
+            type: 'boolean',
+            default: false,
+            description: 'Whether to show this field in the list view',
           },
         ],
       },

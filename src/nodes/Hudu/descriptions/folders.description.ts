@@ -14,10 +14,16 @@ export const folderOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Get all folders',
-        action: 'Get all folders',
+        name: 'Create',
+        value: 'create',
+        description: 'Create a new folder',
+        action: 'Create a folder',
+      },
+      {
+        name: 'Delete',
+        value: 'delete',
+        description: 'Delete a folder',
+        action: 'Delete a folder',
       },
       {
         name: 'Get',
@@ -26,22 +32,16 @@ export const folderOperations: INodeProperties[] = [
         action: 'Get a folder by ID',
       },
       {
-        name: 'Create',
-        value: 'create',
-        description: 'Create a new folder',
-        action: 'Create a folder',
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Get many folders',
+        action: 'Get many folders',
       },
       {
         name: 'Update',
         value: 'update',
         description: 'Update a folder',
         action: 'Update a folder',
-      },
-      {
-        name: 'Delete',
-        value: 'delete',
-        description: 'Delete a folder',
-        action: 'Delete a folder',
       },
     ],
     default: 'getAll',
@@ -96,21 +96,45 @@ export const folderFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Child Folder 🐌',
+        name: 'childFolder',
+        type: 'options',
+        options: [
+          {
+            name: '- All -',
+            value: '',
+          },
+          {
+            name: 'Yes',
+            value: 'yes',
+          },
+          {
+            name: 'No',
+            value: 'no',
+          },
+        ],
+        default: '',
+        description: 'Filter folders based on whether they are child folders or not (Filtering applied client-side, may impact performance)',
+      },
+      {
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the folder',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'In Company',
         name: 'in_company',
         type: 'boolean',
-        default: undefined,
-        description: 'When true, only returns company-specific folders',
+        default: false,
+        description: 'Whether to only return company-specific folders. Ignored if a company filter is applied.',
       },
       {
         displayName: 'Name',
@@ -118,6 +142,13 @@ export const folderFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter folders by name',
+      },
+      {
+        displayName: 'Parent Folder ID 🐌',
+        name: 'parent_folder_id',
+        type: 'number',
+        default: undefined,
+        description: 'Filter by parent folder ID (Filtering applied client-side, may impact performance)',
       },
     ],
   },
@@ -171,14 +202,17 @@ export const folderFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the folder',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Description',
@@ -192,11 +226,11 @@ export const folderFields: INodeProperties[] = [
         name: 'icon',
         type: 'string',
         default: '',
-        description: 'Icon for the folder',
+        description: 'Font Awesome icon code (e.g. fa-home). Search for icons at <a href="https://fontawesome.com/search">Font Awesome</a>.',
       },
       {
         displayName: 'Parent Folder ID',
-        name: 'parentFolderId',
+        name: 'parent_folder_id',
         type: 'number',
         default: undefined,
         description: 'ID of the parent folder',
@@ -221,14 +255,17 @@ export const folderFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the folder',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Description',
@@ -242,7 +279,7 @@ export const folderFields: INodeProperties[] = [
         name: 'icon',
         type: 'string',
         default: '',
-        description: 'Icon for the folder',
+        description: 'Font Awesome icon code (e.g. fa-home). Search for icons at <a href="https://fontawesome.com/search">Font Awesome</a>.',
       },
       {
         displayName: 'Name',

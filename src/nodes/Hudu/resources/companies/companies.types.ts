@@ -1,4 +1,4 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 export interface ICompanyIntegration extends IDataObject {
   id: number; // The unique identifier of the integration
@@ -54,6 +54,4 @@ export type CompaniesOperations =
   | 'delete'
   | 'archive'
   | 'unarchive'
-  | 'getAssets'
-  | 'createAsset'
   | 'jump';

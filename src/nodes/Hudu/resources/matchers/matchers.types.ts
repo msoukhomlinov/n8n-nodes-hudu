@@ -1,4 +1,4 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 export interface IMatcher extends IDataObject {
   id: number; // The unique identifier for the matcher (required)

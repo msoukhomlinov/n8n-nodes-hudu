@@ -26,12 +26,6 @@ export const companiesOperations: INodeProperties[] = [
         action: 'Create a company',
       },
       {
-        name: 'Create Asset',
-        value: 'createAsset',
-        description: 'Create a new asset for a company',
-        action: 'Create an asset for a company',
-      },
-      {
         name: 'Delete',
         value: 'delete',
         description: 'Delete a company',
@@ -44,16 +38,10 @@ export const companiesOperations: INodeProperties[] = [
         action: 'Get a company',
       },
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Retrieve all companies',
-        action: 'Get all companies',
-      },
-      {
-        name: 'Get Assets',
-        value: 'getAssets',
-        description: 'Get assets for a company',
-        action: 'Get assets for a company',
+        description: 'Retrieve many companies',
+        action: 'Get many companies',
       },
       {
         name: 'Jump',
@@ -173,14 +161,17 @@ export const companiesFields: INodeProperties[] = [
         description: 'Additional notes about the company',
       },
       {
-        displayName: 'Parent Company',
+        displayName: 'Parent Company Name or ID',
         name: 'parent_company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The parent company to associate with this company',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Phone Number',
@@ -241,7 +232,7 @@ export const companiesFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['companies'],
-        operation: ['getAll', 'getAssets'],
+        operation: ['getAll'],
       },
     },
     default: false,
@@ -254,13 +245,12 @@ export const companiesFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['companies'],
-        operation: ['getAll', 'getAssets'],
+        operation: ['getAll'],
         returnAll: [false],
       },
     },
     typeOptions: {
       minValue: 1,
-      maxValue: 100,
     },
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
@@ -290,7 +280,7 @@ export const companiesFields: INodeProperties[] = [
         name: 'idInIntegration',
         type: 'string',
         default: '',
-        description: 'Filter companies by id/identifier in PSA/RMM/outside integration',
+        description: 'Filter companies by ID in PSA/RMM/outside integration',
       },
       {
         displayName: 'ID Number',
@@ -336,11 +326,171 @@ export const companiesFields: INodeProperties[] = [
       },
       {
         displayName: 'Updated At',
-        name: 'updatedAt',
-        type: 'string',
-        default: '',
-        description:
-          "Filter companies updated within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match",
+        name: 'updated_at',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Mode',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the last 14 days',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the last 24 hours',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the last 30 days',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the last 48 hours',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the last 60 days',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the last 90 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter companies updated within a range or at an exact time',
       },
       {
         displayName: 'Website',
@@ -439,11 +589,17 @@ export const companiesFields: INodeProperties[] = [
         description: 'Additional notes about the company',
       },
       {
-        displayName: 'Parent Company ID',
+        displayName: 'Parent Company Name or ID',
         name: 'parent_company_id',
-        type: 'number',
-        default: 0,
-        description: "The parent company's ID, if applicable",
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Phone Number',
@@ -472,153 +628,6 @@ export const companiesFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: "The zip code of the company's location",
-      },
-    ],
-  },
-
-  // ----------------------------------
-  //      companies:getAssets
-  // ----------------------------------
-  {
-    displayName: 'Company ID',
-    name: 'companyId',
-    type: 'number',
-    required: true,
-    default: 0,
-    displayOptions: {
-      show: {
-        resource: ['companies'],
-        operation: ['getAssets', 'createAsset'],
-      },
-    },
-    description: 'The ID of the company',
-  },
-  {
-    displayName: 'Filters',
-    name: 'filters',
-    type: 'collection',
-    placeholder: 'Add Filter',
-    default: {},
-    displayOptions: {
-      show: {
-        resource: ['companies'],
-        operation: ['getAssets'],
-      },
-    },
-    options: [
-      {
-        displayName: 'Archived',
-        name: 'archived',
-        type: 'boolean',
-        default: false,
-        description: 'Set to true to only show archived results',
-      },
-    ],
-  },
-
-  // ----------------------------------
-  //      companies:createAsset
-  // ----------------------------------
-  {
-    displayName: 'Name',
-    name: 'name',
-    type: 'string',
-    required: true,
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['companies'],
-        operation: ['createAsset'],
-      },
-    },
-    description: 'The name of the new asset',
-  },
-  {
-    displayName: 'Asset Layout ID',
-    name: 'assetLayoutId',
-    type: 'number',
-    required: true,
-    default: 0,
-    displayOptions: {
-      show: {
-        resource: ['companies'],
-        operation: ['createAsset'],
-      },
-    },
-    description: 'The identifier of the asset layout associated with the new asset',
-  },
-  {
-    displayName: 'Additional Fields',
-    name: 'additionalFields',
-    type: 'collection',
-    placeholder: 'Add Field',
-    default: {},
-    displayOptions: {
-      show: {
-        resource: ['companies'],
-        operation: ['createAsset'],
-      },
-    },
-    options: [
-      {
-        displayName: 'Primary Serial',
-        name: 'primary_serial',
-        type: 'string',
-        default: '',
-        description: 'The primary serial number of the new asset',
-      },
-      {
-        displayName: 'Primary Mail',
-        name: 'primary_mail',
-        type: 'string',
-        default: '',
-        description: 'The primary email associated with the new asset',
-      },
-      {
-        displayName: 'Primary Model',
-        name: 'primary_model',
-        type: 'string',
-        default: '',
-        description: 'The primary model of the new asset',
-      },
-      {
-        displayName: 'Primary Manufacturer',
-        name: 'primary_manufacturer',
-        type: 'string',
-        default: '',
-        description: 'The primary manufacturer of the new asset',
-      },
-      {
-        displayName: 'Custom Fields',
-        name: 'customFields',
-        placeholder: 'Add Custom Field',
-        type: 'fixedCollection',
-        typeOptions: {
-          multipleValues: true,
-        },
-        default: {},
-        options: [
-          {
-            name: 'field',
-            displayName: 'Field',
-            values: [
-              {
-                displayName: 'Label',
-                name: 'label',
-                type: 'string',
-                default: '',
-                description: 'The label of the custom field',
-              },
-              {
-                displayName: 'Value',
-                name: 'value',
-                type: 'string',
-                default: '',
-                description: 'The value of the custom field',
-              },
-            ],
-          },
-        ],
       },
     ],
   },

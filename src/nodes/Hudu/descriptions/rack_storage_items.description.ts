@@ -13,10 +13,16 @@ export const rackStorageItemOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Get all rack storage items',
-        action: 'Get all rack storage items',
+        name: 'Create',
+        value: 'create',
+        description: 'Create a rack storage item',
+        action: 'Create a rack storage item',
+      },
+      {
+        name: 'Delete',
+        value: 'delete',
+        description: 'Delete a rack storage item',
+        action: 'Delete a rack storage item',
       },
       {
         name: 'Get',
@@ -25,22 +31,16 @@ export const rackStorageItemOperations: INodeProperties[] = [
         action: 'Get a rack storage item',
       },
       {
-        name: 'Create',
-        value: 'create',
-        description: 'Create a rack storage item',
-        action: 'Create a rack storage item',
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Get many rack storage items',
+        action: 'Get many rack storage items',
       },
       {
         name: 'Update',
         value: 'update',
         description: 'Update a rack storage item',
         action: 'Update a rack storage item',
-      },
-      {
-        name: 'Delete',
-        value: 'delete',
-        description: 'Delete a rack storage item',
-        action: 'Delete a rack storage item',
       },
     ],
     default: 'getAll',
@@ -98,7 +98,7 @@ export const rackStorageItemFields: INodeProperties[] = [
         name: 'side',
         type: 'string',
         default: '',
-        description: 'Filter by Side. Front or Rear',
+        description: 'Filter by Side. Front or Rear.',
       },
       {
         displayName: 'Start Unit',

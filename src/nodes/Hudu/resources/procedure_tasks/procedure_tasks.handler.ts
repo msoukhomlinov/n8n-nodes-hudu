@@ -1,6 +1,12 @@
 import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import type { IDataObject } from 'n8n-workflow';
+import {
+  handleCreateOperation,
+  handleDeleteOperation,
+  handleGetOperation,
+  handleGetAllOperation,
+  handleUpdateOperation,
+} from '../../utils/operations';
 import type { ProcedureTasksOperations } from './procedure_tasks.types';
 
 export async function handleProcedureTasksOperation(
@@ -8,7 +14,7 @@ export async function handleProcedureTasksOperation(
   operation: ProcedureTasksOperations,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData: IDataObject | IDataObject[] = {};
+  const resourceEndpoint = '/procedure_tasks';
 
   switch (operation) {
     case 'create': {
@@ -26,52 +32,36 @@ export async function handleProcedureTasksOperation(
         }
       }
 
-      responseData = await huduApiRequest.call(
-        this,
-        'POST' as IHttpRequestMethods,
-        '/procedure_tasks',
-        { procedure_task: body },
-      );
-      return responseData;
+      return await handleCreateOperation.call(this, resourceEndpoint, { procedure_task: body });
     }
 
     case 'delete': {
       const taskId = this.getNodeParameter('taskId', i) as string;
-      await huduApiRequest.call(
-        this,
-        'DELETE' as IHttpRequestMethods,
-        `/procedure_tasks/${taskId}`,
-      );
-      return { success: true };
+      return await handleDeleteOperation.call(this, resourceEndpoint, taskId);
     }
 
     case 'get': {
       const taskId = this.getNodeParameter('taskId', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/procedure_tasks/${taskId}`,
-      );
-      return responseData;
+      return await handleGetOperation.call(this, resourceEndpoint, taskId);
     }
 
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
+      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+      const limit = this.getNodeParameter('limit', i, 25) as number;
 
       const qs: IDataObject = {
         ...filters,
       };
 
-      const response = await huduApiRequest.call(
+      return await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/procedure_tasks',
-        undefined,
+        resourceEndpoint,
+        'procedure_tasks',
         qs,
+        returnAll,
+        limit,
       );
-
-      // Return the procedure_tasks array from the response
-      return Array.isArray(response) ? response : (response as IDataObject).procedure_tasks as IDataObject[] || [];
     }
 
     case 'update': {
@@ -86,15 +76,10 @@ export async function handleProcedureTasksOperation(
         }
       }
 
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/procedure_tasks/${taskId}`,
-        { procedure_task: body },
-      );
-      return responseData;
+      return await handleUpdateOperation.call(this, resourceEndpoint, taskId, { procedure_task: body });
     }
   }
 
-  return responseData;
+  // This should never be reached due to TypeScript's exhaustive check
+  throw new Error(`Unsupported operation ${operation}`);
 }

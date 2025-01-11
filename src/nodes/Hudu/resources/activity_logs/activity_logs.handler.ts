@@ -1,55 +1,68 @@
-import type { IDataObject, IExecuteFunctions, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
-import type { ActivityLogsOperation } from './activity_logs.types';
+import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import { handleGetAllOperation } from '../../utils/operations';
+import type { ActivityLogsOperation, IActivityLogsDeleteParams } from './activity_logs.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { huduApiRequest } from '../../utils/requestUtils';
 
 export async function handleActivityLogsOperation(
   this: IExecuteFunctions,
   operation: ActivityLogsOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData: IDataObject | IDataObject[] = {};
+  const resourceEndpoint = '/activity_logs';
 
-  if (operation === 'getAll') {
-    // Handle get all activity logs
-    const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-    const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-    const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i, 25) as number);
+  switch (operation) {
+    case 'getAll': {
+      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+      const filters: IDataObject = {};
 
-    const params: IDataObject = {
-      ...additionalFields,
-      page_size: limit,
-    };
-
-    // Remove empty parameters, but keep numeric zeros
-    for (const key of Object.keys(params)) {
-      if (params[key] === undefined || params[key] === '') {
-        delete params[key];
+      // Process filters
+      for (const [key, value] of Object.entries(additionalFields)) {
+        if (value !== undefined && value !== '') {
+          filters[key] = key === 'start_date' ? new Date(value as string).toISOString() : value;
+        }
       }
+
+      // Set page_size to prevent infinite pagination loop
+      filters.page_size = HUDU_API_CONSTANTS.PAGE_SIZE;
+
+      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+
+      // Activity logs response is a direct array, so we pass undefined as resourceName
+      return handleGetAllOperation.call(
+        this,
+        resourceEndpoint,
+        undefined,
+        filters,
+        returnAll,
+        limit,
+      );
     }
 
-    responseData = await huduApiRequest.call(
-      this,
-      'GET' as IHttpRequestMethods,
-      '/activity_logs',
-      {},
-      params,
-    );
-  } else if (operation === 'delete') {
-    // Handle delete activity logs
-    const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-    const params: IDataObject = {
-      datetime: this.getNodeParameter('datetime', i) as string,
-      ...additionalFields,
-    };
+    case 'delete': {
+      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+      const datetime = this.getNodeParameter('datetime', i) as string;
+      
+      const deleteParams: IActivityLogsDeleteParams = {
+        datetime: new Date(datetime).toISOString(),
+        ...(additionalFields.delete_unassigned_logs !== undefined && {
+          delete_unassigned_logs: additionalFields.delete_unassigned_logs as boolean,
+        }),
+      };
 
-    responseData = await huduApiRequest.call(
-      this,
-      'DELETE' as IHttpRequestMethods,
-      '/activity_logs',
-      {},
-      params,
-    );
+      // Special case: bulk delete with query params
+      const response = await huduApiRequest.call(
+        this,
+        'DELETE',
+        resourceEndpoint,
+        {},
+        deleteParams as unknown as IDataObject,
+      );
+      return response as IDataObject;
+    }
+
+    default:
+      return {};
   }
-
-  return responseData;
 }

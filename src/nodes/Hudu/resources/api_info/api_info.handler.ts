@@ -1,5 +1,5 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { handleSystemInfoOperation } from '../../utils/operations';
 import type { ApiInfoOperation } from './api_info.types';
 
 export async function handleApiInfoOperation(
@@ -10,9 +10,8 @@ export async function handleApiInfoOperation(
 
   switch (operation) {
     case 'get': {
-      responseData = await huduApiRequest.call(
+      responseData = await handleSystemInfoOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
         '/api_info',
       );
       break;

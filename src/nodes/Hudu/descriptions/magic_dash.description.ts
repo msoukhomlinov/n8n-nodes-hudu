@@ -14,40 +14,40 @@ export const magicDashOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Get all Magic Dash items',
-        action: 'Get all Magic Dash items',
-      },
-      {
-        name: 'Get',
-        value: 'get',
-        description: 'Get a Magic Dash item by ID',
-        action: 'Get a Magic Dash item',
-      },
-      {
         name: 'Create',
         value: 'create',
         description: 'Create a Magic Dash item',
-        action: 'Create a Magic Dash item',
-      },
-      {
-        name: 'Update',
-        value: 'update',
-        description: 'Update a Magic Dash item by title and company name',
-        action: 'Update a Magic Dash item',
+        action: 'Create a magic dash item',
       },
       {
         name: 'Delete',
         value: 'delete',
         description: 'Delete a Magic Dash item by title and company name',
-        action: 'Delete a Magic Dash item by title and company name',
+        action: 'Delete a magic dash item by title and company name',
       },
       {
         name: 'Delete By ID',
         value: 'deleteById',
         description: 'Delete a Magic Dash item by ID',
-        action: 'Delete a Magic Dash item by ID',
+        action: 'Delete a magic dash item by id',
+      },
+      {
+        name: 'Get',
+        value: 'get',
+        description: 'Get a Magic Dash item by ID',
+        action: 'Get a magic dash item',
+      },
+      {
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Get many Magic Dash items',
+        action: 'Get many magic dash items',
+      },
+      {
+        name: 'Update',
+        value: 'update',
+        description: 'Update a Magic Dash item by title and company name',
+        action: 'Update a magic dash item',
       },
     ],
     default: 'getAll',
@@ -102,14 +102,17 @@ export const magicDashFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the magic dash item',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Title',
@@ -198,11 +201,17 @@ export const magicDashFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company Name or ID',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'The unique identifier of the company',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Content Link',
@@ -216,8 +225,7 @@ export const magicDashFields: INodeProperties[] = [
         name: 'icon',
         type: 'string',
         default: '',
-        description:
-          'A FontAwesome icon for the header of the Magic Dash Item (e.g., fas fa-circle)',
+        description: 'Font Awesome icon code (e.g. fa-home). Search for icons at <a href="https://fontawesome.com/search">Font Awesome</a>.',
       },
       {
         displayName: 'Image URL',
@@ -229,10 +237,9 @@ export const magicDashFields: INodeProperties[] = [
       {
         displayName: 'Shade',
         name: 'shade',
-        type: 'string',
+        type: 'color',
         default: '',
-        description:
-          'An optional color for the Magic Dash Item to represent different contextual states (e.g., success, danger)',
+        //description: 'An optional color for the Magic Dash Item to represent different contextual states (e.g., success, danger)',
       },
     ],
   },

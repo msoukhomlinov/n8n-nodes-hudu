@@ -1,6 +1,5 @@
 import type { ILoadOptionsFunctions, IDataObject } from 'n8n-workflow';
-import { LoggerProxy } from 'n8n-workflow';
-import { handleListing } from '../../utils/GenericFunctions';
+import { handleListing } from '../../utils';
 
 interface UserOption {
   name: string;
@@ -32,6 +31,10 @@ export async function getUsers(this: ILoadOptionsFunctions) {
       0, // no limit
     )) as HuduUser[];
 
+    if (!Array.isArray(users)) {
+      return [];
+    }
+
     const mappedUsers = users
       .map((user) => ({
         name: `${user.first_name} ${user.last_name} (${user.id})${
@@ -59,7 +62,6 @@ export async function getUsers(this: ILoadOptionsFunctions) {
 
     return mappedUsers.map(({ name, value }) => ({ name, value }));
   } catch (error) {
-    LoggerProxy.error('Error loading users from Hudu API', { error });
     return [];
   }
 }

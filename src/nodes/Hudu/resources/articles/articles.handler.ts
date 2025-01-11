@@ -1,19 +1,126 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing, processDateRange } from '../../utils/GenericFunctions';
-import type { ArticlesOperation } from './articles.types';
+import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import { processDateRange } from '../../utils/index';
+import type { ArticlesOperation, IArticlePostProcessFilters } from './articles.types';
+import { articleFilterMapping } from './articles.types';
+import type { DateRangePreset } from '../../utils/dateUtils';
+import {
+  handleCreateOperation,
+  handleDeleteOperation,
+  handleGetOperation,
+  handleGetAllOperation,
+  handleUpdateOperation,
+  handleArchiveOperation,
+} from '../../utils/operations';
 
 export async function handleArticlesOperation(
   this: IExecuteFunctions,
   operation: ArticlesOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData: IDataObject | IDataObject[];
+  const resourceEndpoint = '/articles';
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
+    case 'getVersionHistory': {
+      const articleId = this.getNodeParameter('articleId', i) as string;
+      const filters = this.getNodeParameter('filters', i) as IDataObject;
+      const activityEndpoint = '/activity_logs';
+
+      // Process date range if present
+      let startDate: string | undefined;
+      if (filters.start_date) {
+        const startDateFilter = filters.start_date as IDataObject;
+        if (startDateFilter.range) {
+          const rangeObj = startDateFilter.range as IDataObject;
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as DateRangePreset,
+            },
+          });
+          if (dateRange) {
+            startDate = dateRange;
+          }
+        }
+      }
+
+      // Fetch creation history
+      const creationFilters: IDataObject = {
+        resource_type: 'Article',
+        resource_id: Number(articleId),
+        action_message: 'created',
+        ...(startDate && { start_date: startDate }),
+      };
+      const creationHistory = await handleGetAllOperation.call(
+        this,
+        activityEndpoint,
+        undefined,
+        creationFilters,
+        true, // returnAll
+      ) as IDataObject[];
+
+      // Fetch update history
+      const updateFilters: IDataObject = {
+        resource_type: 'Article',
+        resource_id: Number(articleId),
+        action_message: 'updated',
+        ...(startDate && { start_date: startDate }),
+      };
+      const updateHistory = await handleGetAllOperation.call(
+        this,
+        activityEndpoint,
+        undefined,
+        updateFilters,
+        true, // returnAll
+      ) as IDataObject[];
+
+      // Combine and process the results
+      const combinedHistory = [...creationHistory, ...updateHistory].map((entry) => {
+        // Parse details if it's a string
+        const rawDetails = entry.details;
+        let parsedDetails: IDataObject = {};
+        
+        try {
+          parsedDetails = typeof rawDetails === 'string' 
+            ? JSON.parse(rawDetails) 
+            : (rawDetails as IDataObject);
+        } catch (e) {
+          // If parsing fails, use empty object
+          parsedDetails = {};
+        }
+
+        return {
+          activity_id: entry.id,
+          datetime: entry.created_at,
+          user_name: entry.user_name,
+          record_name: entry.record_name,
+          details: parsedDetails.content || '',
+        };
+      });
+
+      // Sort by datetime oldest to newest
+      combinedHistory.sort((a, b) => {
+        const dateA = new Date(a.datetime as string).getTime();
+        const dateB = new Date(b.datetime as string).getTime();
+        return dateA - dateB;
+      });
+
+      responseData = combinedHistory;
+      break;
+    }
+
     case 'create': {
       const name = this.getNodeParameter('name', i) as string;
       const content = this.getNodeParameter('content', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+      // Convert company_id to number if present in additionalFields
+      if (additionalFields.company_id) {
+        additionalFields.company_id = Number.parseInt(additionalFields.company_id as string, 10);
+      }
 
       const body: IDataObject = {
         name,
@@ -21,19 +128,13 @@ export async function handleArticlesOperation(
         ...additionalFields,
       };
 
-      responseData = await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/articles', {
-        article: body,
-      });
+      responseData = await handleCreateOperation.call(this, resourceEndpoint, { article: body });
       break;
     }
 
     case 'get': {
       const articleId = this.getNodeParameter('articleId', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/articles/${articleId}`,
-      );
+      responseData = await handleGetOperation.call(this, resourceEndpoint, articleId);
       break;
     }
 
@@ -42,21 +143,30 @@ export async function handleArticlesOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
 
-      console.log('Initial filters:', JSON.stringify(filters, null, 2));
+      // Extract post-processing filters and API filters separately
+      const postProcessFilters: IArticlePostProcessFilters = {};
+      const apiFilters: IDataObject = {};
+
+      // Copy only API filters
+      for (const [key, value] of Object.entries(filters)) {
+        if (key === 'folder_id') {
+          postProcessFilters.folder_id = value as number;
+        } else {
+          apiFilters[key] = value;
+        }
+      }
+
+      // Convert company_id to number if present in filters
+      if (apiFilters.company_id) {
+        apiFilters.company_id = Number.parseInt(apiFilters.company_id as string, 10);
+      }
 
       // Process date range if present
-      if (filters.updated_at) {
-        console.log('Raw updated_at filter:', JSON.stringify(filters.updated_at, null, 2));
-        const updatedAtFilter = filters.updated_at as IDataObject;
-        
+      if (apiFilters.updated_at) {
+        const updatedAtFilter = apiFilters.updated_at as IDataObject;
+
         if (updatedAtFilter.range) {
-          console.log('Range object:', JSON.stringify(updatedAtFilter.range, null, 2));
           const rangeObj = updatedAtFilter.range as IDataObject;
-          
-          // Special logging for last7d
-          if (rangeObj.mode === 'preset' && rangeObj.preset === 'last7d') {
-            console.log('Last 7 Days filter detected');
-          }
 
           const dateRange = processDateRange({
             range: {
@@ -64,36 +174,29 @@ export async function handleArticlesOperation(
               exact: rangeObj.exact as string,
               start: rangeObj.start as string,
               end: rangeObj.end as string,
-              preset: rangeObj.preset as string,
+              preset: rangeObj.preset as DateRangePreset,
             },
           });
 
           if (dateRange) {
-            console.log('Processed date range:', dateRange);
-            filters.updated_at = dateRange;
+            apiFilters.updated_at = dateRange;
           } else {
-            console.log('Date range processing returned undefined');
-            filters.updated_at = undefined;
+            apiFilters.updated_at = undefined;
           }
         } else {
-          console.log('No range found in updated_at filter');
-          filters.updated_at = undefined;
+          apiFilters.updated_at = undefined;
         }
-      } else {
-        console.log('No updated_at filter found in filters object');
       }
 
-      console.log('Final filters:', JSON.stringify(filters, null, 2));
-
-      responseData = await handleListing.call(
+      responseData = await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/articles',
+        resourceEndpoint,
         'articles',
-        {},
-        filters,
+        apiFilters,
         returnAll,
         limit,
+        postProcessFilters,
+        articleFilterMapping,
       );
       return responseData;
     }
@@ -105,44 +208,32 @@ export async function handleArticlesOperation(
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
       const body: IDataObject = {
-        name,
-        content,
-        ...additionalFields,
+        article: {
+          name,
+          content,
+          ...additionalFields,
+        },
       };
 
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/articles/${articleId}`,
-        { article: body },
-      );
+      responseData = await handleUpdateOperation.call(this, resourceEndpoint, articleId, body);
       break;
     }
 
     case 'delete': {
       const articleId = this.getNodeParameter('articleId', i) as string;
-      await huduApiRequest.call(this, 'DELETE' as IHttpRequestMethods, `/articles/${articleId}`);
-      responseData = { success: true };
+      responseData = await handleDeleteOperation.call(this, resourceEndpoint, articleId);
       break;
     }
 
     case 'archive': {
       const articleId = this.getNodeParameter('articleId', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/articles/${articleId}/archive`,
-      );
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, articleId, true);
       break;
     }
 
     case 'unarchive': {
       const articleId = this.getNodeParameter('articleId', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/articles/${articleId}/unarchive`,
-      );
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, articleId, false);
       break;
     }
   }

@@ -1,6 +1,6 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { handleListing, huduApiRequest } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { handleGetOperation, handleGetAllOperation } from '../../utils/operations';
 import type { UserOperation } from './users.types';
 
 export async function handleUserOperation(
@@ -8,7 +8,7 @@ export async function handleUserOperation(
   operation: UserOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData: IDataObject | IDataObject[];
+  const resourceEndpoint = '/users';
 
   switch (operation) {
     case 'getAll': {
@@ -16,25 +16,22 @@ export async function handleUserOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-      responseData = await handleListing.call(
+      return await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/users',
+        resourceEndpoint,
         'users',
-        {},
         filters,
         returnAll,
         limit,
       );
-      break;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      responseData = await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, `/users/${id}`);
-      break;
+      return await handleGetOperation.call(this, resourceEndpoint, id);
     }
   }
 
-  return responseData;
+  // This should never be reached due to TypeScript's exhaustive check
+  throw new Error(`Unsupported operation ${operation}`);
 }

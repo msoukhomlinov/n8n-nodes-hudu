@@ -1,12 +1,23 @@
-import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils/GenericFunctions';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { processDateRange } from '../../utils/index';
+import {
+  handleGetAllOperation,
+  handleGetOperation,
+  handleCreateOperation,
+  handleUpdateOperation,
+  handleDeleteOperation,
+  handleArchiveOperation,
+} from '../../utils/operations';
+import { handleCompanyJumpOperation } from '../../utils/operations/companies';
 import type { CompaniesOperations } from './companies.types';
+import type { DateRangePreset } from '../../utils/dateUtils';
 
 export async function handleCompaniesOperation(
   this: IExecuteFunctions,
   operation: CompaniesOperations,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
+  const resourceEndpoint = '/companies';
   let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
@@ -19,26 +30,19 @@ export async function handleCompaniesOperation(
         ...additionalFields,
       };
 
-      responseData = await huduApiRequest.call(this, 'POST' as IHttpRequestMethods, '/companies', {
-        company: body,
-      });
+      responseData = await handleCreateOperation.call(this, resourceEndpoint, { company: body });
       break;
     }
 
     case 'delete': {
       const companyId = this.getNodeParameter('id', i) as string;
-      await huduApiRequest.call(this, 'DELETE' as IHttpRequestMethods, `/companies/${companyId}`);
-      responseData = { success: true };
+      responseData = await handleDeleteOperation.call(this, resourceEndpoint, companyId);
       break;
     }
 
     case 'get': {
       const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/companies/${companyId}`,
-      );
+      responseData = await handleGetOperation.call(this, resourceEndpoint, companyId);
       break;
     }
 
@@ -51,20 +55,36 @@ export async function handleCompaniesOperation(
         ...filters,
       };
 
-      if (filters.updatedAt) {
-        qs.updated_at = filters.updatedAt;
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+
+          const dateRange = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as DateRangePreset,
+            },
+          });
+
+          qs.updated_at = dateRange || undefined;
+        } else {
+          qs.updated_at = undefined;
+        }
       }
 
       if (filters.idInIntegration) {
         qs.id_in_integration = filters.idInIntegration;
       }
 
-      responseData = await handleListing.call(
+      responseData = await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/companies',
+        resourceEndpoint,
         'companies',
-        {},
         qs,
         returnAll,
         limit,
@@ -75,105 +95,29 @@ export async function handleCompaniesOperation(
     case 'update': {
       const companyId = this.getNodeParameter('id', i) as string;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
-
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/companies/${companyId}`,
-        { company: updateFields },
-      );
-      break;
-    }
-
-    case 'getAssets': {
-      const companyId = this.getNodeParameter('companyId', i) as string;
-      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
-
-      responseData = await handleListing.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/companies/${companyId}/assets`,
-        'assets',
-        undefined,
-        filters,
-        returnAll,
-        limit,
-      );
-      break;
-    }
-
-    case 'createAsset': {
-      const companyId = this.getNodeParameter('companyId', i) as string;
-      const name = this.getNodeParameter('name', i) as string;
-      const assetLayoutId = this.getNodeParameter('assetLayoutId', i) as number;
-      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
       const body: IDataObject = {
-        name,
-        asset_layout_id: assetLayoutId,
-        ...additionalFields,
+        company: updateFields,
       };
-
-      if (additionalFields.customFields) {
-        const { customFields, ...rest } = additionalFields;
-        body.custom_fields = customFields;
-        Object.assign(body, rest);
-      }
-
-      responseData = await huduApiRequest.call(
-        this,
-        'POST' as IHttpRequestMethods,
-        `/companies/${companyId}/assets`,
-        { asset: body },
-      );
+      responseData = await handleUpdateOperation.call(this, resourceEndpoint, companyId, body);
       break;
     }
 
     case 'archive': {
       const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/companies/${companyId}/archive`,
-      );
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, companyId, true);
       break;
     }
 
     case 'unarchive': {
       const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/companies/${companyId}/unarchive`,
-      );
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, companyId, false);
       break;
     }
 
     case 'jump': {
       const integrationSlug = this.getNodeParameter('integrationSlug', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
-      const qs: IDataObject = {
-        integration_slug: integrationSlug,
-      };
-
-      if (additionalFields.integrationId) {
-        qs.integration_id = additionalFields.integrationId;
-      }
-
-      if (additionalFields.integrationIdentifier) {
-        qs.integration_identifier = additionalFields.integrationIdentifier;
-      }
-
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        '/companies/jump',
-        {},
-        qs,
-      );
+      responseData = await handleCompanyJumpOperation.call(this, integrationSlug, additionalFields);
       break;
     }
   }

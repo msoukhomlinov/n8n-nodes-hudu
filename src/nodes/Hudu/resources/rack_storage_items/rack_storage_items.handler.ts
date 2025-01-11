@@ -1,6 +1,12 @@
 import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import type { IDataObject } from 'n8n-workflow';
+import {
+  handleCreateOperation,
+  handleDeleteOperation,
+  handleGetOperation,
+  handleGetAllOperation,
+  handleUpdateOperation,
+} from '../../utils/operations';
 import type { RackStorageItemOperation } from './rack_storage_items.types';
 
 export async function handleRackStorageItemOperation(
@@ -8,36 +14,27 @@ export async function handleRackStorageItemOperation(
   operation: RackStorageItemOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  let responseData: IDataObject | IDataObject[];
+  const resourceEndpoint = '/rack_storage_items';
 
   switch (operation) {
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
+      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+      const limit = this.getNodeParameter('limit', i, 25) as number;
 
-      responseData = await huduApiRequest.call(
+      return await handleGetAllOperation.call(
         this,
-        'GET' as IHttpRequestMethods,
-        '/rack_storage_items',
-        {},
+        resourceEndpoint,
+        'rack_storage_items',
         filters,
+        returnAll,
+        limit,
       );
-
-      // If the response is not an array, return an empty array
-      if (!Array.isArray(responseData)) {
-        return [];
-      }
-
-      return responseData;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/rack_storage_items/${id}`,
-      );
-      break;
+      return await handleGetOperation.call(this, resourceEndpoint, id);
     }
 
     case 'create': {
@@ -52,13 +49,7 @@ export async function handleRackStorageItemOperation(
           ...(this.getNodeParameter('additionalFields', i) as IDataObject),
         },
       };
-      responseData = await huduApiRequest.call(
-        this,
-        'POST' as IHttpRequestMethods,
-        '/rack_storage_items',
-        body,
-      );
-      break;
+      return await handleCreateOperation.call(this, resourceEndpoint, body);
     }
 
     case 'update': {
@@ -68,25 +59,15 @@ export async function handleRackStorageItemOperation(
           ...(this.getNodeParameter('updateFields', i) as IDataObject),
         },
       };
-      responseData = await huduApiRequest.call(
-        this,
-        'PUT' as IHttpRequestMethods,
-        `/rack_storage_items/${id}`,
-        body,
-      );
-      break;
+      return await handleUpdateOperation.call(this, resourceEndpoint, id, body);
     }
 
     case 'delete': {
       const id = this.getNodeParameter('id', i) as number;
-      responseData = await huduApiRequest.call(
-        this,
-        'DELETE' as IHttpRequestMethods,
-        `/rack_storage_items/${id}`,
-      );
-      break;
+      return await handleDeleteOperation.call(this, resourceEndpoint, id);
     }
   }
 
-  return responseData;
+  // This should never be reached due to TypeScript's exhaustive check
+  throw new Error(`Unsupported operation ${operation}`);
 }

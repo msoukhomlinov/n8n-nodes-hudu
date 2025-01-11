@@ -1,4 +1,4 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
 
 interface IAssetField extends IDataObject {
   id: number; // The identifier of the field

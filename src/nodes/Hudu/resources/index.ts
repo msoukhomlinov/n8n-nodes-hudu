@@ -7,6 +7,8 @@ export * from './articles/articles.handler';
 export * from './articles/articles.types';
 export * from './asset_layouts/asset_layouts.handler';
 export * from './asset_layouts/asset_layouts.types';
+export * from './asset_layout_fields/asset_layout_fields.handler';
+export * from './asset_layout_fields/asset_layout_fields.types';
 export * from './asset_passwords/asset_passwords.handler';
 export * from './asset_passwords/asset_passwords.types';
 export * from './assets/assets.handler';

@@ -14,12 +14,6 @@ export const assetPasswordOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Get a list of passwords',
-        action: 'Get a list of passwords',
-      },
-      {
         name: 'Archive',
         value: 'archive',
         description: 'Archive a password',
@@ -42,6 +36,12 @@ export const assetPasswordOperations: INodeProperties[] = [
         value: 'get',
         description: 'Get a password by ID',
         action: 'Get a password',
+      },
+      {
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Get a list of passwords',
+        action: 'Get a list of passwords',
       },
       {
         name: 'Unarchive',
@@ -75,6 +75,28 @@ export const assetPasswordFields: INodeProperties[] = [
     },
     default: 0,
     description: 'ID of the requested password',
+  },
+
+  // Add company_id field
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['asset_passwords'],
+        operation: ['create', 'update'],
+      },
+    },
+    default: '',
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
 
   // Required fields for Create and Update operations
@@ -111,6 +133,9 @@ export const assetPasswordFields: INodeProperties[] = [
     name: 'password',
     type: 'string',
     required: true,
+    typeOptions: {
+      password: true,
+    },
     displayOptions: {
       show: {
         resource: ['asset_passwords'],
@@ -135,26 +160,12 @@ export const assetPasswordFields: INodeProperties[] = [
     description: 'Description or notes related to the password',
   },
   {
-    displayName: 'Company',
-    name: 'company_id',
-    type: 'options',
-    typeOptions: {
-      loadOptionsMethod: 'getCompanies',
-    },
-    required: true,
-    displayOptions: {
-      show: {
-        resource: ['asset_passwords'],
-        operation: ['create', 'update'],
-      },
-    },
-    default: '',
-    description: 'The company to associate with the password',
-  },
-  {
     displayName: 'Passwordable Type',
     name: 'passwordable_type',
     type: 'string',
+    typeOptions: {
+      password: true,
+    },
     required: true,
     displayOptions: {
       show: {
@@ -169,6 +180,9 @@ export const assetPasswordFields: INodeProperties[] = [
     displayName: 'OTP Secret',
     name: 'otp_secret',
     type: 'string',
+    typeOptions: {
+      password: true,
+    },
     required: true,
     displayOptions: {
       show: {
@@ -245,14 +259,20 @@ export const assetPasswordFields: INodeProperties[] = [
         name: 'archived',
         type: 'boolean',
         default: false,
-        description: 'Set to true to display only archived assets',
+        description: 'Whether to display only archived assets',
       },
       {
-        displayName: 'Company ID',
+        displayName: 'Company Name or ID',
         name: 'company_id',
-        type: 'number',
-        default: undefined,
-        description: 'Filter by company ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Name',
@@ -287,15 +307,175 @@ export const assetPasswordFields: INodeProperties[] = [
         name: 'slug',
         type: 'string',
         default: '',
-        description: 'Filter by url slug',
+        description: 'Filter by URL slug',
       },
       {
         displayName: 'Updated At',
         name: 'updated_at',
-        type: 'string',
-        default: '',
-        description:
-          "Filter asset passwords updated within a range or at an exact time. Format: 'start_datetime,end_datetime' for range, 'exact_datetime' for exact match. Both 'start_datetime' and 'end_datetime' should be in ISO 8601 format.",
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'Date',
+                name: 'exact',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['exact'],
+                  },
+                },
+                default: '',
+                description: 'The specific date to filter by',
+              },
+              {
+                displayName: 'End Date',
+                name: 'end',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'End date of the range',
+              },
+              {
+                displayName: 'Filter Type',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  {
+                    name: 'Exact Date',
+                    value: 'exact',
+                    description: 'Match an exact date',
+                  },
+                  {
+                    name: 'Date Range',
+                    value: 'range',
+                    description: 'Match a date range',
+                  },
+                  {
+                    name: 'Preset Range',
+                    value: 'preset',
+                    description: 'Match a preset date range',
+                  },
+                ],
+                default: 'preset',
+                description: 'The mode to use for date filtering',
+              },
+              {
+                displayName: 'Range',
+                name: 'preset',
+                type: 'options',
+                displayOptions: {
+                  show: {
+                    mode: ['preset'],
+                  },
+                },
+                options: [
+                  {
+                    name: 'Last 14 Days',
+                    value: 'last14d',
+                    description: 'Updates in the last 14 days',
+                  },
+                  {
+                    name: 'Last 24 Hours',
+                    value: 'last24h',
+                    description: 'Updates in the last 24 hours',
+                  },
+                  {
+                    name: 'Last 30 Days',
+                    value: 'last30d',
+                    description: 'Updates in the last 30 days',
+                  },
+                  {
+                    name: 'Last 48 Hours',
+                    value: 'last48h',
+                    description: 'Updates in the last 48 hours',
+                  },
+                  {
+                    name: 'Last 60 Days',
+                    value: 'last60d',
+                    description: 'Updates in the last 60 days',
+                  },
+                  {
+                    name: 'Last 7 Days',
+                    value: 'last7d',
+                    description: 'Updates in the last 7 days',
+                  },
+                  {
+                    name: 'Last 90 Days',
+                    value: 'last90d',
+                    description: 'Updates in the last 90 days',
+                  },
+                  {
+                    name: 'Last Month',
+                    value: 'lastMonth',
+                    description: 'Updates during last month',
+                  },
+                  {
+                    name: 'Last Week',
+                    value: 'lastWeek',
+                    description: 'Updates during last week',
+                  },
+                  {
+                    name: 'Last Year',
+                    value: 'lastYear',
+                    description: 'Updates during last year',
+                  },
+                  {
+                    name: 'This Month',
+                    value: 'thisMonth',
+                    description: 'Updates since the start of this month',
+                  },
+                  {
+                    name: 'This Week',
+                    value: 'thisWeek',
+                    description: 'Updates since the start of this week',
+                  },
+                  {
+                    name: 'This Year',
+                    value: 'thisYear',
+                    description: 'Updates since the start of this year',
+                  },
+                  {
+                    name: 'Today',
+                    value: 'today',
+                    description: 'Updates from today',
+                  },
+                  {
+                    name: 'Yesterday',
+                    value: 'yesterday',
+                    description: 'Updates from yesterday',
+                  },
+                ],
+                default: 'last7d',
+                description: 'Choose from common date ranges',
+              },
+              {
+                displayName: 'Start Date',
+                name: 'start',
+                type: 'dateTime',
+                displayOptions: {
+                  show: {
+                    mode: ['range'],
+                  },
+                },
+                default: '',
+                description: 'Start date of the range',
+              },
+            ],
+          },
+        ],
+        description: 'Filter asset passwords updated within a range or at an exact time',
       },
     ],
   },
@@ -339,6 +519,9 @@ export const assetPasswordFields: INodeProperties[] = [
         displayName: 'Password Type',
         name: 'password_type',
         type: 'string',
+        typeOptions: {
+          password: true,
+        },
         default: '',
         description: 'Type or category of the password',
       },

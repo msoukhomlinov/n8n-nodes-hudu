@@ -1,4 +1,11 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { RESOURCE_TYPES } from '../utils/constants';
+
+// Convert RESOURCE_TYPES to options array
+const resourceTypeOptions = RESOURCE_TYPES.map((type) => ({
+  name: type.replace(/([A-Z])/g, ' $1').trim(), // Add spaces before capital letters
+  value: type,
+}));
 
 export const relationsOperations: INodeProperties[] = [
   {
@@ -13,10 +20,10 @@ export const relationsOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
+        name: 'Get Many',
         value: 'getAll',
-        description: 'Get all relations',
-        action: 'Get all relations',
+        description: 'Get many relations',
+        action: 'Get many relations',
       },
       {
         name: 'Create',
@@ -66,8 +73,60 @@ export const relationsFields: INodeProperties[] = [
     typeOptions: {
       minValue: 1,
     },
-    default: 25,
+    default: 50,
     description: 'Max number of results to return',
+  },
+  {
+    displayName: 'Filters',
+    name: 'filters',
+    type: 'collection',
+    placeholder: 'Add Filter',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['relations'],
+        operation: ['getAll'],
+      },
+    },
+    options: [
+      {
+        displayName: 'From Entity ID 🐌',
+        name: 'fromable_id',
+        type: 'number',
+        default: 0,
+        description: 'Filter by the ID of the origin entity (Filtering applied client-side, may impact performance)',
+      },
+      {
+        displayName: 'From Entity Type 🐌',
+        name: 'fromable_type',
+        type: 'options',
+        default: 'Asset',
+        options: resourceTypeOptions,
+        description: 'Filter by the type of the origin entity (Filtering applied client-side, may impact performance)',
+      },
+      {
+        displayName: 'Is Inverse 🐌',
+        name: 'is_inverse',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the relation is inverse (Filtering applied client-side, may impact performance)',
+      },
+      {
+        displayName: 'To Entity ID 🐌',
+        name: 'toable_id',
+        type: 'number',
+        default: 0,
+        description: 'Filter by the ID of the destination entity (Filtering applied client-side, may impact performance)',
+      },
+      {
+        displayName: 'To Entity Type 🐌',
+        name: 'toable_type',
+        type: 'options',
+        default: 'Asset',
+        options: resourceTypeOptions,
+        description: 'Filter by the type of the destination entity (Filtering applied client-side, may impact performance)',
+      },
+    ],
   },
 
   // ----------------------------------
@@ -93,32 +152,7 @@ export const relationsFields: INodeProperties[] = [
     type: 'options',
     required: true,
     default: 'Asset',
-    options: [
-      {
-        name: 'Asset',
-        value: 'Asset',
-      },
-      {
-        name: 'Asset Password',
-        value: 'AssetPassword',
-      },
-      {
-        name: 'Article',
-        value: 'Article',
-      },
-      {
-        name: 'Company',
-        value: 'Company',
-      },
-      {
-        name: 'Procedure',
-        value: 'Procedure',
-      },
-      {
-        name: 'Website',
-        value: 'Website',
-      },
-    ],
+    options: resourceTypeOptions,
     displayOptions: {
       show: {
         resource: ['relations'],
@@ -147,32 +181,7 @@ export const relationsFields: INodeProperties[] = [
     type: 'options',
     required: true,
     default: 'Asset',
-    options: [
-      {
-        name: 'Asset',
-        value: 'Asset',
-      },
-      {
-        name: 'Asset Password',
-        value: 'AssetPassword',
-      },
-      {
-        name: 'Article',
-        value: 'Article',
-      },
-      {
-        name: 'Company',
-        value: 'Company',
-      },
-      {
-        name: 'Procedure',
-        value: 'Procedure',
-      },
-      {
-        name: 'Website',
-        value: 'Website',
-      },
-    ],
+    options: resourceTypeOptions,
     displayOptions: {
       show: {
         resource: ['relations'],
@@ -208,8 +217,7 @@ export const relationsFields: INodeProperties[] = [
         operation: ['create'],
       },
     },
-    description:
-      'When a relation is created, it will also create another relation that is the inverse. When this is true, this relation is the inverse',
+    description: 'Whether this relation is the inverse of another relation that will be automatically created',
   },
 
   // ----------------------------------

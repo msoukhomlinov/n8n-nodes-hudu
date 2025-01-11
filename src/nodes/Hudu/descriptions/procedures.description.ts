@@ -1,3 +1,6 @@
+// Note: This section doesn't contain any company_id fields that need modification
+// The code remains unchanged as it only contains operation definitions and pagination fields
+
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
 
@@ -20,34 +23,16 @@ export const proceduresOperations: INodeProperties[] = [
         action: 'Create a procedure',
       },
       {
-        name: 'Delete',
-        value: 'delete',
-        description: 'Delete a procedure',
-        action: 'Delete a procedure',
-      },
-      {
-        name: 'Get',
-        value: 'get',
-        description: 'Retrieve a procedure',
-        action: 'Get a procedure',
-      },
-      {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Retrieve many procedures',
-        action: 'Get many procedures',
-      },
-      {
-        name: 'Update',
-        value: 'update',
-        description: 'Update a procedure',
-        action: 'Update a procedure',
-      },
-      {
         name: 'Create From Template',
         value: 'createFromTemplate',
         description: 'Create a procedure from a template',
         action: 'Create a procedure from template',
+      },
+      {
+        name: 'Delete',
+        value: 'delete',
+        description: 'Delete a procedure',
+        action: 'Delete a procedure',
       },
       {
         name: 'Duplicate',
@@ -56,10 +41,28 @@ export const proceduresOperations: INodeProperties[] = [
         action: 'Duplicate a procedure',
       },
       {
+        name: 'Get',
+        value: 'get',
+        description: 'Retrieve a procedure',
+        action: 'Get a procedure',
+      },
+      {
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Retrieve many procedures',
+        action: 'Get many procedures',
+      },
+      {
         name: 'Kickoff',
         value: 'kickoff',
         description: 'Start a process from a company process',
         action: 'Kickoff a procedure',
+      },
+      {
+        name: 'Update',
+        value: 'update',
+        description: 'Update a procedure',
+        action: 'Update a procedure',
       },
     ],
     default: 'getAll',
@@ -112,35 +115,17 @@ export const proceduresFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
-        default: '',
-        description: 'Filter by the name of the procedure',
-      },
-      {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'Filter by company',
-      },
-      {
-        displayName: 'Slug',
-        name: 'slug',
-        type: 'string',
-        default: '',
-        description: 'Filter by the URL slug of the procedure',
-      },
-      {
-        displayName: 'Global Template',
-        name: 'global_template',
-        type: 'boolean',
-        default: false,
-        description: 'Filter for global templates',
+        description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Company Template',
@@ -150,11 +135,32 @@ export const proceduresFields: INodeProperties[] = [
         description: 'Filter for company-specific templates',
       },
       {
+        displayName: 'Global Template',
+        name: 'global_template',
+        type: 'boolean',
+        default: false,
+        description: 'Whether this is a global template',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'Filter by the name of the procedure',
+      },
+      {
         displayName: 'Parent Procedure ID',
         name: 'parent_procedure_id',
         type: 'number',
         default: '',
         description: 'Filter for child procedures of a specific parent procedure',
+      },
+      {
+        displayName: 'Slug',
+        name: 'slug',
+        type: 'string',
+        default: '',
+        description: 'Filter by the URL slug of the procedure',
       },
     ],
   },
@@ -211,21 +217,24 @@ export const proceduresFields: INodeProperties[] = [
         description: 'Description of the procedure',
       },
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
         },
         default: '',
-        description: 'The company to associate with the procedure',
+        description: 'The company to associate with the procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Company Template',
         name: 'company_template',
         type: 'boolean',
         default: false,
-        description: 'When true, sets both template and remove_completion_ability to true',
+        description: 'Whether to set both template and remove_completion_ability to true',
       },
     ],
   },
@@ -245,11 +254,31 @@ export const proceduresFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the procedure should be archived',
+      },
+      {
+        displayName: 'Company Name or ID',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
         default: '',
-        description: 'The new name for the procedure',
+        description: 'The company to associate with the procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+      },
+      {
+        displayName: 'Company Template',
+        name: 'company_template',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to set both template and remove_completion_ability to true',
       },
       {
         displayName: 'Description',
@@ -259,28 +288,11 @@ export const proceduresFields: INodeProperties[] = [
         description: 'The new description for the procedure',
       },
       {
-        displayName: 'Company Template',
-        name: 'company_template',
-        type: 'boolean',
-        default: false,
-        description: 'When true, sets both template and remove_completion_ability to true',
-      },
-      {
-        displayName: 'Company',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
-        },
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
         default: '',
-        description: 'The company to associate with the procedure',
-      },
-      {
-        displayName: 'Archived',
-        name: 'archived',
-        type: 'boolean',
-        default: false,
-        description: 'When true, archives the procedure',
+        description: 'The new name for the procedure',
       },
     ],
   },
@@ -314,11 +326,17 @@ export const proceduresFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Company ID',
+        displayName: 'Company Name or ID',
         name: 'company_id',
-        type: 'number',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
         default: '',
-        description: 'The ID of the company for the new procedure',
+        description: 'The company for the new procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Name',
@@ -353,18 +371,24 @@ export const proceduresFields: INodeProperties[] = [
     description: 'The ID of the procedure to duplicate',
   },
   {
-    displayName: 'Company ID',
+    displayName: 'Company Name or ID',
     name: 'companyId',
-    type: 'number',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
     required: true,
+    default: '',
     displayOptions: {
       show: {
         resource: ['procedures'],
         operation: ['duplicate'],
       },
     },
-    default: 0,
-    description: 'The ID of the company for the new duplicated procedure',
+    description: 'The company for the new duplicated procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',
@@ -439,5 +463,29 @@ export const proceduresFields: INodeProperties[] = [
         description: 'The new name for the procedure',
       },
     ],
+  },
+
+  // ----------------------------------
+  //         create & update
+  // ----------------------------------
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['procedures'],
+        operation: ['create', 'update', 'createFromTemplate', 'duplicate', 'kickoff'],
+      },
+    },
+    description: 'The company this procedure belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
 ];

@@ -1,4 +1,5 @@
-import { IDataObject } from 'n8n-workflow';
+import type { IDataObject } from 'n8n-workflow';
+import type { FilterMapping } from '../../utils/index';
 
 export interface IArticles extends IDataObject {
   id: number; // The unique ID of the article
@@ -22,10 +23,22 @@ export interface IArticlesResponse extends IDataObject {
 }
 
 export type ArticlesOperation =
+  | 'archive'
   | 'create'
+  | 'delete'
   | 'get'
   | 'getAll'
-  | 'update'
-  | 'delete'
-  | 'archive'
-  | 'unarchive';
+  | 'getVersionHistory'
+  | 'unarchive'
+  | 'update';
+
+export interface IArticlePostProcessFilters extends IDataObject {
+  folder_id?: number;
+}
+
+// Define how each filter should be applied
+export const articleFilterMapping: FilterMapping<IArticlePostProcessFilters> = {
+  folder_id: (item: IDataObject, value: unknown) => {
+    return Number(item.folder_id) === Number(value);
+  },
+};

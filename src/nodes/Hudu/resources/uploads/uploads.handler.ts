@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils/GenericFunctions';
+import { huduApiRequest } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { UploadOperation } from './uploads.types';
 

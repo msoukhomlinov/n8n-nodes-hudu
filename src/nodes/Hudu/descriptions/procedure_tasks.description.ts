@@ -13,12 +13,6 @@ export const procedureTasksOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Get All',
-        value: 'getAll',
-        description: 'Get all procedure tasks',
-        action: 'Get all procedure tasks',
-      },
-      {
         name: 'Create',
         value: 'create',
         description: 'Create a new procedure task',
@@ -35,6 +29,12 @@ export const procedureTasksOperations: INodeProperties[] = [
         value: 'get',
         description: 'Get a procedure task by ID',
         action: 'Get a procedure task',
+      },
+      {
+        name: 'Get Many',
+        value: 'getAll',
+        description: 'Get many procedure tasks',
+        action: 'Get many procedure tasks',
       },
       {
         name: 'Update',
@@ -78,7 +78,7 @@ export const procedureTasksFields: INodeProperties[] = [
     typeOptions: {
       minValue: 1,
     },
-    default: 25,
+    default: 50,
     description: 'Max number of results to return',
   },
   {
@@ -109,18 +109,17 @@ export const procedureTasksFields: INodeProperties[] = [
         description: 'Filter by the name of the task',
       },
       {
-        displayName: 'Company',
+        displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getCompanies',
-          loadOptionsDependencies: ['includeBlank'],
           loadOptionsParameters: {
             includeBlank: true,
           },
         },
-        default: undefined,
-        description: 'Filter by the company',
+        default: '',
+        description: 'Filter by the company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },
@@ -170,67 +169,7 @@ export const procedureTasksFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Description',
-        name: 'description',
-        type: 'string',
-        default: '',
-        description: 'A detailed description of the task',
-      },
-      {
-        displayName: 'Position',
-        name: 'position',
-        type: 'number',
-        default: undefined,
-        description: 'The position of the task in the procedure',
-      },
-      {
-        displayName: 'User',
-        name: 'user_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getUsers',
-        },
-        default: '',
-        description: 'The user assigned to the task',
-      },
-      {
-        displayName: 'Due Date',
-        name: 'due_date',
-        type: 'dateTime',
-        default: '',
-        description: 'The due date for the task',
-      },
-      {
-        displayName: 'Priority',
-        name: 'priority',
-        type: 'options',
-        options: [
-          {
-            name: 'Unsure',
-            value: 'unsure',
-          },
-          {
-            name: 'Low',
-            value: 'low',
-          },
-          {
-            name: 'Normal',
-            value: 'normal',
-          },
-          {
-            name: 'High',
-            value: 'high',
-          },
-          {
-            name: 'Urgent',
-            value: 'urgent',
-          },
-        ],
-        default: 'normal',
-        description: 'The priority level of the task',
-      },
-      {
-        displayName: 'Assigned Users',
+        displayName: 'Assigned User Names or IDs',
         name: 'assigned_users',
         type: 'multiOptions',
         typeOptions: {
@@ -241,7 +180,67 @@ export const procedureTasksFields: INodeProperties[] = [
           },
         },
         default: [],
-        description: 'The users assigned to the task',
+        description: 'The users assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+      },
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'A detailed description of the task',
+      },
+      {
+        displayName: 'Due Date',
+        name: 'due_date',
+        type: 'dateTime',
+        default: '',
+        description: 'The due date for the task',
+      },
+      {
+        displayName: 'Position',
+        name: 'position',
+        type: 'number',
+        default: undefined,
+        description: 'The position of the task in the procedure',
+      },
+      {
+        displayName: 'Priority',
+        name: 'priority',
+        type: 'options',
+        options: [
+          {
+            name: 'High',
+            value: 'high',
+          },
+          {
+            name: 'Low',
+            value: 'low',
+          },
+          {
+            name: 'Normal',
+            value: 'normal',
+          },
+          {
+            name: 'Unsure',
+            value: 'unsure',
+          },
+          {
+            name: 'Urgent',
+            value: 'urgent',
+          },
+        ],
+        default: 'normal',
+        description: 'The priority level of the task',
+      },
+      {
+        displayName: 'User Name or ID',
+        name: 'user_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+        },
+        default: '',
+        description: 'The user assigned to the task. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },
@@ -295,88 +294,7 @@ export const procedureTasksFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
-        default: '',
-        description: 'The name of the task',
-      },
-      {
-        displayName: 'Description',
-        name: 'description',
-        type: 'string',
-        default: '',
-        description: 'A detailed description of the task',
-      },
-      {
-        displayName: 'Completed',
-        name: 'completed',
-        type: 'boolean',
-        default: false,
-        description: 'When true, marks the task as completed',
-      },
-      {
-        displayName: 'Procedure ID',
-        name: 'procedure_id',
-        type: 'number',
-        default: undefined,
-        description: 'The ID of the procedure this task belongs to',
-      },
-      {
-        displayName: 'Position',
-        name: 'position',
-        type: 'number',
-        default: undefined,
-        description: 'The position of the task in the procedure',
-      },
-      {
-        displayName: 'User',
-        name: 'user_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getUsers',
-        },
-        default: '',
-        description: 'The user assigned to the task',
-      },
-      {
-        displayName: 'Due Date',
-        name: 'due_date',
-        type: 'dateTime',
-        default: '',
-        description: 'The due date for the task',
-      },
-      {
-        displayName: 'Priority',
-        name: 'priority',
-        type: 'options',
-        options: [
-          {
-            name: 'Unsure',
-            value: 'unsure',
-          },
-          {
-            name: 'Low',
-            value: 'low',
-          },
-          {
-            name: 'Normal',
-            value: 'normal',
-          },
-          {
-            name: 'High',
-            value: 'high',
-          },
-          {
-            name: 'Urgent',
-            value: 'urgent',
-          },
-        ],
-        default: 'normal',
-        description: 'The priority level of the task',
-      },
-      {
-        displayName: 'Assigned Users',
+        displayName: 'Assigned User Names or IDs',
         name: 'assigned_users',
         type: 'multiOptions',
         typeOptions: {
@@ -387,7 +305,88 @@ export const procedureTasksFields: INodeProperties[] = [
           },
         },
         default: [],
-        description: 'The users assigned to the task',
+        description: 'The users assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+      },
+      {
+        displayName: 'Completed',
+        name: 'completed',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the task is marked as completed',
+      },
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'A detailed description of the task',
+      },
+      {
+        displayName: 'Due Date',
+        name: 'due_date',
+        type: 'dateTime',
+        default: '',
+        description: 'The due date for the task',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'The name of the task',
+      },
+      {
+        displayName: 'Position',
+        name: 'position',
+        type: 'number',
+        default: undefined,
+        description: 'The position of the task in the procedure',
+      },
+      {
+        displayName: 'Priority',
+        name: 'priority',
+        type: 'options',
+        options: [
+          {
+            name: 'High',
+            value: 'high',
+          },
+          {
+            name: 'Low',
+            value: 'low',
+          },
+          {
+            name: 'Normal',
+            value: 'normal',
+          },
+          {
+            name: 'Unsure',
+            value: 'unsure',
+          },
+          {
+            name: 'Urgent',
+            value: 'urgent',
+          },
+        ],
+        default: 'normal',
+        description: 'The priority level of the task',
+      },
+      {
+        displayName: 'Procedure ID',
+        name: 'procedure_id',
+        type: 'number',
+        default: undefined,
+        description: 'The ID of the procedure this task belongs to',
+      },
+      {
+        displayName: 'User Name or ID',
+        name: 'user_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getUsers',
+        },
+        default: '',
+        description: 'The user assigned to the task. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },
