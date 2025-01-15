@@ -3,9 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 #------ CURRENT DEVELOPMENT ------#
+## [1.2.1] - 2025-01-15
 
+### Added
+- Added comprehensive debugging capabilities controlled via debugConfig
 
-#------ RELEASED VERSIONS ------#
+### Fixed
+- Fixed asset creation operation to properly format and populate custom fields from asset layout fields
+- Fixed Asset delete, archive and unarchive operations to properly include company_id in the API path as per API specification
+- Fixed null response handling in get operations to return empty array instead of empty object
+- Fixed Article operations to use correct parameter name 'articleId' instead of 'id'
+- Fixed Article update operation to make name and content fields optional as per API specification
+- Fixed Article update operation by removing unsupported fields (draft, slug) and aligning descriptions with API specification
+- Fixed Article create operation by enforcing name requirement and making other fields optional
+
 ## [1.2.0] - 2025-01-08
 
 ### Added

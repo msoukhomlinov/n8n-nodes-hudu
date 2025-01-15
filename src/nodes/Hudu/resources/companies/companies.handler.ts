@@ -50,18 +50,15 @@ export async function handleCompaniesOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
-
       const qs: IDataObject = {
         ...filters,
       };
 
       if (filters.updated_at) {
         const updatedAtFilter = filters.updated_at as IDataObject;
-
         if (updatedAtFilter.range) {
           const rangeObj = updatedAtFilter.range as IDataObject;
-
-          const dateRange = processDateRange({
+          filters.updated_at = processDateRange({
             range: {
               mode: rangeObj.mode as 'exact' | 'range' | 'preset',
               exact: rangeObj.exact as string,
@@ -70,10 +67,7 @@ export async function handleCompaniesOperation(
               preset: rangeObj.preset as DateRangePreset,
             },
           });
-
-          qs.updated_at = dateRange || undefined;
-        } else {
-          qs.updated_at = undefined;
+          qs.updated_at = filters.updated_at;
         }
       }
 

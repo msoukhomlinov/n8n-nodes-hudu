@@ -1,15 +1,34 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { huduApiRequest } from '../requestUtils';
+import { DEBUG_CONFIG, debugLog } from '../debugConfig';
 
 export async function handleDeleteOperation(
   this: IExecuteFunctions,
   resourceEndpoint: string,
-  resourceId: string | number,
+  id: string | number,
+  companyId?: string | number,
 ): Promise<IDataObject | IDataObject[]> {
-  await huduApiRequest.call(
+  if (DEBUG_CONFIG.OPERATION_DELETE) {
+    debugLog('Delete Operation - Input', {
+      endpoint: resourceEndpoint,
+      id,
+      companyId,
+    });
+  }
+
+  const endpoint = companyId 
+    ? `/companies/${companyId}${resourceEndpoint}/${id}`
+    : `${resourceEndpoint}/${id}`;
+
+  const response = await huduApiRequest.call(
     this,
     'DELETE',
-    `${resourceEndpoint}/${resourceId}`,
+    endpoint,
   );
-  return { success: true };
+
+  if (DEBUG_CONFIG.OPERATION_DELETE) {
+    debugLog('Delete Operation - Response', response);
+  }
+
+  return response;
 } 

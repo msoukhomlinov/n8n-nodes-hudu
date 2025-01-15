@@ -268,7 +268,7 @@ export const articlesFields: INodeProperties[] = [
     ],
   },
 
-  // Fields for Create and Update operations
+  // Fields for Create operation
   {
     displayName: 'Name',
     name: 'name',
@@ -277,28 +277,72 @@ export const articlesFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['articles'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     default: '',
-    description: 'The name of the article',
+    description: 'Article name',
   },
   {
     displayName: 'Content',
     name: 'content',
     type: 'string',
-    required: true,
     typeOptions: {
       rows: 3,
     },
     displayOptions: {
       show: {
         resource: ['articles'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     default: '',
-    description: 'The HTML content of the article',
+    description: 'Article content',
+  },
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['create'],
+      },
+    },
+    default: '',
+    description: 'Used to associate article with a company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+  },
+  {
+    displayName: 'Enable Sharing',
+    name: 'enable_sharing',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['create'],
+      },
+    },
+    default: false,
+    description: 'Whether the article should have a public URL for non-authenticated users to view',
+  },
+  {
+    displayName: 'Folder ID',
+    name: 'folder_id',
+    type: 'number',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['create'],
+      },
+    },
+    default: undefined,
+    description: 'Used to associate article with a folder',
   },
 
   // Return All option for GetAll operation
@@ -335,15 +379,15 @@ export const articlesFields: INodeProperties[] = [
 
   // Additional Fields for Create and Update operations
   {
-    displayName: 'Additional Fields',
-    name: 'additionalFields',
+    displayName: 'Update Fields',
+    name: 'updateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},
     displayOptions: {
       show: {
         resource: ['articles'],
-        operation: ['create', 'update'],
+        operation: ['update'],
       },
     },
     options: [
@@ -361,32 +405,35 @@ export const articlesFields: INodeProperties[] = [
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
-        displayName: 'Draft',
-        name: 'draft',
-        type: 'boolean',
-        default: false,
-        description: 'Whether the article is a draft',
+        displayName: 'Content',
+        name: 'content',
+        type: 'string',
+        typeOptions: {
+          rows: 3,
+        },
+        default: '',
+        description: 'The HTML content of the article',
       },
       {
         displayName: 'Enable Sharing',
         name: 'enable_sharing',
         type: 'boolean',
         default: false,
-        description: 'Whether the article is shareable',
+        description: 'Whether the article should have a public URL for non-authenticated users to view',
       },
       {
         displayName: 'Folder ID',
         name: 'folder_id',
         type: 'number',
         default: undefined,
-        description: 'The unique folder ID where the article lives',
+        description: 'Used to associate article with a folder',
       },
       {
-        displayName: 'Slug',
-        name: 'slug',
+        displayName: 'Name',
+        name: 'name',
         type: 'string',
         default: '',
-        description: 'The URL slug of the article',
+        description: 'The name of the article',
       },
     ],
   },

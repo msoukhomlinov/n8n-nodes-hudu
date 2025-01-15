@@ -1,6 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange } from '../../utils';
-import type { IDateRange } from '../../utils';
+import { processDateRange, type DateRangePreset } from '../../utils';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -72,9 +71,9 @@ export async function handleNetworksOperation(
               exact: rangeObj.exact as string,
               start: rangeObj.start as string,
               end: rangeObj.end as string,
-              preset: rangeObj.preset as string,
+              preset: rangeObj.preset as DateRangePreset,
             },
-          } as IDateRange);
+          });
         }
       }
 
@@ -88,9 +87,9 @@ export async function handleNetworksOperation(
               exact: rangeObj.exact as string,
               start: rangeObj.start as string,
               end: rangeObj.end as string,
-              preset: rangeObj.preset as string,
+              preset: rangeObj.preset as DateRangePreset,
             },
-          } as IDateRange);
+          });
         }
       }
 

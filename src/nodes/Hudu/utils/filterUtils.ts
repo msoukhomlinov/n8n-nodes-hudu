@@ -9,6 +9,7 @@
  */
 
 import type { IDataObject } from 'n8n-workflow';
+import { DEBUG_CONFIG, debugLog } from './debugConfig';
 
 /**
  * Type for filter mapping functions
@@ -26,17 +27,59 @@ export type FilterMapping<T> = {
  * Apply post-processing filters to results
  */
 export function applyPostFilters<T extends IDataObject>(
-  items: T[],
-  filters: Record<string, unknown>,
-  filterMapping: Record<string, (item: T, value: unknown) => boolean>,
-): T[] {
-  if (!filters || !filterMapping) return items;
-
-  return items.filter((item) => {
-    return Object.entries(filters).every(([key, value]) => {
-      if (value === undefined || value === null) return true;
-      const filterFn = filterMapping[key];
-      return filterFn ? filterFn(item, value) : true;
+  results: IDataObject[],
+  filters: T,
+  filterMapping: Record<string, (item: IDataObject, value: unknown) => boolean>,
+): IDataObject[] {
+  if (DEBUG_CONFIG.UTIL_FILTERS) {
+    debugLog('Filter Processing - Input', {
+      resultCount: results.length,
+      filters,
+      availableFilters: Object.keys(filterMapping),
     });
-  });
+  }
+
+  try {
+    // Apply each filter in sequence
+    let filteredResults = [...results];
+
+    for (const [key, value] of Object.entries(filters)) {
+      const filterFn = filterMapping[key];
+      if (filterFn && value !== undefined && value !== '') {
+        if (DEBUG_CONFIG.UTIL_FILTERS) {
+          debugLog('Filter Processing - Applying Filter', {
+            filter: key,
+            value,
+            resultCountBefore: filteredResults.length,
+          });
+        }
+
+        filteredResults = filteredResults.filter(item => filterFn(item, value));
+
+        if (DEBUG_CONFIG.UTIL_FILTERS) {
+          debugLog('Filter Processing - Filter Applied', {
+            filter: key,
+            resultCountAfter: filteredResults.length,
+          });
+        }
+      }
+    }
+
+    if (DEBUG_CONFIG.UTIL_FILTERS) {
+      debugLog('Filter Processing - Final Results', {
+        initialCount: results.length,
+        finalCount: filteredResults.length,
+      });
+    }
+
+    return filteredResults;
+  } catch (error) {
+    if (DEBUG_CONFIG.UTIL_FILTERS) {
+      debugLog('Filter Processing - Error', {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+      }, 'error');
+    }
+    return results;
+  }
 } 

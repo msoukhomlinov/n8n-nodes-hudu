@@ -22,6 +22,9 @@ export async function handleAssetLayoutOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
+      const qs: IDataObject = {
+        ...filters,
+      };
 
       // Process date range if present
       if (filters.updated_at) {
@@ -30,7 +33,7 @@ export async function handleAssetLayoutOperation(
         if (updatedAtFilter.range) {
           const rangeObj = updatedAtFilter.range as IDataObject;
 
-          const dateRange = processDateRange({
+          filters.updated_at = processDateRange({
             range: {
               mode: rangeObj.mode as 'exact' | 'range' | 'preset',
               exact: rangeObj.exact as string,
@@ -39,10 +42,7 @@ export async function handleAssetLayoutOperation(
               preset: rangeObj.preset as DateRangePreset,
             },
           });
-
-          filters.updated_at = dateRange || undefined;
-        } else {
-          filters.updated_at = undefined;
+          qs.updated_at = filters.updated_at;
         }
       }
 
@@ -50,7 +50,7 @@ export async function handleAssetLayoutOperation(
         this,
         resourceEndpoint,
         'asset_layouts',
-        filters,
+        qs,
         returnAll,
         limit,
       );

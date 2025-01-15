@@ -8,6 +8,8 @@
  * - Date range error handling and validation
  */
 
+import { DEBUG_CONFIG, debugLog } from './debugConfig';
+
 export type DateRangePreset =
   | 'today'
   | 'yesterday'
@@ -59,6 +61,10 @@ function formatDate(date: Date): string {
 export function processDateRange(dateRange: IDateRange): string | undefined {
   if (!dateRange.range) {
     return undefined;
+  }
+
+  if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+    debugLog('Date Processing - Input', dateRange);
   }
 
   try {
@@ -175,7 +181,18 @@ export function processDateRange(dateRange: IDateRange): string | undefined {
           }
         }
     }
+
+    if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+      debugLog('Date Processing - Result', { result: undefined });
+    }
+
   } catch (error) {
+    if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+      debugLog('Date Processing - Error', {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+      }, 'error');
+    }
     if (error instanceof Error) {
       throw new Error(`Date range processing error: ${error.message}`);
     }

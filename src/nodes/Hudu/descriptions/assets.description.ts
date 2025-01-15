@@ -470,124 +470,23 @@ export const assetsFields: INodeProperties[] = [
             displayName: 'Field',
             values: [
               {
-                displayName: 'Field Name',
+                displayName: 'Field Label',
                 name: 'label',
                 type: 'string',
                 default: '',
-                description: 'Name of the custom field',
+                description: 'Label of the asset layout field (needs to be exact)',
               },
-              {
-                displayName: 'Field Type',
-                name: 'type',
-                type: 'options',
-                options: [
-                  {
-                    name: 'Checkbox',
-                    value: 'checkbox',
-                  },
-                  {
-                    name: 'Date',
-                    value: 'date',
-                  },
-                  {
-                    name: 'Email',
-                    value: 'email',
-                  },
-                  {
-                    name: 'Number',
-                    value: 'number',
-                  },
-                  {
-                    name: 'Password',
-                    value: 'password',
-                  },
-                  {
-                    name: 'Rich Text',
-                    value: 'rich_text',
-                  },
-                  {
-                    name: 'Text',
-                    value: 'text',
-                  },
-                  {
-                    name: 'URL',
-                    value: 'url',
-                  },
-                ],
-                default: 'text',
-                description: 'Type of the custom field',
-              },
-              // Text value (shown for text, rich_text, email, url)
               {
                 displayName: 'Value',
                 name: 'value',
                 type: 'string',
-                displayOptions: {
-                  show: {
-                    type: ['text', 'rich_text', 'email', 'url'],
-                  },
-                },
                 default: '',
-                description: 'Value for the text field',
-              },
-              // Number value
-              {
-                displayName: 'Value',
-                name: 'value',
-                type: 'number',
-                displayOptions: {
-                  show: {
-                    type: ['number'],
-                  },
-                },
-                default: 0,
-                description: 'Value for the number field',
-              },
-              // Date value
-              {
-                displayName: 'Value',
-                name: 'value',
-                type: 'dateTime',
-                displayOptions: {
-                  show: {
-                    type: ['date'],
-                  },
-                },
-                default: '',
-                description: 'Value for the date field',
-              },
-              // Checkbox value
-              {
-                displayName: 'Value',
-                name: 'value',
-                type: 'boolean',
-                displayOptions: {
-                  show: {
-                    type: ['checkbox'],
-                  },
-                },
-                default: false,
-                description: 'Whether to check this field',
-              },
-              // Password value
-              {
-                displayName: 'Value',
-                name: 'value',
-                type: 'string',
-                typeOptions: {
-                  password: true,
-                },
-                displayOptions: {
-                  show: {
-                    type: ['password'],
-                  },
-                },
-                default: '',
-                description: 'Value for the password field',
+                description: 'Value for the custom field',
               },
             ],
           },
         ],
+        description: 'Custom fields for the asset',
       },
       {
         displayName: 'Primary Mail',

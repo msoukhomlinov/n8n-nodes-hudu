@@ -6,6 +6,7 @@ import type {
   IDataObject,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { DEBUG_CONFIG, debugLog } from './utils/debugConfig';
 
 // Import all descriptions
 import * as descriptions from './descriptions';
@@ -177,11 +178,26 @@ export class Hudu implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
-    for (let i = 0; i < items.length; i++) {
-      const resource = this.getNodeParameter('resource', i) as string;
-      const operation = this.getNodeParameter('operation', i) as string;
+    if (DEBUG_CONFIG.NODE_INPUT) {
+      debugLog('Node Execution - Input Items', {
+        itemCount: items.length,
+        items,
+      });
+    }
 
+    for (let i = 0; i < items.length; i++) {
       try {
+        const resource = this.getNodeParameter('resource', i) as string;
+        const operation = this.getNodeParameter('operation', i) as string;
+
+        if (DEBUG_CONFIG.NODE_INPUT) {
+          debugLog(`Node Execution - Item ${i}`, {
+            resource,
+            operation,
+            itemData: items[i],
+          });
+        }
+
         let responseData: IDataObject | IDataObject[] = {};
 
         switch (resource) {
@@ -367,8 +383,23 @@ export class Hudu implements INodeType {
           ...item,
           pairedItem: { item: i },
         }));
+
+        if (DEBUG_CONFIG.NODE_OUTPUT) {
+          debugLog(`Node Execution - Item ${i} Output`, {
+            executionData,
+          });
+        }
+
         returnData.push(...executionData);
       } catch (error) {
+        if (DEBUG_CONFIG.NODE_OUTPUT) {
+          debugLog(`Node Execution - Item ${i} Error`, {
+            error,
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          }, 'error');
+        }
+
         if (this.continueOnFail()) {
           const executionErrorData = this.helpers.returnJsonArray({ error: error.message }).map((item) => ({
             ...item,
@@ -379,6 +410,13 @@ export class Hudu implements INodeType {
         }
         throw error;
       }
+    }
+
+    if (DEBUG_CONFIG.NODE_OUTPUT) {
+      debugLog('Node Execution - Final Output', {
+        returnDataCount: returnData.length,
+        returnData,
+      });
     }
 
     return [returnData];

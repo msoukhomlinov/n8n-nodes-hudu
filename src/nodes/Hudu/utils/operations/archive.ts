@@ -1,16 +1,36 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { huduApiRequest } from '../requestUtils';
+import { DEBUG_CONFIG, debugLog } from '../debugConfig';
 
 export async function handleArchiveOperation(
   this: IExecuteFunctions,
   resourceEndpoint: string,
-  resourceId: string | number,
-  isArchive: boolean,
+  id: string | number,
+  archive = true,
+  companyId?: string | number,
 ): Promise<IDataObject | IDataObject[]> {
-  const action = isArchive ? 'archive' : 'unarchive';
-  return await huduApiRequest.call(
+  if (DEBUG_CONFIG.OPERATION_ARCHIVE) {
+    debugLog('Archive Operation - Input', {
+      endpoint: resourceEndpoint,
+      id,
+      companyId,
+      action: archive ? 'archive' : 'unarchive',
+    });
+  }
+
+  const endpoint = companyId 
+    ? `/companies/${companyId}${resourceEndpoint}/${id}/${archive ? 'archive' : 'unarchive'}`
+    : `${resourceEndpoint}/${id}/${archive ? 'archive' : 'unarchive'}`;
+
+  const response = await huduApiRequest.call(
     this,
     'PUT',
-    `${resourceEndpoint}/${resourceId}/${action}`,
+    endpoint,
   );
+
+  if (DEBUG_CONFIG.OPERATION_ARCHIVE) {
+    debugLog('Archive Operation - Response', response);
+  }
+
+  return response;
 } 

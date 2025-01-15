@@ -8,10 +8,6 @@
  * - Type-safe data conversion between n8n and API formats
  */
 
-// Debug flags - set to true to enable debug logging
-const DEBUG = false;
-const DEBUG_RESPONSE = false;
-
 import type {
   IDataObject,
   IExecuteFunctions,
@@ -26,6 +22,7 @@ import { NodeApiError } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from './constants';
 import type { FilterMapping } from './types';
 import { applyPostFilters } from './filterUtils';
+import { DEBUG_CONFIG, debugLog } from './debugConfig';
 
 export interface IHuduRequestOptions {
   method: IHttpRequestMethods;
@@ -97,8 +94,8 @@ export async function executeHuduRequest(
   }
 
   try {
-    if (DEBUG) {
-      console.log('Making request to Hudu API:', {
+    if (DEBUG_CONFIG.API_REQUEST) {
+      debugLog('Hudu API Request', {
         method: requestOptions.method,
         url: requestOptions.url,
         headers: requestOptions.headers,
@@ -114,8 +111,8 @@ export async function executeHuduRequest(
     const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
 
     // Log response for GET requests
-    if (DEBUG_RESPONSE) {
-      console.log('DEBUG - Response:', {
+    if (DEBUG_CONFIG.API_RESPONSE) {
+      debugLog('Hudu API Response', {
         type: typeof response,
         isArray: Array.isArray(response),
         keys: typeof response === 'object' ? Object.keys(response || {}) : [],
@@ -124,14 +121,19 @@ export async function executeHuduRequest(
       });
     }
 
-    return response || {};
+    // Return empty array for null/undefined responses
+    if (response === null || response === undefined) {
+      return [];
+    }
+
+    return response;
   } catch (error) {
-    if (DEBUG) {
-      console.error('Hudu API Error:', {
+    if (DEBUG_CONFIG.API_REQUEST) {
+      debugLog('Hudu API Error', {
         error,
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-      });
+      }, 'error');
     }
     const jsonError: JsonObject = {};
     if (error instanceof Error) {
@@ -156,9 +158,14 @@ export function parseHuduResponse(
   response: IDataObject | IDataObject[],
   resourceName?: string,
 ): IDataObject[] {
-  // If response is already an array, return it
+  // If response is empty or undefined, return empty array
+  if (!response || (typeof response === 'object' && Object.keys(response).length === 0)) {
+    return [];
+  }
+
+  // If response is already an array, return it if not empty
   if (Array.isArray(response)) {
-    return response as IDataObject[];
+    return response.filter(item => item && Object.keys(item).length > 0);
   }
 
   // If we have a resource name, the response should be an object with that key
@@ -168,10 +175,10 @@ export function parseHuduResponse(
     if (data[resourceName] !== undefined) {
       const resourceData = data[resourceName];
       if (Array.isArray(resourceData)) {
-        return resourceData as IDataObject[];
+        return resourceData.filter(item => item && Object.keys(item).length > 0) as IDataObject[];
       }
-      // If it's a single item, wrap it in an array
-      if (resourceData !== null && typeof resourceData === 'object') {
+      // If it's a single item and not empty, wrap it in an array
+      if (resourceData !== null && typeof resourceData === 'object' && Object.keys(resourceData).length > 0) {
         return [resourceData as IDataObject];
       }
     }
@@ -180,8 +187,8 @@ export function parseHuduResponse(
     return [];
   }
 
-  // If no resource name and response is an object, wrap it in an array
-  return [response as IDataObject];
+  // If no resource name and response is a non-empty object, wrap it in an array
+  return Object.keys(response).length > 0 ? [response as IDataObject] : [];
 }
 
 /**

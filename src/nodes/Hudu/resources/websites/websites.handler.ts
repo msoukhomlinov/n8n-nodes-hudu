@@ -1,13 +1,12 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { processDateRange } from '../../utils';
-import type { DateRangePreset, IDateRange } from '../../utils';
-import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import type { DateRangePreset } from '../../utils';
 import {
-  handleCreateOperation,
-  handleDeleteOperation,
-  handleGetOperation,
-  handleGetAllOperation,
-  handleUpdateOperation,
+	handleCreateOperation,
+	handleDeleteOperation,
+	handleGetOperation,
+	handleGetAllOperation,
+	handleUpdateOperation,
 } from '../../utils/operations';
 import type { WebsiteOperation } from './websites.types';
 
@@ -22,13 +21,15 @@ export async function handleWebsitesOperation(
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+      const limit = this.getNodeParameter('limit', i, 25) as number;
 
       if (filters.company_id) {
         filters.company_id = Number.parseInt(filters.company_id as string, 10);
       }
+      const qs: IDataObject = {
+        ...filters,
+      };
 
-      // Process date range filters
       if (filters.created_at) {
         const createdAtFilter = filters.created_at as IDataObject;
         if (createdAtFilter.range) {
@@ -41,7 +42,8 @@ export async function handleWebsitesOperation(
               end: rangeObj.end as string,
               preset: rangeObj.preset as DateRangePreset,
             },
-          } as IDateRange);
+          });
+          qs.created_at = filters.created_at;
         }
       }
 
@@ -57,7 +59,8 @@ export async function handleWebsitesOperation(
               end: rangeObj.end as string,
               preset: rangeObj.preset as DateRangePreset,
             },
-          } as IDateRange);
+          });
+          qs.updated_at = filters.updated_at;
         }
       }
 
@@ -65,7 +68,7 @@ export async function handleWebsitesOperation(
         this,
         resourceEndpoint,
         'websites',
-        filters,
+        qs,
         returnAll,
         limit,
       );

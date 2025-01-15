@@ -1,14 +1,12 @@
 # n8n-nodes-hudu
 
-This is an n8n community node (v1.0.0). It lets you use Hudu in your n8n workflows.
+This n8n community node enables the integration of Hudu within your n8n workflows.
 
 [Hudu](https://www.hudu.com/) is a modern documentation platform for IT.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
 This node was built against Hudu v2.34.4. Future versions of Hudu may not be 100% compatible without node updates.
-
-> **Note:** This is version 1.0.0, so some bugs are expected. Please report any issues on the [GitHub repository](https://github.com/msoukhomlinov/n8n-nodes-hudu).
 
 ## Installation
 
@@ -18,106 +16,141 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ### Activity Logs
 
-- Get all activity logs
+- Get all activity logs with filtering support
+- Filter by user, action, and date range
 
 ### API Info
 
-- Get API information
+- Get API information and version details
 
 ### Articles
 
-- Create, read, update, and delete articles
-- List all articles with pagination support
+- Create articles (name required, with optional content, company, folder, and sharing settings)
+- Update articles with flexible field updates
+- Archive and unarchive articles
+- Delete articles
+- Get single article details
+- List all articles with comprehensive filtering:
+  - Company ID
+  - Draft status
+  - Sharing status
+  - Folder ID
+  - Name exact match
+  - Fuzzy search
+  - Updated date range
+- Get article version history
 
 ### Asset Layouts
 
-- Manage asset layout templates
+- Create and manage asset layout templates
+- Get layout fields and configurations
+- List all layouts with filtering support
 
 ### Asset Passwords
 
-- Manage asset-related passwords
+- Create and manage asset-related passwords
+- Link passwords to assets and companies
+- Filter by company and resource types
 
 ### Assets
 
-- Create and manage assets
+- Create assets with custom fields
 - Link assets to companies
+- Update asset details
+- Archive/unarchive assets
+- Delete assets
+- Get single asset details
+- List all assets with filtering support:
+  - Company association
+  - Updated date range
+  - Custom field values
 
 ### Cards
 
-- Manage cards in the system
+- Lookup cards by integration
+- Jump to card functionality
+- Filter by integration type and slug
 
 ### Companies
 
-- Create a company
-- Delete a company
-- Get a company
-- Get all companies
-- Update a company
+- Create companies with detailed information
+- Update company details
+- Delete companies
+- Get single company information
+- List all companies with filtering support
+- Jump to company by integration
 
 ### Expirations
 
-- Get all expirations with filtering support for:
+- Get all expirations with comprehensive filtering:
   - Company ID
   - Expiration type
   - Resource ID
   - Resource type
+  - Date ranges
 
 ### Folders
 
-- Manage document folders
+- Create and manage document folders
+- Support for nested folder structures
+- Filter by parent folder
+- Track child folder status
 
 ### IP Addresses
 
 - Track and manage IP addresses
+- Link to companies and networks
+- Filter by company and network
 
 ### Magic Dash
 
 - Access Magic Dash functionality
+- Filter by company and title
+- Delete by title and company name
 
 ### Matchers
 
-- Configure and manage matchers
+- Configure and manage integration matchers
+- Filter by match status and company
+- Support for sync identifiers
 
 ### Networks
 
-- Manage network information
+- Create and manage network information
+- Link to companies
+- Filter by company and attributes
 
 ### Password Folders
 
-- Organise and manage password folders
+- Create and organize password folders
+- Support for folder hierarchy
+- Filter by parent folder
 
 ### Procedures
 
 - Create and manage procedures
-- Handle procedure tasks
-
-### Public Photos
-
-- Manage public photos
-
-### Rack Storage
-
-- Manage rack storage
-- Handle rack storage items
+- Create from templates
+- Duplicate existing procedures
+- Manage procedure tasks
+- Track task completion
 
 ### Relations
 
-- Manage relationships between resources
-
-### Uploads
-
-- Handle file uploads
-- Get upload information
-- Delete uploads
+- Create and manage resource relationships
+- Support for various resource types
+- Filter by relationship types and directions
 
 ### Users
 
 - Get user information
 - List all users
+- Filter by role and status
 
 ### Websites
 
 - Manage website records
+- Link to companies
+- Filter by company and status
 
 ## Credentials
 
@@ -131,11 +164,14 @@ To use this node, you need to:
 
 ## Features
 
-- Pagination support for applicable resources
-- Comprehensive error handling
-- Filtering capabilities for relevant operations
-- Supports both single and bulk operations
-- Automatic rate limiting and request optimisation
+- Comprehensive pagination support for all applicable resources
+- Robust error handling and debugging capabilities
+- Advanced filtering options with both API-side and client-side filtering
+- Support for both single and bulk operations
+- Dynamic loading of related resources (companies, layouts, etc.)
+- Date range filtering with preset options
+- Automatic type conversion and validation
+- Debug logging for troubleshooting
 
 ## Resources
 

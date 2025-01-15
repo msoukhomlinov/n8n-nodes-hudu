@@ -1,6 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange } from '../../utils';
-import type { IDateRange } from '../../utils';
+import { processDateRange, type DateRangePreset } from '../../utils';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -38,9 +37,10 @@ export async function handleIpAddressesOperation(
               exact: rangeObj.exact as string,
               start: rangeObj.start as string,
               end: rangeObj.end as string,
-              preset: rangeObj.preset as string,
+              preset: rangeObj.preset as DateRangePreset,
             },
-          } as IDateRange);
+          });
+          qs.created_at = filters.created_at;
         }
       }
 
@@ -54,9 +54,10 @@ export async function handleIpAddressesOperation(
               exact: rangeObj.exact as string,
               start: rangeObj.start as string,
               end: rangeObj.end as string,
-              preset: rangeObj.preset as string,
+              preset: rangeObj.preset as DateRangePreset,
             },
-          } as IDateRange);
+          });
+          qs.updated_at = filters.updated_at;
         }
       }
 
