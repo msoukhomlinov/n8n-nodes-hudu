@@ -18,6 +18,7 @@ import * as resources from './resources';
 import { getUsers } from './optionLoaders/users';
 import { getCompanies } from './optionLoaders/companies';
 import { getAssetLayouts, getAssetLayoutFields, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
+import { getAssets } from './optionLoaders/assets';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -171,6 +172,7 @@ export class Hudu implements INodeType {
       getAssetLayouts,
       getAssetLayoutFields,
       getAssetLayoutFieldValues,
+      getAssets,
     },
   };
 
