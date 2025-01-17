@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-hudu",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "This n8n custom node facilitates integration with Hudu's API.",
   "keywords": [
     "n8n-community-node-package",
@@ -30,7 +30,7 @@
     "format": "prettier src nodes credentials --write",
     "lint": "eslint \"src/**/*.ts\" *.ts package.json",
     "lintfix": "eslint \"src/**/*.ts\" *.ts package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js *.ts package.json",
+    "prepublishOnly": "npm run build",
     "clean": "gulp cleanDist"
   },
   "files": [

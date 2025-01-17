@@ -257,15 +257,15 @@ export async function handleArticlesOperation(
       // Combine and transform responses
       const combinedLogs = [...createdLogs, ...updatedLogs];
       
-      // Sort by created_at in descending order (newest first)
+      // Sort by created_at in ascending order (oldest first)
       combinedLogs.sort((a, b) => {
         const dateA = new Date(a.created_at as string).getTime();
         const dateB = new Date(b.created_at as string).getTime();
-        return dateB - dateA;
+        return dateA - dateB;
       });
 
       // Transform to required format
-      responseData = combinedLogs.map((activity) => {
+      responseData = combinedLogs.map((activity, index) => {
         let articleContent = '';
         try {
           const detailsObj = JSON.parse(activity.details as string);
@@ -280,7 +280,12 @@ export async function handleArticlesOperation(
           created_at: activity.created_at,
           user_name: activity.user_name,
           article_html: articleContent,
-          company_name: activity.company_name,
+          seconds_since_last_revision: combinedLogs[index - 1] 
+            ? Math.floor(
+                (new Date(activity.created_at as string).getTime() - 
+                new Date(combinedLogs[index - 1].created_at as string).getTime()) / 1000
+              )
+            : null,
         };
       });
 
