@@ -38,6 +38,12 @@ export const folderOperations: INodeProperties[] = [
         action: 'Get many folders',
       },
       {
+        name: 'Get Path',
+        value: 'getPath',
+        description: 'Get the full path of a folder',
+        action: 'Get a folder path',
+      },
+      {
         name: 'Update',
         value: 'update',
         description: 'Update a folder',
@@ -296,5 +302,23 @@ export const folderFields: INodeProperties[] = [
         description: 'ID of the parent folder',
       },
     ],
+  },
+
+  // ----------------------------------
+  //         folders: getPath
+  // ----------------------------------
+  {
+    displayName: 'Folder ID',
+    name: 'folderId',
+    type: 'number',
+    displayOptions: {
+      show: {
+        resource: ['folders'],
+        operation: ['getPath'],
+      },
+    },
+    default: 0,
+    required: true,
+    description: 'The ID of the folder to get the path for',
   },
 ];

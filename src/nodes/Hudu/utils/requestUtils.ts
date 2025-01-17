@@ -33,6 +33,58 @@ export interface IHuduRequestOptions {
   contentType?: 'application/json' | 'application/x-www-form-urlencoded' | 'multipart/form-data';
 }
 
+// Rate limiting constants
+const RATE_LIMIT_CONFIG = {
+  MAX_RETRIES: 3,
+  BASE_DELAY_MS: 1000, // Start with 1 second delay
+  MAX_DELAY_MS: 10000, // Maximum delay of 10 seconds
+  JITTER_MS: 500, // Add up to 500ms of random jitter
+} as const;
+
+// HTTP Status Code Messages
+const HTTP_STATUS_MESSAGES = {
+  // Client Errors
+  400: 'Bad Request - The request was malformed or contains invalid parameters',
+  401: 'Unauthorized - Invalid or missing API credentials',
+  403: 'Forbidden - You do not have permission to access this resource',
+  404: 'Not Found - The requested resource does not exist',
+  422: 'Unprocessable Entity - The request was well-formed but contains semantic errors',
+  429: 'Rate Limited - Too many requests, please try again later',
+  
+  // Server Errors
+  500: 'Internal Server Error - An unexpected error occurred on the Hudu server',
+  502: 'Bad Gateway - Unable to reach the Hudu server',
+  503: 'Service Unavailable - The Hudu service is temporarily unavailable',
+  504: 'Gateway Timeout - The request timed out while waiting for Hudu server',
+} as const;
+
+/**
+ * Calculate delay for exponential backoff with jitter
+ */
+function calculateBackoffDelay(retryCount: number, retryAfter?: number): number {
+  if (retryAfter) {
+    // If server specifies retry-after in seconds, convert to ms and respect it
+    return retryAfter * 1000;
+  }
+
+  // Calculate exponential backoff: 2^retryCount * BASE_DELAY_MS
+  const exponentialDelay = Math.min(
+    RATE_LIMIT_CONFIG.BASE_DELAY_MS * Math.pow(2, retryCount),
+    RATE_LIMIT_CONFIG.MAX_DELAY_MS,
+  );
+
+  // Add random jitter
+  const jitter = Math.random() * RATE_LIMIT_CONFIG.JITTER_MS;
+  return exponentialDelay + jitter;
+}
+
+/**
+ * Sleep for specified milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
  * Convert IDataObject to JsonObject safely
  */
@@ -82,6 +134,13 @@ export function createHuduRequest(
 }
 
 /**
+ * Get a descriptive error message for an HTTP status code
+ */
+function getErrorMessage(statusCode: number, defaultMessage: string): string {
+  return HTTP_STATUS_MESSAGES[statusCode as keyof typeof HTTP_STATUS_MESSAGES] || defaultMessage;
+}
+
+/**
  * Execute an HTTP request to Hudu API
  */
 export async function executeHuduRequest(
@@ -93,61 +152,120 @@ export async function executeHuduRequest(
     throw new Error('Request helper not available');
   }
 
-  try {
-    if (DEBUG_CONFIG.API_REQUEST) {
-      debugLog('Hudu API Request', {
-        method: requestOptions.method,
-        url: requestOptions.url,
-        headers: requestOptions.headers,
-        qs: requestOptions.qs,
-        body: requestOptions.body,
-      });
-    }
+  let retryCount = 0;
 
-    // Get the raw response
-    const rawResponse = await helpers.request(requestOptions);
-    
-    // Parse the response if it's a string
-    const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
-
-    // Log response for GET requests
-    if (DEBUG_CONFIG.API_RESPONSE) {
-      debugLog('Hudu API Response', {
-        type: typeof response,
-        isArray: Array.isArray(response),
-        keys: typeof response === 'object' ? Object.keys(response || {}) : [],
-        requestedFilters: requestOptions.qs,
-        rawResponse: response,
-      });
-    }
-
-    // Return empty array for null/undefined responses
-    if (response === null || response === undefined) {
-      return [];
-    }
-
-    return response;
-  } catch (error) {
-    if (DEBUG_CONFIG.API_REQUEST) {
-      debugLog('Hudu API Error', {
-        error,
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'error');
-    }
-    const jsonError: JsonObject = {};
-    if (error instanceof Error) {
-      jsonError.message = error.message;
-      jsonError.name = error.name;
-      if (error.stack) {
-        jsonError.stack = error.stack;
+  while (true) {
+    try {
+      if (DEBUG_CONFIG.API_REQUEST) {
+        debugLog('Hudu API Request', {
+          method: requestOptions.method,
+          url: requestOptions.url,
+          headers: requestOptions.headers,
+          qs: requestOptions.qs,
+          body: requestOptions.body,
+          retryCount,
+        });
       }
-    } else if (typeof error === 'object' && error !== null) {
-      Object.assign(jsonError, toJsonObject(error as IDataObject));
-    } else {
-      jsonError.error = String(error);
+
+      // Get the raw response
+      const rawResponse = await helpers.request(requestOptions);
+      
+      // Parse the response if it's a string
+      const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+
+      // Log response for GET requests
+      if (DEBUG_CONFIG.API_RESPONSE) {
+        debugLog('Hudu API Response', {
+          type: typeof response,
+          isArray: Array.isArray(response),
+          keys: typeof response === 'object' ? Object.keys(response || {}) : [],
+          requestedFilters: requestOptions.qs,
+          rawResponse: response,
+        });
+      }
+
+      // Return empty array for null/undefined responses
+      if (response === null || response === undefined) {
+        return [];
+      }
+
+      return response;
+    } catch (error) {
+      if (DEBUG_CONFIG.API_REQUEST) {
+        debugLog('Hudu API Error', {
+          error,
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          retryCount,
+          statusCode: error.statusCode,
+        }, 'error');
+      }
+
+      // Check if it's a rate limit error and we haven't exceeded max retries
+      if (error.statusCode === 429 && retryCount < RATE_LIMIT_CONFIG.MAX_RETRIES) {
+        // Get retry-after header if available (in seconds)
+        const retryAfter = error.response?.headers?.['retry-after'];
+        const retryAfterMs = retryAfter ? parseInt(retryAfter, 10) : undefined;
+
+        // Calculate delay with exponential backoff
+        const delayMs = calculateBackoffDelay(retryCount, retryAfterMs);
+
+        if (DEBUG_CONFIG.API_REQUEST) {
+          debugLog('Rate Limited - Retrying', {
+            retryCount,
+            retryAfter: retryAfterMs,
+            delayMs,
+          });
+        }
+
+        // Wait before retrying
+        await sleep(delayMs);
+        retryCount++;
+        continue;
+      }
+
+      // Format error with specific status code message
+      const jsonError: JsonObject = {};
+      
+      // Get status code specific message
+      const statusMessage = error.statusCode ? 
+        getErrorMessage(error.statusCode, error.message || 'Unknown error') :
+        error.message || 'Unknown error';
+
+      if (error instanceof Error) {
+        jsonError.message = statusMessage;
+        jsonError.name = error.name;
+        if (error.stack) {
+          jsonError.stack = error.stack;
+        }
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = toJsonObject(error as IDataObject);
+        jsonError.message = statusMessage;
+        // Include any additional error details from the response
+        if (error.response?.body) {
+          try {
+            const errorBody = typeof error.response.body === 'string' ? 
+              JSON.parse(error.response.body) : 
+              error.response.body;
+            jsonError.details = errorBody;
+          } catch {
+            // If parsing fails, include raw error body
+            jsonError.details = error.response.body;
+          }
+        }
+        Object.assign(jsonError, errorObj);
+      } else {
+        jsonError.message = statusMessage;
+        jsonError.error = String(error);
+      }
+
+      // Add status code to error object
+      if (error.statusCode) {
+        jsonError.statusCode = error.statusCode;
+      }
+
+      throw new NodeApiError(this.getNode(), jsonError);
     }
-    throw new NodeApiError(this.getNode(), jsonError);
   }
 }
 

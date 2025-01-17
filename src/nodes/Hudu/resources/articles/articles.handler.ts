@@ -192,6 +192,104 @@ export async function handleArticlesOperation(
       );
       break;
     }
+
+    case 'getVersionHistory': {
+      const articleId = this.getNodeParameter('articleId', i) as string;
+      const filters = this.getNodeParameter('filters', i) as IDataObject;
+      
+      // Base additional fields
+      const baseAdditionalFields: IDataObject = {
+        resource_id: articleId,
+        resource_type: 'Article',
+      };
+
+      // Process date range filters if provided
+      if (filters.start_date && typeof filters.start_date === 'object' && 'range' in filters.start_date) {
+        const rangeObj = (filters.start_date as IDataObject).range as IDataObject;
+        baseAdditionalFields.created_at = processDateRange({
+          range: {
+            mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+            exact: rangeObj.exact as string,
+            start: rangeObj.start as string,
+            end: rangeObj.end as string,
+            preset: rangeObj.preset as DateRangePreset,
+          },
+        });
+      }
+
+      if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
+        debugLog('Articles Version History - Base Query', {
+          articleId,
+          baseAdditionalFields,
+        });
+      }
+
+      // Get created activities
+      const createdAdditionalFields = { ...baseAdditionalFields, action_message: 'created' };
+      const createdLogs = await handleGetAllOperation.call(
+        this,
+        '/activity_logs',
+        'activity_logs',
+        createdAdditionalFields,
+        true, // returnAll
+        undefined, // limit
+      ) as IDataObject[];
+
+      if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
+        debugLog('Articles Version History - Created Activities Response', createdLogs);
+      }
+
+      // Get updated activities
+      const updatedAdditionalFields = { ...baseAdditionalFields, action_message: 'updated' };
+      const updatedLogs = await handleGetAllOperation.call(
+        this,
+        '/activity_logs',
+        'activity_logs',
+        updatedAdditionalFields,
+        true, // returnAll
+        undefined, // limit
+      ) as IDataObject[];
+
+      if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
+        debugLog('Articles Version History - Updated Activities Response', updatedLogs);
+      }
+
+      // Combine and transform responses
+      const combinedLogs = [...createdLogs, ...updatedLogs];
+      
+      // Sort by created_at in descending order (newest first)
+      combinedLogs.sort((a, b) => {
+        const dateA = new Date(a.created_at as string).getTime();
+        const dateB = new Date(b.created_at as string).getTime();
+        return dateB - dateA;
+      });
+
+      // Transform to required format
+      responseData = combinedLogs.map((activity) => {
+        let articleContent = '';
+        try {
+          const detailsObj = JSON.parse(activity.details as string);
+          articleContent = detailsObj.content || activity.details as string;
+        } catch (e) {
+          // If parsing fails, use the original details text
+          articleContent = activity.details as string;
+        }
+
+        return {
+          activity_id: activity.id,
+          created_at: activity.created_at,
+          user_name: activity.user_name,
+          article_html: articleContent,
+          company_name: activity.company_name,
+        };
+      });
+
+      if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
+        debugLog('Articles Version History - Final Response', responseData);
+      }
+
+      break;
+    }
   }
 
   if (DEBUG_CONFIG.RESOURCE_PROCESSING) {

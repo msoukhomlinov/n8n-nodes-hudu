@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, INTEGRATION_SLUGS } from '../utils/constants';
+import { formatTitleCase } from '../utils/formatters';
 
 export const companiesOperations: INodeProperties[] = [
   {
@@ -643,7 +644,7 @@ export const companiesFields: INodeProperties[] = [
     default: '',
     description: 'The integration type to use (e.g. autotask, cw_manage)',
     options: INTEGRATION_SLUGS.map((slug) => ({
-      name: slug,
+      name: formatTitleCase(slug),
       value: slug,
     })),
     displayOptions: {

@@ -83,7 +83,7 @@ export async function handleProceduresOperation(
         throw new Error('No valid parameters provided for update');
       }
 
-      return await handleUpdateOperation.call(this, resourceEndpoint, procedureId, { procedure: updateFields });
+      return await handleUpdateOperation.call(this, resourceEndpoint, procedureId, updateFields);
     }
 
     case 'createFromTemplate': {

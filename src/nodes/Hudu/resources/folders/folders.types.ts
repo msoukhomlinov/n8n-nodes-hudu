@@ -32,4 +32,9 @@ export const folderFilterMapping: FilterMapping<IFolderPostProcessFilters> = {
   },
 };
 
-export type FolderOperation = 'create' | 'get' | 'getAll' | 'update' | 'delete';
+export interface IFolderPathResponse extends IDataObject {
+  path: string;
+  folders: IFolder[];
+}
+
+export type FolderOperation = 'create' | 'get' | 'getAll' | 'update' | 'delete' | 'getPath';

@@ -424,7 +424,7 @@ export const proceduresFields: INodeProperties[] = [
   {
     displayName: 'Procedure ID',
     name: 'id',
-    type: 'string',
+    type: 'number',
     required: true,
     displayOptions: {
       show: {
@@ -483,7 +483,7 @@ export const proceduresFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['procedures'],
-        operation: ['create', 'update', 'createFromTemplate', 'duplicate', 'kickoff'],
+        operation: ['create', 'createFromTemplate', 'duplicate'],
       },
     },
     description: 'The company this procedure belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',

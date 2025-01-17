@@ -7,7 +7,7 @@ import {
   handleDeleteOperation,
 } from '../../utils/operations';
 import type { FilterMapping } from '../../utils/types';
-import type { FolderOperation, IFolderPostProcessFilters } from './folders.types';
+import type { FolderOperation, IFolderPostProcessFilters, IFolder, IFolderPathResponse } from './folders.types';
 import { folderFilterMapping } from './folders.types';
 
 export async function handleFolderOperation(
@@ -98,6 +98,29 @@ export async function handleFolderOperation(
       };
 
       responseData = await handleUpdateOperation.call(this, resourceEndpoint, folderId, body);
+      break;
+    }
+
+    case 'getPath': {
+      const folderId = this.getNodeParameter('folderId', i) as string;
+      const folders: IFolder[] = [];
+      let currentFolderId: string | null = folderId;
+      
+      // Recursively get all folders in the path
+      while (currentFolderId) {
+        const folderData = await handleGetOperation.call(this, resourceEndpoint, currentFolderId) as IDataObject;
+        const folder = folderData.folder as IFolder;
+        folders.unshift(folder); // Add to start of array to maintain correct order
+        currentFolderId = folder.parent_folder_id ? folder.parent_folder_id.toString() : null;
+      }
+
+      // Build the path string
+      const path = folders.map(folder => folder.name).join(' / ');
+
+      responseData = {
+        path,
+        folders,
+      } as IFolderPathResponse;
       break;
     }
 

@@ -36,12 +36,23 @@ export async function handleProcedureDuplicateOperation(
 export async function handleProcedureKickoffOperation(
   this: IExecuteFunctions,
   procedureId: string,
-  additionalFields: IDataObject = {},
+  additionalFields: IDataObject,
 ): Promise<IDataObject | IDataObject[]> {
+  const qs: IDataObject = {};
+
+  if (additionalFields.asset_id) {
+    qs.asset_id = additionalFields.asset_id;
+  }
+
+  if (additionalFields.name) {
+    qs.name = additionalFields.name;
+  }
+
   return await huduApiRequest.call(
     this,
     'POST',
     `/procedures/${procedureId}/kickoff`,
-    additionalFields,
+    {},
+    qs,
   );
 } 

@@ -1,8 +1,68 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
 
-#------ CURRENT DEVELOPMENT ------#
+## Under Development
+
+### Article Activity Analysis Design
+- New operation `getArticleActivityMetrics` planned to provide insights into article engagement and user contributions:
+  - Analysis Perspectives:
+    * Article-centric: Track individual article activity and engagement
+    * User-centric: Monitor author/editor contributions and patterns
+  - Core Features:
+    * Activity measure selection (Most/Least/Trending)
+    * Multi-select action filtering (created/updated/archived/etc.)
+    * Required date range filtering
+    * Optional company and sharing status filters
+  - Analysis Metrics:
+    * Article Metrics:
+      - Activity frequency
+      - Revision count
+      - User engagement (unique editors)
+      - Time between updates
+    * User Metrics:
+      - Contribution volume
+      - Article coverage (unique articles edited)
+      - Action patterns (create vs edit ratio)
+  - Implementation:
+    * Activity log-based tracking for accurate historical data
+    * Aggregation by article_id or user_id based on perspective
+    * Time-series analysis for trend detection
+  - UI Components:
+    * Analysis perspective selector (Article/User focus)
+    * Measure type dropdown (Most Active, Least Active, etc.)
+    * Action multi-select checkboxes
+    * Date range selector (required)
+    * Company filter (optional)
+    * Sharing status filter (optional)
+    * Results limit control
+    * Sorting options for metrics
+
+
+
+## [1.2.5] - 2025-01-17
+
+### Added
+- Expanded API resource coverage to near 100% alignment with Hudu API specification
+- Added Activity Version History operation with comprehensive revision tracking:
+  - Support for retrieving complete version history
+  - Detailed change tracking including content modifications
+  - User attribution for each revision
+  - Timestamp tracking for all changes
+
+### Changed
+- Enhanced procedure operations with improved reliability and functionality
+- Updated resource handlers to better align with API specifications
+- Improved error handling and response formatting across all resources
+
+### Fixed
+- Fixed various procedure operation issues:
+  - Corrected parameter handling in procedure creation
+  - Fixed template-based procedure generation
+  - Resolved procedure update operation inconsistencies
+- Addressed pagination issues in multiple resource handlers
+- Fixed response formatting for nested resource structures
+
+
 ## [1.2.1] - 2025-01-15
 
 ### Added

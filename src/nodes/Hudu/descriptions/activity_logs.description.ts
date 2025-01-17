@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, ACTIVITY_LOG_ACTIONS, RESOURCE_TYPES } from '../utils/constants';
+import { formatTitleCase } from '../utils/formatters';
 
 export const activityLogsOperations: INodeProperties[] = [
   {
@@ -82,7 +83,7 @@ export const activityLogsFields: INodeProperties[] = [
         name: 'action_message',
         type: 'options',
         options: ACTIVITY_LOG_ACTIONS.map((action) => ({
-          name: action,
+          name: formatTitleCase(action),
           value: action,
         })),
         default: '',

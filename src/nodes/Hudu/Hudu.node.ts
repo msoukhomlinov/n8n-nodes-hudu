@@ -10,6 +10,7 @@ import { DEBUG_CONFIG, debugLog } from './utils/debugConfig';
 
 // Import all descriptions
 import * as descriptions from './descriptions';
+import { resourceProperty } from './descriptions/resources';
 
 // Import all resource types and handlers
 import * as resources from './resources';
@@ -53,63 +54,7 @@ export class Hudu implements INodeType {
       },
     },
     properties: [
-      {
-        displayName: 'Resource',
-        name: 'resource',
-        type: 'options',
-        noDataExpression: true,
-        options: [
-          {
-            name: 'Activity Log',
-            value: 'activity_logs',
-          },
-          {
-            name: 'API Info',
-            value: 'api_info',
-          },
-          {
-            name: 'Article',
-            value: 'articles',
-          },
-          {
-            name: 'Asset',
-            value: 'assets',
-          },
-          {
-            name: 'Asset Layout',
-            value: 'asset_layouts',
-          },
-          {
-            name: 'Asset Layout Field',
-            value: 'asset_layout_fields',
-          },
-          {
-            name: 'Asset Password',
-            value: 'asset_passwords',
-          },
-          {
-            name: 'Company',
-            value: 'companies',
-          },
-          {
-            name: 'Folder',
-            value: 'folders',
-          },
-          {
-            name: 'Relation',
-            value: 'relations',
-          },
-          {
-            name: 'User',
-            value: 'users',
-          },
-          {
-            name: 'Website',
-            value: 'websites',
-          },
-        ],
-        default: 'companies',
-      },
+      resourceProperty,
       // Operations
       ...descriptions.activityLogsOperations,
       ...descriptions.apiInfoOperations,

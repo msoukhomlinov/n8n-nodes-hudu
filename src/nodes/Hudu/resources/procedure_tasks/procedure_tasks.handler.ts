@@ -1,11 +1,10 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import {
+  handleGetAllOperation,
+  handleUpdateOperation,
   handleCreateOperation,
   handleDeleteOperation,
   handleGetOperation,
-  handleGetAllOperation,
-  handleUpdateOperation,
 } from '../../utils/operations';
 import type { ProcedureTasksOperations } from './procedure_tasks.types';
 

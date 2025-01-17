@@ -5,14 +5,14 @@
 
 export const DEBUG_CONFIG = {
   // API Communication
-  API_REQUEST: false,     // Debug API request details
+  API_REQUEST: true,     // Debug API request details
   API_RESPONSE: false,    // Debug API response details
 
   // Core Operations
   OPERATION_CREATE: false,   // Debug create operations
   OPERATION_UPDATE: false,   // Debug update operations
   OPERATION_DELETE: false,   // Debug delete operations
-  OPERATION_GET: false,      // Debug get operations
+  OPERATION_GET: true,      // Debug get operations
   OPERATION_GET_ALL: false,  // Debug getAll operations
   OPERATION_ARCHIVE: false,  // Debug archive operations
 

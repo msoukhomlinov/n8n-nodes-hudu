@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { INTEGRATION_SLUGS } from '../utils/constants';
+import { formatTitleCase } from '../utils/formatters';
 
 export const cardsOperations: INodeProperties[] = [
   {
@@ -46,7 +47,7 @@ export const cardsFields: INodeProperties[] = [
     default: '',
     description: 'The integration type to use (e.g. autotask, cw_manage)',
     options: INTEGRATION_SLUGS.map((slug) => ({
-      name: slug,
+      name: formatTitleCase(slug),
       value: slug,
     })),
     displayOptions: {
@@ -96,7 +97,7 @@ export const cardsFields: INodeProperties[] = [
     default: '',
     description: 'The integration type to use (e.g. autotask, cw_manage)',
     options: INTEGRATION_SLUGS.map((slug) => ({
-      name: slug,
+      name: formatTitleCase(slug),
       value: slug,
     })),
     displayOptions: {
@@ -142,7 +143,7 @@ export const cardsFields: INodeProperties[] = [
     default: '',
     description: 'The integration type to use (e.g. autotask, cw_manage)',
     options: INTEGRATION_SLUGS.map((slug) => ({
-      name: slug,
+      name: formatTitleCase(slug),
       value: slug,
     })),
     displayOptions: {

@@ -13,7 +13,7 @@ export async function handleActivityLogsOperation(
   switch (operation) {
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const filters = this.getNodeParameter('filters', i) as IDataObject;
+      const filters = this.getNodeParameter('additionalFields', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       return await handleGetAllOperation.call(
