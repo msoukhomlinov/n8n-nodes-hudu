@@ -35,6 +35,7 @@ export class Hudu implements INodeType {
     },
     inputs: ['main'],
     outputs: ['main'],
+    usableAsTool: true,
     credentials: [
       {
         name: 'huduApi',
