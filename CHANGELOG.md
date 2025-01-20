@@ -37,7 +37,7 @@ All notable changes to this project will be documented in this file.
     * Results limit control
     * Sorting options for metrics
 
-## [1.2.6] - 2025-01-20
+## [1.2.7] - 2025-01-20
 
 ### Changed
 - Enhanced validation for company ID fields across all resources:
