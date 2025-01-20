@@ -12,6 +12,14 @@ This node was built against Hudu v2.34.4. Future versions of Hudu may not be 100
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
+## Important Update Note
+
+When updating between versions, make sure to restart your n8n instance after the update. UI changes and new features are often only picked up after a restart. The recommended update process is:
+
+1. Update the node (`npm install n8n-nodes-hudu@latest`)
+2. Restart n8n instance
+3. Clear browser cache if needed
+
 ## Supported Resources & Operations
 
 ### Activity Logs
