@@ -37,7 +37,20 @@ All notable changes to this project will be documented in this file.
     * Results limit control
     * Sorting options for metrics
 
+## [1.2.6] - 2025-01-20
 
+### Changed
+- Enhanced validation for company ID fields across all resources:
+  - Added strict validation to ensure company IDs are positive integers
+  - Improved error messages for invalid company ID inputs
+  - Standardised company ID validation across all handlers
+  - Updated handlers: articles, websites, networks, rack_storages, ip_addresses
+  - Added clear error messages indicating when input is not a number
+
+### Fixed
+- Fixed company ID validation in dynamic picklists to prevent server errors
+- Standardised error handling for company ID fields across all resources
+- Ensured consistent validation behavior for company ID fields in filters and parameters
 
 ## [1.2.5] - 2025-01-17
 

@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, type DateRangePreset } from '../../utils';
+import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -61,6 +61,11 @@ export async function handleNetworksOperation(
         ...filters,
       };
 
+      // Validate company_id if provided
+      if (filters.company_id !== undefined && filters.company_id !== null && filters.company_id !== '') {
+        qs.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+      }
+
       if (filters.created_at) {
         const createdAtFilter = filters.created_at as IDataObject;
         if (createdAtFilter.range) {
@@ -93,11 +98,6 @@ export async function handleNetworksOperation(
         }
       }
 
-      // Convert company_id to number if present
-      if (filters.company_id !== undefined && filters.company_id !== null && filters.company_id !== '') {
-        qs.company_id = Number.parseInt(filters.company_id as string, 10);
-      }
-
       return await handleGetAllOperation.call(
         this,
         resourceEndpoint,
@@ -116,9 +116,9 @@ export async function handleNetworksOperation(
       const networkBody: IDataObject = {};
       for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          // Convert company_id to number if present
+          // Validate company_id if present
           if (key === 'company_id') {
-            networkBody[key] = Number.parseInt(value as string, 10);
+            networkBody[key] = validateCompanyId(value, this.getNode(), 'Company ID');
           } else {
             networkBody[key] = value;
           }

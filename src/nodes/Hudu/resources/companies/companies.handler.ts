@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange } from '../../utils/index';
+import { processDateRange, validateCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -25,6 +25,15 @@ export async function handleCompaniesOperation(
       const name = this.getNodeParameter('name', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
+      // Validate parent_company_id if provided
+      if (additionalFields.parent_company_id) {
+        additionalFields.parent_company_id = validateCompanyId(
+          additionalFields.parent_company_id,
+          this.getNode(),
+          'Parent Company ID'
+        );
+      }
+
       const body: IDataObject = {
         name,
         ...additionalFields,
@@ -35,14 +44,22 @@ export async function handleCompaniesOperation(
     }
 
     case 'delete': {
-      const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await handleDeleteOperation.call(this, resourceEndpoint, companyId);
+      const companyId = validateCompanyId(
+        this.getNodeParameter('id', i),
+        this.getNode(),
+        'Company ID'
+      );
+      responseData = await handleDeleteOperation.call(this, resourceEndpoint, companyId.toString());
       break;
     }
 
     case 'get': {
-      const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, companyId);
+      const companyId = validateCompanyId(
+        this.getNodeParameter('id', i),
+        this.getNode(),
+        'Company ID'
+      );
+      responseData = await handleGetOperation.call(this, resourceEndpoint, companyId.toString());
       break;
     }
 
@@ -87,24 +104,46 @@ export async function handleCompaniesOperation(
     }
 
     case 'update': {
-      const companyId = this.getNodeParameter('id', i) as string;
+      const companyId = validateCompanyId(
+        this.getNodeParameter('id', i),
+        this.getNode(),
+        'Company ID'
+      );
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+
+      // Validate parent_company_id if provided
+      if (updateFields.parent_company_id) {
+        updateFields.parent_company_id = validateCompanyId(
+          updateFields.parent_company_id,
+          this.getNode(),
+          'Parent Company ID'
+        );
+      }
+
       const body: IDataObject = {
         company: updateFields,
       };
-      responseData = await handleUpdateOperation.call(this, resourceEndpoint, companyId, body);
+      responseData = await handleUpdateOperation.call(this, resourceEndpoint, companyId.toString(), body);
       break;
     }
 
     case 'archive': {
-      const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await handleArchiveOperation.call(this, resourceEndpoint, companyId, true);
+      const companyId = validateCompanyId(
+        this.getNodeParameter('id', i),
+        this.getNode(),
+        'Company ID'
+      );
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, companyId.toString(), true);
       break;
     }
 
     case 'unarchive': {
-      const companyId = this.getNodeParameter('id', i) as string;
-      responseData = await handleArchiveOperation.call(this, resourceEndpoint, companyId, false);
+      const companyId = validateCompanyId(
+        this.getNodeParameter('id', i),
+        this.getNode(),
+        'Company ID'
+      );
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, companyId.toString(), false);
       break;
     }
 

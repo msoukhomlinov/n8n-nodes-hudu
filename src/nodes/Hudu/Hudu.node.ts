@@ -35,7 +35,8 @@ export class Hudu implements INodeType {
     },
     inputs: ['main'],
     outputs: ['main'],
-    usableAsTool: true,
+    // TODO: Enable this when we are ready to configure use of Hudu node as a tool for the n8n AI Agent
+    // usableAsTool: true,
     credentials: [
       {
         name: 'huduApi',

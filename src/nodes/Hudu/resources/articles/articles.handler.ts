@@ -9,7 +9,7 @@ import {
 } from '../../utils/operations';
 import type { ArticlesOperation } from './articles.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
-import { processDateRange, type DateRangePreset } from '../../utils';
+import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
 
 export async function handleArticlesOperation(
   this: IExecuteFunctions,
@@ -95,6 +95,12 @@ export async function handleArticlesOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
+
+      // Validate company_id if provided in filters
+      if (filters.company_id) {
+        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+      }
+
       const qs: IDataObject = {
         ...filters,
       };

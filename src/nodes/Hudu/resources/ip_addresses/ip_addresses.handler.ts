@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, type DateRangePreset } from '../../utils';
+import { processDateRange, validateCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -8,6 +8,7 @@ import {
   handleDeleteOperation,
 } from '../../utils/operations';
 import type { IpAddressOperations } from './ip_addresses.types';
+import type { DateRangePreset } from '../../utils/dateUtils';
 
 export async function handleIpAddressesOperation(
   this: IExecuteFunctions,
@@ -21,7 +22,7 @@ export async function handleIpAddressesOperation(
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       if (filters.company_id) {
-        filters.company_id = Number.parseInt(filters.company_id as string, 10);
+        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
       }
       const qs: IDataObject = {
         ...filters,

@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, type DateRangePreset } from '../../utils';
+import { processDateRange, validateCompanyId } from '../../utils/index';
 import {
   handleCreateOperation,
   handleDeleteOperation,
@@ -8,6 +8,7 @@ import {
   handleUpdateOperation,
 } from '../../utils/operations';
 import type { RackStorageOperation } from './rack_storages.types';
+import type { DateRangePreset } from '../../utils/dateUtils';
 
 export async function handleRackStorageOperation(
   this: IExecuteFunctions,
@@ -23,7 +24,7 @@ export async function handleRackStorageOperation(
       const limit = this.getNodeParameter('limit', i, 25) as number;
 
       if (filters.company_id) {
-        filters.company_id = Number.parseInt(filters.company_id as string, 10);
+        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
       }
       const qs: IDataObject = {
         ...filters,

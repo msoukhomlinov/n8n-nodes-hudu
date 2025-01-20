@@ -1,18 +1,15 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { processDateRange, validateCompanyId } from '../../utils/index';
 import {
-  handleCreateOperation,
-  handleDeleteOperation,
-  handleGetOperation,
   handleGetAllOperation,
+  handleGetOperation,
+  handleCreateOperation,
   handleUpdateOperation,
+  handleDeleteOperation,
+  handleArchiveOperation,
 } from '../../utils/operations';
-import {
-  handleProcedureCreateFromTemplateOperation,
-  handleProcedureDuplicateOperation,
-  handleProcedureKickoffOperation,
-} from '../../utils/operations/procedures';
 import type { ProceduresOperations } from './procedures.types';
+import type { DateRangePreset } from '../../utils/dateUtils';
 
 export async function handleProceduresOperation(
   this: IExecuteFunctions,
@@ -20,14 +17,20 @@ export async function handleProceduresOperation(
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
   const resourceEndpoint = '/procedures';
+  let responseData: IDataObject | IDataObject[] = {};
 
   switch (operation) {
     case 'create': {
       const name = this.getNodeParameter('name', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
+      // Validate company_id if provided
       if (additionalFields.company_id) {
-        additionalFields.company_id = Number.parseInt(additionalFields.company_id as string, 10);
+        additionalFields.company_id = validateCompanyId(
+          additionalFields.company_id,
+          this.getNode(),
+          'Company ID'
+        );
       }
 
       const body: IDataObject = {
@@ -35,17 +38,14 @@ export async function handleProceduresOperation(
         ...additionalFields,
       };
 
-      return await handleCreateOperation.call(this, resourceEndpoint, body);
-    }
-
-    case 'delete': {
-      const procedureId = this.getNodeParameter('id', i) as string;
-      return await handleDeleteOperation.call(this, resourceEndpoint, procedureId);
+      responseData = await handleCreateOperation.call(this, resourceEndpoint, { procedure: body });
+      break;
     }
 
     case 'get': {
       const procedureId = this.getNodeParameter('id', i) as string;
-      return await handleGetOperation.call(this, resourceEndpoint, procedureId);
+      responseData = await handleGetOperation.call(this, resourceEndpoint, procedureId);
+      break;
     }
 
     case 'getAll': {
@@ -53,15 +53,37 @@ export async function handleProceduresOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
 
+      // Validate company_id if provided in filters
       if (filters.company_id) {
-        filters.company_id = Number.parseInt(filters.company_id as string, 10);
+        filters.company_id = validateCompanyId(
+          filters.company_id,
+          this.getNode(),
+          'Company ID'
+        );
       }
 
       const qs: IDataObject = {
         ...filters,
       };
 
-      return await handleGetAllOperation.call(
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+          filters.updated_at = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as DateRangePreset,
+            },
+          });
+          qs.updated_at = filters.updated_at;
+        }
+      }
+
+      responseData = await handleGetAllOperation.call(
         this,
         resourceEndpoint,
         'procedures',
@@ -69,46 +91,98 @@ export async function handleProceduresOperation(
         returnAll,
         limit,
       );
+      break;
     }
 
     case 'update': {
       const procedureId = this.getNodeParameter('id', i) as string;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
+      // Validate company_id if provided
       if (updateFields.company_id) {
-        updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+        updateFields.company_id = validateCompanyId(
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID'
+        );
       }
 
-      if (Object.keys(updateFields).length === 0) {
-        throw new Error('No valid parameters provided for update');
-      }
+      const body: IDataObject = {
+        procedure: updateFields,
+      };
 
-      return await handleUpdateOperation.call(this, resourceEndpoint, procedureId, updateFields);
+      responseData = await handleUpdateOperation.call(this, resourceEndpoint, procedureId, body);
+      break;
+    }
+
+    case 'delete': {
+      const procedureId = this.getNodeParameter('id', i) as string;
+      responseData = await handleDeleteOperation.call(this, resourceEndpoint, procedureId);
+      break;
+    }
+
+    case 'archive': {
+      const procedureId = this.getNodeParameter('id', i) as string;
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, procedureId, true);
+      break;
+    }
+
+    case 'unarchive': {
+      const procedureId = this.getNodeParameter('id', i) as string;
+      responseData = await handleArchiveOperation.call(this, resourceEndpoint, procedureId, false);
+      break;
     }
 
     case 'createFromTemplate': {
-      const templateId = this.getNodeParameter('templateId', i) as string;
+      const templateId = this.getNodeParameter('template_id', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      return await handleProcedureCreateFromTemplateOperation.call(this, templateId, additionalFields);
+      // Validate company_id if provided
+      if (additionalFields.company_id) {
+        additionalFields.company_id = validateCompanyId(
+          additionalFields.company_id,
+          this.getNode(),
+          'Company ID'
+        );
+      }
+
+      const body: IDataObject = {
+        ...additionalFields,
+      };
+
+      responseData = await handleCreateOperation.call(
+        this,
+        `${resourceEndpoint}/${templateId}/create_from_template`,
+        { procedure: body },
+      );
+      break;
     }
 
     case 'duplicate': {
       const procedureId = this.getNodeParameter('id', i) as string;
-      const companyId = this.getNodeParameter('companyId', i) as number;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      return await handleProcedureDuplicateOperation.call(this, procedureId, companyId, additionalFields);
-    }
+      // Validate company_id if provided
+      if (additionalFields.company_id) {
+        additionalFields.company_id = validateCompanyId(
+          additionalFields.company_id,
+          this.getNode(),
+          'Company ID'
+        );
+      }
 
-    case 'kickoff': {
-      const procedureId = this.getNodeParameter('id', i) as string;
-      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+      const body: IDataObject = {
+        ...additionalFields,
+      };
 
-      return await handleProcedureKickoffOperation.call(this, procedureId, additionalFields);
+      responseData = await handleCreateOperation.call(
+        this,
+        `${resourceEndpoint}/${procedureId}/duplicate`,
+        { procedure: body },
+      );
+      break;
     }
   }
 
-  // This should never be reached due to TypeScript's exhaustive check
-  throw new Error(`Unsupported operation ${operation}`);
+  return responseData;
 }

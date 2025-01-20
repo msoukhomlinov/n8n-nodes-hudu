@@ -6,6 +6,7 @@
  * - HTTP request utilities (requestUtils.ts)
  * - Filter utilities (filterUtils.ts)
  * - Constants and configuration (constants.ts)
+ * - Validation utilities (validation.ts)
  * 
  * Import all utilities from this file using:
  * import { functionName } from '../../utils';
@@ -14,4 +15,5 @@
 export * from './dateUtils';
 export * from './requestUtils';
 export * from './filterUtils';
-export * from './constants'; 
+export * from './constants';
+export * from './validation'; 
