@@ -37,6 +37,15 @@ All notable changes to this project will be documented in this file.
     * Results limit control
     * Sorting options for metrics
 
+## [1.2.8] - 2025-01-21
+
+### Fixed
+- Fixed asset passwords create operation:
+  - Made 'name' and 'company_id' required fields
+  - Enhanced the `passwordable_type` field to use a picklist for improved user experience
+- Fixed asset passwords update operation to properly handle all fields
+- Improved field validation and error handling for asset password operations
+
 ## [1.2.7] - 2025-01-20
 
 ### Changed

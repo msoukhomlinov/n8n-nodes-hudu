@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import { HUDU_API_CONSTANTS, RESOURCE_TYPES } from '../utils/constants';
 
 export const assetPasswordOperations: INodeProperties[] = [
   {
@@ -77,7 +77,7 @@ export const assetPasswordFields: INodeProperties[] = [
     description: 'ID of the requested password',
   },
 
-  // Add company_id field
+  // Required fields for Create operation
   {
     displayName: 'Company Name or ID',
     name: 'company_id',
@@ -92,14 +92,12 @@ export const assetPasswordFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     default: '',
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
-
-  // Required fields for Create and Update operations
   {
     displayName: 'Name',
     name: 'name',
@@ -108,25 +106,11 @@ export const assetPasswordFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     default: '',
     description: 'Name of the password',
-  },
-  {
-    displayName: 'Username',
-    name: 'username',
-    type: 'string',
-    required: true,
-    displayOptions: {
-      show: {
-        resource: ['asset_passwords'],
-        operation: ['create', 'update'],
-      },
-    },
-    default: '',
-    description: 'Username associated with the password',
   },
   {
     displayName: 'Password',
@@ -139,73 +123,221 @@ export const assetPasswordFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     default: '',
     description: 'The actual password string',
   },
+
+  // Additional Fields for Create operation
   {
-    displayName: 'Description',
-    name: 'description',
-    type: 'string',
-    required: true,
+    displayName: 'Additional Fields',
+    name: 'additionalFields',
+    type: 'collection',
+    placeholder: 'Add Field',
+    default: {},
     displayOptions: {
       show: {
         resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
-    default: '',
-    description: 'Description or notes related to the password',
+    options: [
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'Description or notes related to the password',
+      },
+      {
+        displayName: 'In Portal',
+        name: 'in_portal',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the password is accessible in the portal',
+      },
+      {
+        displayName: 'OTP Secret',
+        name: 'otp_secret',
+        type: 'string',
+        typeOptions: {
+          password: true,
+        },
+        default: '',
+        description: 'Secret key for one-time passwords (OTP), if used',
+      },
+      {
+        displayName: 'Password Folder ID',
+        name: 'password_folder_id',
+        type: 'number',
+        default: undefined,
+        description: 'ID of the folder in which the password is stored',
+      },
+      {
+        displayName: 'Password Type',
+        name: 'password_type',
+        type: 'string',
+        typeOptions: {
+          password: true,
+        },
+        default: '',
+        description: 'Type or category of the password',
+      },
+      {
+        displayName: 'Passwordable ID',
+        name: 'passwordable_id',
+        type: 'number',
+        default: undefined,
+        description: "ID of the related object (e.g., 'Website') for the password",
+      },
+      {
+        displayName: 'Passwordable Type',
+        name: 'passwordable_type',
+        type: 'options',
+        options: RESOURCE_TYPES.map(type => ({
+          name: type,
+          value: type,
+        })),
+        default: '',
+        description: 'Type of the related object for the password',
+      },
+      {
+        displayName: 'URL',
+        name: 'url',
+        type: 'string',
+        default: '',
+        description: 'URL related to the password, if applicable',
+      },
+      {
+        displayName: 'Username',
+        name: 'username',
+        type: 'string',
+        default: '',
+        description: 'Username associated with the password',
+      },
+    ],
   },
+
+  // Update Fields
   {
-    displayName: 'Passwordable Type',
-    name: 'passwordable_type',
-    type: 'string',
-    typeOptions: {
-      password: true,
-    },
-    required: true,
+    displayName: 'Update Fields',
+    name: 'updateFields',
+    type: 'collection',
+    placeholder: 'Add Field',
+    default: {},
     displayOptions: {
       show: {
         resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+        operation: ['update'],
       },
     },
-    default: '',
-    description: "Type of the related object for the password (e.g., 'Asset', 'Website')",
-  },
-  {
-    displayName: 'OTP Secret',
-    name: 'otp_secret',
-    type: 'string',
-    typeOptions: {
-      password: true,
-    },
-    required: true,
-    displayOptions: {
-      show: {
-        resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+    options: [
+      {
+        displayName: 'Company Name or ID',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
-    },
-    default: '',
-    description: 'Secret key for one-time passwords (OTP), if used',
-  },
-  {
-    displayName: 'URL',
-    name: 'url',
-    type: 'string',
-    required: true,
-    displayOptions: {
-      show: {
-        resource: ['asset_passwords'],
-        operation: ['create', 'update'],
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'Description or notes related to the password',
       },
-    },
-    default: '',
-    description: 'URL related to the password, if applicable',
+      {
+        displayName: 'In Portal',
+        name: 'in_portal',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the password is accessible in the portal',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'Name of the password',
+      },
+      {
+        displayName: 'OTP Secret',
+        name: 'otp_secret',
+        type: 'string',
+        typeOptions: {
+          password: true,
+        },
+        default: '',
+        description: 'Secret key for one-time passwords (OTP), if used',
+      },
+      {
+        displayName: 'Password',
+        name: 'password',
+        type: 'string',
+        typeOptions: {
+          password: true,
+        },
+        default: '',
+        description: 'The actual password string',
+      },
+      {
+        displayName: 'Password Folder ID',
+        name: 'password_folder_id',
+        type: 'number',
+        default: undefined,
+        description: 'ID of the folder in which the password is stored',
+      },
+      {
+        displayName: 'Password Type',
+        name: 'password_type',
+        type: 'string',
+        typeOptions: {
+          password: true,
+        },
+        default: '',
+        description: 'Type or category of the password',
+      },
+      {
+        displayName: 'Passwordable ID',
+        name: 'passwordable_id',
+        type: 'number',
+        default: undefined,
+        description: "ID of the related object (e.g., 'Website') for the password",
+      },
+      {
+        displayName: 'Passwordable Type',
+        name: 'passwordable_type',
+        type: 'options',
+        options: RESOURCE_TYPES.map(type => ({
+          name: type,
+          value: type,
+        })),
+        default: '',
+        description: 'Type of the related object for the password',
+      },
+      {
+        displayName: 'URL',
+        name: 'url',
+        type: 'string',
+        default: '',
+        description: 'URL related to the password, if applicable',
+      },
+      {
+        displayName: 'Username',
+        name: 'username',
+        type: 'string',
+        default: '',
+        description: 'Username associated with the password',
+      },
+    ],
   },
 
   // Return All option for GetAll operation
@@ -280,20 +412,6 @@ export const assetPasswordFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter by name of password',
-      },
-      {
-        displayName: 'Page',
-        name: 'page',
-        type: 'number',
-        default: HUDU_API_CONSTANTS.DEFAULT_PAGE,
-        description: 'Get current page of results',
-      },
-      {
-        displayName: 'Page Size',
-        name: 'page_size',
-        type: 'number',
-        default: HUDU_API_CONSTANTS.PAGE_SIZE,
-        description: 'Number of results to return',
       },
       {
         displayName: 'Search',
@@ -476,68 +594,6 @@ export const assetPasswordFields: INodeProperties[] = [
           },
         ],
         description: 'Filter asset passwords updated within a range or at an exact time',
-      },
-    ],
-  },
-
-  // Additional Fields
-  {
-    displayName: 'Additional Fields',
-    name: 'additionalFields',
-    type: 'collection',
-    placeholder: 'Add Field',
-    default: {},
-    displayOptions: {
-      show: {
-        resource: ['asset_passwords'],
-        operation: ['create', 'update'],
-      },
-    },
-    options: [
-      {
-        displayName: 'In Portal',
-        name: 'in_portal',
-        type: 'boolean',
-        default: false,
-        description: 'Whether the password is accessible in the portal',
-      },
-      {
-        displayName: 'Login URL',
-        name: 'login_url',
-        type: 'string',
-        default: '',
-        description: 'URL for the login page associated with the password',
-      },
-      {
-        displayName: 'Password Folder ID',
-        name: 'password_folder_id',
-        type: 'number',
-        default: undefined,
-        description: 'ID of the folder in which the password is stored',
-      },
-      {
-        displayName: 'Password Type',
-        name: 'password_type',
-        type: 'string',
-        typeOptions: {
-          password: true,
-        },
-        default: '',
-        description: 'Type or category of the password',
-      },
-      {
-        displayName: 'Passwordable ID',
-        name: 'passwordable_id',
-        type: 'number',
-        default: undefined,
-        description: "ID of the related object (e.g., 'Website') for the password",
-      },
-      {
-        displayName: 'Slug',
-        name: 'slug',
-        type: 'string',
-        default: '',
-        description: 'URL-friendly identifier for the password',
       },
     ],
   },
