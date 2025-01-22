@@ -50,7 +50,7 @@ export async function handleAssetsOperation(
         this.getNode(),
         'Company ID'
       );
-      const assetId = this.getNodeParameter('asset_id', i) as string;
+      const assetId = this.getNodeParameter('id', i) as string;
       responseData = await handleGetOperation.call(
         this,
         `${resourceEndpoint}/${companyId}/assets`,
@@ -111,11 +111,29 @@ export async function handleAssetsOperation(
         this.getNode(),
         'Company ID'
       );
-      const assetId = this.getNodeParameter('asset_id', i) as string;
+      const assetId = this.getNodeParameter('id', i) as string;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
+      // Extract and format custom fields if they exist
+      let customFields;
+      if (updateFields.customFields) {
+        const customFieldsData = updateFields.customFields as IDataObject;
+        if (customFieldsData.field) {
+          customFields = (customFieldsData.field as IDataObject[]).reduce((acc, field) => {
+            // Convert spaces to underscores but preserve case
+            const key = (field.label as string).replace(/\s+/g, '_');
+            acc[key] = field.value;
+            return acc;
+          }, {} as IDataObject);
+        }
+        delete updateFields.customFields;
+      }
+
       const body: IDataObject = {
-        asset: updateFields,
+        asset: {
+          ...updateFields,
+          ...(customFields && { custom_fields: [customFields] }),
+        },
       };
 
       responseData = await handleUpdateOperation.call(
@@ -133,7 +151,7 @@ export async function handleAssetsOperation(
         this.getNode(),
         'Company ID'
       );
-      const assetId = this.getNodeParameter('asset_id', i) as string;
+      const assetId = this.getNodeParameter('id', i) as string;
       responseData = await handleDeleteOperation.call(
         this,
         `${resourceEndpoint}/${companyId}/assets`,
@@ -148,7 +166,7 @@ export async function handleAssetsOperation(
         this.getNode(),
         'Company ID'
       );
-      const assetId = this.getNodeParameter('asset_id', i) as string;
+      const assetId = this.getNodeParameter('id', i) as string;
       responseData = await handleArchiveOperation.call(
         this,
         `${resourceEndpoint}/${companyId}/assets`,
@@ -164,7 +182,7 @@ export async function handleAssetsOperation(
         this.getNode(),
         'Company ID'
       );
-      const assetId = this.getNodeParameter('asset_id', i) as string;
+      const assetId = this.getNodeParameter('id', i) as string;
       responseData = await handleArchiveOperation.call(
         this,
         `${resourceEndpoint}/${companyId}/assets`,
