@@ -30,10 +30,25 @@ export async function handleAssetsOperation(
       const assetLayoutId = this.getNodeParameter('asset_layout_id', i) as number;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
+      // Extract and format custom fields if they exist
+      let customFields: Record<string, unknown> | undefined;
+      const { customFields: customFieldsData, ...remainingFields } = additionalFields;
+      if (customFieldsData) {
+        const fields = customFieldsData as IDataObject;
+        if (fields.field) {
+          customFields = (fields.field as IDataObject[]).reduce<Record<string, unknown>>((acc, field) => {
+            const key = (field.label as string).replace(/\s+/g, '_');
+            acc[key] = field.value;
+            return acc;
+          }, {});
+        }
+      }
+
       const body: IDataObject = {
         name,
         asset_layout_id: assetLayoutId,
-        ...additionalFields,
+        ...remainingFields,
+        ...(customFields && { custom_fields: [customFields] }),
       };
 
       responseData = await handleCreateOperation.call(
@@ -115,23 +130,22 @@ export async function handleAssetsOperation(
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
       // Extract and format custom fields if they exist
-      let customFields;
-      if (updateFields.customFields) {
-        const customFieldsData = updateFields.customFields as IDataObject;
-        if (customFieldsData.field) {
-          customFields = (customFieldsData.field as IDataObject[]).reduce((acc, field) => {
-            // Convert spaces to underscores but preserve case
+      let customFields: Record<string, unknown> | undefined;
+      const { customFields: customFieldsData, ...remainingFields } = updateFields;
+      if (customFieldsData) {
+        const fields = customFieldsData as IDataObject;
+        if (fields.field) {
+          customFields = (fields.field as IDataObject[]).reduce<Record<string, unknown>>((acc, field) => {
             const key = (field.label as string).replace(/\s+/g, '_');
             acc[key] = field.value;
             return acc;
-          }, {} as IDataObject);
+          }, {});
         }
-        delete updateFields.customFields;
       }
 
       const body: IDataObject = {
         asset: {
-          ...updateFields,
+          ...remainingFields,
           ...(customFields && { custom_fields: [customFields] }),
         },
       };

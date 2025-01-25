@@ -451,7 +451,7 @@ export const assetsFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['assets'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     options: [
@@ -487,6 +487,92 @@ export const assetsFields: INodeProperties[] = [
           },
         ],
         description: 'Custom fields for the asset',
+      },
+      {
+        displayName: 'Primary Mail',
+        name: 'primary_mail',
+        type: 'string',
+        default: '',
+        description: 'The primary email associated with the asset',
+      },
+      {
+        displayName: 'Primary Manufacturer',
+        name: 'primary_manufacturer',
+        type: 'string',
+        default: '',
+        description: 'The primary manufacturer of the asset',
+      },
+      {
+        displayName: 'Primary Model',
+        name: 'primary_model',
+        type: 'string',
+        default: '',
+        description: 'The primary model of the asset',
+      },
+      {
+        displayName: 'Primary Serial',
+        name: 'primary_serial',
+        type: 'string',
+        default: '',
+        description: 'The primary serial number of the asset',
+      },
+    ],
+  },
+  // ----------------------------------
+  //         assets:update fields
+  // ----------------------------------
+  {
+    displayName: 'Update Fields',
+    name: 'updateFields',
+    type: 'collection',
+    placeholder: 'Add Field',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+      },
+    },
+    options: [
+      {
+        displayName: 'Custom Fields',
+        name: 'customFields',
+        placeholder: 'Add Custom Field',
+        type: 'fixedCollection',
+        typeOptions: {
+          multipleValues: true,
+        },
+        default: {},
+        options: [
+          {
+            name: 'field',
+            displayName: 'Field',
+            values: [
+              {
+                displayName: 'Field Label',
+                name: 'label',
+                type: 'string',
+                default: '',
+                description: 'Label of the asset layout field (needs to be exact)',
+              },
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'string',
+                default: '',
+                description: 'Value for the custom field',
+              },
+            ],
+          },
+        ],
+        description: 'Custom fields for the asset',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'The name of the asset',
       },
       {
         displayName: 'Primary Mail',

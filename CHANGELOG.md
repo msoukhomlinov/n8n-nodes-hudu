@@ -37,6 +37,14 @@ All notable changes to this project will be documented in this file.
     * Results limit control
     * Sorting options for metrics
 
+## [1.2.9] - 2025-01-25
+
+### Fixed
+- Fixed asset update operation:
+  - Properly structured update fields to handle both regular and custom fields
+  - Separated update fields from create fields for better clarity
+  - Improved field validation and error handling for asset updates
+
 ## [1.2.8] - 2025-01-21
 
 ### Fixed

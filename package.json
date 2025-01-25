@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-hudu",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "This n8n custom node facilitates integration with Hudu's API.",
   "keywords": [
     "n8n-community-node-package",
