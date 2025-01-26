@@ -5,46 +5,62 @@
 
 export const DEBUG_CONFIG = {
   // API Communication
-  API_REQUEST: false,     // Debug API request details
-  API_RESPONSE: false,    // Debug API response details
+  API_REQUEST: true,     // Debug API request details
+  API_RESPONSE: true,    // Debug API response details
 
   // Core Operations
-  OPERATION_CREATE: false,   // Debug create operations
-  OPERATION_UPDATE: false,   // Debug update operations
-  OPERATION_DELETE: false,   // Debug delete operations
-  OPERATION_GET: false,      // Debug get operations
-  OPERATION_GET_ALL: false,  // Debug getAll operations
-  OPERATION_ARCHIVE: false,  // Debug archive operations
+  OPERATION_CREATE: true,   // Debug create operations
+  OPERATION_UPDATE: true,   // Debug update operations
+  OPERATION_DELETE: true,   // Debug delete operations
+  OPERATION_GET: true,      // Debug get operations
+  OPERATION_GET_ALL: true,  // Debug getAll operations
+  OPERATION_ARCHIVE: true,  // Debug archive operations
 
   // Resource Handlers
-  RESOURCE_PROCESSING: false,  // Debug resource handler processing
-  RESOURCE_PARAMS: false,      // Debug parameter extraction in handlers
-  RESOURCE_TRANSFORM: false,   // Debug data transformations in handlers
+  RESOURCE_PROCESSING: true,  // Debug resource handler processing
+  RESOURCE_PARAMS: true,      // Debug parameter extraction in handlers
+  RESOURCE_TRANSFORM: true,   // Debug data transformations in handlers
+  RESOURCE_MAPPING: true,     // Debug resource mapping
 
   // Node Execution
-  NODE_INPUT: false,    // Debug input items to node
-  NODE_OUTPUT: false,   // Debug output from node
+  NODE_INPUT: true,    // Debug input items to node
+  NODE_OUTPUT: true,   // Debug output from node
 
   // Utility Functions
-  UTIL_DATE_PROCESSING: false,  // Debug date range processing
-  UTIL_FILTERS: false,          // Debug filter processing
-  UTIL_TYPE_CONVERSION: false   // Debug type conversions
+  UTIL_DATE_PROCESSING: true,  // Debug date range processing
+  UTIL_FILTERS: true,          // Debug filter processing
+  UTIL_TYPE_CONVERSION: true,   // Debug type conversions
+
+  // Asset Related
+  ASSET_OPTIONS: true,        // Debug asset options loading and processing
+  FIELD_TYPE_MAPPING: true,   // Debug field type mapping operations
+
+  // Additional options
+  OPTION_LOADING: true,       // Debug option loading
 } as const;
 
 /**
  * Debug logging utility
  */
-export function debugLog(title: string, obj: unknown, type: 'log' | 'error' = 'log'): void {
-  // Print the title
-  console[type](`*** ${title} ***`);
+export function debugLog(message: string, data?: unknown): void {
+  // Always log resource mapping and option loading debug messages
+  const isResourceMapping = message.includes('[ResourceMapping]');
+  const isOptionLoading = message.includes('[OptionLoading]');
+  const isAssetOptions = message.includes('[AssetOptions]');
+  const isFieldTypeMapping = message.includes('[FieldTypeMapping]');
   
-  // If object is present, print it
-  if (obj !== undefined) {
-    console[type](debugStringify(obj));
+  if (DEBUG_CONFIG.RESOURCE_MAPPING && isResourceMapping) {
+    console.log(`[Hudu][ResourceMapping] ${message}`, data);
+  } else if (DEBUG_CONFIG.OPTION_LOADING && isOptionLoading) {
+    console.log(`[Hudu][OptionLoading] ${message}`, data);
+  } else if (DEBUG_CONFIG.ASSET_OPTIONS && isAssetOptions) {
+    console.log(`[Hudu][AssetOptions] ${message}`, data);
+  } else if (DEBUG_CONFIG.FIELD_TYPE_MAPPING && isFieldTypeMapping) {
+    console.log(`[Hudu][FieldTypeMapping] ${message}`, data);
+  } else {
+    // For other debug messages, check the specific config
+    console.log(`[Hudu] ${message}`, data);
   }
-  
-  // Add a newline for better readability
-  console[type]('');
 }
 
 /**

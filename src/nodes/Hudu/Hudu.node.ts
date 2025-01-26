@@ -1,11 +1,15 @@
-import type { IExecuteFunctions } from 'n8n-core';
+/* eslint-disable n8n-nodes-base/node-class-description-inputs-wrong-regular-node */
 import type {
+  IExecuteFunctions,
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
   IDataObject,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import {
+  NodeOperationError,
+  NodeConnectionType,
+} from 'n8n-workflow';
 import { DEBUG_CONFIG, debugLog } from './utils/debugConfig';
 
 // Import all descriptions
@@ -18,8 +22,11 @@ import * as resources from './resources';
 // Import option loaders
 import { getUsers } from './optionLoaders/users';
 import { getCompanies } from './optionLoaders/companies';
-import { getAssetLayouts, getAssetLayoutFields, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
+import { getAssetLayouts, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
 import { getAssets } from './optionLoaders/assets';
+import { getAssetLayoutFields } from './optionLoaders/asset_layouts/getAssetLayoutFields';
+import { getCustomFieldsLayoutFields } from './optionLoaders/asset_layouts/getCustomFieldsLayoutFields';
+import { getAssetTagFields } from './optionLoaders/asset_layouts/getAssetTagFields';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -33,10 +40,10 @@ export class Hudu implements INodeType {
     defaults: {
       name: 'Hudu',
     },
-    inputs: ['main'],
-    outputs: ['main'],
+    inputs: [NodeConnectionType.Main],
+    // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+    outputs: [NodeConnectionType.Main],
     // TODO: Enable this when we are ready to configure use of Hudu node as a tool for the n8n AI Agent
-    // usableAsTool: true,
     credentials: [
       {
         name: 'huduApi',
@@ -112,14 +119,25 @@ export class Hudu implements INodeType {
     ],
   };
 
+  constructor() {
+    debugLog('Hudu node constructor - Registering methods', {
+      loadOptions: Object.keys(this.methods.loadOptions),
+      resourceMapping: Object.keys(this.methods.resourceMapping),
+    });
+  }
+
   methods = {
     loadOptions: {
       getUsers,
       getCompanies,
       getAssetLayouts,
-      getAssetLayoutFields,
       getAssetLayoutFieldValues,
       getAssets,
+      getCustomFieldsLayoutFields,
+    },
+    resourceMapping: {
+      getAssetLayoutFields,
+      getAssetTagFields,
     },
   };
 
@@ -346,12 +364,13 @@ export class Hudu implements INodeType {
             error,
             message: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
-          }, 'error');
+            level: 'error',
+          });
         }
 
         if (this.continueOnFail()) {
-          const executionErrorData = this.helpers.returnJsonArray({ error: error.message }).map((item) => ({
-            ...item,
+          const executionErrorData = this.helpers.returnJsonArray({ error: error.message }).map((item: IDataObject) => ({
+            json: item,
             pairedItem: { item: i },
           }));
           returnData.push(...executionErrorData);

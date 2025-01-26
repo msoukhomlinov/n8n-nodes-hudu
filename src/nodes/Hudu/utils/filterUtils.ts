@@ -78,7 +78,8 @@ export function applyPostFilters<T extends IDataObject>(
       debugLog('Filter Processing - Error', {
         error,
         message: error instanceof Error ? error.message : String(error),
-      }, 'error');
+        level: 'error',
+      });
     }
     return results;
   }

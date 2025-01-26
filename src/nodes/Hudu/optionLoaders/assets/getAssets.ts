@@ -3,7 +3,7 @@ import { handleListing } from '../../utils';
 
 interface AssetOption {
 	name: string;
-	value: number;
+	value: string | number;
 }
 
 interface HuduAsset extends IDataObject {
@@ -88,7 +88,11 @@ export async function getAssets(this: ILoadOptionsFunctions) {
 				}
 				acc[group].push({
 					name: formatAssetName(asset, false, showCompanyName),
-					value: asset.id,
+					value: JSON.stringify({
+						id: asset.id,
+						url: `/a/${asset.slug}`,
+						name: asset.name
+					}),
 				});
 				return acc;
 			}, {} as { [key: string]: AssetOption[] });
@@ -110,7 +114,11 @@ export async function getAssets(this: ILoadOptionsFunctions) {
 			}
 			acc[group].push({
 				name: formatAssetName(asset, showAssetType, false),
-				value: asset.id,
+				value: JSON.stringify({
+					id: asset.id,
+					url: `/a/${asset.slug}`,
+					name: asset.name
+				}),
 			});
 			return acc;
 		}, {} as { [key: string]: AssetOption[] });

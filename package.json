@@ -45,6 +45,9 @@
       "dist/nodes/Hudu/Hudu.node.js"
     ]
   },
+  "engines": {
+    "n8n": ">=1.70.0"
+  },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
     "@types/diff": "^7.0.0",
@@ -66,8 +69,8 @@
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "jsonc-eslint-parser": "^2.4.0",
-    "n8n-core": "^0.125.0",
-    "n8n-workflow": "^0.107.0",
+    "n8n-core": "^1.69.2",
+    "n8n-workflow": "^1.69.2",
     "node-fetch": "^2.7.0",
     "prettier": "^2.7.1",
     "typescript": "^4.9.5"
@@ -79,8 +82,6 @@
     "html-to-markdown": "^1.0.0",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
-    "n8n-core": "^0.125.0",
-    "n8n-workflow": "^0.107.0",
     "parse5": "^7.1.2"
   }
 }

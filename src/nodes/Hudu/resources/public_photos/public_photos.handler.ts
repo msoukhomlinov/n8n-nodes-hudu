@@ -1,5 +1,8 @@
-import type { IExecuteFunctions } from 'n8n-core';
-import type { IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+import type {
+  IExecuteFunctions,
+  IDataObject,
+  IHttpRequestMethods,
+} from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils';
 import type { PublicPhotoOperation } from './public_photos.types';
 

@@ -62,20 +62,14 @@ const HTTP_STATUS_MESSAGES = {
  * Calculate delay for exponential backoff with jitter
  */
 function calculateBackoffDelay(retryCount: number, retryAfter?: number): number {
-  if (retryAfter) {
-    // If server specifies retry-after in seconds, convert to ms and respect it
-    return retryAfter * 1000;
-  }
-
-  // Calculate exponential backoff: 2^retryCount * BASE_DELAY_MS
-  const exponentialDelay = Math.min(
-    RATE_LIMIT_CONFIG.BASE_DELAY_MS * Math.pow(2, retryCount),
-    RATE_LIMIT_CONFIG.MAX_DELAY_MS,
-  );
-
-  // Add random jitter
+  // If we have a retry-after header, use that as the base delay
+  const baseDelay = retryAfter ? retryAfter * 1000 : RATE_LIMIT_CONFIG.BASE_DELAY_MS;
+  
+  // Calculate exponential backoff with jitter
+  const exponentialDelay = baseDelay * (2 ** retryCount);
   const jitter = Math.random() * RATE_LIMIT_CONFIG.JITTER_MS;
-  return exponentialDelay + jitter;
+  
+  return Math.min(exponentialDelay + jitter, RATE_LIMIT_CONFIG.MAX_DELAY_MS);
 }
 
 /**
@@ -198,14 +192,15 @@ export async function executeHuduRequest(
           stack: error instanceof Error ? error.stack : undefined,
           retryCount,
           statusCode: error.statusCode,
-        }, 'error');
+          level: 'error',
+        });
       }
 
       // Check if it's a rate limit error and we haven't exceeded max retries
       if (error.statusCode === 429 && retryCount < RATE_LIMIT_CONFIG.MAX_RETRIES) {
         // Get retry-after header if available (in seconds)
         const retryAfter = error.response?.headers?.['retry-after'];
-        const retryAfterMs = retryAfter ? parseInt(retryAfter, 10) : undefined;
+        const retryAfterMs = retryAfter ? Number.parseInt(retryAfter, 10) : undefined;
 
         // Calculate delay with exponential backoff
         const delayMs = calculateBackoffDelay(retryCount, retryAfterMs);

@@ -191,7 +191,8 @@ export function processDateRange(dateRange: IDateRange): string | undefined {
       debugLog('Date Processing - Error', {
         error,
         message: error instanceof Error ? error.message : String(error),
-      }, 'error');
+        level: 'error',
+      });
     }
     if (error instanceof Error) {
       throw new Error(`Date range processing error: ${error.message}`);

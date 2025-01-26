@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import { HUDU_API_CONSTANTS, ASSET_LAYOUT_FIELD_TYPES, ASSET_LAYOUT_FIELD_LABELS } from '../utils/constants';
 
 export const assetLayoutOperations: INodeProperties[] = [
   {
@@ -418,8 +418,66 @@ export const assetLayoutFields: INodeProperties[] = [
           {
             displayName: 'Field Type',
             name: 'field_type',
-            type: 'string',
-            default: '',
+            type: 'options',
+            options: [
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.TEXT],
+                value: ASSET_LAYOUT_FIELD_TYPES.TEXT,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT],
+                value: ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.HEADING],
+                value: ASSET_LAYOUT_FIELD_TYPES.HEADING,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.CHECKBOX],
+                value: ASSET_LAYOUT_FIELD_TYPES.CHECKBOX,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.WEBSITE],
+                value: ASSET_LAYOUT_FIELD_TYPES.WEBSITE,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.PASSWORD],
+                value: ASSET_LAYOUT_FIELD_TYPES.PASSWORD,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+                value: ASSET_LAYOUT_FIELD_TYPES.NUMBER,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.DATE],
+                value: ASSET_LAYOUT_FIELD_TYPES.DATE,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT],
+                value: ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.EMBED],
+                value: ASSET_LAYOUT_FIELD_TYPES.EMBED,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.EMAIL],
+                value: ASSET_LAYOUT_FIELD_TYPES.EMAIL,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.PHONE],
+                value: ASSET_LAYOUT_FIELD_TYPES.PHONE,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG],
+                value: ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG,
+              },
+              {
+                name: ASSET_LAYOUT_FIELD_LABELS[ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA],
+                value: ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA,
+              },
+            ],
+            default: ASSET_LAYOUT_FIELD_TYPES.TEXT,
             description: 'The type of the field',
           },
           {

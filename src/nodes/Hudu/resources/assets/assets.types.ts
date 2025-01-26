@@ -39,4 +39,5 @@ export type AssetsOperations =
   | 'update'
   | 'delete'
   | 'archive'
-  | 'unarchive';
+  | 'unarchive'
+  | 'getManyAsAssetLinks';
