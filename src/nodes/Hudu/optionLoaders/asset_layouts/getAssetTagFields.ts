@@ -4,6 +4,8 @@ import { handleGetOperation } from '../../utils/operations';
 import type { IAssetLayoutFieldEntity } from '../../resources/asset_layout_fields/asset_layout_fields.types';
 import { ASSET_LAYOUT_FIELD_TYPES } from '../../utils/constants';
 import { debugLog } from '../../utils/debugConfig';
+import { huduApiRequest } from '../../utils/requestUtils';
+import type { IAssetResponse } from '../../resources/assets/assets.types';
 
 interface IAssetLayout {
 	id: number;
@@ -54,7 +56,34 @@ export async function mapAssetTagFieldsForResource(
 	try {
 		debugLog('[ResourceMapping] Starting getAssetTagFields');
 		
-		const layoutId = this.getNodeParameter('asset_layout_id', 0) as string;
+		let layoutId: string;
+		const operation = this.getNodeParameter('operation', 0) as string;
+
+		if (operation === 'update') {
+			// For update operation, get layout ID from asset details
+			const assetId = this.getNodeParameter('id', 0) as string;
+			debugLog('[ResourceMapping] Getting layout ID from asset:', assetId);
+
+			const response = await huduApiRequest.call(
+				this,
+				'GET',
+				'/assets',
+				{},
+				{ id: assetId },
+			) as IAssetResponse;
+
+			if (!response || !response.assets || !response.assets.length) {
+				throw new Error(`Asset with ID ${assetId} not found`);
+			}
+
+			const asset = response.assets[0] as { asset_layout_id: number };
+			layoutId = asset.asset_layout_id.toString();
+			debugLog('[ResourceMapping] Got layout ID from asset:', layoutId);
+		} else {
+			// For create operation, get layout ID from UI
+			layoutId = this.getNodeParameter('asset_layout_id', 0) as string;
+			debugLog('[ResourceMapping] Got layout ID from UI:', layoutId);
+		}
 		
 		debugLog('[ResourceMapping] Context:', { 
 			node: this.getNode().name,
@@ -62,7 +91,7 @@ export async function mapAssetTagFieldsForResource(
 		});
 
 		if (!layoutId) {
-			debugLog('[ResourceMapping] No layout ID provided, returning empty fields');
+			debugLog('[ResourceMapping] No layout ID available, returning empty fields');
 			return {
 				fields: [],
 			};

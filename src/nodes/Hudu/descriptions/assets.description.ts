@@ -62,7 +62,7 @@ export const assetsOperations: INodeProperties[] = [
 
 export const assetsFields: INodeProperties[] = [
   // ----------------------------------
-  //         assets:single operations (get/archive/unarchive/delete)
+  //         assets:single operations (get/archive/unarchive/delete/update)
   // ----------------------------------
   {
     displayName: 'Asset ID',
@@ -72,7 +72,7 @@ export const assetsFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['assets'],
-        operation: ['get', 'archive', 'unarchive', 'delete'],
+        operation: ['get', 'archive', 'unarchive', 'delete', 'update'],
       },
     },
     default: '',
@@ -306,18 +306,161 @@ export const assetsFields: INodeProperties[] = [
   //         assets:update
   // ----------------------------------
   {
-    displayName: 'Asset ID',
-    name: 'id',
-    type: 'number',
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+        },
+      },
     required: true,
     displayOptions: {
       show: {
         resource: ['assets'],
         operation: ['update'],
       },
+      hide: {
+        id: ['', 0],
+      },      
     },
     default: '',
-    description: 'The ID of the asset to update',
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },  
+  {
+    displayName: 'Show Asset Link Field Selector',
+    name: 'updateShowAssetLinkSelector',
+    type: 'boolean',
+    default: false,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+      },
+      hide: {
+        id: ['', 0],
+      },
+    },
+    description: 'Whether to show the Asset Link field selector',
+  },
+  {
+    displayName: 'Show Other Custom Fields Selector',
+    name: 'updateShowOtherFieldsSelector',
+    type: 'boolean',
+    default: false,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+      },
+      hide: {
+        id: ['', 0],
+      },
+    },
+    description: 'Whether to show the custom fields selector',
+  },
+  {
+    displayName: '▶️ All Custom Fields (Except Asset Links)',
+    name: 'updateCustomFieldsHeader',
+    type: 'notice',
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+        updateShowOtherFieldsSelector: [true],
+      },
+    },
+  },
+  {
+    displayName: 'Asset Custom Field Mappings',
+    description: 'Map asset layout fields to their values',
+    hint: 'The fields available will be based on the asset\'s layout',
+    name: 'updateFieldMappings',
+    type: 'resourceMapper',
+    default: {
+      mappingMode: 'defineBelow',
+      value: null,
+    },
+    typeOptions: {
+      loadOptionsDependsOn: ['id'],
+      resourceMapper: {
+        resourceMapperMethod: 'mapAssetLayoutFieldsForResource',
+        mode: 'add',
+        fieldWords: {
+          singular: 'field',
+          plural: 'fields',
+        },
+        addAllFields: false,
+        multiKeyMatch: true,
+        supportAutoMap: true,
+        noFieldsError: 'No fields in the asset\'s layout. Check for custom fields.',
+        matchingFieldsLabels: {
+          title: 'Asset Layout Fields',
+          description: 'Select the fields from the Asset Layout to map values to',
+          hint: 'The fields shown are from the asset\'s layout',
+        },
+      },
+    },
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+        updateShowOtherFieldsSelector: [true],
+      },
+    },
+  },
+  {
+    displayName: '▶️ Asset Link Fields Only',
+    name: 'updateAssetTagFieldsHeader',
+    type: 'notice',
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+        updateShowAssetLinkSelector: [true],
+      },
+    },
+  },
+  {
+    displayName: 'Asset Tag Field Mappings',
+    description: 'Map asset tag fields to their values',
+    hint: 'The tag fields available will be based on the asset\'s layout',
+    name: 'updateTagFieldMappings',
+    type: 'resourceMapper',
+    default: {
+      mappingMode: 'defineBelow',
+      value: null,
+    },
+    typeOptions: {
+      loadOptionsDependsOn: ['id'],
+      resourceMapper: {
+        resourceMapperMethod: 'mapAssetTagFieldsForResource',
+        mode: 'add',
+        fieldWords: {
+          singular: 'tag field',
+          plural: 'tag fields',
+        },
+        addAllFields: false,
+        multiKeyMatch: true,
+        supportAutoMap: true,
+        noFieldsError: 'No Asset Link fields are available in the asset\'s layout. Check for tag fields.',
+        matchingFieldsLabels: {
+          title: 'Asset Tag Fields',
+          description: 'Select the tag fields from the Asset Layout to map values to',
+          hint: 'The tag fields shown are from the asset\'s layout',
+        },
+      },
+    },
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+        updateShowAssetLinkSelector: [true],
+      },
+    },
   },
 
   // ----------------------------------
@@ -628,41 +771,41 @@ export const assetsFields: INodeProperties[] = [
       },
     },
     options: [
-      {
+  {
         displayName: 'Primary Mail',
         name: 'primary_mail',
-        type: 'string',
-        default: '',
+    type: 'string',
+    default: '',
         description: 'The primary email associated with the asset',
-      },
-      {
+  },  
+  {
         displayName: 'Primary Manufacturer',
         name: 'primary_manufacturer',
         type: 'string',
-        default: '',
+    default: '',
         description: 'The primary manufacturer of the asset',
-      },
-      {
+  },
+  {
         displayName: 'Primary Model',
         name: 'primary_model',
         type: 'string',
-        default: '',
+    default: '',
         description: 'The primary model of the asset',
-      },
-      {
+  },
+  {
         displayName: 'Primary Serial',
         name: 'primary_serial',
         type: 'string',
-        default: '',
+    default: '',
         description: 'The primary serial number of the asset',
       },
     ],
-  },
+      },
 
   // ----------------------------------
   //         assets:update fields
   // ----------------------------------
-  {
+   {
     displayName: 'Update Fields',
     name: 'updateFields',
     type: 'collection',
@@ -672,6 +815,9 @@ export const assetsFields: INodeProperties[] = [
       show: {
         resource: ['assets'],
         operation: ['update'],
+      },
+      hide: {
+        id: ['', 0],
       },
     },
     options: [
