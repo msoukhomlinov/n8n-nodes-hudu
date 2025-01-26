@@ -122,13 +122,6 @@ export class Hudu implements INodeType {
     ],
   };
 
-  constructor() {
-    debugLog('Hudu node constructor - Registering methods', {
-      loadOptions: Object.keys(this.methods.loadOptions),
-      resourceMapping: Object.keys(this.methods.resourceMapping),
-    });
-  }
-
   methods = {
     loadOptions: {
       getUsers,
