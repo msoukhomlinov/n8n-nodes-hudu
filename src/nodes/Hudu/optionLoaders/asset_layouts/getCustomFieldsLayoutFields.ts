@@ -21,7 +21,7 @@ export async function getCustomFieldsLayoutFields(
 	try {
 		debugLog('[CustomFields] Starting getCustomFieldsLayoutFields');
 		
-		const layoutId = this.getCurrentNodeParameter('customFields_asset_layout_id') as string;
+		const layoutId = this.getCurrentNodeParameter('getall_asset_layout_id') as string;
 		
 		debugLog('[CustomFields] Context:', { 
 			node: this.getNode().name,

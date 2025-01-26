@@ -24,9 +24,12 @@ import { getUsers } from './optionLoaders/users';
 import { getCompanies } from './optionLoaders/companies';
 import { getAssetLayouts, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
 import { getAssets } from './optionLoaders/assets';
-import { getAssetLayoutFields } from './optionLoaders/asset_layouts/getAssetLayoutFields';
+import { 
+	mapAssetLayoutFieldsForResource,
+	getAssetLayoutFields,
+} from './optionLoaders/asset_layouts/getAssetLayoutFields';
 import { getCustomFieldsLayoutFields } from './optionLoaders/asset_layouts/getCustomFieldsLayoutFields';
-import { getAssetTagFields } from './optionLoaders/asset_layouts/getAssetTagFields';
+import { mapAssetTagFieldsForResource } from './optionLoaders/asset_layouts/getAssetTagFields';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -131,13 +134,14 @@ export class Hudu implements INodeType {
       getUsers,
       getCompanies,
       getAssetLayouts,
+      getAssetLayoutFields,
       getAssetLayoutFieldValues,
       getAssets,
       getCustomFieldsLayoutFields,
     },
     resourceMapping: {
-      getAssetLayoutFields,
-      getAssetTagFields,
+      mapAssetLayoutFieldsForResource,
+      mapAssetTagFieldsForResource,
     },
   };
 

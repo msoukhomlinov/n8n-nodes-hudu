@@ -1,5 +1,4 @@
 import type { IExecuteFunctions, IDataObject, INodeExecutionData } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
 
 export async function getManyAsAssetLinksHandler(
 	this: IExecuteFunctions,
@@ -15,17 +14,5 @@ export async function getManyAsAssetLinksHandler(
 		}));
 	}
 
-	// For direct getManyAsAssetLinks operation calls
-	const layoutId = this.getNodeParameter('customFields_asset_layout_id', index) as string;
-
-	if (!layoutId) {
-		throw new NodeOperationError(this.getNode(), 'Asset Layout ID is required');
-	}
-
-	// Return array of items formatted as asset links
-	return [{
-		json: {
-			asset_layout_id: layoutId,
-		} as IDataObject,
-	}];
+	return [];
 } 

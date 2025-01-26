@@ -48,7 +48,7 @@ async function getLinkedLayoutName(
 	}
 }
 
-export async function getAssetTagFields(
+export async function mapAssetTagFieldsForResource(
 	this: ILoadOptionsFunctions,
 ): Promise<ResourceMapperFields> {
 	try {

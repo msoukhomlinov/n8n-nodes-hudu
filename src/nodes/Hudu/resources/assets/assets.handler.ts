@@ -11,6 +11,7 @@ import type { AssetsOperations } from './assets.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import type { FieldType, INodePropertyOptions } from 'n8n-workflow';
 import { getManyAsAssetLinksHandler } from './getManyAsAssetLinks.handler';
+import { NodeOperationError } from 'n8n-workflow';
 
 interface AssetFieldMapping {
   value: IDataObject;
@@ -124,6 +125,11 @@ export async function handleAssetsOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
       const returnAsAssetLinks = this.getNodeParameter('returnAsAssetLinks', i, false) as boolean;
+
+      // Check for asset layout ID if returning as asset links
+      if (returnAsAssetLinks && !filters.filter_layout_id) {
+        throw new NodeOperationError(this.getNode(), 'Asset Layout Name or ID must be selected when returning assets as asset links');
+      }
 
       // Validate company_id if provided in filters
       if (filters.company_id) {
@@ -265,11 +271,6 @@ export async function handleAssetsOperation(
         assetId,
         false,
       );
-      break;
-    }
-
-    case 'getManyAsAssetLinks': {
-      responseData = await getManyAsAssetLinksHandler.call(this, i);
       break;
     }
 

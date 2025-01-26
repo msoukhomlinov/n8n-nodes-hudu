@@ -4,7 +4,6 @@ import { handleGetOperation } from '../../utils/operations';
 import type { IAssetLayoutFieldEntity } from '../../resources/asset_layout_fields/asset_layout_fields.types';
 import { ASSET_LAYOUT_FIELD_TYPES } from '../../utils/constants';
 import { debugLog } from '../../utils/debugConfig';
-import { getAssetTagFieldOptions } from './getAssetTagFieldOptions';
 
 interface IAssetLayout extends IDataObject {
 	active: boolean;
@@ -46,9 +45,7 @@ async function getFieldTypeAndOptions(
 			return { type: 'boolean' };
 		case ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT:
 			return { type: 'string' };
-		case ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG: {
-			return getAssetTagFieldOptions.call(this, field);
-		}
+		case ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG:
 		case ASSET_LAYOUT_FIELD_TYPES.PASSWORD:
 		case ASSET_LAYOUT_FIELD_TYPES.TEXT:
 		case ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT:
@@ -150,7 +147,7 @@ async function getLayoutFields(
 	};
 }
 
-export async function getAssetLayoutFields(
+export async function mapAssetLayoutFieldsForResource(
 	this: ILoadOptionsFunctions,
 ): Promise<ResourceMapperFields> {
 	try {
@@ -159,6 +156,47 @@ export async function getAssetLayoutFields(
 		return getLayoutFields.call(this, includeAssetTags);
 	} catch (error) {
 		debugLog('[ResourceMapping] Error in getAssetLayoutFields:', error);
+		if (error instanceof NodeOperationError) {
+			throw error;
+		}
+		throw new NodeOperationError(this.getNode(), `Failed to load asset layout fields: ${(error as Error).message}`);
+	}
+}
+
+export async function getAssetLayoutFields(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	try {
+		const layoutId = this.getNodeParameter('asset_layout_id', 0) as string;
+		
+		debugLog('[FieldLoading] Starting getAssetLayoutFields for layout:', layoutId);
+
+		if (!layoutId) {
+			return [];
+		}
+
+		// Fetch the layout details
+		const layout = await handleGetOperation.call(this, '/asset_layouts', layoutId) as IAssetLayoutResponse;
+		
+		if (!layout || !layout.asset_layout) {
+			throw new NodeOperationError(this.getNode(), 'Asset layout not found or inaccessible');
+		}
+
+		const layoutData = layout.asset_layout;
+		const fields = layoutData.fields || [];
+
+		// Map fields to INodePropertyOptions format
+		return fields
+			.filter((field: IAssetLayoutFieldEntity) => !field.is_destroyed)
+			.map((field: IAssetLayoutFieldEntity) => ({
+				name: `${field.label} (${field.field_type})${!layoutData.active ? ' [Archived Layout]' : ''}`,
+				value: field.id.toString(),
+				description: field.hint || undefined,
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name));
+
+	} catch (error) {
+		debugLog('[FieldLoading] Error in getAssetLayoutFields:', error);
 		if (error instanceof NodeOperationError) {
 			throw error;
 		}

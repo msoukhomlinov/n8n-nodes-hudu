@@ -44,12 +44,6 @@ export const assetsOperations: INodeProperties[] = [
         action: 'Retrieve a list of assets',
       },
       {
-        name: 'Get Many as Asset Links',
-        value: 'getManyAsAssetLinks',
-        description: 'Get multiple assets and format them for use in Asset Link custom fields that allow multiple values',
-        action: 'Get multiple assets as asset links',
-      },
-      {
         name: 'Unarchive',
         value: 'unarchive',
         description: 'Unarchive an asset',
@@ -150,25 +144,7 @@ export const assetsFields: INodeProperties[] = [
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   {
-    displayName: 'Global Scope',
-    name: 'asset_tag_scope',
-    type: 'boolean',
-    default: false,
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['create'],
-      },
-      hide: {
-        asset_layout_id: [''],
-        company_id: [''],
-      },          
-    },
-    description: 'Whether to include assets from all companies in Asset Tag custom fields picklists',
-    hint: 'When enabled, assets from all companies will be shown in Asset Tag field picklists. Note: This may increase load times for large datasets.',
-  },
-  {
-    displayName: '▶️ All Custom Fields (Except Asset Link)',
+    displayName: '▶️ All Custom Fields (Except Asset Links)',
     name: 'customFieldsHeader',
     type: 'notice',
     default: '',
@@ -195,9 +171,9 @@ export const assetsFields: INodeProperties[] = [
       value: null,
     },
     typeOptions: {
-      loadOptionsDependsOn: ['asset_layout_id', 'asset_tag_scope'],
+      loadOptionsDependsOn: ['asset_layout_id'],
       resourceMapper: {
-        resourceMapperMethod: 'getAssetLayoutFields',
+        resourceMapperMethod: 'mapAssetLayoutFieldsForResource',
         mode: 'add',
         fieldWords: {
           singular: 'field',
@@ -254,9 +230,9 @@ export const assetsFields: INodeProperties[] = [
       value: null,
     },
     typeOptions: {
-      loadOptionsDependsOn: ['asset_layout_id', 'asset_tag_scope'],
+      loadOptionsDependsOn: ['asset_layout_id'],
       resourceMapper: {
-        resourceMapperMethod: 'getAssetTagFields',
+        resourceMapperMethod: 'mapAssetTagFieldsForResource',
         mode: 'add',
         fieldWords: {
           singular: 'tag field',
@@ -333,27 +309,6 @@ export const assetsFields: INodeProperties[] = [
     default: false,
     description: 'Whether to format the results for use in Asset Link custom fields',
     hint: 'When enabled, results will be formatted for use in Asset Link custom fields that allow multiple values',
-  },
-  {
-    displayName: 'Asset Layout Name or ID',
-    name: 'customFields_asset_layout_id',
-    type: 'options',
-    typeOptions: {
-      loadOptionsMethod: 'getAssetLayouts',
-      loadOptionsParameters: {
-        includeBlank: true,
-      },
-    },
-    required: true,
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['getAll'],
-        returnAsAssetLinks: [true],
-      },
-    },
-    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   {
     displayName: 'Limit',
@@ -714,67 +669,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'The primary serial number of the asset',
-      },
-    ],
-  },
-
-  // ----------------------------------
-  //         assets:getManyAsAssetLinks
-  // ----------------------------------
-  {
-    displayName: 'Asset Layout Name or ID',
-    name: 'customFields_asset_layout_id',
-    type: 'options',
-    typeOptions: {
-      loadOptionsMethod: 'getAssetLayouts',
-      loadOptionsParameters: {
-        includeBlank: true,
-      },
-    },
-    required: true,
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['getManyAsAssetLinks'],
-      },
-    },
-    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-  },
-  {
-    displayName: 'Asset Layout Fields',
-    name: 'customFields_field_selections',
-    type: 'fixedCollection',
-    default: { fields: [] },
-    typeOptions: {
-      multipleValues: true,
-    },
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['getManyAsAssetLinks'],
-      },
-      hide: {
-        customFields_asset_layout_id: [''],
-      },
-    },
-    options: [
-      {
-        name: 'fields',
-        displayName: 'Fields',
-        values: [
-          {
-            displayName: 'Field Name or ID',
-            name: 'field',
-            type: 'options',
-            typeOptions: {
-              loadOptionsMethod: 'getCustomFieldsLayoutFields',
-              loadOptionsDependsOn: ['customFields_asset_layout_id'],
-            },
-            default: '',
-            description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-          },
-        ],
       },
     ],
   },
