@@ -144,6 +144,42 @@ export const assetsFields: INodeProperties[] = [
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   {
+    displayName: 'Show Asset Link Field Selector',
+    name: 'showAssetLinkSelector',
+    type: 'boolean',
+    default: false,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create'],
+      },
+      hide: {
+        company_id: [''],
+        name: [''],
+        asset_layout_id: [''],
+      }
+    },
+    description: 'Whether to show the Asset Link field selector',
+  },
+  {
+    displayName: 'Show Other Custom Fields Selector',
+    name: 'showOtherFieldsSelector',
+    type: 'boolean',
+    default: false,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create'],
+      },
+      hide: {
+        company_id: [''],
+        name: [''],
+        asset_layout_id: [''],
+      }
+    },
+    description: 'Whether to show the custom fields selector',
+  },
+  {
     displayName: '▶️ All Custom Fields (Except Asset Links)',
     name: 'customFieldsHeader',
     type: 'notice',
@@ -152,6 +188,7 @@ export const assetsFields: INodeProperties[] = [
       show: {
         resource: ['assets'],
         operation: ['create'],
+        showOtherFieldsSelector: [true],
       },
       hide: {
         name: [''],
@@ -194,6 +231,7 @@ export const assetsFields: INodeProperties[] = [
       show: {
         resource: ['assets'],
         operation: ['create'],
+        showOtherFieldsSelector: [true],
       },
       hide: {
         name: [''],
@@ -211,6 +249,7 @@ export const assetsFields: INodeProperties[] = [
       show: {
         resource: ['assets'],
         operation: ['create'],
+        showAssetLinkSelector: [true],
       },
       hide: {
         name: [''],
@@ -253,6 +292,7 @@ export const assetsFields: INodeProperties[] = [
       show: {
         resource: ['assets'],
         operation: ['create'],
+        showAssetLinkSelector: [true],
       },
       hide: {
         name: [''],
