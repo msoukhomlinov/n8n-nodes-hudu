@@ -39,9 +39,6 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.9] - 2025-01-25
 
-### Important Notes
-- Minimum n8n version requirement: 1.69.2 or higher
-
 ### Enhanced
 - Improved Asset operations with comprehensive updates:
   - Added support for custom asset tags via new "Return As Asset Links" toggle in Get Many Assets operation
