@@ -39,11 +39,18 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.9] - 2025-01-25
 
-### Fixed
-- Fixed asset update operation:
-  - Properly structured update fields to handle both regular and custom fields
-  - Separated update fields from create fields for better clarity
-  - Improved field validation and error handling for asset updates
+### Enhanced
+- Improved Asset operations with comprehensive updates:
+  - Added support for custom asset tags via new "Return As Asset Links" toggle in Get Many Assets operation
+  - Optimised asset creation and update operations to handle both standard and custom fields
+  - Enhanced UI with dynamic field validation and intuitive field descriptions
+  - Streamlined workflow for using asset data between operations
+
+### Notes
+- Asset custom field limitations:
+  - Legacy list fields require manual value entry (picklist conversion not implemented due to Hudu deprecating this feature)
+  - New list field sources not yet available via Hudu API - requires manual ID configuration
+- Restart of n8n is required after upgrading to this version for changes to take effect
 
 ## [1.2.8] - 2025-01-21
 

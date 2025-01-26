@@ -5,38 +5,38 @@
 
 export const DEBUG_CONFIG = {
   // API Communication
-  API_REQUEST: true,     // Debug API request details
-  API_RESPONSE: true,    // Debug API response details
+  API_REQUEST: false,     // Debug API request details
+  API_RESPONSE: false,    // Debug API response details
 
   // Core Operations
-  OPERATION_CREATE: true,   // Debug create operations
-  OPERATION_UPDATE: true,   // Debug update operations
-  OPERATION_DELETE: true,   // Debug delete operations
-  OPERATION_GET: true,      // Debug get operations
-  OPERATION_GET_ALL: true,  // Debug getAll operations
-  OPERATION_ARCHIVE: true,  // Debug archive operations
+  OPERATION_CREATE: false,   // Debug create operations
+  OPERATION_UPDATE: false,   // Debug update operations
+  OPERATION_DELETE: false,   // Debug delete operations
+  OPERATION_GET: false,      // Debug get operations
+  OPERATION_GET_ALL: false,  // Debug getAll operations
+  OPERATION_ARCHIVE: false,  // Debug archive operations
 
   // Resource Handlers
-  RESOURCE_PROCESSING: true,  // Debug resource handler processing
-  RESOURCE_PARAMS: true,      // Debug parameter extraction in handlers
-  RESOURCE_TRANSFORM: true,   // Debug data transformations in handlers
-  RESOURCE_MAPPING: true,     // Debug resource mapping
+  RESOURCE_PROCESSING: false,  // Debug resource handler processing
+  RESOURCE_PARAMS: false,      // Debug parameter extraction in handlers
+  RESOURCE_TRANSFORM: false,   // Debug data transformations in handlers
+  RESOURCE_MAPPING: false,     // Debug resource mapping
 
   // Node Execution
-  NODE_INPUT: true,    // Debug input items to node
-  NODE_OUTPUT: true,   // Debug output from node
+  NODE_INPUT: false,    // Debug input items to node
+  NODE_OUTPUT: false,   // Debug output from node
 
   // Utility Functions
-  UTIL_DATE_PROCESSING: true,  // Debug date range processing
-  UTIL_FILTERS: true,          // Debug filter processing
-  UTIL_TYPE_CONVERSION: true,   // Debug type conversions
+  UTIL_DATE_PROCESSING: false,  // Debug date range processing
+  UTIL_FILTERS: false,          // Debug filter processing
+  UTIL_TYPE_CONVERSION: false,   // Debug type conversions
 
   // Asset Related
-  ASSET_OPTIONS: true,        // Debug asset options loading and processing
-  FIELD_TYPE_MAPPING: true,   // Debug field type mapping operations
+  ASSET_OPTIONS: false,        // Debug asset options loading and processing
+  FIELD_TYPE_MAPPING: false,   // Debug field type mapping operations
 
   // Additional options
-  OPTION_LOADING: true,       // Debug option loading
+  OPTION_LOADING: false,       // Debug option loading
 } as const;
 
 /**

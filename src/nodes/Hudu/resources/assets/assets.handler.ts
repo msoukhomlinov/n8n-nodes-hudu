@@ -75,15 +75,40 @@ export async function handleAssetsOperation(
       
       debugLog('[RESOURCE_PARAMS] Create asset parameters', { companyId, name, layoutId });
 
-      const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;
-      const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;
+      let customFields: CustomFieldsResponse | undefined;
+      let tagFields: CustomFieldsResponse | undefined;
 
-      debugLog('[RESOURCE_MAPPING] Processing field mappings', { fieldMappings, tagFieldMappings });
+      // Only get field mappings if their selectors are enabled
+      const showOtherFields = this.getNodeParameter('showOtherFieldsSelector', i) as boolean;
+      const showAssetLinks = this.getNodeParameter('showAssetLinkSelector', i) as boolean;
 
-      const customFields = fieldMappings?.value ? processCustomFields(fieldMappings) : undefined;
-      const tagFields = tagFieldMappings?.value ? processCustomFields(tagFieldMappings) : undefined;
+      debugLog('[RESOURCE_PARAMS] Field selector states', { showOtherFields, showAssetLinks });
 
-      // Merge custom fields and tag fields
+      if (showOtherFields) {
+        try {
+          const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;
+          if (fieldMappings?.value) {
+            customFields = processCustomFields(fieldMappings);
+            debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
+          }
+        } catch (error) {
+          debugLog('[RESOURCE_MAPPING] No field mappings provided', error);
+        }
+      }
+
+      if (showAssetLinks) {
+        try {
+          const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;
+          if (tagFieldMappings?.value) {
+            tagFields = processCustomFields(tagFieldMappings);
+            debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
+          }
+        } catch (error) {
+          debugLog('[RESOURCE_MAPPING] No tag field mappings provided', error);
+        }
+      }
+
+      // Merge custom fields and tag fields if any exist
       const mergedFields: CustomFieldsResponse = {
         custom_fields: [
           {
@@ -98,7 +123,7 @@ export async function handleAssetsOperation(
       const body: IDataObject = {
         name,
         asset_layout_id: layoutId,
-        ...mergedFields,
+        ...(Object.keys(mergedFields.custom_fields[0]).length > 0 ? mergedFields : {}),
       };
 
       debugLog('[API_REQUEST] Creating asset with body', body);
@@ -241,18 +266,26 @@ export async function handleAssetsOperation(
       debugLog('[RESOURCE_PARAMS] Field selector states', { showOtherFields, showAssetLinks });
 
       if (showOtherFields) {
-        const updateFieldMappings = this.getNodeParameter('updateFieldMappings', i) as AssetFieldMapping;
-        if (updateFieldMappings?.value) {
-          customFields = processCustomFields(updateFieldMappings);
-          debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
+        try {
+          const updateFieldMappings = this.getNodeParameter('updateFieldMappings', i) as AssetFieldMapping;
+          if (updateFieldMappings?.value) {
+            customFields = processCustomFields(updateFieldMappings);
+            debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
+          }
+        } catch (error) {
+          debugLog('[RESOURCE_MAPPING] No field mappings provided', error);
         }
       }
 
       if (showAssetLinks) {
-        const updateTagFieldMappings = this.getNodeParameter('updateTagFieldMappings', i) as AssetFieldMapping;
-        if (updateTagFieldMappings?.value) {
-          tagFields = processCustomFields(updateTagFieldMappings);
-          debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
+        try {
+          const updateTagFieldMappings = this.getNodeParameter('updateTagFieldMappings', i) as AssetFieldMapping;
+          if (updateTagFieldMappings?.value) {
+            tagFields = processCustomFields(updateTagFieldMappings);
+            debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
+          }
+        } catch (error) {
+          debugLog('[RESOURCE_MAPPING] No tag field mappings provided', error);
         }
       }
 

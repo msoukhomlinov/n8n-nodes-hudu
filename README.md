@@ -14,11 +14,13 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ## Important Update Note
 
-When updating between versions, make sure to restart your n8n instance after the update. UI changes and new features are often only picked up after a restart. The recommended update process is:
+When updating between versions, make sure to restart your n8n instance after the update. UI changes and new features are only picked up after a restart. The recommended update process is:
 
 1. Update the node (`npm install n8n-nodes-hudu@latest`)
 2. Restart n8n instance
 3. Clear browser cache if needed
+
+This is particularly important for version 1.2.9 and above where significant UI and functionality changes were introduced.
 
 ## Supported Resources & Operations
 
@@ -62,16 +64,24 @@ When updating between versions, make sure to restart your n8n instance after the
 
 ### Assets
 
-- Create assets with custom fields
+- Create assets with custom fields and tags
 - Link assets to companies
 - Update asset details
 - Archive/unarchive assets
 - Delete assets
 - Get single asset details
-- List all assets with filtering support:
+- List all assets with enhanced filtering support:
   - Company association
   - Updated date range
   - Custom field values
+  - Return as Asset Links option for custom tag support
+- Optimised asset creation and update operations for both standard and custom fields
+- Enhanced UI with dynamic field validation and intuitive field descriptions
+- Streamlined workflow for using asset data between operations
+
+Note: Custom field support has some limitations:
+- Legacy list fields require manual value entry (picklist conversion not implemented due to Hudu deprecating this feature)
+- New list field sources not yet available via Hudu API - requires manual ID configuration
 
 ### Cards
 
