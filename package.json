@@ -46,7 +46,7 @@
     ]
   },
   "engines": {
-    "n8n": ">=1.70.0"
+    "n8n": ">=1.69.2"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
