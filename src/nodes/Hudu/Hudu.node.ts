@@ -43,10 +43,11 @@ export class Hudu implements INodeType {
     defaults: {
       name: 'Hudu',
     },
+    usableAsTool: true,
     inputs: [NodeConnectionType.Main],
     // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
     outputs: [NodeConnectionType.Main],
-    // TODO: Enable this when we are ready to configure use of Hudu node as a tool for the n8n AI Agent
+    
     credentials: [
       {
         name: 'huduApi',
