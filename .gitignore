@@ -64,4 +64,6 @@ tmp/
 .cursor-settings.json
 .cursor-keybindings.json
 .cursor-snippets/
-.cursor-prompts/ 
+.cursor-prompts/
+.cursorrules
+.cursorignore
