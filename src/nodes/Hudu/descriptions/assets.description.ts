@@ -78,6 +78,29 @@ export const assetsFields: INodeProperties[] = [
     default: '',
     description: 'The ID of the asset to operate on',
   },
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['delete', 'archive', 'unarchive'],
+      },
+      hide: {
+        id: ['', 0],
+      },      
+    },
+    default: '',
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
 
   // ----------------------------------
   //         assets:create

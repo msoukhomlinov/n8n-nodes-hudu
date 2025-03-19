@@ -37,6 +37,14 @@ All notable changes to this project will be documented in this file.
     * Results limit control
     * Sorting options for metrics
 
+## [1.3.0] - 2025-03-20
+
+### Fixed
+- Added missing company_id field to asset delete, archive, and unarchive operations:
+  - Fixed error when deleting assets that was showing "parameterName: company_id" error
+  - Added required Company Name/ID dropdown field to the delete, archive, and unarchive operations
+  - Ensures proper API path construction for these operations that require company_id in the URL path
+
 ## [1.2.9] - 2025-01-25
 
 ### Enhanced
