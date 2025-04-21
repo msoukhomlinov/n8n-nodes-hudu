@@ -37,6 +37,11 @@ All notable changes to this project will be documented in this file.
     * Results limit control
     * Sorting options for metrics
 
+## [1.3.1] - 2025-04-21
+
+### Changed
+- Aligned package general content such as README and documentation
+
 ## [1.3.0] - 2025-03-20
 
 ### Fixed

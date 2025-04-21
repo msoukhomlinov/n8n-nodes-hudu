@@ -1,4 +1,5 @@
 # n8n-nodes-hudu
+This community node enables seamless integration with Hudu documentation platform in your n8n workflows, allowing you to automate and manage your IT documentation tasks.
 
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -6,6 +7,9 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
 ## Recent Changes
+
+### [1.3.1] - 2025-04-21
+- Aligned package general content such as README and documentation
 
 ### [1.3.0] - 2025-03-20
 - Fixed missing company_id field in asset delete, archive, and unarchive operations
