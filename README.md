@@ -1,5 +1,25 @@
 # n8n-nodes-hudu
 
+![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
+
+## Recent Changes
+
+### [1.3.0] - 2025-03-20
+- Fixed missing company_id field in asset delete, archive, and unarchive operations
+
+### [1.2.9] - 2025-01-25
+- Improved Asset operations with enhanced UI, custom asset tags support, and optimised asset creation/update
+- Added streamlined workflow for using asset data between operations
+
+### [1.2.8] - 2025-01-21
+- Fixed asset passwords create/update operations with required fields and enhanced validation
+- Improved field validation and error handling for asset password operations
+
+> **IMPORTANT**: When updating between versions, make sure to restart your n8n instance after the update. UI changes and new features are only picked up after a restart. The recommended update process is:
+
 This n8n community node enables the integration of Hudu within your n8n workflows.
 
 [Hudu](https://www.hudu.com/) is a modern documentation platform for IT.
@@ -8,19 +28,39 @@ This n8n community node enables the integration of Hudu within your n8n workflow
 
 This node was built against Hudu v2.34.4. Future versions of Hudu may not be 100% compatible without node updates.
 
+[Installation](#installation)  
+[Credentials](#credentials)  
+[Features](#features)  
+[Supported Resources & Operations](#supported-resources--operations)  
+[Resources](#resources)  
+[Contributing](#contributing)  
+[Support](#support)  
+[License](#license)
+
 ## Installation
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-## Important Update Note
+## Credentials
 
-When updating between versions, make sure to restart your n8n instance after the update. UI changes and new features are only picked up after a restart. The recommended update process is:
+To use this node, you need to:
 
-1. Update the node (`npm install n8n-nodes-hudu@latest`)
-2. Restart n8n instance
-3. Clear browser cache if needed
+1. Have a Hudu instance
+2. Generate an API key in your Hudu settings
+3. Configure the node with:
+   - Base URL (e.g., https://your-hudu-instance.com)
+   - API Key
 
-This is particularly important for version 1.2.9 and above where significant UI and functionality changes were introduced.
+## Features
+
+- Comprehensive pagination support for all applicable resources
+- Robust error handling and debugging capabilities
+- Advanced filtering options with both API-side and client-side filtering
+- Support for both single and bulk operations
+- Dynamic loading of related resources (companies, layouts, etc.)
+- Date range filtering with preset options
+- Automatic type conversion and validation
+- Debug logging for troubleshooting
 
 ## Supported Resources & Operations
 
@@ -170,27 +210,6 @@ Note: Custom field support has some limitations:
 - Link to companies
 - Filter by company and status
 
-## Credentials
-
-To use this node, you need to:
-
-1. Have a Hudu instance
-2. Generate an API key in your Hudu settings
-3. Configure the node with:
-   - Base URL (e.g., https://your-hudu-instance.com)
-   - API Key
-
-## Features
-
-- Comprehensive pagination support for all applicable resources
-- Robust error handling and debugging capabilities
-- Advanced filtering options with both API-side and client-side filtering
-- Support for both single and bulk operations
-- Dynamic loading of related resources (companies, layouts, etc.)
-- Date range filtering with preset options
-- Automatic type conversion and validation
-- Debug logging for troubleshooting
-
 ## Resources
 
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
@@ -215,3 +234,13 @@ Please ensure your PR:
 - Includes tests if applicable
 
 For bug reports or feature requests, please use the GitHub issues section.
+
+## Support
+
+If you find this node helpful and would like to support its development:
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/msoukhomlinov)
+
+## License
+
+[MIT](LICENSE)
