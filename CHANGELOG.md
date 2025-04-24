@@ -43,6 +43,9 @@ All notable changes to this project will be documented in this file.
 ### Enhanced
 - Simplified the process for creating assets specifically for use as asset links, making it more intuitive and reliable.
 - The 'Return As Asset Links' feature is now available for both single asset (Get) and multiple assets (Get Many) operations, providing consistent output formatting for asset link custom fields.
+- Added support for advanced properties when creating asset layout custom fields:
+  - You can now set `hint`, `min`, `max`, `linkable_id`, `expiration`, `options`, `multiple_options`, `list_id`, and other advanced field data.
+  - An "Other Data" input is available for all field types, allowing you to specify additional properties as required by the Hudu API (e.g., `linkable_id` for AssetLink fields, `expiration` for date fields, etc).
 
 ## [1.3.2] - 2025-04-24
 
