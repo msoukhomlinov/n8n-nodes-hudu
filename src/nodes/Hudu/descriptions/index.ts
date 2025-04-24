@@ -23,3 +23,4 @@ export * from './relations.description';
 export * from './uploads.description';
 export * from './users.description';
 export * from './websites.description';
+export * from './lists.description';
