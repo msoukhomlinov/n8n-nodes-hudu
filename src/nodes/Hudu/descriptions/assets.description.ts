@@ -79,6 +79,35 @@ export const assetsFields: INodeProperties[] = [
     description: 'The ID of the asset to operate on',
   },
   {
+    displayName: 'Return As Asset Links',
+    name: 'returnAsAssetLinks',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['get', 'getAll'],
+      },
+    },
+    default: false,
+    description: 'Whether to format the result(s) for use in Asset Link custom fields',
+    hint: 'When enabled, the result will be formatted for use in Asset Link custom fields that allow a single value (for Get) or multiple values (for Get Many)',
+  },
+  {
+    displayName: 'Output Field Name',
+    name: 'assetLinksOutputField',
+    type: 'string',
+    default: 'assetLinks',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['get', 'getAll'],
+        returnAsAssetLinks: [true],
+      },
+    },
+    description: 'Name of the output field to place the asset links array under',
+    hint: 'This field will contain the asset links array when "Return As Asset Links" is enabled',
+  },
+  {
     displayName: 'Company Name or ID',
     name: 'company_id',
     type: 'options',
@@ -501,20 +530,6 @@ export const assetsFields: INodeProperties[] = [
     },
     default: false,
     description: 'Whether to return all results or only up to a given limit',
-  },
-  {
-    displayName: 'Return As Asset Links',
-    name: 'returnAsAssetLinks',
-    type: 'boolean',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['getAll'],
-      },
-    },
-    default: false,
-    description: 'Whether to format the results for use in Asset Link custom fields',
-    hint: 'When enabled, results will be formatted for use in Asset Link custom fields that allow multiple values',
   },
   {
     displayName: 'Limit',

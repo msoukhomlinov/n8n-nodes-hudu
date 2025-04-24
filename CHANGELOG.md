@@ -38,6 +38,12 @@ All notable changes to this project will be documented in this file.
     * Sorting options for metrics
 
 
+## [1.3.3] - 2025-04-24
+
+### Enhanced
+- Simplified the process for creating assets specifically for use as asset links, making it more intuitive and reliable.
+- The 'Return As Asset Links' feature is now available for both single asset (Get) and multiple assets (Get Many) operations, providing consistent output formatting for asset link custom fields.
+
 ## [1.3.2] - 2025-04-24
 
 #### Added
