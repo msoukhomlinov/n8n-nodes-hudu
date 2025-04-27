@@ -8,6 +8,15 @@ This community node enables seamless integration with Hudu documentation platfor
 
 ## Recent Changes
 
+### [1.3.3] - 2025-04-24
+- Asset link and asset tag fields are now serialised as JSON when creating or updating assets, ensuring correct data is sent to the Hudu API.
+- The 'Return As Asset Links' feature is now available for both single asset (Get) and multiple assets (Get Many) operations, providing consistent output formatting for asset link custom fields.
+- Asset layout custom fields now support advanced properties: `hint`, `min`, `max`, `linkable_id`, `expiration`, `options`, `multiple_options`, `list_id`, and more. An "Other Data" input is available for all field types, allowing you to specify additional properties as required by the Hudu API.
+
+### [1.3.2] - 2025-04-24
+- Full support for the new Lists resource, enabling you to create, update, retrieve, and manage lists directly from your n8n workflows.
+- Resolved an issue with the Procedures kickoff operation
+
 ### [1.3.1] - 2025-04-21
 - Aligned package general content such as README and documentation
 
@@ -99,6 +108,7 @@ To use this node, you need to:
 - Create and manage asset layout templates
 - Get layout fields and configurations
 - List all layouts with filtering support
+- **Advanced custom field support:** Add hints, min/max, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties.
 
 ### Asset Passwords
 
@@ -118,10 +128,11 @@ To use this node, you need to:
   - Company association
   - Updated date range
   - Custom field values
-  - Return as Asset Links option for custom tag support
+  - **Return as Asset Links** option for custom tag support (now available for both Get and Get Many)
 - Optimised asset creation and update operations for both standard and custom fields
 - Enhanced UI with dynamic field validation and intuitive field descriptions
 - Streamlined workflow for using asset data between operations
+- **Asset link/tag fields are serialised as JSON for API compatibility**
 
 Note: Custom field support has some limitations:
 - Legacy list fields require manual value entry (picklist conversion not implemented due to Hudu deprecating this feature)

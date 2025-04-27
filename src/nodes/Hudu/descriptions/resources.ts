@@ -50,6 +50,10 @@ export const resourceOptions = [
     value: 'ipAddresses',
   },
   {
+    name: 'List',
+    value: 'lists',
+  },
+  {
     name: 'Magic Dash',
     value: 'magic_dash',
   },

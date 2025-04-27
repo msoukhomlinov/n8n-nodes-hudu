@@ -34,7 +34,7 @@ interface CustomFieldsResponse {
   custom_fields: Record<string, string>[];
 }
 
-function processCustomFields(fieldMappings: AssetFieldMapping): CustomFieldsResponse {
+function processCustomFields(fieldMappings: AssetFieldMapping, isTagField: boolean = false): CustomFieldsResponse {
   debugLog('[ResourceMapping] Processing custom fields', fieldMappings);
   const { value: mappingsValue, schema } = fieldMappings;
   const customFieldObject: Record<string, string> = {};
@@ -45,7 +45,13 @@ function processCustomFields(fieldMappings: AssetFieldMapping): CustomFieldsResp
       const fieldName = (fieldInfo.label as string)
         .toLowerCase()
         .replace(/\s+/g, '_');
-      customFieldObject[fieldName] = value?.toString() || '';
+      // For tag/asset link fields, serialise objects/arrays as JSON
+      if (isTagField && (typeof value === 'object' && value !== null)) {
+        // Serialise to JSON string for API compatibility
+        customFieldObject[fieldName] = JSON.stringify(value);
+      } else {
+        customFieldObject[fieldName] = value?.toString() || '';
+      }
     }
   }
   
@@ -88,7 +94,7 @@ export async function handleAssetsOperation(
         try {
           const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;
           if (fieldMappings?.value) {
-            customFields = processCustomFields(fieldMappings);
+            customFields = processCustomFields(fieldMappings, false);
             debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
           }
         } catch (error) {
@@ -100,7 +106,7 @@ export async function handleAssetsOperation(
         try {
           const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;
           if (tagFieldMappings?.value) {
-            tagFields = processCustomFields(tagFieldMappings);
+            tagFields = processCustomFields(tagFieldMappings, true);
             debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
           }
         } catch (error) {
@@ -141,6 +147,8 @@ export async function handleAssetsOperation(
     case 'get': {
       debugLog('[OPERATION_GET] Processing get asset operation');
       const assetId = this.getNodeParameter('id', i) as string;
+      const returnAsAssetLinks = this.getNodeParameter('returnAsAssetLinks', i, false) as boolean;
+      const assetLinksOutputField = this.getNodeParameter('assetLinksOutputField', i, 'assetLinks') as string;
       const qs: IDataObject = {
         id: assetId,
       };
@@ -160,7 +168,13 @@ export async function handleAssetsOperation(
         throw new Error(`Asset with ID ${assetId} not found`);
       }
 
-      responseData = response[0];
+      if (returnAsAssetLinks) {
+        const assetLinks = await getManyAsAssetLinksHandler.call(this, i, [response[0]]);
+        responseData = { [assetLinksOutputField]: assetLinks };
+        debugLog('[RESOURCE_TRANSFORM] Transformed asset to asset link under field', { field: assetLinksOutputField, value: assetLinks });
+      } else {
+        responseData = response[0];
+      }
       debugLog('[API_RESPONSE] Get asset response', responseData);
       break;
     }
@@ -171,6 +185,7 @@ export async function handleAssetsOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, 25) as number;
       const returnAsAssetLinks = this.getNodeParameter('returnAsAssetLinks', i, false) as boolean;
+      const assetLinksOutputField = this.getNodeParameter('assetLinksOutputField', i, 'assetLinks') as string;
 
       debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, returnAsAssetLinks });
 
@@ -232,10 +247,9 @@ export async function handleAssetsOperation(
       );
 
       if (returnAsAssetLinks) {
-        // Format results as asset links and return as JSON string
         const assetLinks = await getManyAsAssetLinksHandler.call(this, i, results);
-        responseData = { json: JSON.stringify(assetLinks) };
-        debugLog('[RESOURCE_TRANSFORM] Transformed assets to asset links', responseData);
+        responseData = { [assetLinksOutputField]: assetLinks };
+        debugLog('[RESOURCE_TRANSFORM] Transformed assets to asset links under field', { field: assetLinksOutputField, value: assetLinks });
       } else {
         responseData = results;
       }
@@ -269,7 +283,7 @@ export async function handleAssetsOperation(
         try {
           const updateFieldMappings = this.getNodeParameter('updateFieldMappings', i) as AssetFieldMapping;
           if (updateFieldMappings?.value) {
-            customFields = processCustomFields(updateFieldMappings);
+            customFields = processCustomFields(updateFieldMappings, false);
             debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
           }
         } catch (error) {
@@ -281,7 +295,7 @@ export async function handleAssetsOperation(
         try {
           const updateTagFieldMappings = this.getNodeParameter('updateTagFieldMappings', i) as AssetFieldMapping;
           if (updateTagFieldMappings?.value) {
-            tagFields = processCustomFields(updateTagFieldMappings);
+            tagFields = processCustomFields(updateTagFieldMappings, true);
             debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
           }
         } catch (error) {
