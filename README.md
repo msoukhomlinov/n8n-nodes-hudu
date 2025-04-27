@@ -4,6 +4,8 @@ This community node enables seamless integration with Hudu documentation platfor
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+> **API Compatibility:** This node is aligned with Hudu API version 2.36.3. Compatibility with future Hudu versions is not guaranteed without further updates.
+
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
 ## Recent Changes
