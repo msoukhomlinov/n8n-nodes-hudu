@@ -81,6 +81,7 @@ export class Hudu implements INodeType {
       ...descriptions.expirationsOperations,
       ...descriptions.folderOperations,
       ...descriptions.ipAddressOperations,
+      ...descriptions.listsOperations,
       ...descriptions.magicDashOperations,
       ...descriptions.matchersOperations,
       ...descriptions.networksOperations,
@@ -107,6 +108,7 @@ export class Hudu implements INodeType {
       ...descriptions.expirationsFields,
       ...descriptions.folderFields,
       ...descriptions.ipAddressFields,
+      ...descriptions.listsFields,
       ...descriptions.magicDashFields,
       ...descriptions.matchersFields,
       ...descriptions.networksFields,
@@ -246,6 +248,13 @@ export class Hudu implements INodeType {
             responseData = await resources.handleIpAddressesOperation.call(
               this,
               operation as resources.IpAddressOperations,
+              i,
+            );
+            break;
+          case 'lists':
+            responseData = await resources.handleListsOperation.call(
+              this,
+              operation as resources.ListsOperation,
               i,
             );
             break;

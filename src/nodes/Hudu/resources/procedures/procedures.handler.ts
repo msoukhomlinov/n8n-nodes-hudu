@@ -8,6 +8,7 @@ import {
   handleDeleteOperation,
   handleArchiveOperation,
 } from '../../utils/operations';
+import { handleProcedureKickoffOperation } from '../../utils/operations/procedures';
 import type { ProceduresOperations } from './procedures.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
 
@@ -180,6 +181,13 @@ export async function handleProceduresOperation(
         `${resourceEndpoint}/${procedureId}/duplicate`,
         { procedure: body },
       );
+      break;
+    }
+
+    case 'kickoff': {
+      const procedureId = this.getNodeParameter('id', i) as string;
+      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+      responseData = await handleProcedureKickoffOperation.call(this, procedureId, additionalFields);
       break;
     }
   }
