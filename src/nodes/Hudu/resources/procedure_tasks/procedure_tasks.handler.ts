@@ -7,6 +7,7 @@ import {
   handleGetOperation,
 } from '../../utils/operations';
 import type { ProcedureTasksOperations } from './procedure_tasks.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleProcedureTasksOperation(
   this: IExecuteFunctions,
@@ -47,7 +48,7 @@ export async function handleProcedureTasksOperation(
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       const qs: IDataObject = {
         ...filters,

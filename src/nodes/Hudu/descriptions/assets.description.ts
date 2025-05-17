@@ -44,6 +44,12 @@ export const assetsOperations: INodeProperties[] = [
         action: 'Retrieve a list of assets',
       },
       {
+        name: 'Move Layout',
+        value: 'moveLayout',
+        description: 'Move an asset to a different layout',
+        action: 'Move an asset to a different layout',
+      },
+      {
         name: 'Unarchive',
         value: 'unarchive',
         description: 'Unarchive an asset',
@@ -72,7 +78,7 @@ export const assetsFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['assets'],
-        operation: ['get', 'archive', 'unarchive', 'delete', 'update'],
+        operation: ['get', 'archive', 'unarchive', 'delete', 'update', 'moveLayout'],
       },
     },
     default: '',
@@ -379,7 +385,27 @@ export const assetsFields: INodeProperties[] = [
     },
     default: '',
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-  },  
+  },
+  {
+    displayName: 'Asset Layout Name or ID',
+    name: 'update_asset_layout_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getAssetLayoutId',
+    },
+    required: true,
+    default: '',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+      },
+      hide: {
+        id: ['', 0],
+      },
+    },
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
   {
     displayName: 'Show Asset Link Field Selector',
     name: 'updateShowAssetLinkSelector',
@@ -392,6 +418,7 @@ export const assetsFields: INodeProperties[] = [
       },
       hide: {
         id: ['', 0],
+        update_asset_layout_id: [''],
       },
     },
     description: 'Whether to show the Asset Link field selector',
@@ -408,6 +435,7 @@ export const assetsFields: INodeProperties[] = [
       },
       hide: {
         id: ['', 0],
+        update_asset_layout_id: [''],
       },
     },
     description: 'Whether to show the custom fields selector',
@@ -429,14 +457,14 @@ export const assetsFields: INodeProperties[] = [
     displayName: 'Asset Custom Field Mappings',
     description: 'Map asset layout fields to their values',
     hint: 'The fields available will be based on the asset\'s layout',
-    name: 'updateFieldMappings',
+    name: 'fieldMappings',
     type: 'resourceMapper',
     default: {
       mappingMode: 'defineBelow',
       value: null,
     },
     typeOptions: {
-      loadOptionsDependsOn: ['id'],
+      loadOptionsDependsOn: ['update_asset_layout_id'],
       resourceMapper: {
         resourceMapperMethod: 'mapAssetLayoutFieldsForResource',
         mode: 'add',
@@ -480,14 +508,14 @@ export const assetsFields: INodeProperties[] = [
     displayName: 'Asset Tag Field Mappings',
     description: 'Map asset tag fields to their values',
     hint: 'The tag fields available will be based on the asset\'s layout',
-    name: 'updateTagFieldMappings',
+    name: 'tagFieldMappings',
     type: 'resourceMapper',
     default: {
       mappingMode: 'defineBelow',
       value: null,
     },
     typeOptions: {
-      loadOptionsDependsOn: ['id'],
+      loadOptionsDependsOn: ['update_asset_layout_id'],
       resourceMapper: {
         resourceMapperMethod: 'mapAssetTagFieldsForResource',
         mode: 'add',
@@ -498,7 +526,7 @@ export const assetsFields: INodeProperties[] = [
         addAllFields: false,
         multiKeyMatch: true,
         supportAutoMap: true,
-        noFieldsError: 'No Asset Link fields are available in the asset\'s layout. Check for tag fields.',
+        noFieldsError: 'No Asset Link fields are available in the asset\'s layout. Check for tag fields. Retry',
         matchingFieldsLabels: {
           title: 'Asset Tag Fields',
           description: 'Select the tag fields from the Asset Layout to map values to',
@@ -895,6 +923,57 @@ export const assetsFields: INodeProperties[] = [
         description: 'The primary serial number of the asset',
       },
     ],
+  },
+
+  // ----------------------------------
+  //         assets:moveLayout
+  // ----------------------------------
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['moveLayout'],
+      },
+      hide: {
+        id: ['', 0],
+      },      
+    },
+    default: '',
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
+  {
+    displayName: 'Target Asset Layout Name or ID',
+    name: 'target_asset_layout_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getAssetLayouts',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['moveLayout'],
+      },
+      hide: {
+        id: ['', 0],
+        company_id: [''],
+      },      
+    },
+    default: '',
+    description: 'The layout to move the asset to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
 ];
 

@@ -9,6 +9,7 @@ import {
 import type { FilterMapping } from '../../utils/types';
 import type { FolderOperation, IFolderPostProcessFilters, IFolder, IFolderPathResponse } from './folders.types';
 import { folderFilterMapping } from './folders.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleFolderOperation(
   this: IExecuteFunctions,
@@ -22,7 +23,7 @@ export async function handleFolderOperation(
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       // Extract post-processing filters and API filters separately
       const postProcessFilters: IFolderPostProcessFilters = {};

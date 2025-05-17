@@ -68,7 +68,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 	},
 
-	// Field ID for single operations
+	// Field ID for get operation
 	{
 		displayName: 'Field Name or ID',
 		name: 'field_id',
@@ -81,7 +81,30 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['asset_layout_fields'],
-				operation: ['get', 'update', 'delete'],
+				operation: ['get'],
+			},
+		},
+		default: '',
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+
+	// Field ID for update and delete operations (with dependency on asset_layout_id)
+	{
+		displayName: 'Field Name or ID',
+		name: 'field_id',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getAssetLayoutFields',
+			loadOptionsDependsOn: ['asset_layout_id'],
+		},
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['asset_layout_fields'],
+				operation: ['update', 'delete'],
+			},
+			hide: {
+				asset_layout_id: [''],
 			},
 		},
 		default: '',

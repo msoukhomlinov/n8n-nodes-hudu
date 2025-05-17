@@ -38,6 +38,22 @@ All notable changes to this project will be documented in this file.
     * Sorting options for metrics
 
 
+## [1.3.4] - 2025-05-17
+
+### Enhanced
+- Optimised lists by splitting operations relating to list options into its own, now lists are managed under list and list options under its own resource.
+- Enhanced website operations to ensure all fields are fully supported for create and update operations: `name`, `company_id`, `account_id`, `asset_field_id`, `asset_type`, `code`, `company_name`, `disable_dns`, `disable_ssl`, `disable_whois`, `discarded_at`, `headers`, `icon`, `keyword`, `message`, `monitor_type`, `monitored_at`, `monitoring_status`, `notes`, `paused`, `refreshed_at`, `sent_notifications`, `slug`, `url`, plus new email security fields in API v2.37: `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`.
+
+### Added
+- Added full CRUD support for VLAN Zones, including all fields, filters, and archive status, with robust debug logging and company picklist loader.
+- Added list picklist loader for improved usability across resources.
+- Added full CRUD support for the VLAN resource (new in Hudu API v2.37), including all required and optional fields for create and update operations.
+
+### Fixed
+- Fixed Asset Link Field Selector not loading properly in update operations by pre-loading asset layout information and displaying proper layout names.
+
+> **Note:** Some features in this version require Hudu API v2.37.0 to function properly.
+
 ## [1.3.3] - 2025-04-24
 
 ### Enhanced

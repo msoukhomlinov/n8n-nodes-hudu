@@ -85,6 +85,15 @@ When debugging is enabled, the output includes:
    - Enable only necessary debug categories
    - Be aware that extensive debugging may impact performance
 
+4. **Debug Message Format**
+   - All debug messages should use standardized category format: `[CATEGORY_NAME]`
+   - Always use UPPERCASE_WITH_UNDERSCORES format in square brackets
+   - Examples:
+     - `[RESOURCE_MAPPING]` (not `[ResourceMapping]` or `[Resource_Mapping]`)
+     - `[API_REQUEST]` (not `[ApiRequest]`)
+     - `[OPTION_LOADING]` (not `[OptionLoading]`)
+   - Our debug function will automatically map different formats to the correct category, but new code should follow the standard
+
 ## Examples
 
 ### Debug API Communication
@@ -134,4 +143,20 @@ If you encounter issues:
 1. Enable relevant debug categories
 2. Reproduce the issue
 3. Collect logs
-4. Create an issue on GitHub with the logs (ensure sensitive data is removed) 
+4. Create an issue on GitHub with the logs (ensure sensitive data is removed)
+
+# Debug Information
+
+## Pagination and Limits
+
+There is a discrepancy between the linter rules and the actual code regarding default pagination limits:
+
+1. The linter rules expect `default: 50` in the description files
+2. The actual code uses `HUDU_API_CONSTANTS.PAGE_SIZE` which is set to 10
+
+This inconsistency is acceptable because:
+- The description files define UI parameters in the n8n interface
+- The actual API calls use the constant defined in constants.ts
+- We've standardized all handlers to use HUDU_API_CONSTANTS.PAGE_SIZE
+
+If any issues arise related to pagination limits, check both the description files and the handler implementations. 

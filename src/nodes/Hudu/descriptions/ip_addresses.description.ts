@@ -561,19 +561,6 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'Additional comments about the IP address',
       },
       {
-        displayName: 'Company Name or ID',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
-        default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-      },
-      {
         displayName: 'Description',
         name: 'description',
         type: 'string',
@@ -593,6 +580,13 @@ export const ipAddressFields: INodeProperties[] = [
         type: 'number',
         default: 0,
         description: 'The identifier of the network to which this IP address belongs',
+      },
+      {
+        displayName: 'Skip DNS Validation',
+        name: 'skip_dns_validation',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to skip verification that the FQDN resolves to the address',
       },
       {
         displayName: 'Status',
@@ -700,19 +694,6 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'Additional comments about the IP address',
       },
       {
-        displayName: 'Company Name or ID',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
-        default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-      },
-      {
         displayName: 'Description',
         name: 'description',
         type: 'string',
@@ -732,6 +713,13 @@ export const ipAddressFields: INodeProperties[] = [
         type: 'number',
         default: 0,
         description: 'The identifier of the network to which this IP address belongs',
+      },
+      {
+        displayName: 'Skip DNS Validation',
+        name: 'skip_dns_validation',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to skip verification that the FQDN resolves to the address',
       },
       {
         displayName: 'Status',

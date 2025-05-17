@@ -9,6 +9,7 @@ import {
 } from '../../utils/operations';
 import type { RackStorageOperation } from './rack_storages.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleRackStorageOperation(
   this: IExecuteFunctions,
@@ -21,7 +22,7 @@ export async function handleRackStorageOperation(
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       if (filters.company_id) {
         filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');

@@ -11,6 +11,7 @@ import {
 import { handleCompanyJumpOperation } from '../../utils/operations/companies';
 import type { CompaniesOperations } from './companies.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleCompaniesOperation(
   this: IExecuteFunctions,
@@ -66,7 +67,7 @@ export async function handleCompaniesOperation(
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const qs: IDataObject = {
         ...filters,
       };

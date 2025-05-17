@@ -50,9 +50,12 @@ export const listsOperations: INodeProperties[] = [
 export const listsFields: INodeProperties[] = [
   // List ID for get, update, delete
   {
-    displayName: 'List ID',
+    displayName: 'List Name or ID',
     name: 'id',
-    type: 'string',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getLists',
+    },
     required: true,
     displayOptions: {
       show: {
@@ -61,7 +64,7 @@ export const listsFields: INodeProperties[] = [
       },
     },
     default: '',
-    description: 'The unique ID of the list',
+    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   // Name for create
   {
@@ -78,120 +81,20 @@ export const listsFields: INodeProperties[] = [
     default: '',
     description: 'The name of the list',
   },
-  // List items for create
+  // Name for update
   {
-    displayName: 'List Items',
-    name: 'list_items_attributes',
-    type: 'fixedCollection',
-    typeOptions: {
-      multipleValues: true,
-    },
-    displayOptions: {
-      show: {
-        resource: ['lists'],
-        operation: ['create'],
-      },
-    },
-    default: {},
-    placeholder: 'Add List Item',
-    options: [
-      {
-        name: 'item',
-        displayName: 'Item',
-        values: [
-          {
-            displayName: 'Name',
-            name: 'name',
-            type: 'string',
-            required: true,
-            default: '',
-            description: 'Name of the list item',
-          },
-        ],
-      },
-    ],
-    description: 'Array of list items to create',
-  },
-  // Fields for update
-  {
-    displayName: 'Update Fields',
-    name: 'updateFields',
-    type: 'collection',
-    placeholder: 'Add Field',
-    default: {},
+    displayName: 'Name',
+    name: 'updateFields.name',
+    type: 'string',
+    required: true,
     displayOptions: {
       show: {
         resource: ['lists'],
         operation: ['update'],
       },
     },
-    options: [
-      {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
-        default: '',
-        description: 'Name of the list',
-      },
-      {
-        displayName: 'List Items',
-        name: 'list_items_attributes',
-        type: 'fixedCollection',
-        typeOptions: {
-          multipleValues: true,
-        },
-        default: {},
-        placeholder: 'Add List Item',
-        options: [
-          {
-            name: 'item',
-            displayName: 'Item',
-            values: [
-              {
-                displayName: 'Add New Item',
-                name: 'addNew',
-                type: 'boolean',
-                default: false,
-                description: 'Whether to add a new list item. Disable to update or delete an existing item by ID.',
-              },
-              {
-                displayName: 'ID',
-                name: 'id',
-                type: 'number',
-                default: 0,
-                description: 'ID of the existing list item (required for updates or deletion)',
-                displayOptions: {
-                  show: {
-                    addNew: [false],
-                  },
-                },
-              },
-              {
-                displayName: 'Name',
-                name: 'name',
-                type: 'string',
-                default: '',
-                description: 'Name of the list item',
-              },
-              {
-                displayName: 'Destroy',
-                name: '_destroy',
-                type: 'boolean',
-                default: false,
-                description: 'Whether to remove this item',
-                displayOptions: {
-                  show: {
-                    addNew: [false],
-                  },
-                },
-              },
-            ],
-          },
-        ],
-        description: 'Array of list items to update, add, or remove',
-      },
-    ],
-    description: 'Fields to update on the list',
+    default: '',
+    description: 'The new name of the list',
   },
   // Filters for getAll
   {

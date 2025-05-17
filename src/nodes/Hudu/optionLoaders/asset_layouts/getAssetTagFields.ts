@@ -35,7 +35,7 @@ async function getLinkedLayoutName(
 	layoutId: number,
 ): Promise<string> {
 	try {
-		debugLog('[ResourceMapping] Fetching linked layout details for ID:', layoutId);
+		debugLog('[RESOURCE_MAPPING] Fetching linked layout details for ID:', layoutId);
 		const response = await handleGetOperation.call(this, '/asset_layouts', layoutId);
 		const layout = response as unknown as IAssetLayoutResponse;
 		
@@ -45,7 +45,7 @@ async function getLinkedLayoutName(
 		
 		return layout.asset_layout.name;
 	} catch (error) {
-		debugLog('[ResourceMapping] Error fetching linked layout:', error);
+		debugLog('[RESOURCE_MAPPING] Error fetching linked layout:', error);
 		return 'Unknown Layout';
 	}
 }
@@ -54,84 +54,95 @@ export async function mapAssetTagFieldsForResource(
 	this: ILoadOptionsFunctions,
 ): Promise<ResourceMapperFields> {
 	try {
-		debugLog('[ResourceMapping] Starting getAssetTagFields');
+		debugLog('[RESOURCE_MAPPING] Starting getAssetTagFields');
 		
 		let layoutId: string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
 		if (operation === 'update') {
-			// For update operation, get layout ID from asset details
-			const assetId = this.getNodeParameter('id', 0) as string;
-			debugLog('[ResourceMapping] Getting layout ID from asset:', assetId);
+			// For update operation, get pre-loaded layout ID first
+			try {
+				layoutId = this.getNodeParameter('update_asset_layout_id', 0) as string;
+				debugLog('[RESOURCE_MAPPING] Got pre-loaded layout ID:', layoutId);
+			} catch (error) {
+				// Fall back to getting layout ID from asset if pre-loaded ID is not available
+				debugLog('[RESOURCE_MAPPING] Pre-loaded layout ID not found, fetching from asset');
+				const assetId = this.getNodeParameter('id', 0) as string;
+				debugLog('[RESOURCE_MAPPING] Getting layout ID from asset:', assetId);
 
-			const response = await huduApiRequest.call(
-				this,
-				'GET',
-				'/assets',
-				{},
-				{ id: assetId },
-			) as IAssetResponse;
+				const response = await huduApiRequest.call(
+					this,
+					'GET',
+					'/assets',
+					{},
+					{ id: assetId },
+				) as IAssetResponse;
 
-			if (!response || !response.assets || !response.assets.length) {
-				throw new Error(`Asset with ID ${assetId} not found`);
+				if (!response || !response.assets || !response.assets.length) {
+					throw new NodeOperationError(this.getNode(), `Asset with ID ${assetId} not found`);
+				}
+
+				const asset = response.assets[0] as { asset_layout_id: number };
+				layoutId = asset.asset_layout_id.toString();
+				debugLog('[RESOURCE_MAPPING] Got layout ID from asset:', layoutId);
 			}
-
-			const asset = response.assets[0] as { asset_layout_id: number };
-			layoutId = asset.asset_layout_id.toString();
-			debugLog('[ResourceMapping] Got layout ID from asset:', layoutId);
 		} else {
 			// For create operation, get layout ID from UI
 			layoutId = this.getNodeParameter('asset_layout_id', 0) as string;
-			debugLog('[ResourceMapping] Got layout ID from UI:', layoutId);
+			debugLog('[RESOURCE_MAPPING] Got layout ID from UI:', layoutId);
 		}
 		
-		debugLog('[ResourceMapping] Context:', { 
+		debugLog('[RESOURCE_MAPPING] Context:', { 
 			node: this.getNode().name,
 			layoutId,
 		});
 
 		if (!layoutId) {
-			debugLog('[ResourceMapping] No layout ID available, returning empty fields');
-			return {
-				fields: [],
-			};
+			debugLog('[RESOURCE_MAPPING] No layout ID available');
+			throw new NodeOperationError(this.getNode(), 'Asset Layout Name or ID must be selected when returning assets as asset links');
 		}
 
 		// Fetch the layout details
-		debugLog('[ResourceMapping] Fetching layout details for ID:', layoutId);
+		debugLog('[RESOURCE_MAPPING] Fetching layout details for ID:', layoutId);
 		const response = await handleGetOperation.call(this, '/asset_layouts', layoutId);
 		const layout = response as unknown as IAssetLayoutResponse;
-		debugLog('[ResourceMapping] Layout response:', layout);
+		debugLog('[RESOURCE_MAPPING] Layout response:', layout);
 		
 		// Check if layout exists
 		if (!layout || !layout.asset_layout) {
-			debugLog('[ResourceMapping] Layout not found or inaccessible');
+			debugLog('[RESOURCE_MAPPING] Layout not found or inaccessible');
 			throw new NodeOperationError(this.getNode(), 'Asset layout not found or inaccessible');
 		}
 
 		const layoutData = layout.asset_layout;
 		const fields = layoutData.fields || [];
-		debugLog('[ResourceMapping] Found fields:', fields);
+		debugLog('[RESOURCE_MAPPING] Found fields:', fields);
 
 		// If no fields are found
 		if (fields.length === 0) {
-			debugLog('[ResourceMapping] No fields found in layout, returning empty fields');
-			return {
-				fields: [],
-			};
+			debugLog('[RESOURCE_MAPPING] No fields found in layout');
+			throw new NodeOperationError(this.getNode(), 'No fields found in the selected Asset Layout');
+		}
+
+		// Filter for Asset Tag fields
+		const assetTagFields = fields.filter((field: IAssetLayoutFieldEntity) => {
+			const isAssetTag = field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG;
+			const include = !field.is_destroyed && isAssetTag;
+			debugLog(`[RESOURCE_MAPPING] Filtering field ${field.label}:`, { include, field });
+			return include;
+		});
+
+		// Check if there are any Asset Tag fields after filtering
+		if (assetTagFields.length === 0) {
+			debugLog('[RESOURCE_MAPPING] No Asset Link fields found in layout after filtering');
+			throw new NodeOperationError(this.getNode(), 'No Asset Link fields are available in the asset\'s layout. Check for tag fields. Retry');
 		}
 
 		// Map fields to ResourceMapperFields format
-		debugLog('[ResourceMapping] Starting field mapping process');
-		const mappedFields = await Promise.all(fields
-			.filter((field: IAssetLayoutFieldEntity) => {
-				const isAssetTag = field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG;
-				const include = !field.is_destroyed && isAssetTag;
-				debugLog(`[ResourceMapping] Filtering field ${field.label}:`, { include, field });
-				return include;
-			})
+		debugLog('[RESOURCE_MAPPING] Starting field mapping process');
+		const mappedFields = await Promise.all(assetTagFields
 			.map(async (field: IAssetLayoutFieldEntity) => {
-				debugLog(`[ResourceMapping] Processing field ${field.label} of type ${field.field_type}`);
+				debugLog(`[RESOURCE_MAPPING] Processing field ${field.label} of type ${field.field_type}`);
 				
 				let linkedLayoutName = 'Any Asset Layout';
 				if (field.linkable_id === 0) {
@@ -152,18 +163,18 @@ export async function mapAssetTagFieldsForResource(
 					label: field.label,
 				};
 
-				debugLog(`[ResourceMapping] Final mapped field ${field.label}:`, mappedField);
+				debugLog(`[RESOURCE_MAPPING] Final mapped field ${field.label}:`, mappedField);
 				return mappedField;
 			}));
 
 		const sortedFields = mappedFields.sort((a, b) => a.displayName.localeCompare(b.displayName));
-		debugLog('[ResourceMapping] Final mapped fields:', sortedFields);
+		debugLog('[RESOURCE_MAPPING] Final mapped fields:', sortedFields);
 		
 		return {
 			fields: sortedFields,
 		};
 	} catch (error) {
-		debugLog('[ResourceMapping] Error in getAssetTagFields:', error);
+		debugLog('[RESOURCE_MAPPING] Error in getAssetTagFields:', error);
 		if (error instanceof NodeOperationError) {
 			throw error;
 		}
