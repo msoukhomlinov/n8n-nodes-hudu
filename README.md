@@ -4,11 +4,19 @@ This community node enables seamless integration with Hudu documentation platfor
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.36.3. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.37.0. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
 ## Recent Changes
+
+### [1.3.4] - 2025-05-17
+- Optimised lists with dedicated list options resource
+- Added full CRUD support for VLAN Zones and VLAN resources (new in Hudu API v2.37)
+- Enhanced website operations with full field support, including new email security fields
+- Fixed Asset Link Field Selector not loading properly in update operations
+
+> **Note:** Some features in this version require Hudu API v2.37.0 to function properly.
 
 ### [1.3.3] - 2025-04-24
 - Asset link and asset tag fields are now serialised as JSON when creating or updating assets, ensuring correct data is sent to the Hudu API.

@@ -1,6 +1,7 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { handleGetOperation, handleGetAllOperation } from '../../utils/operations';
 import type { PasswordFoldersOperations } from './password_folders.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handlePasswordFoldersOperation(
   this: IExecuteFunctions,
@@ -20,7 +21,7 @@ export async function handlePasswordFoldersOperation(
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       const qs: IDataObject = {
         ...filters,

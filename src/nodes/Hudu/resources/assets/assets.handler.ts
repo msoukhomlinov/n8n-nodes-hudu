@@ -13,6 +13,8 @@ import type { FieldType, INodePropertyOptions } from 'n8n-workflow';
 import { getManyAsAssetLinksHandler } from './getManyAsAssetLinks.handler';
 import { NodeOperationError } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { huduApiRequest } from '../../utils/requestUtils';
 
 interface AssetFieldMapping {
   value: IDataObject;
@@ -35,7 +37,7 @@ interface CustomFieldsResponse {
 }
 
 function processCustomFields(fieldMappings: AssetFieldMapping, isTagField: boolean = false): CustomFieldsResponse {
-  debugLog('[ResourceMapping] Processing custom fields', fieldMappings);
+  debugLog('[RESOURCE_MAPPING] Processing custom fields', fieldMappings);
   const { value: mappingsValue, schema } = fieldMappings;
   const customFieldObject: Record<string, string> = {};
   
@@ -55,7 +57,7 @@ function processCustomFields(fieldMappings: AssetFieldMapping, isTagField: boole
     }
   }
   
-  debugLog('[ResourceMapping] Processed custom fields result', customFieldObject);
+  debugLog('[RESOURCE_MAPPING] Processed custom fields result', customFieldObject);
   return { custom_fields: [customFieldObject] };
 }
 
@@ -88,33 +90,7 @@ export async function handleAssetsOperation(
       const showOtherFields = this.getNodeParameter('showOtherFieldsSelector', i) as boolean;
       const showAssetLinks = this.getNodeParameter('showAssetLinkSelector', i) as boolean;
 
-      debugLog('[RESOURCE_PARAMS] Field selector states', { showOtherFields, showAssetLinks });
-
-      if (showOtherFields) {
-        try {
-          const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;
-          if (fieldMappings?.value) {
-            customFields = processCustomFields(fieldMappings, false);
-            debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
-          }
-        } catch (error) {
-          debugLog('[RESOURCE_MAPPING] No field mappings provided', error);
-        }
-      }
-
-      if (showAssetLinks) {
-        try {
-          const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;
-          if (tagFieldMappings?.value) {
-            tagFields = processCustomFields(tagFieldMappings, true);
-            debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
-          }
-        } catch (error) {
-          debugLog('[RESOURCE_MAPPING] No tag field mappings provided', error);
-        }
-      }
-
-      // Merge custom fields and tag fields if any exist
+            debugLog('[RESOURCE_PARAMS] Field selector states', { showOtherFields, showAssetLinks });        if (showOtherFields) {        try {          const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;          if (fieldMappings?.value) {            customFields = processCustomFields(fieldMappings, false);            debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);          }        } catch (error) {          debugLog('[RESOURCE_MAPPING] No field mappings provided', error);        }      }        if (showAssetLinks) {        try {          const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;          if (tagFieldMappings?.value) {            tagFields = processCustomFields(tagFieldMappings, true);            debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);          }        } catch (error) {          debugLog('[RESOURCE_MAPPING] No tag field mappings provided', error);        }      }        // Merge custom fields and tag fields if any exist
       const mergedFields: CustomFieldsResponse = {
         custom_fields: [
           {
@@ -183,7 +159,7 @@ export async function handleAssetsOperation(
       debugLog('[OPERATION_GET_ALL] Processing get all assets operation');
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const returnAsAssetLinks = this.getNodeParameter('returnAsAssetLinks', i, false) as boolean;
       const assetLinksOutputField = this.getNodeParameter('assetLinksOutputField', i, 'assetLinks') as string;
 
@@ -281,9 +257,9 @@ export async function handleAssetsOperation(
 
       if (showOtherFields) {
         try {
-          const updateFieldMappings = this.getNodeParameter('updateFieldMappings', i) as AssetFieldMapping;
-          if (updateFieldMappings?.value) {
-            customFields = processCustomFields(updateFieldMappings, false);
+          const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;
+          if (fieldMappings?.value) {
+            customFields = processCustomFields(fieldMappings, false);
             debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
           }
         } catch (error) {
@@ -293,9 +269,9 @@ export async function handleAssetsOperation(
 
       if (showAssetLinks) {
         try {
-          const updateTagFieldMappings = this.getNodeParameter('updateTagFieldMappings', i) as AssetFieldMapping;
-          if (updateTagFieldMappings?.value) {
-            tagFields = processCustomFields(updateTagFieldMappings, true);
+          const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;
+          if (tagFieldMappings?.value) {
+            tagFields = processCustomFields(tagFieldMappings, true);
             debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
           }
         } catch (error) {
@@ -397,6 +373,44 @@ export async function handleAssetsOperation(
       );
 
       debugLog('[API_RESPONSE] Unarchive asset response', responseData);
+      break;
+    }
+
+    case 'moveLayout': {
+      debugLog('[OPERATION_MOVE_LAYOUT] Processing move layout operation');
+      const companyId = validateCompanyId(
+        this.getNodeParameter('company_id', i),
+        this.getNode(),
+        'Company ID'
+      );
+      const assetId = this.getNodeParameter('id', i) as string;
+      const targetLayoutId = this.getNodeParameter('target_asset_layout_id', i) as number;
+      
+      debugLog('[RESOURCE_PARAMS] Move layout parameters', { companyId, assetId, targetLayoutId });
+
+      if (!targetLayoutId) {
+        throw new NodeOperationError(this.getNode(), 'Target Asset Layout ID is required');
+      }
+
+      const body: IDataObject = {
+        asset_layout_id: targetLayoutId,
+      };
+
+      debugLog('[API_REQUEST] Moving asset to new layout', { companyId, assetId, body });
+
+      try {
+        responseData = await huduApiRequest.call(
+          this,
+          'PUT',
+          `${resourceEndpoint}/${companyId}/assets/${assetId}/move_layout`,
+          body,
+        );
+
+        debugLog('[API_RESPONSE] Move layout response', responseData);
+      } catch (error) {
+        debugLog('[API_ERROR] Move layout operation failed', { error, companyId, assetId, targetLayoutId });
+        throw error;
+      }
       break;
     }
 

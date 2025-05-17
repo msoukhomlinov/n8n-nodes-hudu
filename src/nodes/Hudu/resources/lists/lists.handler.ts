@@ -8,6 +8,7 @@ import {
 } from '../../utils/operations';
 import type { ListsOperation } from './lists.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleListsOperation(
   this: IExecuteFunctions,
@@ -31,15 +32,11 @@ export async function handleListsOperation(
       if (!name || name.trim() === '') {
         throw new Error('List name cannot be blank');
       }
-      // Flatten the fixedCollection structure for list_items_attributes
-      const listItemsRaw = this.getNodeParameter('list_items_attributes', i, {}) as IDataObject;
-      const listItems = Array.isArray(listItemsRaw.item) ? listItemsRaw.item : [];
+      
       const body: IDataObject = {
         name,
       };
-      if (listItems.length > 0) {
-        body.list_items_attributes = listItems;
-      }
+      
       responseData = await handleCreateOperation.call(
         this,
         resourceEndpoint,
@@ -59,7 +56,7 @@ export async function handleListsOperation(
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const qs: IDataObject = { ...filters };
       responseData = await handleGetAllOperation.call(
         this,
@@ -73,31 +70,20 @@ export async function handleListsOperation(
     }
     case 'update': {
       const listId = this.getNodeParameter('id', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
-      if (!updateFields || Object.keys(updateFields).length === 0) {
-        throw new Error('No fields to update were provided');
+      const name = this.getNodeParameter('updateFields.name', i) as string;
+      if (!name || name.trim() === '') {
+        throw new Error('List name cannot be blank');
       }
-      // Flatten the fixedCollection structure for list_items_attributes if present
-      if (updateFields.list_items_attributes) {
-        const itemsRaw = updateFields.list_items_attributes as IDataObject;
-        let items = Array.isArray(itemsRaw.item) ? itemsRaw.item : [];
-        // Process each item for addNew logic
-        items = items.map(item => {
-          const newItem = { ...item };
-          if (newItem.addNew) {
-            delete newItem.id;
-            delete newItem._destroy;
-          }
-          delete newItem.addNew;
-          return newItem;
-        });
-        updateFields.list_items_attributes = items;
-      }
+      
+      const updateData: IDataObject = {
+        name,
+      };
+      
       responseData = await handleUpdateOperation.call(
         this,
         resourceEndpoint,
         listId,
-        { list: updateFields },
+        { list: updateData },
       );
       break;
     }

@@ -39,28 +39,130 @@ export const DEBUG_CONFIG = {
   OPTION_LOADING: false,       // Debug option loading
 } as const;
 
+// Mapping for various debug message formats to standardized uppercase config keys
+const DEBUG_CATEGORY_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
+  // Resource mapping variations
+  'RESOURCE_MAPPING': 'RESOURCE_MAPPING',
+  'ResourceMapping': 'RESOURCE_MAPPING',
+  'Resource_Mapping': 'RESOURCE_MAPPING',
+  
+  // Option loading variations
+  'OPTION_LOADING': 'OPTION_LOADING',
+  'OptionLoading': 'OPTION_LOADING',
+  
+  // Asset options variations
+  'ASSET_OPTIONS': 'ASSET_OPTIONS',
+  'AssetOptions': 'ASSET_OPTIONS',
+  
+  // Field type mapping variations
+  'FIELD_TYPE_MAPPING': 'FIELD_TYPE_MAPPING',
+  'FieldTypeMapping': 'FIELD_TYPE_MAPPING',
+  
+  // Additional mappings for other categories
+  'API_REQUEST': 'API_REQUEST',
+  'API_RESPONSE': 'API_RESPONSE',
+  'OPERATION_CREATE': 'OPERATION_CREATE',
+  'OPERATION_UPDATE': 'OPERATION_UPDATE',
+  'OPERATION_DELETE': 'OPERATION_DELETE',
+  'OPERATION_GET': 'OPERATION_GET',
+  'OPERATION_GET_ALL': 'OPERATION_GET_ALL',
+  'OPERATION_ARCHIVE': 'OPERATION_ARCHIVE',
+  'RESOURCE_PROCESSING': 'RESOURCE_PROCESSING',
+  'ResourceProcessing': 'RESOURCE_PROCESSING',
+  'RESOURCE_PARAMS': 'RESOURCE_PARAMS',
+  'ResourceParams': 'RESOURCE_PARAMS',
+  'RESOURCE_TRANSFORM': 'RESOURCE_TRANSFORM',
+  'ResourceTransform': 'RESOURCE_TRANSFORM',
+  'NODE_INPUT': 'NODE_INPUT',
+  'NODE_OUTPUT': 'NODE_OUTPUT',
+  'UTIL_DATE_PROCESSING': 'UTIL_DATE_PROCESSING',
+  'DateProcessing': 'UTIL_DATE_PROCESSING',
+  'UTIL_FILTERS': 'UTIL_FILTERS',
+  'Filters': 'UTIL_FILTERS',
+  'UTIL_TYPE_CONVERSION': 'UTIL_TYPE_CONVERSION',
+  'CustomFields': 'ASSET_OPTIONS',
+};
+
+// Message prefix mapping to DEBUG_CONFIG categories
+const MESSAGE_PREFIX_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
+  'Hudu API Request': 'API_REQUEST',
+  'Hudu API Response': 'API_RESPONSE',
+  'Hudu API Error': 'API_REQUEST',
+  'Rate Limited': 'API_REQUEST',
+  'Update Operation': 'OPERATION_UPDATE',
+  'GetAll Operation': 'OPERATION_GET_ALL',
+  'Get Operation': 'OPERATION_GET',
+  'Delete Operation': 'OPERATION_DELETE',
+  'Create Operation': 'OPERATION_CREATE',
+  'Archive Operation': 'OPERATION_ARCHIVE',
+  'Filter Processing': 'UTIL_FILTERS',
+  'Date Processing': 'UTIL_DATE_PROCESSING',
+  'Lists Handler': 'RESOURCE_PROCESSING',
+  'List Options Handler': 'RESOURCE_PROCESSING',
+  'Articles Handler': 'RESOURCE_PROCESSING',
+  'Articles Version History': 'RESOURCE_PROCESSING',
+  'Node Execution': 'NODE_INPUT',  // We'll refine this later in the extractDebugCategory function
+  // Additional patterns found
+  'VLAN Zone operation': 'RESOURCE_PROCESSING',
+  'VLAN operation': 'RESOURCE_PROCESSING',
+  'Websites resource': 'RESOURCE_PROCESSING',
+  'IP Address operation': 'RESOURCE_PROCESSING',
+  'Company operation': 'RESOURCE_PROCESSING',
+  'Asset operation': 'RESOURCE_PROCESSING',
+  'Asset Layout operation': 'RESOURCE_PROCESSING',
+  'User operation': 'RESOURCE_PROCESSING',
+  'Cards operation': 'RESOURCE_PROCESSING',
+  'Article operation': 'RESOURCE_PROCESSING',
+  'Activity Log operation': 'RESOURCE_PROCESSING',
+  'Expiration operation': 'RESOURCE_PROCESSING',
+  'Folder operation': 'RESOURCE_PROCESSING',
+  'Matcher operation': 'RESOURCE_PROCESSING',
+  'Network operation': 'RESOURCE_PROCESSING',
+  'Procedure operation': 'RESOURCE_PROCESSING',
+  'API Info operation': 'RESOURCE_PROCESSING'
+};
+
+/**
+ * Extract debug category from message
+ * @param message Debug message to parse
+ * @returns Standardized debug category key or undefined
+ */
+function extractDebugCategory(message: string): keyof typeof DEBUG_CONFIG | undefined {
+  // Check if message contains a category tag like [CategoryName]
+  const categoryMatch = message.match(/\[([A-Za-z0-9_]+)\]/);
+  if (categoryMatch && categoryMatch[1]) {
+    const category = categoryMatch[1];
+    // Look up the standardized category in our map
+    return DEBUG_CATEGORY_MAP[category];
+  }
+  
+  // If no bracket category, try to match based on message prefix
+  for (const [prefix, category] of Object.entries(MESSAGE_PREFIX_MAP)) {
+    if (message.startsWith(prefix)) {
+      // Special case for Node Execution
+      if (prefix === 'Node Execution' && message.includes('Output')) {
+        return 'NODE_OUTPUT';
+      }
+      return category;
+    }
+  }
+  
+  return undefined;
+}
+
 /**
  * Debug logging utility
  */
 export function debugLog(message: string, data?: unknown): void {
-  // Always log resource mapping and option loading debug messages
-  const isResourceMapping = message.includes('[ResourceMapping]');
-  const isOptionLoading = message.includes('[OptionLoading]');
-  const isAssetOptions = message.includes('[AssetOptions]');
-  const isFieldTypeMapping = message.includes('[FieldTypeMapping]');
+  // Extract the debug category from the message
+  const category = extractDebugCategory(message);
   
-  if (DEBUG_CONFIG.RESOURCE_MAPPING && isResourceMapping) {
-    console.log(`[Hudu][ResourceMapping] ${message}`, data);
-  } else if (DEBUG_CONFIG.OPTION_LOADING && isOptionLoading) {
-    console.log(`[Hudu][OptionLoading] ${message}`, data);
-  } else if (DEBUG_CONFIG.ASSET_OPTIONS && isAssetOptions) {
-    console.log(`[Hudu][AssetOptions] ${message}`, data);
-  } else if (DEBUG_CONFIG.FIELD_TYPE_MAPPING && isFieldTypeMapping) {
-    console.log(`[Hudu][FieldTypeMapping] ${message}`, data);
-  } else {
-    // For other debug messages, check the specific config
-    console.log(`[Hudu] ${message}`, data);
+  // Only log if the category exists and is enabled in DEBUG_CONFIG
+  if (category && DEBUG_CONFIG[category]) {
+    // Use the original category name without formatting
+    console.log(`[Hudu][${category}] ${message}`, data);
   }
+  // No else branch - if category doesn't exist or is disabled, don't log anything
 }
 
 /**

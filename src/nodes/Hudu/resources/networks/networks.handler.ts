@@ -8,6 +8,7 @@ import {
   handleDeleteOperation,
 } from '../../utils/operations';
 import type { NetworksOperations } from './networks.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleNetworksOperation(
   this: IExecuteFunctions,
@@ -56,7 +57,7 @@ export async function handleNetworksOperation(
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const qs: IDataObject = {
         ...filters,
       };
@@ -64,6 +65,11 @@ export async function handleNetworksOperation(
       // Validate company_id if provided
       if (filters.company_id !== undefined && filters.company_id !== null && filters.company_id !== '') {
         qs.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+      }
+
+      // Pass archived filter if present
+      if (filters.archived !== undefined) {
+        qs.archived = filters.archived;
       }
 
       if (filters.created_at) {

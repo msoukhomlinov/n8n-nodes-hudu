@@ -24,12 +24,14 @@ import { getUsers } from './optionLoaders/users';
 import { getCompanies } from './optionLoaders/companies';
 import { getAssetLayouts, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
 import { getAssets } from './optionLoaders/assets';
+import { getAssetLayoutId } from './optionLoaders/assets/getAssetLayoutId';
 import { 
 	mapAssetLayoutFieldsForResource,
 	getAssetLayoutFields,
 } from './optionLoaders/asset_layouts/getAssetLayoutFields';
 import { getCustomFieldsLayoutFields } from './optionLoaders/asset_layouts/getCustomFieldsLayoutFields';
 import { mapAssetTagFieldsForResource } from './optionLoaders/asset_layouts/getAssetTagFields';
+import { getLists } from './optionLoaders/lists';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -81,6 +83,7 @@ export class Hudu implements INodeType {
       ...descriptions.expirationsOperations,
       ...descriptions.folderOperations,
       ...descriptions.ipAddressOperations,
+      ...descriptions.listOptionsOperations,
       ...descriptions.listsOperations,
       ...descriptions.magicDashOperations,
       ...descriptions.matchersOperations,
@@ -95,6 +98,8 @@ export class Hudu implements INodeType {
       ...descriptions.uploadsOperations,
       ...descriptions.userOperations,
       ...descriptions.websitesOperations,
+      ...descriptions.vlansOperations,
+      ...descriptions.vlanZonesOperations,
       // Fields
       ...descriptions.activityLogsFields,
       ...descriptions.apiInfoFields,
@@ -108,6 +113,7 @@ export class Hudu implements INodeType {
       ...descriptions.expirationsFields,
       ...descriptions.folderFields,
       ...descriptions.ipAddressFields,
+      ...descriptions.listOptionsFields,
       ...descriptions.listsFields,
       ...descriptions.magicDashFields,
       ...descriptions.matchersFields,
@@ -122,6 +128,8 @@ export class Hudu implements INodeType {
       ...descriptions.uploadsFields,
       ...descriptions.userFields,
       ...descriptions.websitesFields,
+      ...descriptions.vlansFields,
+      ...descriptions.vlanZonesFields,
     ],
   };
 
@@ -133,7 +141,9 @@ export class Hudu implements INodeType {
       getAssetLayoutFields,
       getAssetLayoutFieldValues,
       getAssets,
+      getAssetLayoutId,
       getCustomFieldsLayoutFields,
+      getLists,
     },
     resourceMapping: {
       mapAssetLayoutFieldsForResource,
@@ -251,6 +261,13 @@ export class Hudu implements INodeType {
               i,
             );
             break;
+          case 'list_options':
+            responseData = await resources.handleListOptionsOperation.call(
+              this,
+              operation as resources.ListOptionsOperation,
+              i,
+            );
+            break;
           case 'lists':
             responseData = await resources.handleListsOperation.call(
               this,
@@ -346,6 +363,20 @@ export class Hudu implements INodeType {
             responseData = await resources.handleWebsitesOperation.call(
               this,
               operation as resources.WebsiteOperation,
+              i,
+            );
+            break;
+          case 'vlans':
+            responseData = await resources.handleVlansOperation.call(
+              this,
+              operation as resources.VlanOperation,
+              i,
+            );
+            break;
+          case 'vlan_zones':
+            responseData = await resources.handleVlanZonesOperation.call(
+              this,
+              operation as resources.VlanZoneOperation,
               i,
             );
             break;

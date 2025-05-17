@@ -5,6 +5,7 @@ import type {
 } from 'n8n-workflow';
 import { huduApiRequest, handleListing } from '../../utils';
 import type { PublicPhotoOperation } from './public_photos.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handlePublicPhotoOperation(
   this: IExecuteFunctions,
@@ -32,7 +33,7 @@ export async function handlePublicPhotoOperation(
 
     case 'getAll': {
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       responseData = await handleListing.call(
         this,

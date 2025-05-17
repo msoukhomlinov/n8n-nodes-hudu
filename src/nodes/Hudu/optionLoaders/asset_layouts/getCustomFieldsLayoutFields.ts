@@ -19,44 +19,44 @@ export async function getCustomFieldsLayoutFields(
 	this: ILoadOptionsFunctions,
 ): Promise<INodePropertyOptions[]> {
 	try {
-		debugLog('[CustomFields] Starting getCustomFieldsLayoutFields');
+		debugLog('[ASSET_OPTIONS] Starting getCustomFieldsLayoutFields');
 		
 		const layoutId = this.getCurrentNodeParameter('getall_asset_layout_id') as string;
 		
-		debugLog('[CustomFields] Context:', { 
+		debugLog('[ASSET_OPTIONS] Context:', { 
 			node: this.getNode().name,
 			layoutId,
 		});
 
 		if (!layoutId) {
-			debugLog('[CustomFields] No layout ID provided, returning empty options');
+			debugLog('[ASSET_OPTIONS] No layout ID provided, returning empty options');
 			return [];
 		}
 
 		// Fetch the layout details
-		debugLog('[CustomFields] Fetching layout details for ID:', layoutId);
+		debugLog('[ASSET_OPTIONS] Fetching layout details for ID:', layoutId);
 		const response = await handleGetOperation.call(this, '/asset_layouts', layoutId);
 		const layout = response as unknown as IAssetLayoutResponse;
-		debugLog('[CustomFields] Layout response:', layout);
+		debugLog('[ASSET_OPTIONS] Layout response:', layout);
 		
 		// Check if layout exists
 		if (!layout || !layout.asset_layout) {
-			debugLog('[CustomFields] Layout not found or inaccessible');
+			debugLog('[ASSET_OPTIONS] Layout not found or inaccessible');
 			throw new NodeOperationError(this.getNode(), 'Asset layout not found or inaccessible');
 		}
 
 		const layoutData = layout.asset_layout;
 		const fields = layoutData.fields || [];
-		debugLog('[CustomFields] Found fields:', fields);
+		debugLog('[ASSET_OPTIONS] Found fields:', fields);
 
 		// If no fields are found
 		if (fields.length === 0) {
-			debugLog('[CustomFields] No fields found in layout, returning empty options');
+			debugLog('[ASSET_OPTIONS] No fields found in layout, returning empty options');
 			return [];
 		}
 
 		// Map fields to options format
-		debugLog('[CustomFields] Starting field mapping process');
+		debugLog('[ASSET_OPTIONS] Starting field mapping process');
 		const options = fields
 			.filter((field: IAssetLayoutFieldEntity) => !field.is_destroyed && field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG)
 			.map((field: IAssetLayoutFieldEntity) => ({
@@ -66,10 +66,10 @@ export async function getCustomFieldsLayoutFields(
 			}))
 			.sort((a, b) => a.name.localeCompare(b.name));
 
-		debugLog('[CustomFields] Final mapped options:', options);
+		debugLog('[ASSET_OPTIONS] Final mapped options:', options);
 		return options;
 	} catch (error) {
-		debugLog('[CustomFields] Error in getCustomFieldsLayoutFields:', error);
+		debugLog('[ASSET_OPTIONS] Error in getCustomFieldsLayoutFields:', error);
 		if (error instanceof NodeOperationError) {
 			throw error;
 		}

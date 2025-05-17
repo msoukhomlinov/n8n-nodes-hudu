@@ -2,26 +2,26 @@ import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { processDateRange, validateCompanyId } from '../../utils/index';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import {
-	handleCreateOperation,
-	handleDeleteOperation,
-	handleGetOperation,
-	handleGetAllOperation,
-	handleUpdateOperation,
+  handleCreateOperation,
+  handleDeleteOperation,
+  handleGetOperation,
+  handleGetAllOperation,
+  handleUpdateOperation,
 } from '../../utils/operations';
-import type { WebsiteOperation } from './websites.types';
+import type { VlanZoneOperation } from './vlan_zones.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
 
-export async function handleWebsitesOperation(
+export async function handleVlanZonesOperation(
   this: IExecuteFunctions,
-  operation: WebsiteOperation,
+  operation: VlanZoneOperation,
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
-  if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
-    debugLog('[ResourceProcessing] Processing Websites resource', { operation, itemIndex: i });
-  }
+  const resourceEndpoint = '/vlan_zones';
 
-  const resourceEndpoint = '/websites';
+  if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
+    debugLog('[ResourceProcessing] VLAN Zone operation started', { operation, index: i });
+  }
 
   switch (operation) {
     case 'getAll': {
@@ -30,7 +30,7 @@ export async function handleWebsitesOperation(
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites getAll parameters', { returnAll, filters, limit });
+        debugLog('[ResourceParams] VLAN Zone getAll parameters', { returnAll, filters, limit });
       }
 
       if (filters.company_id) {
@@ -44,6 +44,16 @@ export async function handleWebsitesOperation(
         const createdAtFilter = filters.created_at as IDataObject;
         if (createdAtFilter.range) {
           const rangeObj = createdAtFilter.range as IDataObject;
+          if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+            debugLog('[DateProcessing] Processing created_at date range', {
+              mode: rangeObj.mode,
+              exact: rangeObj.exact,
+              start: rangeObj.start,
+              end: rangeObj.end,
+              preset: rangeObj.preset,
+            });
+          }
+
           filters.created_at = processDateRange({
             range: {
               mode: rangeObj.mode as 'exact' | 'range' | 'preset',
@@ -54,6 +64,10 @@ export async function handleWebsitesOperation(
             },
           });
           qs.created_at = filters.created_at;
+
+          if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+            debugLog('[DateProcessing] Processed created_at result', filters.created_at);
+          }
         }
       }
 
@@ -61,6 +75,16 @@ export async function handleWebsitesOperation(
         const updatedAtFilter = filters.updated_at as IDataObject;
         if (updatedAtFilter.range) {
           const rangeObj = updatedAtFilter.range as IDataObject;
+          if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+            debugLog('[DateProcessing] Processing updated_at date range', {
+              mode: rangeObj.mode,
+              exact: rangeObj.exact,
+              start: rangeObj.start,
+              end: rangeObj.end,
+              preset: rangeObj.preset,
+            });
+          }
+
           filters.updated_at = processDateRange({
             range: {
               mode: rangeObj.mode as 'exact' | 'range' | 'preset',
@@ -71,97 +95,111 @@ export async function handleWebsitesOperation(
             },
           });
           qs.updated_at = filters.updated_at;
+
+          if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
+            debugLog('[DateProcessing] Processed updated_at result', filters.updated_at);
+          }
         }
       }
 
-      if (DEBUG_CONFIG.RESOURCE_TRANSFORM) {
-        debugLog('[ResourceTransform] Websites getAll transformed query', { qs });
+      if (DEBUG_CONFIG.UTIL_FILTERS) {
+        debugLog('[Filters] VLAN Zone filters after processing', qs);
       }
 
-      return await handleGetAllOperation.call(
+      const result = await handleGetAllOperation.call(
         this,
         resourceEndpoint,
-        'websites',
+        'vlan_zones',
         qs,
         returnAll,
         limit,
       );
+
+      if (DEBUG_CONFIG.RESOURCE_TRANSFORM) {
+        debugLog('[ResourceTransform] VLAN Zone getAll results count', {
+          count: Array.isArray(result) ? result.length : 1,
+        });
+      }
+
+      return result;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      
+
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites get parameters', { id });
+        debugLog('[ResourceParams] VLAN Zone get parameters', { id });
       }
-      
+
       return await handleGetOperation.call(this, resourceEndpoint, id);
     }
 
     case 'create': {
       const companyId = validateCompanyId(
-        this.getNodeParameter('companyId', i),
+        this.getNodeParameter('company_id', i),
         this.getNode(),
-        'Company ID'
+        'Company ID',
       );
       const name = this.getNodeParameter('name', i) as string;
+      const vlanIdRanges = this.getNodeParameter('vlan_id_ranges', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-      
+
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites create parameters', { 
-          companyId, 
-          name, 
-          additionalFields 
+        debugLog('[ResourceParams] VLAN Zone create parameters', {
+          companyId,
+          name,
+          vlanIdRanges,
+          additionalFields,
         });
       }
-      
+
       const body = {
-        website: {
+        vlan_zone: {
           name,
+          vlan_id_ranges: vlanIdRanges,
           company_id: companyId,
           ...additionalFields,
         },
       };
-      
+
       if (DEBUG_CONFIG.RESOURCE_TRANSFORM) {
-        debugLog('[ResourceTransform] Websites create transformed body', { body });
+        debugLog('[ResourceTransform] VLAN Zone create request body', body);
       }
-      
+
       return await handleCreateOperation.call(this, resourceEndpoint, body);
     }
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
       const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
-      
+
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites update parameters', { id, updateFields });
+        debugLog('[ResourceParams] VLAN Zone update parameters', { id, updateFields });
       }
-      
+
       const body = {
-        website: {
+        vlan_zone: {
           ...updateFields,
         },
       };
-      
+
       if (DEBUG_CONFIG.RESOURCE_TRANSFORM) {
-        debugLog('[ResourceTransform] Websites update transformed body', { body });
+        debugLog('[ResourceTransform] VLAN Zone update request body', body);
       }
-      
+
       return await handleUpdateOperation.call(this, resourceEndpoint, id, body);
     }
 
     case 'delete': {
       const id = this.getNodeParameter('id', i) as number;
-      
+
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites delete parameters', { id });
+        debugLog('[ResourceParams] VLAN Zone delete parameters', { id });
       }
-      
+
       return await handleDeleteOperation.call(this, resourceEndpoint, id);
     }
   }
 
-  // This should never be reached due to TypeScript's exhaustive check
   throw new Error(`Unsupported operation ${operation}`);
-}
+} 

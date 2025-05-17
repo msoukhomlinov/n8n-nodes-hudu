@@ -28,6 +28,9 @@ export interface IWebsite extends IDataObject {
   asset_type?: string; // The type of the asset, in this case, 'Website'
   company_name?: string; // The name of the associated company
   url?: string; // The URL path of the website within the application
+  enable_dmarc_tracking?: boolean; // Indicates whether DMARC checks are enabled for the website
+  enable_dkim_tracking?: boolean; // Indicates whether DKIM checks are enabled for the website
+  enable_spf_tracking?: boolean; // Indicates whether SPF checks are enabled for the website
 }
 
 export interface IWebsiteResponse extends IDataObject {

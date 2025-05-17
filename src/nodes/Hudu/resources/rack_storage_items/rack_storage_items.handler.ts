@@ -10,6 +10,7 @@ import {
   handleUpdateOperation,
 } from '../../utils/operations';
 import type { RackStorageItemOperation } from './rack_storage_items.types';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleRackStorageItemOperation(
   this: IExecuteFunctions,
@@ -22,7 +23,7 @@ export async function handleRackStorageItemOperation(
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       return await handleGetAllOperation.call(
         this,

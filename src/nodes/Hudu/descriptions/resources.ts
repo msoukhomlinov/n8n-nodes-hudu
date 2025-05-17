@@ -54,6 +54,10 @@ export const resourceOptions = [
     value: 'lists',
   },
   {
+    name: 'List Options',
+    value: 'list_options',
+  },
+  {
     name: 'Magic Dash',
     value: 'magic_dash',
   },
@@ -104,6 +108,14 @@ export const resourceOptions = [
   {
     name: 'Website',
     value: 'websites',
+  },
+  {
+    name: 'VLAN',
+    value: 'vlans',
+  },
+  {
+    name: 'VLAN Zone',
+    value: 'vlan_zones',
   },
 ];
 

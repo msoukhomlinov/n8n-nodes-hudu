@@ -9,6 +9,8 @@ import {
 } from '../../utils/operations';
 import type { IpAddressOperations } from './ip_addresses.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { debugLog } from '../../utils/debugConfig';
 
 export async function handleIpAddressesOperation(
   this: IExecuteFunctions,
@@ -63,7 +65,7 @@ export async function handleIpAddressesOperation(
       }
 
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       responseData = await handleGetAllOperation.call(
         this,
@@ -87,12 +89,20 @@ export async function handleIpAddressesOperation(
       const companyId = Number.parseInt(this.getNodeParameter('company_id', i) as string, 10);
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
+      // Map 'comments' to 'notes' for API compatibility
       const body: IDataObject = {
         address,
         status,
         company_id: companyId,
         ...additionalFields,
       };
+
+      // Map comments to notes if it exists
+      if (body.comments !== undefined) {
+        debugLog('[RESOURCE_TRANSFORM] Mapping comments to notes field for IP address', { comments: body.comments });
+        body.notes = body.comments;
+        delete body.comments;
+      }
 
       return await handleCreateOperation.call(this, resourceEndpoint, { ip_address: body });
     }
@@ -103,6 +113,13 @@ export async function handleIpAddressesOperation(
 
       if (updateFields.company_id) {
         updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+      }
+
+      // Map comments to notes if it exists
+      if (updateFields.comments !== undefined) {
+        debugLog('[RESOURCE_TRANSFORM] Mapping comments to notes field for IP address update', { comments: updateFields.comments });
+        updateFields.notes = updateFields.comments;
+        delete updateFields.comments;
       }
 
       return await handleUpdateOperation.call(this, resourceEndpoint, id, { ip_address: updateFields });

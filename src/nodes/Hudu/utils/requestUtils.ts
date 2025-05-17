@@ -19,7 +19,7 @@ import type {
   JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from './constants';
+import { HUDU_API_CONSTANTS, RESOURCES_WITH_PAGE_SIZE } from './constants';
 import type { FilterMapping } from './types';
 import { applyPostFilters } from './filterUtils';
 import { DEBUG_CONFIG, debugLog } from './debugConfig';
@@ -341,20 +341,38 @@ export async function handleListing<T extends IDataObject>(
   let hasMore = true;
   let page = 1;
 
-  // Optimize page size if we have a specific limit less than default page size
+  // Optimise page size if we have a specific limit less than default page size
   const pageSize = !returnAll && limit > 0 && limit < HUDU_API_CONSTANTS.PAGE_SIZE 
     ? limit 
     : HUDU_API_CONSTANTS.PAGE_SIZE;
 
+  //debugLog('[handleListing] Start', { endpoint, resourceName, returnAll, limit, pageSize });
+
+  // Check if this resource supports pagination
+  const resourcePath = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  const supportsPagination = RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any);
+
   // Keep fetching until we have enough filtered results or no more data
   while (hasMore) {
-    const queryParams = { 
-      ...query, 
-      page,
-      page_size: pageSize,
-    };
+    // Only include pagination parameters if the resource supports them
+    const queryParams = { ...query };
+    
+    if (supportsPagination) {
+      queryParams.page = page;
+      queryParams.page_size = pageSize;
+    }
+    
     const response = await huduApiRequest.call(this, method, endpoint, body, queryParams, resourceName);
     const batchResults = parseHuduResponse(response, resourceName);
+
+    //debugLog('[handleListing] Page fetched', { 
+    //  endpoint, 
+    //  resourceName, 
+    //  page, 
+    //  supportsPagination,
+    //  batchCount: batchResults.length, 
+    //  cumulativeCount: results.length + batchResults.length 
+    //});
 
     if (batchResults.length === 0) {
       hasMore = false;
@@ -374,20 +392,25 @@ export async function handleListing<T extends IDataObject>(
       filteredResults = results;
     }
 
-    // Determine if we should continue fetching
-    if (!returnAll) {
-      if (filteredResults.length >= limit) {
-        hasMore = false;
+    // If resource doesn't support pagination, we get all data in one request
+    if (!supportsPagination) {
+      hasMore = false;
+    } else {
+      // Determine if we should continue fetching for resources with pagination
+      if (!returnAll) {
+        if (filteredResults.length >= limit) {
+          hasMore = false;
+        } else {
+          // Continue if there might be more results
+          hasMore = batchResults.length === pageSize;
+        }
       } else {
-        // Continue if there might be more results
+        // If returning all, continue if there might be more results
         hasMore = batchResults.length === pageSize;
       }
-    } else {
-      // If returning all, continue if there might be more results
-      hasMore = batchResults.length === pageSize;
-    }
 
-    page++;
+      page++;
+    }
   }
 
   // Slice to exact limit if we're not returning all

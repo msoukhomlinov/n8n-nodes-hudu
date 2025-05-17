@@ -9,6 +9,7 @@ import {
 import type { AssetLayoutOperation } from './asset_layouts.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import { debugLog } from '../../utils/debugConfig';
+import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
 export async function handleAssetLayoutOperation(
   this: IExecuteFunctions,
@@ -24,7 +25,7 @@ export async function handleAssetLayoutOperation(
       debugLog('[OPERATION_GET_ALL] Processing get all asset layouts operation');
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
-      const limit = this.getNodeParameter('limit', i, 25) as number;
+      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const qs: IDataObject = {
         ...filters,
       };
