@@ -20,6 +20,12 @@ export const publicPhotosOperations: INodeProperties[] = [
         action: 'Create a public photo',
       },
       {
+        name: 'Get',
+        value: 'get',
+        description: 'Retrieve a specific public photo by its ID',
+        action: 'Get a public photo',
+      },
+      {
         name: 'Get Many',
         value: 'getAll',
         description: 'Retrieve many public photos',
@@ -87,6 +93,45 @@ export const publicPhotosFields: INodeProperties[] = [
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
   },
+  {
+    displayName: 'Filter',
+    name: 'filter',
+    type: 'fixedCollection',
+    displayOptions: {
+      show: {
+        resource: ['public_photos'],
+        operation: ['getAll'],
+      },
+    },
+    placeholder: 'Add Filter',
+    default: {},
+    description: 'Optional filters to narrow down the public photos returned',
+    options: [
+      {
+        name: 'criteria',
+        displayName: 'Criteria',
+        values: [
+          {
+            displayName: 'Record Type',
+            name: 'record_type_filter',
+            type: 'string',
+            default: '',
+            description: 'Filter photos by the type of record they are associated with (e.g., Article). Case-sensitive.',
+          },
+          {
+            displayName: 'Record ID',
+            name: 'record_id_filter',
+            type: 'number',
+            default: null,
+            typeOptions: {
+              minValue: 1,
+            },
+            description: 'Filter photos by the ID of the record they are associated with',
+          },
+        ],
+      },
+    ],
+  },
 
   // ----------------------------------
   //         public_photos:create
@@ -95,15 +140,18 @@ export const publicPhotosFields: INodeProperties[] = [
     displayName: 'Photo',
     name: 'photo',
     type: 'string',
+    default: 'data',
+    required: true,
+    description: 'Name of the binary property containing the photo to upload',
+    typeOptions: {
+      loadOptionsMethod: 'getBinaryProperties',
+    },
     displayOptions: {
       show: {
         resource: ['public_photos'],
         operation: ['create'],
       },
     },
-    required: true,
-    default: '',
-    description: 'The photo file to be uploaded (must be an image)',
   },
   {
     displayName: 'Record Type',

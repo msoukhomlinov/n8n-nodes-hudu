@@ -20,7 +20,7 @@ export const DEBUG_CONFIG = {
   RESOURCE_PROCESSING: false,  // Debug resource handler processing
   RESOURCE_PARAMS: false,      // Debug parameter extraction in handlers
   RESOURCE_TRANSFORM: false,   // Debug data transformations in handlers
-  RESOURCE_MAPPING: false,     // Debug resource mapping
+  RESOURCE_MAPPING: false,    // Debug resource mapping
 
   // Node Execution
   NODE_INPUT: false,    // Debug input items to node
@@ -159,8 +159,11 @@ export function debugLog(message: string, data?: unknown): void {
   
   // Only log if the category exists and is enabled in DEBUG_CONFIG
   if (category && DEBUG_CONFIG[category]) {
+    // Redact sensitive data if present
+    const safeData = data ? redactSensitiveData(data) : undefined;
+    
     // Use the original category name without formatting
-    console.log(`[Hudu][${category}] ${message}`, data);
+    console.log(`[Hudu][${category}] ${message}`, safeData);
   }
   // No else branch - if category doesn't exist or is disabled, don't log anything
 }
@@ -182,7 +185,7 @@ export function redactSensitiveData(obj: unknown): unknown {
     return obj;
   }
 
-  const sensitiveKeys = ['x-api-key', 'apiKey', 'api_key', 'password', 'token', 'secret'];
+  const sensitiveKeys = ['x-api-key', 'apiKey', 'api_key', 'password', 'token', 'secret', 'authorization'];
   
   if (Array.isArray(obj)) {
     return obj.map(item => redactSensitiveData(item));
@@ -192,7 +195,8 @@ export function redactSensitiveData(obj: unknown): unknown {
     const redactedObj: Record<string, unknown> = {};
     
     for (const [key, value] of Object.entries(obj)) {
-      if (sensitiveKeys.includes(key.toLowerCase())) {
+      // Case-insensitive check for sensitive keys
+      if (sensitiveKeys.some(sensitiveKey => key.toLowerCase() === sensitiveKey.toLowerCase())) {
         redactedObj[key] = '[REDACTED]';
       } else {
         redactedObj[key] = typeof value === 'object' ? redactSensitiveData(value) : value;

@@ -1,5 +1,5 @@
 # n8n-nodes-hudu
-This community node enables seamless integration with Hudu documentation platform in your n8n workflows, allowing you to automate and manage your IT documentation tasks.
+This community node enables seamless integration with the Hudu documentation platform in your n8n workflows, allowing you to automate and manage your IT documentation tasks.
 
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -8,57 +8,25 @@ This community node enables seamless integration with Hudu documentation platfor
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
+## What's New in 1.3.5 (2025-05-27)
+
+- The `Lists` and `List Options` resources are now managed as separate, distinct resources, each with their own full set of CRUD operations for improved clarity and flexibility. This change allows you to manage lists themselves and the items within those lists independently.
+- Management of asset fields is now performed via three new dedicated resources: `Asset Standard Field`, `Asset Custom Field`, and `Asset Link Field`. Field-level operations (get/update) are no longer handled via the main Asset resource, but through these new resources for improved clarity and modularity.
+- **Public Photos resource improvements:**
+  - Filter fields (`Record Type Filter` and `Record ID Filter`) are now grouped in a single optional "Filter" fixed collection for the Get Many operation, improving UI consistency and usability.
+  - The Get by ID operation now fetches public photos page by page, checking each page for the requested ID and returning as soon as it is found. This is much more efficient for large datasets.
+  - Documentation and type definitions for Public Photos have been updated for clarity and alignment with the API.
+
 ## Recent Changes
 
 ### [1.3.4] - 2025-05-17
-- Optimised lists with dedicated list options resource
-- Added full CRUD support for VLAN Zones and VLAN resources (new in Hudu API v2.37)
 - Enhanced website operations with full field support, including new email security fields
+- Added full CRUD support for VLAN Zones and VLAN resources (new in Hudu API v2.37)
 - Fixed Asset Link Field Selector not loading properly in update operations
 
 > **Note:** Some features in this version require Hudu API v2.37.0 to function properly.
 
-### [1.3.3] - 2025-04-24
-- Asset link and asset tag fields are now serialised as JSON when creating or updating assets, ensuring correct data is sent to the Hudu API.
-- The 'Return As Asset Links' feature is now available for both single asset (Get) and multiple assets (Get Many) operations, providing consistent output formatting for asset link custom fields.
-- Asset layout custom fields now support advanced properties: `hint`, `min`, `max`, `linkable_id`, `expiration`, `options`, `multiple_options`, `list_id`, and more. An "Other Data" input is available for all field types, allowing you to specify additional properties as required by the Hudu API.
-
-### [1.3.2] - 2025-04-24
-- Full support for the new Lists resource, enabling you to create, update, retrieve, and manage lists directly from your n8n workflows.
-- Resolved an issue with the Procedures kickoff operation
-
-### [1.3.1] - 2025-04-21
-- Aligned package general content such as README and documentation
-
-### [1.3.0] - 2025-03-20
-- Fixed missing company_id field in asset delete, archive, and unarchive operations
-
-### [1.2.9] - 2025-01-25
-- Improved Asset operations with enhanced UI, custom asset tags support, and optimised asset creation/update
-- Added streamlined workflow for using asset data between operations
-
-### [1.2.8] - 2025-01-21
-- Fixed asset passwords create/update operations with required fields and enhanced validation
-- Improved field validation and error handling for asset password operations
-
-> **IMPORTANT**: When updating between versions, make sure to restart your n8n instance after the update. UI changes and new features are only picked up after a restart. The recommended update process is:
-
-This n8n community node enables the integration of Hudu within your n8n workflows.
-
-[Hudu](https://www.hudu.com/) is a modern documentation platform for IT.
-
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
-
-This node was built against Hudu v2.34.4. Future versions of Hudu may not be 100% compatible without node updates.
-
-[Installation](#installation)  
-[Credentials](#credentials)  
-[Features](#features)  
-[Supported Resources & Operations](#supported-resources--operations)  
-[Resources](#resources)  
-[Contributing](#contributing)  
-[Support](#support)  
-[License](#license)
+(For full change history, see [CHANGELOG.md](CHANGELOG.md))
 
 ## Installation
 
@@ -84,133 +52,97 @@ To use this node, you need to:
 - Date range filtering with preset options
 - Automatic type conversion and validation
 - Debug logging for troubleshooting
+- **Full CRUD support for VLANs and VLAN Zones**
+- **Websites resource now supports all fields, including new email security options**
 
 ## Supported Resources & Operations
 
 ### Activity Logs
-
 - Get all activity logs with filtering support
 - Filter by user, action, and date range
 
 ### API Info
-
 - Get API information and version details
 
 ### Articles
-
-- Create articles (name required, with optional content, company, folder, and sharing settings)
-- Update articles with flexible field updates
-- Archive and unarchive articles
-- Delete articles
-- Get single article details
-- List all articles with comprehensive filtering:
-  - Company ID
-  - Draft status
-  - Sharing status
-  - Folder ID
-  - Name exact match
-  - Fuzzy search
-  - Updated date range
+- Create, update, archive, unarchive, delete, and retrieve articles
+- List all articles with comprehensive filtering (company, draft, sharing, folder, name, fuzzy search, updated date range)
 - Get article version history
 
-### Asset Layouts
+### Asset
+- **Manage core asset lifecycle & properties**: Create, retrieve, update core details, archive, unarchive, move layout, and delete assets
+- Link assets to companies
+- Get single asset details, including all its field values
+- List all assets with enhanced filtering (e.g., by company, update date, archived status)
 
+### Asset Layouts
 - Create and manage asset layout templates
 - Get layout fields and configurations
 - List all layouts with filtering support
-- **Advanced custom field support:** Add hints, min/max, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties.
+- **Advanced custom field support:** Add hints, min/max, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties
+
+### Asset Layout Fields
+- Manage individual fields within asset layouts
 
 ### Asset Passwords
-
 - Create and manage asset-related passwords
 - Link passwords to assets and companies
 - Filter by company and resource types
 
-### Assets
-
-- Create assets with custom fields and tags
-- Link assets to companies
-- Update asset details
-- Archive/unarchive assets
-- Delete assets
-- Get single asset details
-- List all assets with enhanced filtering support:
-  - Company association
-  - Updated date range
-  - Custom field values
-  - **Return as Asset Links** option for custom tag support (now available for both Get and Get Many)
-- Optimised asset creation and update operations for both standard and custom fields
-- Enhanced UI with dynamic field validation and intuitive field descriptions
-- Streamlined workflow for using asset data between operations
-- **Asset link/tag fields are serialised as JSON for API compatibility**
-
-Note: Custom field support has some limitations:
-- Legacy list fields require manual value entry (picklist conversion not implemented due to Hudu deprecating this feature)
-- New list field sources not yet available via Hudu API - requires manual ID configuration
-
 ### Cards
-
 - Lookup cards by integration
 - Jump to card functionality
 - Filter by integration type and slug
 
 ### Companies
-
-- Create companies with detailed information
-- Update company details
-- Delete companies
-- Get single company information
+- Create, update, delete, and retrieve companies
 - List all companies with filtering support
 - Jump to company by integration
 
 ### Expirations
-
-- Get all expirations with comprehensive filtering:
-  - Company ID
-  - Expiration type
-  - Resource ID
-  - Resource type
-  - Date ranges
+- Get all expirations with comprehensive filtering (company, expiration type, resource ID/type, date ranges)
 
 ### Folders
-
 - Create and manage document folders
 - Support for nested folder structures
 - Filter by parent folder
 - Track child folder status
 
 ### IP Addresses
-
 - Track and manage IP addresses
 - Link to companies and networks
 - Filter by company and network
 
-### Magic Dash
+### Lists
+- Create, update, retrieve, and delete lists
+- Use this resource to manage the lists themselves
+- Filter lists by name or query
 
+### List Options
+- Create, update, retrieve, and delete list items within a specific list
+- Use this resource to manage the items/options of a list
+
+### Magic Dash
 - Access Magic Dash functionality
 - Filter by company and title
 - Delete by title and company name
 
 ### Matchers
-
 - Configure and manage integration matchers
 - Filter by match status and company
 - Support for sync identifiers
 
 ### Networks
-
 - Create and manage network information
 - Link to companies
 - Filter by company and attributes
 
 ### Password Folders
-
-- Create and organize password folders
+- Create and organise password folders
 - Support for folder hierarchy
 - Filter by parent folder
 
 ### Procedures
-
 - Create and manage procedures
 - Create from templates
 - Duplicate existing procedures
@@ -218,22 +150,29 @@ Note: Custom field support has some limitations:
 - Track task completion
 
 ### Relations
-
 - Create and manage resource relationships
 - Support for various resource types
 - Filter by relationship types and directions
 
 ### Users
-
 - Get user information
 - List all users
 - Filter by role and status
 
-### Websites
+### VLANs
+- Full CRUD support for VLANs, including filtering by company, name, and VLAN ID
 
+### VLAN Zones
+- Full CRUD support for VLAN Zones, including filtering by company, name, archive status, and date ranges
+
+### Uploads
+- Manage file uploads
+
+### Websites
 - Manage website records
 - Link to companies
 - Filter by company and status
+- **All fields supported, including new email security fields:** `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`, and more
 
 ## Resources
 
@@ -252,7 +191,6 @@ Contributions are welcome! If you'd like to contribute to this project:
 5. Open a Pull Request
 
 Please ensure your PR:
-
 - Clearly describes the changes
 - Includes any relevant documentation updates
 - Follows the existing code style
