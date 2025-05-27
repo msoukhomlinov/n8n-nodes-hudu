@@ -57,3 +57,15 @@ export * from './vlans/vlans.handler';
 export * from './vlans/vlans.types';
 export * from './vlan_zones/vlan_zones.handler';
 export * from './vlan_zones/vlan_zones.types';
+
+// Asset Field Custom
+export * from './assetCustomField/assetCustomField.types';
+export * from './assetCustomField/assetCustomField.handler';
+
+// Asset Link Field
+export * from './assetLinkField/assetLinkField.types';
+export * from './assetLinkField/assetLinkField.handler';
+
+// Asset Standard Field
+export * from './assetStandardField/assetStandardField.types';
+export * from './assetStandardField/assetStandardField.handler';

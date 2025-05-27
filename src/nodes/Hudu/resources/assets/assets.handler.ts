@@ -1,5 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, validateCompanyId, huduApiRequest } from '../../utils';
+import type { IDateRange } from '../../utils';
 import {
   handleGetAllOperation,
   handleCreateOperation,
@@ -8,58 +9,10 @@ import {
   handleArchiveOperation,
 } from '../../utils/operations';
 import type { AssetsOperations } from './assets.types';
-import type { DateRangePreset } from '../../utils/dateUtils';
-import type { FieldType, INodePropertyOptions } from 'n8n-workflow';
-import { getManyAsAssetLinksHandler } from './getManyAsAssetLinks.handler';
 import { NodeOperationError } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { huduApiRequest } from '../../utils/requestUtils';
-
-interface AssetFieldMapping {
-  value: IDataObject;
-  schema: Array<{
-    id: string;
-    displayName: string;
-    required: boolean;
-    defaultMatch: boolean;
-    type: FieldType | undefined;
-    display: boolean;
-    canBeUsedToMatch: boolean;
-    description?: string;
-    options?: INodePropertyOptions[];
-    label: string;
-  }>;
-}
-
-interface CustomFieldsResponse {
-  custom_fields: Record<string, string>[];
-}
-
-function processCustomFields(fieldMappings: AssetFieldMapping, isTagField: boolean = false): CustomFieldsResponse {
-  debugLog('[RESOURCE_MAPPING] Processing custom fields', fieldMappings);
-  const { value: mappingsValue, schema } = fieldMappings;
-  const customFieldObject: Record<string, string> = {};
-  
-  for (const [fieldId, value] of Object.entries(mappingsValue)) {
-    const fieldInfo = schema.find(f => f.id === fieldId);
-    if (fieldInfo) {
-      const fieldName = (fieldInfo.label as string)
-        .toLowerCase()
-        .replace(/\s+/g, '_');
-      // For tag/asset link fields, serialise objects/arrays as JSON
-      if (isTagField && (typeof value === 'object' && value !== null)) {
-        // Serialise to JSON string for API compatibility
-        customFieldObject[fieldName] = JSON.stringify(value);
-      } else {
-        customFieldObject[fieldName] = value?.toString() || '';
-      }
-    }
-  }
-  
-  debugLog('[RESOURCE_MAPPING] Processed custom fields result', customFieldObject);
-  return { custom_fields: [customFieldObject] };
-}
+import { getCompanyIdForAsset } from '../../utils/operations/getCompanyIdForAsset';
 
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
@@ -67,52 +20,44 @@ export async function handleAssetsOperation(
   i: number,
 ): Promise<IDataObject | IDataObject[]> {
   debugLog(`[OPERATION_${operation.toUpperCase()}] Starting asset operation`, { operation, index: i });
-  const resourceEndpoint = '/companies';
+  const assetsResourceEndpoint = '/assets';
   let responseData: IDataObject | IDataObject[];
 
   switch (operation) {
     case 'create': {
       debugLog('[OPERATION_CREATE] Processing create asset operation');
       const companyId = validateCompanyId(
-        this.getNodeParameter('company_id', i),
+        this.getNodeParameter('company_id', i) as string,
         this.getNode(),
         'Company ID'
       );
       const name = this.getNodeParameter('name', i) as string;
       const layoutId = this.getNodeParameter('asset_layout_id', i) as number;
       
-      debugLog('[RESOURCE_PARAMS] Create asset parameters', { companyId, name, layoutId });
+      const primary_serial = this.getNodeParameter('primary_serial', i, '') as string;
+      const primary_model = this.getNodeParameter('primary_model', i, '') as string;
+      const primary_manufacturer = this.getNodeParameter('primary_manufacturer', i, '') as string;
+      const hostname = this.getNodeParameter('hostname', i, '') as string;
+      const notes = this.getNodeParameter('notes', i, '') as string;
 
-      let customFields: CustomFieldsResponse | undefined;
-      let tagFields: CustomFieldsResponse | undefined;
-
-      // Only get field mappings if their selectors are enabled
-      const showOtherFields = this.getNodeParameter('showOtherFieldsSelector', i) as boolean;
-      const showAssetLinks = this.getNodeParameter('showAssetLinkSelector', i) as boolean;
-
-            debugLog('[RESOURCE_PARAMS] Field selector states', { showOtherFields, showAssetLinks });        if (showOtherFields) {        try {          const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;          if (fieldMappings?.value) {            customFields = processCustomFields(fieldMappings, false);            debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);          }        } catch (error) {          debugLog('[RESOURCE_MAPPING] No field mappings provided', error);        }      }        if (showAssetLinks) {        try {          const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;          if (tagFieldMappings?.value) {            tagFields = processCustomFields(tagFieldMappings, true);            debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);          }        } catch (error) {          debugLog('[RESOURCE_MAPPING] No tag field mappings provided', error);        }      }        // Merge custom fields and tag fields if any exist
-      const mergedFields: CustomFieldsResponse = {
-        custom_fields: [
-          {
-            ...(customFields?.custom_fields[0] || {}),
-            ...(tagFields?.custom_fields[0] || {}),
-          },
-        ],
-      };
-
-      debugLog('[RESOURCE_TRANSFORM] Merged custom fields', mergedFields);
+      debugLog('[RESOURCE_PARAMS] Create asset parameters', { companyId, name, layoutId, primary_serial, primary_model, primary_manufacturer, hostname, notes });
 
       const body: IDataObject = {
         name,
         asset_layout_id: layoutId,
-        ...(Object.keys(mergedFields.custom_fields[0]).length > 0 ? mergedFields : {}),
       };
+
+      if (primary_serial) body.primary_serial = primary_serial;
+      if (primary_model) body.primary_model = primary_model;
+      if (primary_manufacturer) body.primary_manufacturer = primary_manufacturer;
+      if (hostname) body.hostname = hostname;
+      if (notes) body.notes = notes;
 
       debugLog('[API_REQUEST] Creating asset with body', body);
 
       responseData = await handleCreateOperation.call(
         this,
-        `${resourceEndpoint}/${companyId}/assets`,
+        `/companies/${companyId}/assets`,
         { asset: body },
       );
 
@@ -122,35 +67,24 @@ export async function handleAssetsOperation(
 
     case 'get': {
       debugLog('[OPERATION_GET] Processing get asset operation');
-      const assetId = this.getNodeParameter('id', i) as string;
-      const returnAsAssetLinks = this.getNodeParameter('returnAsAssetLinks', i, false) as boolean;
-      const assetLinksOutputField = this.getNodeParameter('assetLinksOutputField', i, 'assetLinks') as string;
-      const qs: IDataObject = {
-        id: assetId,
-      };
+      const assetId = this.getNodeParameter('assetId', i) as string;
       
-      debugLog('[API_REQUEST] Getting asset', { assetId, qs });
+      debugLog('[API_REQUEST] Getting asset', { assetId });
       
-      const response = await handleGetAllOperation.call(
-        this,
-        '/assets',
-        'assets',
-        qs,
-        false,
-        1,
-      );
+      const rawResponse = await huduApiRequest.call(this, 'GET', '/assets', {}, { id: assetId });
 
-      if (!response || !response.length) {
-        throw new Error(`Asset with ID ${assetId} not found`);
+      if (!rawResponse || typeof rawResponse !== 'object' || !Array.isArray((rawResponse as IDataObject).assets)) {
+        throw new NodeOperationError(this.getNode(), `Unexpected API response format when fetching asset ID '${assetId}'`, { itemIndex: i });
       }
 
-      if (returnAsAssetLinks) {
-        const assetLinks = await getManyAsAssetLinksHandler.call(this, i, [response[0]]);
-        responseData = { [assetLinksOutputField]: assetLinks };
-        debugLog('[RESOURCE_TRANSFORM] Transformed asset to asset link under field', { field: assetLinksOutputField, value: assetLinks });
-      } else {
-        responseData = response[0];
+      const assetsArray = (rawResponse as IDataObject).assets as IDataObject[];
+      if (!assetsArray.length) {
+        throw new NodeOperationError(this.getNode(), `No asset found with ID '${assetId}'`, { itemIndex: i });
       }
+
+      const assetData = assetsArray[0];
+      responseData = assetData;
+      
       debugLog('[API_RESPONSE] Get asset response', responseData);
       break;
     }
@@ -160,264 +94,141 @@ export async function handleAssetsOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
-      const returnAsAssetLinks = this.getNodeParameter('returnAsAssetLinks', i, false) as boolean;
-      const assetLinksOutputField = this.getNodeParameter('assetLinksOutputField', i, 'assetLinks') as string;
 
-      debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, returnAsAssetLinks });
+      debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit });
 
-      // Check for asset layout ID if returning as asset links
-      if (returnAsAssetLinks && !filters.filter_layout_id) {
-        throw new NodeOperationError(this.getNode(), 'Asset Layout Name or ID must be selected when returning assets as asset links');
-      }
-
-      // Validate company_id if provided in filters
-      if (filters.company_id) {
-        filters.company_id = validateCompanyId(
-          filters.company_id,
+      const mappedFilters: IDataObject = { ...filters };
+      if (mappedFilters.company_id) {
+        mappedFilters.company_id = validateCompanyId(
+          mappedFilters.company_id as string,
           this.getNode(),
           'Company ID'
         );
       }
 
-      // Map filter_layout_id to asset_layout_id
-      const mappedFilters: IDataObject = { ...filters };
       if (mappedFilters.filter_layout_id) {
         mappedFilters.asset_layout_id = mappedFilters.filter_layout_id;
-        mappedFilters.filter_layout_id = undefined;
+        delete mappedFilters.filter_layout_id;
+      }
+      if (mappedFilters.hasOwnProperty('archived')) {
+        mappedFilters.archived = String(mappedFilters.archived).toLowerCase() === 'true';
       }
 
-      debugLog('[UTIL_FILTERS] Processed filters', mappedFilters);
+      debugLog('[RESOURCE_PROCESSING] Processed filters', mappedFilters);
 
       const qs: IDataObject = {
         ...mappedFilters,
-        page_size: filters.page_size || limit
       };
 
       if (filters.updated_at) {
-        const updatedAtFilter = filters.updated_at as IDataObject;
-        if (updatedAtFilter.range) {
-          const rangeObj = updatedAtFilter.range as IDataObject;
-          filters.updated_at = processDateRange({
-            range: {
-              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
-              exact: rangeObj.exact as string,
-              start: rangeObj.start as string,
-              end: rangeObj.end as string,
-              preset: rangeObj.preset as DateRangePreset,
-            },
-          });
-          qs.updated_at = filters.updated_at;
-          debugLog('[UTIL_DATE_PROCESSING] Processed date range', qs.updated_at);
+        const dateFilterValue = processDateRange(filters.updated_at as IDateRange);
+        if (dateFilterValue) {
+          qs.updated_at = dateFilterValue;
+        } else {
+          if (typeof filters.updated_at === 'string') {
+             qs.updated_at = filters.updated_at;
+          } else {
+            delete qs.updated_at;
+          }
         }
       }
-
-      debugLog('[API_REQUEST] Getting all assets', { qs, returnAll, limit });
-
-      const results = await handleGetAllOperation.call(
+      
+      responseData = await handleGetAllOperation.call(
         this,
-        '/assets',
+        assetsResourceEndpoint,
         'assets',
         qs,
         returnAll,
         limit,
       );
-
-      if (returnAsAssetLinks) {
-        const assetLinks = await getManyAsAssetLinksHandler.call(this, i, results);
-        responseData = { [assetLinksOutputField]: assetLinks };
-        debugLog('[RESOURCE_TRANSFORM] Transformed assets to asset links under field', { field: assetLinksOutputField, value: assetLinks });
-      } else {
-        responseData = results;
-      }
-
-      debugLog('[API_RESPONSE] Get all assets response', responseData);
+      
+      debugLog('[API_RESPONSE] Get all assets response');
       break;
     }
 
     case 'update': {
       debugLog('[OPERATION_UPDATE] Processing update asset operation');
-      const companyId = validateCompanyId(
-        this.getNodeParameter('company_id', i),
-        this.getNode(),
-        'Company ID'
-      );
-      const assetId = this.getNodeParameter('id', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const assetId = this.getNodeParameter('assetId', i) as string;
       
-      debugLog('[RESOURCE_PARAMS] Update asset parameters', { companyId, assetId, updateFields });
+      const name = this.getNodeParameter('name', i, undefined) as string | undefined;
+      const primary_serial = this.getNodeParameter('primary_serial', i, undefined) as string | undefined;
+      const primary_model = this.getNodeParameter('primary_model', i, undefined) as string | undefined;
+      const primary_manufacturer = this.getNodeParameter('primary_manufacturer', i, undefined) as string | undefined;
+      const hostname = this.getNodeParameter('hostname', i, undefined) as string | undefined;
+      const notes = this.getNodeParameter('notes', i, undefined) as string | undefined;
+
+      const body: IDataObject = {};
+      if (name !== undefined) body.name = name;
+      if (primary_serial !== undefined) body.primary_serial = primary_serial;
+      if (primary_model !== undefined) body.primary_model = primary_model;
+      if (primary_manufacturer !== undefined) body.primary_manufacturer = primary_manufacturer;
+      if (hostname !== undefined) body.hostname = hostname;
+      if (notes !== undefined) body.notes = notes;
+
+      debugLog('[RESOURCE_PARAMS] Update asset parameters', { assetId, body });
       
-      let customFields: CustomFieldsResponse | undefined;
-      let tagFields: CustomFieldsResponse | undefined;
-
-      // Only get field mappings if their selectors are enabled
-      const showOtherFields = this.getNodeParameter('updateShowOtherFieldsSelector', i) as boolean;
-      const showAssetLinks = this.getNodeParameter('updateShowAssetLinkSelector', i) as boolean;
-
-      debugLog('[RESOURCE_PARAMS] Field selector states', { showOtherFields, showAssetLinks });
-
-      if (showOtherFields) {
-        try {
-          const fieldMappings = this.getNodeParameter('fieldMappings', i) as AssetFieldMapping;
-          if (fieldMappings?.value) {
-            customFields = processCustomFields(fieldMappings, false);
-            debugLog('[RESOURCE_MAPPING] Processed custom fields', customFields);
-          }
-        } catch (error) {
-          debugLog('[RESOURCE_MAPPING] No field mappings provided', error);
-        }
+      if (Object.keys(body).length === 0) {
+        throw new NodeOperationError(this.getNode(), "No fields provided to update for asset.", { itemIndex: i });
       }
 
-      if (showAssetLinks) {
-        try {
-          const tagFieldMappings = this.getNodeParameter('tagFieldMappings', i) as AssetFieldMapping;
-          if (tagFieldMappings?.value) {
-            tagFields = processCustomFields(tagFieldMappings, true);
-            debugLog('[RESOURCE_MAPPING] Processed tag fields', tagFields);
-          }
-        } catch (error) {
-          debugLog('[RESOURCE_MAPPING] No tag field mappings provided', error);
-        }
-      }
+      const requestBody = { asset: body };
 
-      // Merge custom fields and tag fields if any exist
-      const mergedFields: CustomFieldsResponse = {
-        custom_fields: [
-          {
-            ...(customFields?.custom_fields[0] || {}),
-            ...(tagFields?.custom_fields[0] || {}),
-          },
-        ],
-      };
+      debugLog('[API_REQUEST] Updating asset with body', requestBody);
 
-      debugLog('[RESOURCE_TRANSFORM] Merged fields', mergedFields);
-
-      const body: IDataObject = {
-        asset: {
-          ...updateFields,
-          ...(Object.keys(mergedFields.custom_fields[0]).length > 0 ? mergedFields : {}),
-        },
-      };
-
-      debugLog('[API_REQUEST] Updating asset with body', body);
-
-      responseData = await handleUpdateOperation.call(
-        this,
-        `${resourceEndpoint}/${companyId}/assets`,
-        assetId,
-        body,
-      );
-
+      responseData = await handleUpdateOperation.call(this, assetsResourceEndpoint, assetId, requestBody);
       debugLog('[API_RESPONSE] Update asset response', responseData);
       break;
     }
 
-    case 'delete': {
-      debugLog('[OPERATION_DELETE] Processing delete asset operation');
-      const companyId = validateCompanyId(
-        this.getNodeParameter('company_id', i),
-        this.getNode(),
-        'Company ID'
+    case 'archive':
+    case 'unarchive': {
+      const assetId = this.getNodeParameter('assetId', i) as string;
+      const { companyId } = await getCompanyIdForAsset(this, assetId, i);
+      responseData = await handleArchiveOperation.call(
+        this,
+        assetsResourceEndpoint,
+        String(assetId),
+        operation === 'archive',
+        String(companyId)
       );
-      const assetId = this.getNodeParameter('id', i) as string;
+      debugLog('[API_RESPONSE] Archive/Unarchive asset response', responseData);
+      break;
+    }
 
-      debugLog('[API_REQUEST] Deleting asset', { companyId, assetId });
-
+    case 'delete': {
+      const assetId = this.getNodeParameter('assetId', i) as string;
+      const { companyId } = await getCompanyIdForAsset(this, assetId, i);
       responseData = await handleDeleteOperation.call(
         this,
-        `${resourceEndpoint}/${companyId}/assets`,
-        assetId,
+        assetsResourceEndpoint,
+        String(assetId),
+        String(companyId)
       );
-
       debugLog('[API_RESPONSE] Delete asset response', responseData);
       break;
     }
 
-    case 'archive': {
-      debugLog('[OPERATION_ARCHIVE] Processing archive asset operation');
-      const companyId = validateCompanyId(
-        this.getNodeParameter('company_id', i),
-        this.getNode(),
-        'Company ID'
-      );
-      const assetId = this.getNodeParameter('id', i) as string;
-
-      debugLog('[API_REQUEST] Archiving asset', { companyId, assetId });
-
-      responseData = await handleArchiveOperation.call(
-        this,
-        `${resourceEndpoint}/${companyId}/assets`,
-        assetId,
-        true,
-      );
-
-      debugLog('[API_RESPONSE] Archive asset response', responseData);
-      break;
-    }
-
-    case 'unarchive': {
-      debugLog('[OPERATION_ARCHIVE] Processing unarchive asset operation');
-      const companyId = validateCompanyId(
-        this.getNodeParameter('company_id', i),
-        this.getNode(),
-        'Company ID'
-      );
-      const assetId = this.getNodeParameter('id', i) as string;
-
-      debugLog('[API_REQUEST] Unarchiving asset', { companyId, assetId });
-
-      responseData = await handleArchiveOperation.call(
-        this,
-        `${resourceEndpoint}/${companyId}/assets`,
-        assetId,
-        false,
-      );
-
-      debugLog('[API_RESPONSE] Unarchive asset response', responseData);
-      break;
-    }
-
     case 'moveLayout': {
-      debugLog('[OPERATION_MOVE_LAYOUT] Processing move layout operation');
-      const companyId = validateCompanyId(
-        this.getNodeParameter('company_id', i),
-        this.getNode(),
-        'Company ID'
-      );
-      const assetId = this.getNodeParameter('id', i) as string;
-      const targetLayoutId = this.getNodeParameter('target_asset_layout_id', i) as number;
-      
-      debugLog('[RESOURCE_PARAMS] Move layout parameters', { companyId, assetId, targetLayoutId });
-
-      if (!targetLayoutId) {
-        throw new NodeOperationError(this.getNode(), 'Target Asset Layout ID is required');
-      }
-
+      debugLog('[OPERATION_MOVE_LAYOUT] Processing move asset layout operation');
+      const assetId = this.getNodeParameter('assetId', i) as string;
+      const newLayoutId = this.getNodeParameter('target_asset_layout_id', i) as number;
+      const preserveFields = this.getNodeParameter('preserve_fields', i, false) as boolean;
       const body: IDataObject = {
-        asset_layout_id: targetLayoutId,
+        asset_layout_id: newLayoutId,
+        preserve_fields: preserveFields,
       };
-
-      debugLog('[API_REQUEST] Moving asset to new layout', { companyId, assetId, body });
-
-      try {
-        responseData = await huduApiRequest.call(
-          this,
-          'PUT',
-          `${resourceEndpoint}/${companyId}/assets/${assetId}/move_layout`,
-          body,
-        );
-
-        debugLog('[API_RESPONSE] Move layout response', responseData);
-      } catch (error) {
-        debugLog('[API_ERROR] Move layout operation failed', { error, companyId, assetId, targetLayoutId });
-        throw error;
-      }
+      debugLog('[API_REQUEST] Moving asset layout with body', { assetId, body });
+      responseData = await huduApiRequest.call(this, 'POST', `${assetsResourceEndpoint}/${assetId}/move_to_layout`, body);
+      debugLog('[API_RESPONSE] Move asset layout response', responseData);
       break;
     }
 
     default:
-      throw new Error(`The operation "${operation}" is not supported!`);
+      throw new NodeOperationError(
+        this.getNode(),
+        `The operation '${operation}' is not supported for assets.`,
+      );
   }
 
-  debugLog(`[OPERATION_${operation.toUpperCase()}] Operation completed`, responseData);
   return responseData;
 }

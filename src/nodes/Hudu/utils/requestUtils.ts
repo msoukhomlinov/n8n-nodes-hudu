@@ -100,8 +100,7 @@ export function createHuduRequest(
   options: IHuduRequestOptions,
 ): IHttpRequestOptions {
   const { method, endpoint, body = {}, qs = {} } = options;
-  // Use application/x-www-form-urlencoded for GET requests, default to application/json for others
-  const contentType = method === 'GET' ? 'application/x-www-form-urlencoded' : 'application/json';
+  let contentType = method === 'GET' ? 'application/x-www-form-urlencoded' : 'application/json';
 
   if (!credentials?.apiKey || !credentials?.baseUrl) {
     throw new Error('Missing API credentials. Please provide both the API key and base URL.');
@@ -113,15 +112,23 @@ export function createHuduRequest(
     qs: toJsonObject(qs),
     headers: {
       'x-api-key': credentials.apiKey as string,
-      'Content-Type': contentType,
     },
   };
 
-  if (Object.keys(body).length > 0) {
+  // Detect multipart
+  if ((body as any)._isMultipart) {
+    contentType = 'multipart/form-data';
+    (requestOptions as any).formData = { ...body };
+    delete (requestOptions as any).formData._isMultipart;
+  } else if (Object.keys(body).length > 0) {
     if (contentType === 'application/json') {
       requestOptions.json = true;
     }
     requestOptions.body = toJsonObject(body);
+  }
+
+  if (requestOptions.headers) {
+    requestOptions.headers['Content-Type'] = contentType;
   }
 
   return requestOptions;

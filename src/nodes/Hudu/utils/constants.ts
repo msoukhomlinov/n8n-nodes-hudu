@@ -22,6 +22,7 @@ export const ASSET_LAYOUT_FIELD_TYPES = {
   PHONE: 'Phone',
   ASSET_TAG: 'AssetTag',
   ADDRESS_DATA: 'AddressData',
+  DROPDOWN: 'Dropdown',
 } as const;
 
 /**
@@ -190,3 +191,25 @@ export const RESOURCE_TYPES = [
   'VaultPassword',
   'Website',
 ] as const;
+
+// General date format constants
+export const DATE_FORMAT = 'YYYY-MM-DD';
+export const TIME_FORMAT = 'HH:mm:ss';
+export const DATETIME_FORMAT = `${DATE_FORMAT} ${TIME_FORMAT}`;
+
+// Operation constants
+export const OPERATION = {
+  CREATE: 'create',
+  DELETE: 'delete',
+  GET: 'get',
+  GET_ALL: 'getAll',
+  GET_MANY: 'getMany',
+  UPDATE: 'update',
+  DOWNLOAD: 'download',
+  UPLOAD: 'upload',
+  STATUS: {
+    EXECUTING: 'running',
+    SUCCEEDED: 'success',
+    FAILED: 'failed',
+  },
+};

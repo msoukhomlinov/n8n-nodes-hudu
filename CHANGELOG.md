@@ -1,56 +1,28 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Under Development
+## [1.3.5] - 2025-05-27
 
-### Article Activity Analysis Design
-- New operation `getArticleActivityMetrics` planned to provide insights into article engagement and user contributions:
-  - Analysis Perspectives:
-    * Article-centric: Track individual article activity and engagement
-    * User-centric: Monitor author/editor contributions and patterns
-  - Core Features:
-    * Activity measure selection (Most/Least/Trending)
-    * Multi-select action filtering (created/updated/archived/etc.)
-    * Required date range filtering
-    * Optional company and sharing status filters
-  - Analysis Metrics:
-    * Article Metrics:
-      - Activity frequency
-      - Revision count
-      - User engagement (unique editors)
-      - Time between updates
-    * User Metrics:
-      - Contribution volume
-      - Article coverage (unique articles edited)
-      - Action patterns (create vs edit ratio)
-  - Implementation:
-    * Activity log-based tracking for accurate historical data
-    * Aggregation by article_id or user_id based on perspective
-    * Time-series analysis for trend detection
-  - UI Components:
-    * Analysis perspective selector (Article/User focus)
-    * Measure type dropdown (Most Active, Least Active, etc.)
-    * Action multi-select checkboxes
-    * Date range selector (required)
-    * Company filter (optional)
-    * Sharing status filter (optional)
-    * Results limit control
-    * Sorting options for metrics
-
+### Enhanced
+- The `Lists` and `List Options` resources are now managed as separate, distinct resources, each with their own full set of CRUD operations for improved clarity and flexibility. This change allows you to manage lists themselves and the items within those lists independently.
+- Management of asset fields is now performed via three new dedicated resources: `Asset Standard Field`, `Asset Custom Field`, and `Asset Link Field`. Field-level operations (get/update) are no longer handled via the main Asset resource, but through these new resources for improved clarity and modularity.
+- **Public Photos resource improvements:**
+  - Filter fields (`Record Type Filter` and `Record ID Filter`) are now grouped in a single optional "Filter" fixed collection for the Get Many operation, improving UI consistency and usability.
+  - The Get by ID operation now fetches public photos page by page, checking each page for the requested ID and returning as soon as it is found. This is much more efficient for large datasets.
+  - Documentation and type definitions for Public Photos have been updated for clarity and alignment with the API.
 
 ## [1.3.4] - 2025-05-17
 
 ### Enhanced
-- Optimised lists by splitting operations relating to list options into its own, now lists are managed under list and list options under its own resource.
-- Enhanced website operations to ensure all fields are fully supported for create and update operations: `name`, `company_id`, `account_id`, `asset_field_id`, `asset_type`, `code`, `company_name`, `disable_dns`, `disable_ssl`, `disable_whois`, `discarded_at`, `headers`, `icon`, `keyword`, `message`, `monitor_type`, `monitored_at`, `monitoring_status`, `notes`, `paused`, `refreshed_at`, `sent_notifications`, `slug`, `url`, plus new email security fields in API v2.37: `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`.
+- Website operations now support all available fields for create and update, including new email security fields: `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`, and more. This ensures complete alignment with the latest Hudu API (v2.37).
 
 ### Added
-- Added full CRUD support for VLAN Zones, including all fields, filters, and archive status, with robust debug logging and company picklist loader.
-- Added list picklist loader for improved usability across resources.
-- Added full CRUD support for the VLAN resource (new in Hudu API v2.37), including all required and optional fields for create and update operations.
+- Full CRUD support for VLAN Zones, including all fields, filters, archive status, and robust debug logging. Company picklist loader added for easier selection.
+- Full CRUD support for VLANs (new in Hudu API v2.37), including all required and optional fields for create and update operations.
+- List picklist loader introduced for improved usability across resources that reference lists.
 
 ### Fixed
-- Fixed Asset Link Field Selector not loading properly in update operations by pre-loading asset layout information and displaying proper layout names.
+- Asset Link Field Selector now loads correctly in update operations by pre-loading asset layout information and displaying proper layout names.
 
 > **Note:** Some features in this version require Hudu API v2.37.0 to function properly.
 

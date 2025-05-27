@@ -18,6 +18,18 @@ export const resourceOptions = [
     value: 'assets',
   },
   {
+    name: 'Asset Field Custom',
+    value: 'assetCustomField',
+  },
+  {
+    name: 'Asset Field Link',
+    value: 'assetLinkField',
+  },  
+  {
+    name: 'Asset Field Standard',
+    value: 'assetStandardField',
+  },  
+  {
     name: 'Asset Layout',
     value: 'asset_layouts',
   },

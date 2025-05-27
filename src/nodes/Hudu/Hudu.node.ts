@@ -5,6 +5,8 @@ import type {
   INodeType,
   INodeTypeDescription,
   IDataObject,
+  ILoadOptionsFunctions,
+  INodePropertyOptions,
 } from 'n8n-workflow';
 import {
   NodeOperationError,
@@ -19,19 +21,14 @@ import { resourceProperty } from './descriptions/resources';
 // Import all resource types and handlers
 import * as resources from './resources';
 
-// Import option loaders
-import { getUsers } from './optionLoaders/users';
-import { getCompanies } from './optionLoaders/companies';
-import { getAssetLayouts, getAssetLayoutFieldValues } from './optionLoaders/asset_layouts';
-import { getAssets } from './optionLoaders/assets';
-import { getAssetLayoutId } from './optionLoaders/assets/getAssetLayoutId';
-import { 
-	mapAssetLayoutFieldsForResource,
-	getAssetLayoutFields,
-} from './optionLoaders/asset_layouts/getAssetLayoutFields';
-import { getCustomFieldsLayoutFields } from './optionLoaders/asset_layouts/getCustomFieldsLayoutFields';
-import { mapAssetTagFieldsForResource } from './optionLoaders/asset_layouts/getAssetTagFields';
-import { getLists } from './optionLoaders/lists';
+// Import all option loaders centrally
+import * as optionLoaders from './optionLoaders';
+import { getAssets } from './optionLoaders/assets/getAssets';
+import { getAssetsForCompany } from './optionLoaders/assets/getAssetsForCompany';
+import { getAssetCustomFields } from './optionLoaders/assets/getAssetCustomFields';
+import { mapAssetLayoutFieldsForResource } from './optionLoaders/asset_layouts/getAssetLayoutFields';
+import { getAssetLinkFields } from './optionLoaders/asset_layouts/getAssetLinkFields';
+import { getLinkableAssets } from './optionLoaders/assets/getLinkableAssets';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -104,10 +101,13 @@ export class Hudu implements INodeType {
       ...descriptions.activityLogsFields,
       ...descriptions.apiInfoFields,
       ...descriptions.articlesFields,
+      ...descriptions.assetCustomFieldProperties,       
       ...descriptions.assetLayoutFields,
       ...descriptions.assetLayoutFieldFields,
-      ...descriptions.assetPasswordFields,
+      ...descriptions.assetLinkFieldProperties,      
+      ...descriptions.assetPasswordFields,      
       ...descriptions.assetsFields,
+      ...descriptions.assetStandardFieldDescription,      
       ...descriptions.cardsFields,
       ...descriptions.companiesFields,
       ...descriptions.expirationsFields,
@@ -135,19 +135,42 @@ export class Hudu implements INodeType {
 
   methods = {
     loadOptions: {
-      getUsers,
-      getCompanies,
-      getAssetLayouts,
-      getAssetLayoutFields,
-      getAssetLayoutFieldValues,
+      getUsers: optionLoaders.getUsers,
+      getCompanies: optionLoaders.getCompanies,
+      getAssetLayouts: optionLoaders.getAssetLayouts,
+      getAssetLayoutFields: optionLoaders.getAssetLayoutFields,
+      getAssetLayoutFieldValues: optionLoaders.getAssetLayoutFieldValues,
       getAssets,
-      getAssetLayoutId,
-      getCustomFieldsLayoutFields,
-      getLists,
+      getAssetsForCompany,
+      getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
+      getLists: optionLoaders.getLists,
+      getAssetCustomFields,
+      getAssetLinkFields,
+      getLinkableAssets,
+      async getStandardAssetFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        return [
+          { name: 'Name', value: 'name' },
+          { name: 'Archived', value: 'archived' },
+          { name: 'Primary Serial', value: 'primary_serial' },
+          { name: 'Primary Model', value: 'primary_model' },
+          { name: 'Primary Manufacturer', value: 'primary_manufacturer' },
+          { name: 'Primary Mail', value: 'primary_mail' },
+        ];
+      },
+      async getBinaryProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const items = (this as any).getInputData?.() || [];
+        const item = items[0];
+        if (!item || !item.binary) {
+          return [];
+        }
+        return Object.keys(item.binary).map((key) => ({
+          name: key,
+          value: key,
+        }));
+      },
     },
     resourceMapping: {
       mapAssetLayoutFieldsForResource,
-      mapAssetTagFieldsForResource,
     },
   };
 
@@ -223,6 +246,27 @@ export class Hudu implements INodeType {
             responseData = await resources.handleAssetsOperation.call(
               this,
               operation as resources.AssetsOperations,
+              i,
+            );
+            break;
+          case 'assetStandardField':
+            responseData = await resources.handleAssetStandardFieldOperation.call(
+              this,
+              operation as resources.AssetStandardFieldOperation,
+              i,
+            );
+            break;
+          case 'assetLinkField':
+            responseData = await resources.handleAssetLinkFieldOperation.call(
+              this,
+              operation as resources.AssetLinkFieldOperation,
+              i,
+            );
+            break;
+          case 'assetCustomField':
+            responseData = await resources.handleAssetCustomFieldOperation.call(
+              this,
+              operation as resources.AssetCustomFieldOperation,
               i,
             );
             break;
