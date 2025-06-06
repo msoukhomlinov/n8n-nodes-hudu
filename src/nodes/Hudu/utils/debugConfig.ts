@@ -17,10 +17,10 @@ export const DEBUG_CONFIG = {
   OPERATION_ARCHIVE: false,  // Debug archive operations
 
   // Resource Handlers
-  RESOURCE_PROCESSING: false,  // Debug resource handler processing
-  RESOURCE_PARAMS: false,      // Debug parameter extraction in handlers
-  RESOURCE_TRANSFORM: false,   // Debug data transformations in handlers
-  RESOURCE_MAPPING: false,    // Debug resource mapping
+  RESOURCE_PROCESSING: true,  // Debug resource handler processing
+  RESOURCE_PARAMS: true,      // Debug parameter extraction in handlers
+  RESOURCE_TRANSFORM: true,   // Debug data transformations in handlers
+  RESOURCE_MAPPING: true,    // Debug resource mapping
 
   // Node Execution
   NODE_INPUT: false,    // Debug input items to node

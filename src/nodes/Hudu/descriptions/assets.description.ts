@@ -81,7 +81,7 @@ export const assetsFields: INodeProperties[] = [
         operation: ['get', 'archive', 'unarchive', 'delete', 'update', 'moveLayout'],
       },
     },
-    default: '',
+    default: 0,
     description: 'The ID of the asset to operate on',
   },
   {
@@ -258,12 +258,41 @@ export const assetsFields: INodeProperties[] = [
   // ----------------------------------
   //         assets:update
   // ----------------------------------
-  // Note: All field-level updates (standard, link, custom) must be performed via the dedicated Asset Standard Field, Asset Link Field, or Asset Custom Field resources.
+  {
+    displayName: 'Asset Fields',
+    name: 'mappedFields',
+    type: 'resourceMapper',
+    default: {
+      mappingMode: 'defineBelow',
+      value: null,
+    },
+    required: true,
+    typeOptions: {
+      resourceMapper: {
+        resourceMapperMethod: 'mapAssetLayoutFieldsForResource',
+        mode: 'update',
+        fieldWords: {
+          singular: 'field',
+          plural: 'fields',
+        },
+        addAllFields: false,
+        multiKeyMatch: false,
+        supportAutoMap: false,
+      },
+      loadOptionsDependsOn: ['assetId'],
+    },
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['update'],
+      },
+    },
+    description: 'Map one or more asset fields to update. You may update a single field or multiple fields in one operation. This unified interface replaces separate "Update Field" and "Update Fields" operations.',
+  },
   {
     displayName: 'Asset Name',
     name: 'name',
     type: 'string',
-    required: true,
     default: '',
     displayOptions: {
       show: {
@@ -271,7 +300,7 @@ export const assetsFields: INodeProperties[] = [
         operation: ['update'],
       },
       hide: {
-        assetId: ['', 0],
+        mappedFields: [true],
       },
     },
     description: 'The name of the asset',
