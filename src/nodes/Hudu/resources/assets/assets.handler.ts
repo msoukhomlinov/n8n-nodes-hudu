@@ -13,6 +13,12 @@ import { NodeOperationError } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { getCompanyIdForAsset } from '../../utils/operations/getCompanyIdForAsset';
+import {
+  getAssetWithMetadata,
+  validateFieldForMapping,
+  transformFieldValueForUpdate,
+  updateAssetWithMappedFields,
+} from '../../utils/assetFieldUtils';
 
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
@@ -149,7 +155,43 @@ export async function handleAssetsOperation(
     case 'update': {
       debugLog('[OPERATION_UPDATE] Processing update asset operation');
       const assetId = this.getNodeParameter('assetId', i) as string;
-      
+
+      // --- Enhanced Resource Mapper Logic Start ---
+      // Check if mappedFields parameter is present (resource mapper usage)
+      const mappedFields = this.getNodeParameter('mappedFields', i, undefined) as IDataObject | undefined;
+      if (mappedFields && Object.keys(mappedFields).length > 0) {
+        debugLog('[RESOURCE_MAPPER] Using enhanced resource mapper for asset update', { assetId, mappedFields });
+        // Fetch asset context
+        const assetMeta = await getAssetWithMetadata(this, Number(assetId), i);
+        const updatePayload: IDataObject = {};
+        for (const [fieldKey, fieldValue] of Object.entries(mappedFields)) {
+          // Validate and transform each field
+          const fieldDef = await validateFieldForMapping(
+            this,
+            assetMeta.assetLayoutId,
+            fieldKey,
+            typeof fieldValue,
+            i
+          );
+          updatePayload[fieldDef.label] = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
+        }
+        // Always include name and asset_layout_id if present in assetMeta
+        if (assetMeta.name) updatePayload.name = assetMeta.name;
+        updatePayload.asset_layout_id = assetMeta.assetLayoutId;
+        // Perform the update
+        responseData = await updateAssetWithMappedFields(
+          this,
+          assetMeta.assetId,
+          assetMeta.companyId,
+          updatePayload,
+          i
+        );
+        debugLog('[RESOURCE_MAPPER] Asset updated via resource mapper', responseData);
+        break;
+      }
+      // --- Enhanced Resource Mapper Logic End ---
+
+      // Legacy direct field update logic (backward compatibility)
       const name = this.getNodeParameter('name', i, undefined) as string | undefined;
       const primary_serial = this.getNodeParameter('primary_serial', i, undefined) as string | undefined;
       const primary_model = this.getNodeParameter('primary_model', i, undefined) as string | undefined;
@@ -166,15 +208,11 @@ export async function handleAssetsOperation(
       if (notes !== undefined) body.notes = notes;
 
       debugLog('[RESOURCE_PARAMS] Update asset parameters', { assetId, body });
-      
       if (Object.keys(body).length === 0) {
         throw new NodeOperationError(this.getNode(), "No fields provided to update for asset.", { itemIndex: i });
       }
-
       const requestBody = { asset: body };
-
       debugLog('[API_REQUEST] Updating asset with body', requestBody);
-
       responseData = await handleUpdateOperation.call(this, assetsResourceEndpoint, assetId, requestBody);
       debugLog('[API_RESPONSE] Update asset response', responseData);
       break;

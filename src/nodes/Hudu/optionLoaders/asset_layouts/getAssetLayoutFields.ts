@@ -17,19 +17,6 @@ interface IAssetLayoutResponse extends IDataObject {
 	asset_layout: IAssetLayout;
 }
 
-interface IMappedField {
-	id: string;
-	displayName: string;
-	required: boolean;
-	defaultMatch: boolean;
-	type: FieldType | undefined;
-	display: boolean;
-	canBeUsedToMatch: boolean;
-	description: string | undefined;
-	options?: INodePropertyOptions[];
-	label: string;
-}
-
 async function getFieldTypeAndOptions(
 	this: ILoadOptionsFunctions,
 	huduType: string,
@@ -67,114 +54,91 @@ async function getLayoutFields(
 	this: ILoadOptionsFunctions,
 	includeAssetTags = false,
 ): Promise<ResourceMapperFields> {
-	debugLog('[RESOURCE_MAPPING] Starting getLayoutFields');
+	debugLog('[RESOURCE_MAPPING] Starting getLayoutFields. Context Operation:', this.getNodeParameter('operation', 0));
 	
 	let layoutId: string;
 	const operation = this.getNodeParameter('operation', 0) as string;
 
 	if (operation === 'update') {
-		// For update operation, get layout ID from asset details
-		const assetId = this.getNodeParameter('id', 0) as string;
-		debugLog('[RESOURCE_MAPPING] Getting layout ID from asset:', assetId);
+		const assetId = this.getNodeParameter('assetId', 0) as string;
+		debugLog('[RESOURCE_MAPPING] Update Operation - Asset ID from parameter:', { assetId }); // DEBUG 1
 
-		// Use huduApiRequest directly since handleGetAllOperation expects IExecuteFunctions
-		const response = await huduApiRequest.call(
-			this,
-			'GET',
-			'/assets',
-			{},
-			{ id: assetId },
-		) as IAssetResponse;
-
-		if (!response || !response.assets || !response.assets.length) {
-			throw new Error(`Asset with ID ${assetId} not found`);
+		if (!assetId) {
+			debugLog('[RESOURCE_MAPPING] Asset ID not provided for update, returning empty fields');
+			return { fields: [] };
 		}
+		try {
+			const response = await huduApiRequest.call(
+				this,
+				'GET',
+				'/assets',
+				{},
+				{ id: assetId },
+			) as IAssetResponse;
 
-		const asset = response.assets[0] as { asset_layout_id: number };
-		layoutId = asset.asset_layout_id.toString();
-		debugLog('[RESOURCE_MAPPING] Got layout ID from asset:', layoutId);
-	} else {
-		// For create operation, get layout ID from UI
-		layoutId = this.getNodeParameter('asset_layout_id', 0) as string;
-		debugLog('[RESOURCE_MAPPING] Got layout ID from UI:', layoutId);
-	}
-	
-	debugLog('[RESOURCE_MAPPING] Context:', { 
-		node: this.getNode().name,
-		layoutId,
-		includeAssetTags,
-	});
-
-	if (!layoutId) {
-		debugLog('[RESOURCE_MAPPING] No layout ID available, returning empty fields');
-		return {
-			fields: [],
-		};
-	}
-
-	// Fetch the layout details
-	debugLog('[RESOURCE_MAPPING] Fetching layout details for ID:', layoutId);
-	const layout = await handleGetOperation.call(this, '/asset_layouts', layoutId) as IAssetLayoutResponse;
-	debugLog('[RESOURCE_MAPPING] Layout response:', layout);
-	
-	// Check if layout exists
-	if (!layout || !layout.asset_layout) {
-		debugLog('[RESOURCE_MAPPING] Layout not found or inaccessible');
-		throw new NodeOperationError(this.getNode(), 'Asset layout not found or inaccessible');
-	}
-
-	const layoutData = layout.asset_layout;
-	const fields = layoutData.fields || [];
-	debugLog('[RESOURCE_MAPPING] Found fields:', fields);
-
-	// If no fields are found
-	if (fields.length === 0) {
-		debugLog('[RESOURCE_MAPPING] No fields found in layout, returning empty fields');
-		return {
-			fields: [],
-		};
-	}
-
-	// Map fields to ResourceMapperFields format
-	debugLog('[RESOURCE_MAPPING] Starting field mapping process');
-	const mappedFields = await Promise.all(fields
-		.filter((field: IAssetLayoutFieldEntity) => {
-			const isAssetTag = field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG;
-			const include = !field.is_destroyed && (includeAssetTags ? isAssetTag : !isAssetTag);
-			debugLog(`[RESOURCE_MAPPING] Filtering field ${field.label}:`, { include, field });
-			return include;
-		})
-		.map(async (field: IAssetLayoutFieldEntity) => {
-			debugLog(`[RESOURCE_MAPPING] Processing field ${field.label} of type ${field.field_type}`);
-			const { type, options } = await getFieldTypeAndOptions.call(this, field.field_type, field);
-			debugLog(`[RESOURCE_MAPPING] Mapped field ${field.label}:`, { field, type, options });
-			
-			const mappedField: IMappedField = {
-				id: field.id.toString(),
-				displayName: `${field.label} (${field.field_type})${!layoutData.active ? ' [Archived Layout]' : ''}`,
-				required: field.required || false,
-				defaultMatch: false,
-				type,
-				display: true,
-				canBeUsedToMatch: true,
-				description: field.hint || undefined,
-				label: field.label,
-			};
-
-			if (options) {
-				debugLog(`[RESOURCE_MAPPING] Adding options to field ${field.label}:`, options);
-				mappedField.options = options;
+			if (!response || !response.assets || !response.assets.length) {
+				debugLog('[RESOURCE_MAPPING] Asset not found via API for Asset ID:', assetId);
+				throw new Error(`Asset with ID ${assetId} not found`);
 			}
+			const asset = response.assets[0] as { asset_layout_id: number };
+			layoutId = asset.asset_layout_id.toString();
+			debugLog('[RESOURCE_MAPPING] Layout ID from asset:', { layoutId }); // DEBUG 2
+		} catch (error) {
+			debugLog('[RESOURCE_MAPPING] Error fetching asset or layoutId for update:', { assetId, error: (error as Error).message });
+			return { fields: [] }; // Return empty on error to prevent node crash
+		}
+	} else { // Create operation
+		layoutId = this.getNodeParameter('asset_layout_id', 0) as string;
+		debugLog('[RESOURCE_MAPPING] Create Operation - Layout ID from parameter:', { layoutId });
+	}
+	
+	if (!layoutId) {
+		debugLog('[RESOURCE_MAPPING] No Layout ID available (either from asset or parameter), returning empty fields');
+		return { fields: [] };
+	}
 
-			debugLog(`[RESOURCE_MAPPING] Final mapped field ${field.label}:`, mappedField);
-			return mappedField;
-		}))
-		.then(fields => fields.sort((a, b) => a.displayName.localeCompare(b.displayName)));
+	try {
+		const layout = await handleGetOperation.call(this, '/asset_layouts', layoutId) as IAssetLayoutResponse;
+		if (!layout || !layout.asset_layout || !Array.isArray(layout.asset_layout.fields)) {
+			debugLog('[RESOURCE_MAPPING] Layout not found or fields array missing for Layout ID:', { layoutId, layoutResponse: layout });
+			return { fields: [] };
+		}
+		const layoutFields = layout.asset_layout.fields;
+		debugLog('[RESOURCE_MAPPING] Fields fetched for Layout ID:', { layoutId, count: layoutFields.length, firstField: layoutFields[0] }); // DEBUG 3
 
-	debugLog('[RESOURCE_MAPPING] Final mapped fields:', mappedFields);
-	return {
-		fields: mappedFields,
-	};
+		const mappedFields = await Promise.all(layoutFields
+			.filter((field: IAssetLayoutFieldEntity) => {
+				const isAssetTag = field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG;
+				const include = !field.is_destroyed && (includeAssetTags ? isAssetTag : !isAssetTag);
+				// Minimal log inside filter to avoid excessive logging for many fields
+				// debugLog(`[RESOURCE_MAPPING] Filtering field ${field.label}: include: ${include}`);
+				return include;
+			})
+			.map(async (field: IAssetLayoutFieldEntity) => {
+				const { type, options } = await getFieldTypeAndOptions.call(this, field.field_type, field);
+				return {
+					id: field.id.toString(),
+					displayName: `${field.label} (${field.field_type})${!layout.asset_layout.active ? ' [Archived Layout]' : ''}`,
+					required: field.required || false,
+					defaultMatch: false,
+					type,
+					display: true,
+					canBeUsedToMatch: true,
+					description: field.hint || undefined,
+					label: field.label,
+					options: options,
+				};
+			}))
+			.then(fields => fields.sort((a, b) => a.displayName.localeCompare(b.displayName)));
+
+		debugLog('[RESOURCE_MAPPING] Final Mapped Fields to be returned:', { count: mappedFields.length, mappedFieldsSample: mappedFields.slice(0, 2) }); // DEBUG 4
+		return {
+			fields: mappedFields,
+		};
+	} catch (error) {
+		debugLog('[RESOURCE_MAPPING] Error fetching or processing layout fields:', { layoutId, error: (error as Error).message });
+		return { fields: [] }; // Return empty on error
+	}
 }
 
 export async function mapAssetLayoutFieldsForResource(
