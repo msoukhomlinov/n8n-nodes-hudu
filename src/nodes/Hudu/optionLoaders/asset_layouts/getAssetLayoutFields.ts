@@ -1,4 +1,4 @@
-import type { ILoadOptionsFunctions, IDataObject, ResourceMapperFields, FieldType, INodePropertyOptions } from 'n8n-workflow';
+import type { ILoadOptionsFunctions, IDataObject, ResourceMapperFields, FieldType, INodePropertyOptions, ResourceMapperField } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { handleGetOperation } from '../../utils/operations';
 import type { IAssetLayoutFieldEntity } from '../../resources/asset_layout_fields/asset_layout_fields.types';
@@ -22,7 +22,15 @@ async function getFieldTypeAndOptions(
 	huduType: string,
 	field: IAssetLayoutFieldEntity,
 ): Promise<{ type: FieldType | undefined; options?: INodePropertyOptions[] }> {
-	debugLog('[FIELD_TYPE_MAPPING] Starting type mapping for field:', { huduType, field });
+	debugLog('[RESOURCE_MAPPING] getFieldTypeAndOptions called for field:', { 
+		id: field.id, 
+		label: field.label, 
+		huduType: huduType,
+		hasOptions: !!field.options,
+		optionsValue: field.options,
+		hasListId: !!(field as IDataObject).list_id,
+		listIdValue: (field as IDataObject).list_id
+	});
 	
 	// Map Hudu field types to n8n types
 	switch (huduType) {
@@ -32,8 +40,59 @@ async function getFieldTypeAndOptions(
 			return { type: 'dateTime' };
 		case ASSET_LAYOUT_FIELD_TYPES.CHECKBOX:
 			return { type: 'boolean' };
-		case ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT:
+		case ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT: {
+			// Case 1: Options are defined as a static string on the layout field
+			if (field.options && typeof field.options === 'string' && field.options.trim() !== '') {
+				debugLog('[RESOURCE_MAPPING] Found static options for ListSelect field', { id: field.id, options: field.options });
+				const availableOptions = field.options.split(/\r?\n/).map(opt => ({
+					name: opt.trim(),
+					value: opt.trim(),
+				}));
+				return { type: 'options', options: availableOptions };
+			}
+
+			// Case 2: Options are linked from a Hudu List via list_id
+			const listId = (field as IDataObject).list_id as number | undefined;
+			if (listId) {
+				try {
+					debugLog('[RESOURCE_MAPPING] Found list_id for ListSelect field, fetching parent list', { id: field.id, listId });
+					const response = await handleGetOperation.call(
+						this,
+						'/lists',
+						listId,
+					);
+
+					let listItems: IDataObject[] = [];
+					const responseObject = response as IDataObject;
+
+					if (responseObject && typeof responseObject === 'object') {
+						const list = (responseObject.list || responseObject) as IDataObject;
+						if (list && Array.isArray(list.list_items)) {
+							listItems = list.list_items as IDataObject[];
+						} else {
+							debugLog('[RESOURCE_MAPPING] Could not find list_items in response', { id: field.id, listId, response });
+						}
+					}
+
+					const availableOptions = listItems.map(opt => ({
+						name: opt.name as string,
+						value: opt.name as string,
+					}));
+
+					debugLog('[RESOURCE_MAPPING] Successfully extracted list options', { id: field.id, listId, count: availableOptions.length });
+					return { type: 'options', options: availableOptions };
+				} catch (error) {
+					debugLog('[RESOURCE_MAPPING] Error fetching list for options', { id: field.id, listId, error: (error as Error).message });
+					return { type: 'string' }; // Fallback on error
+				}
+			}
+
+			// Fallback for ListSelect fields with no options defined
+			debugLog('[RESOURCE_MAPPING] No options found for ListSelect field', { id: field.id });
 			return { type: 'string' };
+		}
+		case ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA:
+			return { type: 'object' };
 		case ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG:
 		case ASSET_LAYOUT_FIELD_TYPES.PASSWORD:
 		case ASSET_LAYOUT_FIELD_TYPES.TEXT:
@@ -43,7 +102,7 @@ async function getFieldTypeAndOptions(
 		case ASSET_LAYOUT_FIELD_TYPES.EMBED:
 		case ASSET_LAYOUT_FIELD_TYPES.EMAIL:
 		case ASSET_LAYOUT_FIELD_TYPES.PHONE:
-		case ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA:
+		case ASSET_LAYOUT_FIELD_TYPES.RELATION:
 			return { type: 'string' };
 		default:
 			return { type: undefined };
@@ -61,7 +120,7 @@ async function getLayoutFields(
 
 	if (operation === 'update') {
 		const assetId = this.getNodeParameter('assetId', 0) as string;
-		debugLog('[RESOURCE_MAPPING] Update Operation - Asset ID from parameter:', { assetId }); // DEBUG 1
+		debugLog('[RESOURCE_MAPPING] Update Operation - Asset ID from parameter:', { assetId });
 
 		if (!assetId) {
 			debugLog('[RESOURCE_MAPPING] Asset ID not provided for update, returning empty fields');
@@ -82,7 +141,7 @@ async function getLayoutFields(
 			}
 			const asset = response.assets[0] as { asset_layout_id: number };
 			layoutId = asset.asset_layout_id.toString();
-			debugLog('[RESOURCE_MAPPING] Layout ID from asset:', { layoutId }); // DEBUG 2
+			debugLog('[RESOURCE_MAPPING] Layout ID from asset:', { layoutId });
 		} catch (error) {
 			debugLog('[RESOURCE_MAPPING] Error fetching asset or layoutId for update:', { assetId, error: (error as Error).message });
 			return { fields: [] }; // Return empty on error to prevent node crash
@@ -104,34 +163,47 @@ async function getLayoutFields(
 			return { fields: [] };
 		}
 		const layoutFields = layout.asset_layout.fields;
-		debugLog('[RESOURCE_MAPPING] Fields fetched for Layout ID:', { layoutId, count: layoutFields.length, firstField: layoutFields[0] }); // DEBUG 3
+		debugLog('[RESOURCE_MAPPING] Fields fetched for Layout ID:', { layoutId, count: layoutFields.length, firstField: layoutFields[0] });
 
-		const mappedFields = await Promise.all(layoutFields
-			.filter((field: IAssetLayoutFieldEntity) => {
-				const isAssetTag = field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG;
-				const include = !field.is_destroyed && (includeAssetTags ? isAssetTag : !isAssetTag);
-				// Minimal log inside filter to avoid excessive logging for many fields
-				// debugLog(`[RESOURCE_MAPPING] Filtering field ${field.label}: include: ${include}`);
-				return include;
-			})
-			.map(async (field: IAssetLayoutFieldEntity) => {
+		const standardFields: ResourceMapperField[] = [
+			{ id: 'name', displayName: 'Asset Name (name)', type: 'string', required: true, defaultMatch: false, display: true, canBeUsedToMatch: true },
+			{ id: 'primary_serial', displayName: 'Primary Serial (primary_serial)', type: 'string', required: false, defaultMatch: false, display: true, canBeUsedToMatch: true },
+			{ id: 'primary_model', displayName: 'Primary Model (primary_model)', type: 'string', required: false, defaultMatch: false, display: true, canBeUsedToMatch: true },
+			{ id: 'primary_manufacturer', displayName: 'Primary Manufacturer (primary_manufacturer)', type: 'string', required: false, defaultMatch: false, display: true, canBeUsedToMatch: true },
+		];
+
+		const customFieldsPromises = layoutFields
+			.filter((field: IAssetLayoutFieldEntity) => !field.is_destroyed && field.field_type !== ASSET_LAYOUT_FIELD_TYPES.HEADING)
+			.map(async (field: IAssetLayoutFieldEntity): Promise<ResourceMapperField> => {
+				debugLog('[RESOURCE_MAPPING] About to call getFieldTypeAndOptions for field:', { id: field.id, label: field.label, fieldType: field.field_type });
 				const { type, options } = await getFieldTypeAndOptions.call(this, field.field_type, field);
+				debugLog('[RESOURCE_MAPPING] getFieldTypeAndOptions returned:', { id: field.id, label: field.label, type, options: options ? `${options.length} options` : 'none' });
+				let displayName = `${field.label} (${field.field_type})${!layout.asset_layout.active ? ' [Archived Layout]' : ''}`;
+				if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG || field.field_type === ASSET_LAYOUT_FIELD_TYPES.RELATION) {
+					displayName += ' - Use comma-separated IDs';
+				} else if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT && (field as IDataObject).multiple_options == true) {
+					displayName += ' - Use comma-separated values for multiple options';
+				}
 				return {
 					id: field.id.toString(),
-					displayName: `${field.label} (${field.field_type})${!layout.asset_layout.active ? ' [Archived Layout]' : ''}`,
+					displayName: displayName,
 					required: field.required || false,
 					defaultMatch: false,
 					type,
 					display: true,
 					canBeUsedToMatch: true,
-					description: field.hint || undefined,
-					label: field.label,
-					options: options,
+					options,
 				};
-			}))
-			.then(fields => fields.sort((a, b) => a.displayName.localeCompare(b.displayName)));
+			});
+		
+		const customFields = (await Promise.all(customFieldsPromises))
+			.sort((a, b) => a.displayName.localeCompare(b.displayName));
+		
+		const sortedStandardFields = standardFields.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-		debugLog('[RESOURCE_MAPPING] Final Mapped Fields to be returned:', { count: mappedFields.length, mappedFieldsSample: mappedFields.slice(0, 2) }); // DEBUG 4
+		const mappedFields = [...sortedStandardFields, ...customFields];
+
+		debugLog('[RESOURCE_MAPPING] Final Mapped Fields to be returned:', { count: mappedFields.length, mappedFieldsSample: mappedFields.slice(0, 5) });
 		return {
 			fields: mappedFields,
 		};

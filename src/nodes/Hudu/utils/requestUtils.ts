@@ -158,32 +158,29 @@ export async function executeHuduRequest(
   while (true) {
     try {
       if (DEBUG_CONFIG.API_REQUEST) {
-        debugLog('Hudu API Request', {
+        debugLog('[API_REQUEST] Hudu API Request:', {
           method: requestOptions.method,
           url: requestOptions.url,
           headers: requestOptions.headers,
           qs: requestOptions.qs,
           body: requestOptions.body,
-          retryCount,
+          formData: (requestOptions as any).formData,
         });
       }
 
       // Get the raw response
       const rawResponse = await helpers.request(requestOptions);
       
-      // Parse the response if it's a string
-      const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
-
-      // Log response for GET requests
       if (DEBUG_CONFIG.API_RESPONSE) {
-        debugLog('Hudu API Response', {
-          type: typeof response,
-          isArray: Array.isArray(response),
-          keys: typeof response === 'object' ? Object.keys(response || {}) : [],
-          requestedFilters: requestOptions.qs,
-          rawResponse: response,
+        debugLog('[API_RESPONSE] Hudu API Response:', {
+          statusCode: (rawResponse as any)?.statusCode,
+          headers: (rawResponse as any)?.headers,
+          body: rawResponse,
         });
       }
+
+      // Parse the response if it's a string
+      const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
 
       // Return empty array for null/undefined responses
       if (response === null || response === undefined) {
@@ -192,6 +189,20 @@ export async function executeHuduRequest(
 
       return response;
     } catch (error) {
+      // For DELETE requests, a 204 status code is a success, but n8n's request helper
+      // may throw an error because there is no response body. We intercept this case.
+      const err = error as IDataObject;
+      const context = err.context as IDataObject | undefined;
+      const responseContext = context?.response as IDataObject | undefined;
+      const statusCode = err.statusCode ?? responseContext?.statusCode;
+
+      if (requestOptions.method === 'DELETE' && statusCode === 204) {
+        debugLog('[API_RESPONSE] Handled 204 No Content for DELETE request', {
+          url: requestOptions.url,
+        });
+        return { success: true };
+      }
+      
       if (DEBUG_CONFIG.API_REQUEST) {
         debugLog('Hudu API Error', {
           error,
@@ -229,41 +240,92 @@ export async function executeHuduRequest(
       // Format error with specific status code message
       const jsonError: JsonObject = {};
       
-      // Get status code specific message
-      const statusMessage = error.statusCode ? 
-        getErrorMessage(error.statusCode, error.message || 'Unknown error') :
-        error.message || 'Unknown error';
+      const axiosError = error as {
+        response?: {
+          body?: any;
+          headers?: any;
+        };
+        statusCode?: number;
+      };
+
+      // Preserve the original error message which may contain JSON details
+      const originalMessage = error.message || 'Unknown error';
+      
+      // Get status code specific message as fallback
+      const fallbackMessage = axiosError.statusCode ?
+        getErrorMessage(axiosError.statusCode, originalMessage) :
+        originalMessage;
+      
+      let errorDetails = '';
+      if (axiosError.response?.body) {
+        try {
+          const body = typeof axiosError.response.body === 'string' ? JSON.parse(axiosError.response.body) : axiosError.response.body;
+          if (body.error) {
+            errorDetails = body.error;
+            if (body.details && Array.isArray(body.details)) {
+              errorDetails += `: ${body.details.join(', ')}`;
+            }
+          }
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+
+      if (DEBUG_CONFIG.API_RESPONSE) {
+        debugLog('[API_RESPONSE] Hudu API Error Response:', {
+          statusCode: axiosError.statusCode,
+          headers: axiosError.response?.headers,
+          body: axiosError.response?.body,
+        });
+      }
 
       if (error instanceof Error) {
-        jsonError.message = statusMessage;
+        // Preserve original message if it contains JSON details, otherwise use formatted message
+        if (originalMessage.includes('{') && originalMessage.includes('}')) {
+          jsonError.message = originalMessage;
+        } else {
+          jsonError.message = errorDetails ? `${fallbackMessage} - ${errorDetails}` : fallbackMessage;
+        }
         jsonError.name = error.name;
         if (error.stack) {
           jsonError.stack = error.stack;
         }
-      } else if (typeof error === 'object' && error !== null) {
-        const errorObj = toJsonObject(error as IDataObject);
-        jsonError.message = statusMessage;
         // Include any additional error details from the response
-        if (error.response?.body) {
+        if (axiosError.response?.body) {
           try {
-            const errorBody = typeof error.response.body === 'string' ? 
-              JSON.parse(error.response.body) : 
-              error.response.body;
+            const errorBody = typeof axiosError.response.body === 'string' ?
+              JSON.parse(axiosError.response.body) :
+              axiosError.response.body;
             jsonError.details = errorBody;
           } catch {
             // If parsing fails, include raw error body
-            jsonError.details = error.response.body;
+            jsonError.details = axiosError.response.body;
+          }
+        }
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = toJsonObject(error as IDataObject);
+        jsonError.message = errorDetails ? `${fallbackMessage} - ${errorDetails}` : fallbackMessage;
+        // Include any additional error details from the response
+        if (axiosError.response?.body) {
+          try {
+            const errorBody = typeof axiosError.response.body === 'string' ?
+              JSON.parse(axiosError.response.body) :
+              axiosError.response.body;
+            jsonError.details = errorBody;
+          } catch {
+            // If parsing fails, include raw error body
+            jsonError.details = axiosError.response.body;
           }
         }
         Object.assign(jsonError, errorObj);
       } else {
-        jsonError.message = statusMessage;
+        jsonError.message = errorDetails ? `${fallbackMessage} - ${errorDetails}` : fallbackMessage;
         jsonError.error = String(error);
       }
 
       // Add status code to error object
-      if (error.statusCode) {
-        jsonError.statusCode = error.statusCode;
+      if (axiosError.statusCode) {
+        jsonError.statusCode = axiosError.statusCode;
       }
 
       throw new NodeApiError(this.getNode(), jsonError);

@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-06-11
+
+### Enhanced
+- The `Assets` and `Asset Layouts` resources are now fully supported for all API operations, improving functionality and resolving previous inconsistencies.
+
+### Changed
+- Reverted the separation of asset field management. Operations for standard, custom, and link fields are now handled directly within the `Asset` resource's `update` or `create` operations via the unified resource mapper, removing the dedicated `Asset Standard Field`, `Asset Custom Field`, and `Asset Link Field` resources.
+
+### Fixed
+- Corrected an issue with the Asset Layout update operation that caused a 500 Internal Server Error due to an API expectation mismatch.
+
 ## [1.3.5] - 2025-05-27
 
 ### Enhanced

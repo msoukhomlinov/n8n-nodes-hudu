@@ -45,12 +45,9 @@ export const assetLayoutOperations: INodeProperties[] = [
 export const assetLayoutFields: INodeProperties[] = [
   // ID field for single operations
   {
-    displayName: 'Asset Layout Name or ID',
+    displayName: 'Asset Layout ID',
     name: 'id',
-    type: 'options',
-    typeOptions: {
-      loadOptionsMethod: 'getAssetLayouts',
-    },
+    type: 'number',
     required: true,
     displayOptions: {
       show: {
@@ -58,8 +55,8 @@ export const assetLayoutFields: INodeProperties[] = [
         operation: ['get', 'update'],
       },
     },
-    default: '',
-    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+    default: 0,
+    description: 'ID of the Asset Layout to operate on',
   },
 
   // ----------------------------------
@@ -321,7 +318,7 @@ export const assetLayoutFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['asset_layouts'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     options: [
@@ -393,10 +390,11 @@ export const assetLayoutFields: INodeProperties[] = [
       },
     ],
   },
+];
 
-  // Fields Collection
+export const assetLayoutManageFields: INodeProperties[] = [
   {
-    displayName: 'Fields',
+    displayName: 'Fields to Add/Update',
     name: 'fields',
     type: 'fixedCollection',
     typeOptions: {
@@ -509,6 +507,97 @@ export const assetLayoutFields: INodeProperties[] = [
             description: 'Whether to show this field in the list view',
           },
         ],
+      },
+    ],
+  },
+];
+
+export const assetLayoutUpdateFields: INodeProperties[] = [
+  {
+    displayName: 'Update Fields',
+    name: 'assetLayoutUpdateFields',
+    type: 'collection',
+    placeholder: 'Add Field to Update',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['asset_layouts'],
+        operation: ['update'],
+      },
+    },
+    options: [
+      {
+        displayName: 'Active',
+        name: 'active',
+        type: 'boolean',
+        default: true,
+        description: 'Whether the Asset Layout is active',
+      },
+      {
+        displayName: 'Color',
+        name: 'color',
+        type: 'color',
+        default: '',
+        description: 'Hex code for the background color',
+      },
+      {
+        displayName: 'Icon',
+        name: 'icon',
+        type: 'string',
+        default: '',
+        description: 'Font Awesome icon code (e.g. fa-home). Search for icons at <a href="https://fontawesome.com/search">Font Awesome</a>.',
+      },
+      {
+        displayName: 'Icon Color',
+        name: 'icon_color',
+        type: 'color',
+        default: '',
+        description: 'Hex code for the icon color',
+      },
+      {
+        displayName: 'Include Comments',
+        name: 'include_comments',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to include comments in the Asset Layout',
+      },
+      {
+        displayName: 'Include Files',
+        name: 'include_files',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to include files in the Asset Layout',
+      },
+      {
+        displayName: 'Include Passwords',
+        name: 'include_passwords',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to include passwords in the Asset Layout',
+      },
+      {
+        displayName: 'Include Photos',
+        name: 'include_photos',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to include photos in the Asset Layout',
+      },
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        description: 'The new name for the Asset Layout',
+      },
+      {
+        displayName: 'Password Types',
+        name: 'password_types',
+        type: 'string',
+        typeOptions: {
+          password: true,
+        },
+        default: '',
+        description: 'List of password types, separated with new line characters',
       },
     ],
   },

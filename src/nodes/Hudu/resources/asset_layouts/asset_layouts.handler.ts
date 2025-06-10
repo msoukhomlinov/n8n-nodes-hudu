@@ -107,23 +107,26 @@ export async function handleAssetLayoutOperation(
 
     case 'update': {
       debugLog('[OPERATION_UPDATE] Processing update asset layout operation');
-      const id = this.getNodeParameter('id', i) as string;
-      const name = this.getNodeParameter('name', i) as string;
-      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+      const id = this.getNodeParameter('id', i) as number;
+      const assetLayoutUpdateFields = this.getNodeParameter('assetLayoutUpdateFields', i) as IDataObject;
       const fields = this.getNodeParameter('fields', i) as IDataObject;
 
-      debugLog('[RESOURCE_PARAMS] Update asset layout parameters', { id, name, additionalFields, fields });
+      debugLog('[RESOURCE_PARAMS] Update asset layout parameters', { id, assetLayoutUpdateFields, fields });
 
-      const body: IDataObject = {
-        asset_layout: {
-          name,
-          ...additionalFields,
-        },
+      const assetLayoutPayload: IDataObject = {
+        ...assetLayoutUpdateFields,
       };
 
+      // Ensure 'fields' is always present to avoid backend NilClass error on Hudu server
       if (fields && (fields as IDataObject).field) {
-        (body.asset_layout as IDataObject).fields = (fields as IDataObject).field;
+        assetLayoutPayload.fields = (fields as IDataObject).field;
+      } else {
+        assetLayoutPayload.fields = [];
       }
+
+      const body: IDataObject = {
+        asset_layout: assetLayoutPayload,
+      };
 
       debugLog('[API_REQUEST] Updating asset layout with body', body);
 

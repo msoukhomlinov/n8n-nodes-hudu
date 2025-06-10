@@ -22,7 +22,7 @@ export const assetsOperations: INodeProperties[] = [
       {
         name: 'Create',
         value: 'create',
-        description: 'Create an asset. To manage specific standard, custom, or asset link fields after creation, use the dedicated Hudu Asset Standard Field, Hudu Asset Link Field, or Hudu Asset Field Custom nodes respectively.',
+        description: 'Create a new asset',
         action: 'Create an asset',
       },
       {
@@ -34,19 +34,19 @@ export const assetsOperations: INodeProperties[] = [
       {
         name: 'Get',
         value: 'get',
-        description: 'Get an asset by ID',
+        description: 'Retrieve an asset',
         action: 'Get an asset',
       },
       {
         name: 'Get Many',
         value: 'getAll',
-        description: 'Retrieve a list of assets',
+        description: 'Retrieve many assets',
         action: 'Retrieve a list of assets',
       },
       {
         name: 'Move Layout',
         value: 'moveLayout',
-        description: 'Move an asset to a different layout',
+        description: 'Move asset to different layout',
         action: 'Move an asset to a different layout',
       },
       {
@@ -58,13 +58,37 @@ export const assetsOperations: INodeProperties[] = [
       {
         name: 'Update',
         value: 'update',
-        description: 'Update core properties of an asset. To manage specific standard, custom, or asset link fields, use the dedicated Hudu Asset Standard Field, Hudu Asset Link Field, or Hudu Asset Field Custom nodes respectively.',
+        description: 'Update an asset',
         action: 'Update an asset',
       },
     ],
     default: 'getAll',
   },
 ];
+
+// Shared properties for the Asset Fields resource mapper
+const assetResourceMapper = {
+	displayName: 'Asset Fields',
+	name: 'mappedFields',
+	type: 'resourceMapper' as const,
+	default: {
+		mappingMode: 'defineBelow',
+		value: null,
+	},
+	typeOptions: {
+		resourceMapper: {
+			resourceMapperMethod: 'mapAssetLayoutFieldsForResource',
+			mode: 'add' as const,
+			fieldWords: {
+				singular: 'field',
+				plural: 'fields',
+			},
+			addAllFields: false,
+			multiKeyMatch: false,
+			supportAutoMap: false,
+		},
+	},
+};
 
 export const assetsFields: INodeProperties[] = [
   // ----------------------------------
@@ -100,9 +124,6 @@ export const assetsFields: INodeProperties[] = [
         resource: ['assets'],
         operation: ['create', 'getAll'],
       },
-      hide: {
-        assetId: ['', 0],
-      },      
     },
     default: '',
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
@@ -111,23 +132,6 @@ export const assetsFields: INodeProperties[] = [
   // ----------------------------------
   //         assets:create
   // ----------------------------------
-  {
-    displayName: 'Asset Name',
-    name: 'name',
-    type: 'string',
-    required: true,
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['create'],
-      },
-      hide: {
-        company_id: [''],
-      }
-    },
-    description: 'The name of the asset',
-  },
   {
     displayName: 'Asset Layout Name or ID',
     name: 'asset_layout_id',
@@ -147,138 +151,36 @@ export const assetsFields: INodeProperties[] = [
       },
       hide: {
         company_id: [''],
-        name: [''],
       }
     },
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   {
-    displayName: 'Primary Serial',
-    name: 'primary_serial',
-    type: 'string',
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['create'],
-      },
-      hide: {
-        operation: ['create'],
-        company_id: [''],
-        name: [''],
-        asset_layout_id: [''],
-      }
-    },
-    description: 'Primary serial number for the asset',
-    placeholder: 'e.g. ABC123XYZ',
-  },
-  {
-    displayName: 'Primary Model',
-    name: 'primary_model',
-    type: 'string',
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['create'],
-      },
-      hide: {
-        operation: ['create'],
-        company_id: [''],
-        name: [''],
-        asset_layout_id: [''],
-      }
-    },
-    description: 'Primary model for the asset',
-    placeholder: 'e.g. MacBook Pro 16-inch',
-  },
-  {
-    displayName: 'Primary Manufacturer',
-    name: 'primary_manufacturer',
-    type: 'string',
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['create'],
-      },
-      hide: {
-        operation: ['create'],
-        company_id: [''],
-        name: [''],
-        asset_layout_id: [''],
-      }
-    },
-    description: 'Primary manufacturer for the asset',
-    placeholder: 'e.g. Apple',
-  },
-  {
-    displayName: 'Hostname',
-    name: 'hostname',
-    type: 'string',
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['create'],
-      },
-      hide: {
-        operation: ['create'],
-        company_id: [''],
-        name: [''],
-        asset_layout_id: [''],
-      }
-    },
-    description: 'Hostname of the asset',
-    placeholder: 'e.g. server01.example.com',
-  },
-  {
-    displayName: 'Notes',
-    name: 'notes',
-    type: 'string',
+    ...assetResourceMapper,
     typeOptions: {
-      rows: 4,
+      ...assetResourceMapper.typeOptions,
+      loadOptionsDependsOn: ['asset_layout_id'],
     },
-    default: '',
     displayOptions: {
       show: {
         resource: ['assets'],
         operation: ['create'],
       },
       hide: {
-        operation: ['create'],
-        company_id: [''],
-        name: [''],
         asset_layout_id: [''],
-      }
+      },
     },
-    description: 'Notes for the asset',
+    description: 'Map all asset fields, including name, standard properties, custom fields, and asset link fields for the new asset. This allows you to set any combination of layout-specific fields during creation.',
   },
 
   // ----------------------------------
   //         assets:update
   // ----------------------------------
   {
-    displayName: 'Asset Fields',
-    name: 'mappedFields',
-    type: 'resourceMapper',
-    default: {
-      mappingMode: 'defineBelow',
-      value: null,
-    },
+    ...assetResourceMapper,
     required: true,
     typeOptions: {
-      resourceMapper: {
-        resourceMapperMethod: 'mapAssetLayoutFieldsForResource',
-        mode: 'update',
-        fieldWords: {
-          singular: 'field',
-          plural: 'fields',
-        },
-        addAllFields: false,
-        multiKeyMatch: false,
-        supportAutoMap: false,
-      },
+      ...assetResourceMapper.typeOptions,
       loadOptionsDependsOn: ['assetId'],
     },
     displayOptions: {
@@ -287,23 +189,7 @@ export const assetsFields: INodeProperties[] = [
         operation: ['update'],
       },
     },
-    description: 'Map one or more asset fields to update. You may update a single field or multiple fields in one operation. This unified interface replaces separate "Update Field" and "Update Fields" operations.',
-  },
-  {
-    displayName: 'Asset Name',
-    name: 'name',
-    type: 'string',
-    default: '',
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['update'],
-      },
-      hide: {
-        mappedFields: [true],
-      },
-    },
-    description: 'The name of the asset',
+    description: 'Map one or more asset fields to update, including name and other standard properties. You may update a single field or multiple fields in one operation.',
   },
 
   // ----------------------------------
@@ -365,19 +251,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getAssetLayouts',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
-        default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-      },
-      {
-        displayName: 'Company Name or ID',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
           loadOptionsParameters: {
             includeBlank: true,
           },

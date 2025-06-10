@@ -4,12 +4,12 @@ import type { IDateRange } from '../../utils';
 import {
   handleGetAllOperation,
   handleCreateOperation,
-  handleUpdateOperation,
   handleDeleteOperation,
   handleArchiveOperation,
+  handleGetOperation,
 } from '../../utils/operations';
 import type { AssetsOperations } from './assets.types';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError, NodeApiError } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { getCompanyIdForAsset } from '../../utils/operations/getCompanyIdForAsset';
@@ -19,6 +19,9 @@ import {
   transformFieldValueForUpdate,
   updateAssetWithMappedFields,
 } from '../../utils/assetFieldUtils';
+import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layout_fields.types';
+import { isStandardField } from '../../utils/fieldTypeUtils';
+import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
 
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
@@ -37,35 +40,101 @@ export async function handleAssetsOperation(
         this.getNode(),
         'Company ID'
       );
-      const name = this.getNodeParameter('name', i) as string;
       const layoutId = this.getNodeParameter('asset_layout_id', i) as number;
       
-      const primary_serial = this.getNodeParameter('primary_serial', i, '') as string;
-      const primary_model = this.getNodeParameter('primary_model', i, '') as string;
-      const primary_manufacturer = this.getNodeParameter('primary_manufacturer', i, '') as string;
-      const hostname = this.getNodeParameter('hostname', i, '') as string;
-      const notes = this.getNodeParameter('notes', i, '') as string;
+      const rawMappedFields = this.getNodeParameter('mappedFields', i, {}) as IDataObject;
+      let mappedFields: IDataObject;
 
-      debugLog('[RESOURCE_PARAMS] Create asset parameters', { companyId, name, layoutId, primary_serial, primary_model, primary_manufacturer, hostname, notes });
+      if (rawMappedFields.value && typeof rawMappedFields.value === 'object' && rawMappedFields.value !== null) {
+        mappedFields = rawMappedFields.value as IDataObject;
+      } else {
+        mappedFields = { ...rawMappedFields };
+        delete mappedFields.mappingMode;
+      }
 
       const body: IDataObject = {
-        name,
         asset_layout_id: layoutId,
       };
 
-      if (primary_serial) body.primary_serial = primary_serial;
-      if (primary_model) body.primary_model = primary_model;
-      if (primary_manufacturer) body.primary_manufacturer = primary_manufacturer;
-      if (hostname) body.hostname = hostname;
-      if (notes) body.notes = notes;
+      const customFields: IDataObject[] = [];
+
+      if (Object.keys(mappedFields).length === 0) {
+        throw new NodeOperationError(this.getNode(), 'No fields provided to create the asset. Please map at least the "Asset Name" field.', { itemIndex: i });
+      }
+
+      // Fetch layout fields for validation of custom fields
+      const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(layoutId)) as IDataObject;
+
+      const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] } | undefined;
+        
+      if (!layout || !Array.isArray(layout.fields)) {
+        throw new NodeOperationError(this.getNode(), `Asset layout with ID '${layoutId}' not found or has no fields.`, { itemIndex: i });
+      }
+      
+      // Process each mapped field
+      for (const [fieldId, fieldValue] of Object.entries(mappedFields)) {
+        if (isStandardField(fieldId)) {
+          // It's a standard field, add it to the top-level body
+          body[fieldId] = fieldValue;
+          debugLog('[RESOURCE_PROCESSING] Mapped standard field', { fieldKey: fieldId, fieldValue });
+        } else {
+          // It's a custom field, validate and transform it
+          const fieldDef = validateFieldForMapping(
+            this,
+            layout.fields,
+            fieldId,
+            typeof fieldValue,
+            i
+          );
+          const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
+					const customFieldObject = { [fieldDef.label]: transformedValue };
+          customFields.push(customFieldObject);
+          debugLog('[RESOURCE_PROCESSING] Mapped custom field', { fieldId, fieldLabel: fieldDef.label, field: customFieldObject });
+        }
+      }
+
+      if (!body.name) {
+        throw new NodeOperationError(this.getNode(), 'The "Asset Name" field is required for asset creation.', { itemIndex: i });
+      }
+      
+      if (customFields.length > 0) {
+        body.custom_fields = customFields;
+      }
 
       debugLog('[API_REQUEST] Creating asset with body', body);
 
-      responseData = await handleCreateOperation.call(
-        this,
-        `/companies/${companyId}/assets`,
-        { asset: body },
-      );
+      const requestBody = { asset: body };
+      debugLog('[API_REQUEST] Final request payload for asset creation', requestBody);
+
+      try {
+        responseData = await handleCreateOperation.call(
+          this,
+          `/companies/${companyId}/assets`,
+          requestBody,
+        );
+      } catch (error) {
+        debugLog('[API_ERROR] Caught error in assets handler', { 
+          errorType: error.constructor.name,
+          isNodeApiError: error instanceof NodeApiError,
+          httpCode: (error as any).httpCode,
+          statusCode: (error as any).statusCode,
+          message: (error as any).message,
+          description: (error as any).description
+        });
+        
+        if (error instanceof NodeApiError) {
+          // Apply error parsing to all API errors, not just 422s
+          const parsedErrorMessage = parseHuduApiErrorWithContext(error, 'asset creation');
+          debugLog('[API_ERROR] Parsed API error message', { 
+            httpCode: error.httpCode,
+            original: error.message, 
+            parsed: parsedErrorMessage 
+          });
+          throw new NodeOperationError(this.getNode(), parsedErrorMessage, { itemIndex: i });
+        }
+        // Re-throw original error if it's not a NodeApiError
+        throw error;
+      }
 
       debugLog('[API_RESPONSE] Create asset response', responseData);
       break;
@@ -98,20 +167,22 @@ export async function handleAssetsOperation(
     case 'getAll': {
       debugLog('[OPERATION_GET_ALL] Processing get all assets operation');
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const filters = this.getNodeParameter('filters', i) as IDataObject;
+      const companyId = this.getNodeParameter('company_id', i) as string;
+      const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-      debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit });
+      debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, companyId });
 
       const mappedFilters: IDataObject = { ...filters };
-      if (mappedFilters.company_id) {
+
+      if (companyId) {
         mappedFilters.company_id = validateCompanyId(
-          mappedFilters.company_id as string,
+          companyId,
           this.getNode(),
           'Company ID'
         );
       }
-
+      
       if (mappedFilters.filter_layout_id) {
         mappedFilters.asset_layout_id = mappedFilters.filter_layout_id;
         delete mappedFilters.filter_layout_id;
@@ -157,27 +228,63 @@ export async function handleAssetsOperation(
       const assetId = this.getNodeParameter('assetId', i) as string;
 
       // --- Enhanced Resource Mapper Logic Start ---
-      // Check if mappedFields parameter is present (resource mapper usage)
-      const mappedFields = this.getNodeParameter('mappedFields', i, undefined) as IDataObject | undefined;
-      if (mappedFields && Object.keys(mappedFields).length > 0) {
+      const rawMappedFieldsUpdate = this.getNodeParameter('mappedFields', i, undefined) as IDataObject | undefined;
+
+      if (rawMappedFieldsUpdate && Object.keys(rawMappedFieldsUpdate).length > 0) {
+        let mappedFields: IDataObject;
+        if (rawMappedFieldsUpdate.value && typeof rawMappedFieldsUpdate.value === 'object' && rawMappedFieldsUpdate.value !== null) {
+          mappedFields = rawMappedFieldsUpdate.value as IDataObject;
+        } else {
+          mappedFields = { ...rawMappedFieldsUpdate };
+          delete mappedFields.mappingMode;
+        }
+
         debugLog('[RESOURCE_MAPPER] Using enhanced resource mapper for asset update', { assetId, mappedFields });
         // Fetch asset context
         const assetMeta = await getAssetWithMetadata(this, Number(assetId), i);
-        const updatePayload: IDataObject = {};
-        for (const [fieldKey, fieldValue] of Object.entries(mappedFields)) {
-          // Validate and transform each field
-          const fieldDef = await validateFieldForMapping(
-            this,
-            assetMeta.assetLayoutId,
-            fieldKey,
-            typeof fieldValue,
-            i
-          );
-          updatePayload[fieldDef.label] = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
+        
+        // Fetch layout fields for efficient validation
+        const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(assetMeta.assetLayoutId)) as IDataObject;
+        const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] } | undefined;
+
+        if (!layout || !Array.isArray(layout.fields)) {
+          throw new NodeOperationError(this.getNode(), `Asset layout with ID '${assetMeta.assetLayoutId}' not found or has no fields.`, { itemIndex: i });
         }
-        // Always include name and asset_layout_id if present in assetMeta
-        if (assetMeta.name) updatePayload.name = assetMeta.name;
+        
+        const updatePayload: IDataObject = {};
+        const customUpdateFields: IDataObject[] = [];
+        
+        for (const [fieldId, fieldValue] of Object.entries(mappedFields)) {
+          if (isStandardField(fieldId)) {
+            updatePayload[fieldId] = fieldValue;
+          } else {
+            try {
+              const fieldDef = validateFieldForMapping(
+                this,
+                layout.fields,
+                fieldId,
+                typeof fieldValue,
+                i
+              );
+              const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
+							const customFieldObject = { [fieldDef.label]: transformedValue };
+              customUpdateFields.push(customFieldObject);
+            } catch (error) {
+              debugLog(`[RESOURCE_VALIDATION] Error validating field id '${fieldId}' for update.`, { error: (error as Error).message });
+            }
+          }
+        }
+        
+        if (customUpdateFields.length > 0) {
+          updatePayload.custom_fields = customUpdateFields;
+        }
+
+        // Always include name and asset_layout_id, but don't overwrite name if it was provided
+        if (assetMeta.name && !updatePayload.hasOwnProperty('name')) {
+          updatePayload.name = assetMeta.name;
+        }
         updatePayload.asset_layout_id = assetMeta.assetLayoutId;
+
         // Perform the update
         responseData = await updateAssetWithMappedFields(
           this,
@@ -189,33 +296,9 @@ export async function handleAssetsOperation(
         debugLog('[RESOURCE_MAPPER] Asset updated via resource mapper', responseData);
         break;
       }
-      // --- Enhanced Resource Mapper Logic End ---
-
-      // Legacy direct field update logic (backward compatibility)
-      const name = this.getNodeParameter('name', i, undefined) as string | undefined;
-      const primary_serial = this.getNodeParameter('primary_serial', i, undefined) as string | undefined;
-      const primary_model = this.getNodeParameter('primary_model', i, undefined) as string | undefined;
-      const primary_manufacturer = this.getNodeParameter('primary_manufacturer', i, undefined) as string | undefined;
-      const hostname = this.getNodeParameter('hostname', i, undefined) as string | undefined;
-      const notes = this.getNodeParameter('notes', i, undefined) as string | undefined;
-
-      const body: IDataObject = {};
-      if (name !== undefined) body.name = name;
-      if (primary_serial !== undefined) body.primary_serial = primary_serial;
-      if (primary_model !== undefined) body.primary_model = primary_model;
-      if (primary_manufacturer !== undefined) body.primary_manufacturer = primary_manufacturer;
-      if (hostname !== undefined) body.hostname = hostname;
-      if (notes !== undefined) body.notes = notes;
-
-      debugLog('[RESOURCE_PARAMS] Update asset parameters', { assetId, body });
-      if (Object.keys(body).length === 0) {
-        throw new NodeOperationError(this.getNode(), "No fields provided to update for asset.", { itemIndex: i });
-      }
-      const requestBody = { asset: body };
-      debugLog('[API_REQUEST] Updating asset with body', requestBody);
-      responseData = await handleUpdateOperation.call(this, assetsResourceEndpoint, assetId, requestBody);
-      debugLog('[API_RESPONSE] Update asset response', responseData);
-      break;
+      
+      // If we reach here, it means no mapped fields were provided, which is an error.
+      throw new NodeOperationError(this.getNode(), "The 'Asset Fields' parameter is required for the update operation. Please map at least one field to update.", { itemIndex: i });
     }
 
     case 'archive':
