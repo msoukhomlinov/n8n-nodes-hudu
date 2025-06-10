@@ -8,13 +8,13 @@ This community node enables seamless integration with the Hudu documentation pla
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
-## What's New in 1.4.0 (2025-06-11)
+## Recent Changes
+
+### [1.4.0] - 2025-06-11
 
 - **Major**: Enhanced `Assets` and `Asset Layouts` resources to fully support all API operations, improving functionality and resolving previous inconsistencies.
 - **Changed**: Reverted the separation of asset field management. Operations for standard, custom, and link fields are now handled directly within the `Asset` resource's `update` operation via the unified resource mapper.
 - **Fix**: Corrected an issue with the Asset Layout update operation that was causing a 500 Internal Server Error.
-
-## Recent Changes
 
 ### [1.3.5] - 2025-05-27
 
