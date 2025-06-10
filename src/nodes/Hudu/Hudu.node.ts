@@ -25,10 +25,7 @@ import * as resources from './resources';
 import * as optionLoaders from './optionLoaders';
 import { getAssets } from './optionLoaders/assets/getAssets';
 import { getAssetsForCompany } from './optionLoaders/assets/getAssetsForCompany';
-import { getAssetCustomFields } from './optionLoaders/assets/getAssetCustomFields';
 import { mapAssetLayoutFieldsForResource } from './optionLoaders/asset_layouts/getAssetLayoutFields';
-import { getAssetLinkFields } from './optionLoaders/asset_layouts/getAssetLinkFields';
-import { getLinkableAssets } from './optionLoaders/assets/getLinkableAssets';
 
 export class Hudu implements INodeType {
   description: INodeTypeDescription = {
@@ -101,13 +98,12 @@ export class Hudu implements INodeType {
       ...descriptions.activityLogsFields,
       ...descriptions.apiInfoFields,
       ...descriptions.articlesFields,
-      ...descriptions.assetCustomFieldProperties,       
       ...descriptions.assetLayoutFields,
+      ...descriptions.assetLayoutUpdateFields,
+      ...descriptions.assetLayoutManageFields,
       ...descriptions.assetLayoutFieldFields,
-      ...descriptions.assetLinkFieldProperties,      
       ...descriptions.assetPasswordFields,      
       ...descriptions.assetsFields,
-      ...descriptions.assetStandardFieldDescription,      
       ...descriptions.cardsFields,
       ...descriptions.companiesFields,
       ...descriptions.expirationsFields,
@@ -144,9 +140,6 @@ export class Hudu implements INodeType {
       getAssetsForCompany,
       getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
       getLists: optionLoaders.getLists,
-      getAssetCustomFields,
-      getAssetLinkFields,
-      getLinkableAssets,
       async getStandardAssetFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         return [
           { name: 'Name', value: 'name' },
@@ -246,27 +239,6 @@ export class Hudu implements INodeType {
             responseData = await resources.handleAssetsOperation.call(
               this,
               operation as resources.AssetsOperations,
-              i,
-            );
-            break;
-          case 'assetStandardField':
-            responseData = await resources.handleAssetStandardFieldOperation.call(
-              this,
-              operation as resources.AssetStandardFieldOperation,
-              i,
-            );
-            break;
-          case 'assetLinkField':
-            responseData = await resources.handleAssetLinkFieldOperation.call(
-              this,
-              operation as resources.AssetLinkFieldOperation,
-              i,
-            );
-            break;
-          case 'assetCustomField':
-            responseData = await resources.handleAssetCustomFieldOperation.call(
-              this,
-              operation as resources.AssetCustomFieldOperation,
               i,
             );
             break;

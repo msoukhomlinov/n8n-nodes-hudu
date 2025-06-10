@@ -21,6 +21,7 @@ export const ASSET_LAYOUT_FIELD_TYPES = {
   EMAIL: 'Email',
   PHONE: 'Phone',
   ASSET_TAG: 'AssetTag',
+  RELATION: 'Relation',
   ADDRESS_DATA: 'AddressData',
   DROPDOWN: 'Dropdown',
 } as const;

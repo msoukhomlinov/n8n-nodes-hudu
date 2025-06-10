@@ -5,22 +5,23 @@
 
 export const DEBUG_CONFIG = {
   // API Communication
-  API_REQUEST: false,     // Debug API request details
-  API_RESPONSE: false,    // Debug API response details
+  API_REQUEST: true,     // Debug API request details
+  API_RESPONSE: true,    // Debug API response details
+  API_ERROR: true,       // Debug API error handling and parsing
 
   // Core Operations
   OPERATION_CREATE: false,   // Debug create operations
   OPERATION_UPDATE: false,   // Debug update operations
-  OPERATION_DELETE: false,   // Debug delete operations
+  OPERATION_DELETE: true,   // Debug delete operations
   OPERATION_GET: false,      // Debug get operations
   OPERATION_GET_ALL: false,  // Debug getAll operations
   OPERATION_ARCHIVE: false,  // Debug archive operations
 
   // Resource Handlers
-  RESOURCE_PROCESSING: true,  // Debug resource handler processing
-  RESOURCE_PARAMS: true,      // Debug parameter extraction in handlers
-  RESOURCE_TRANSFORM: true,   // Debug data transformations in handlers
-  RESOURCE_MAPPING: true,    // Debug resource mapping
+  RESOURCE_PROCESSING: false,  // Debug resource handler processing
+  RESOURCE_PARAMS: false,      // Debug parameter extraction in handlers
+  RESOURCE_TRANSFORM: false,   // Debug data transformations in handlers
+  RESOURCE_MAPPING: false,    // Debug resource mapping
 
   // Node Execution
   NODE_INPUT: false,    // Debug input items to node
@@ -37,6 +38,9 @@ export const DEBUG_CONFIG = {
 
   // Additional options
   OPTION_LOADING: false,       // Debug option loading
+
+  // Diagnostic flags
+  DIAGNOSTIC_LOGGING: true,
 } as const;
 
 // Mapping for various debug message formats to standardized uppercase config keys
@@ -61,6 +65,7 @@ const DEBUG_CATEGORY_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
   // Additional mappings for other categories
   'API_REQUEST': 'API_REQUEST',
   'API_RESPONSE': 'API_RESPONSE',
+  'API_ERROR': 'API_ERROR',
   'OPERATION_CREATE': 'OPERATION_CREATE',
   'OPERATION_UPDATE': 'OPERATION_UPDATE',
   'OPERATION_DELETE': 'OPERATION_DELETE',
@@ -87,7 +92,7 @@ const DEBUG_CATEGORY_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
 const MESSAGE_PREFIX_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
   'Hudu API Request': 'API_REQUEST',
   'Hudu API Response': 'API_RESPONSE',
-  'Hudu API Error': 'API_REQUEST',
+  'Hudu API Error': 'API_ERROR',
   'Rate Limited': 'API_REQUEST',
   'Update Operation': 'OPERATION_UPDATE',
   'GetAll Operation': 'OPERATION_GET_ALL',

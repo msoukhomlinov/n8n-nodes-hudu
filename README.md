@@ -8,16 +8,21 @@ This community node enables seamless integration with the Hudu documentation pla
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
-## What's New in 1.3.5 (2025-05-27)
+## What's New in 1.4.0 (2025-06-11)
+
+- **Major**: Enhanced `Assets` and `Asset Layouts` resources to fully support all API operations, improving functionality and resolving previous inconsistencies.
+- **Changed**: Reverted the separation of asset field management. Operations for standard, custom, and link fields are now handled directly within the `Asset` resource's `update` operation via the unified resource mapper.
+- **Fix**: Corrected an issue with the Asset Layout update operation that was causing a 500 Internal Server Error.
+
+## Recent Changes
+
+### [1.3.5] - 2025-05-27
 
 - The `Lists` and `List Options` resources are now managed as separate, distinct resources, each with their own full set of CRUD operations for improved clarity and flexibility. This change allows you to manage lists themselves and the items within those lists independently.
-- Management of asset fields is now performed via three new dedicated resources: `Asset Standard Field`, `Asset Custom Field`, and `Asset Link Field`. Field-level operations (get/update) are no longer handled via the main Asset resource, but through these new resources for improved clarity and modularity.
 - **Public Photos resource improvements:**
   - Filter fields (`Record Type Filter` and `Record ID Filter`) are now grouped in a single optional "Filter" fixed collection for the Get Many operation, improving UI consistency and usability.
   - The Get by ID operation now fetches public photos page by page, checking each page for the requested ID and returning as soon as it is found. This is much more efficient for large datasets.
   - Documentation and type definitions for Public Photos have been updated for clarity and alignment with the API.
-
-## Recent Changes
 
 ### [1.3.4] - 2025-05-17
 - Enhanced website operations with full field support, including new email security fields
@@ -80,9 +85,6 @@ To use this node, you need to:
 - Get layout fields and configurations
 - List all layouts with filtering support
 - **Advanced custom field support:** Add hints, min/max, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties
-
-### Asset Layout Fields
-- Manage individual fields within asset layouts
 
 ### Asset Passwords
 - Create and manage asset-related passwords
