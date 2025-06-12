@@ -109,9 +109,7 @@ export async function handleProceduresOperation(
         );
       }
 
-      const body: IDataObject = {
-        procedure: updateFields,
-      };
+      const body: IDataObject = updateFields;
 
       responseData = await handleUpdateOperation.call(this, resourceEndpoint, procedureId, body);
       break;

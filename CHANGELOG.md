@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2025-06-12
+
+### Enhanced
+- **Assets**:
+  - The `Get Many` operation now supports fetching assets across all companies by making the `Company ID` field optional. When the `Company ID` is omitted, a wider range of filters becomes available.
+- **Asset Layouts**:
+  - Aligned the `update` operation with the Hudu API, which now correctly accepts an array of field names for reordering.
+- **Asset Layout Fields**:
+  - The `linkable_id` field now uses a dynamic asset layout picker, improving UX for `Asset Link` and `Asset Tag` fields.
+
+### Fixed
+- **Asset Layouts**:
+  - Removed the `active` field from the `create` operation, as it is only supported for updates.
+  - Corrected the `update` operation to no longer show a UI for creating new fields, which was misaligned with the API's reordering functionality.
+- **Asset Layout Fields**:
+  - Fixed a parameter dependency loop that caused the UI to crash.
+  - Refactored handler logic to use dedicated API endpoints for `create`, `update`, and `delete` operations, improving efficiency and reliability.
+
 ## [1.4.0] - 2025-06-11
 
 ### Enhanced

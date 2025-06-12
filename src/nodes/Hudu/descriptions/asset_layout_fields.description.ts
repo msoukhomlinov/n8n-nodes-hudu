@@ -68,7 +68,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 	},
 
-	// Field ID for get operation
+	// Field ID for get, update, and delete operations
 	{
 		displayName: 'Field Name or ID',
 		name: 'field_id',
@@ -81,27 +81,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['asset_layout_fields'],
-				operation: ['get'],
-			},
-		},
-		default: '',
-		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-	},
-
-	// Field ID for update and delete operations (with dependency on asset_layout_id)
-	{
-		displayName: 'Field Name or ID',
-		name: 'field_id',
-		type: 'options',
-		typeOptions: {
-			loadOptionsMethod: 'getAssetLayoutFields',
-			loadOptionsDependsOn: ['asset_layout_id'],
-		},
-		required: true,
-		displayOptions: {
-			show: {
-				resource: ['asset_layout_fields'],
-				operation: ['update', 'delete'],
+				operation: ['get', 'update', 'delete'],
 			},
 			hide: {
 				asset_layout_id: [''],
@@ -235,11 +215,29 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 				description: 'Whether this field is marked as destroyed (advanced use only)',
 			},
 			{
-				displayName: 'Linkable ID',
+				displayName: 'Linkable Asset Layout Name or ID',
 				name: 'linkable_id',
-				type: 'number',
-				default: undefined,
-				description: 'ID of a linked resource (advanced use, optional)',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getAssetLayouts',
+				},
+				default: '',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+			},			
+			{
+				displayName: 'List Name or ID',
+				name: 'list_id',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getLists',
+				},
+				displayOptions: {
+					show: {
+						field_type: ['ListSelect'],
+					},
+				},
+				default: '',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
 			{
 				displayName: 'Maximum Value',
@@ -387,18 +385,24 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 				description: 'Whether this field is marked as destroyed (advanced use only)',
 			},
 			{
-				displayName: 'Label',
-				name: 'label',
-				type: 'string',
+				displayName: 'Linkable Asset Layout Name or ID',
+				name: 'linkable_id',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getAssetLayouts',
+				},
 				default: '',
-				description: 'The label of the field',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
 			{
-				displayName: 'Linkable ID',
-				name: 'linkable_id',
-				type: 'number',
-				default: undefined,
-				description: 'ID of a linked resource (advanced use, optional)',
+				displayName: 'List Name or ID',
+				name: 'list_id',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getLists',
+				},
+				default: '',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
 			{
 				displayName: 'Maximum Value',

@@ -5,14 +5,14 @@
 
 export const DEBUG_CONFIG = {
   // API Communication
-  API_REQUEST: true,     // Debug API request details
-  API_RESPONSE: true,    // Debug API response details
-  API_ERROR: true,       // Debug API error handling and parsing
+  API_REQUEST: false,     // Debug API request details
+  API_RESPONSE: false,    // Debug API response details
+  API_ERROR: false,       // Debug API error handling and parsing
 
   // Core Operations
   OPERATION_CREATE: false,   // Debug create operations
   OPERATION_UPDATE: false,   // Debug update operations
-  OPERATION_DELETE: true,   // Debug delete operations
+  OPERATION_DELETE: false,   // Debug delete operations
   OPERATION_GET: false,      // Debug get operations
   OPERATION_GET_ALL: false,  // Debug getAll operations
   OPERATION_ARCHIVE: false,  // Debug archive operations
@@ -40,7 +40,7 @@ export const DEBUG_CONFIG = {
   OPTION_LOADING: false,       // Debug option loading
 
   // Diagnostic flags
-  DIAGNOSTIC_LOGGING: true,
+  DIAGNOSTIC_LOGGING: false,
 } as const;
 
 // Mapping for various debug message formats to standardized uppercase config keys
