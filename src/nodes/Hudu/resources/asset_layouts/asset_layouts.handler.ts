@@ -109,18 +109,15 @@ export async function handleAssetLayoutOperation(
       debugLog('[OPERATION_UPDATE] Processing update asset layout operation');
       const id = this.getNodeParameter('id', i) as number;
       const assetLayoutUpdateFields = this.getNodeParameter('assetLayoutUpdateFields', i) as IDataObject;
-      const fields = this.getNodeParameter('fields', i) as IDataObject;
 
-      debugLog('[RESOURCE_PARAMS] Update asset layout parameters', { id, assetLayoutUpdateFields, fields });
+      debugLog('[RESOURCE_PARAMS] Update asset layout parameters', { id, assetLayoutUpdateFields });
 
       const assetLayoutPayload: IDataObject = {
         ...assetLayoutUpdateFields,
       };
 
       // Ensure 'fields' is always present to avoid backend NilClass error on Hudu server
-      if (fields && (fields as IDataObject).field) {
-        assetLayoutPayload.fields = (fields as IDataObject).field;
-      } else {
+      if (!assetLayoutPayload.fields) {
         assetLayoutPayload.fields = [];
       }
 

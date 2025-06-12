@@ -173,20 +173,10 @@ export async function handleAssetsOperation(
 
       debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, companyId });
 
+			const endpoint = companyId ? `/companies/${companyId}/assets` : '/assets';
+
       const mappedFilters: IDataObject = { ...filters };
 
-      if (companyId) {
-        mappedFilters.company_id = validateCompanyId(
-          companyId,
-          this.getNode(),
-          'Company ID'
-        );
-      }
-      
-      if (mappedFilters.filter_layout_id) {
-        mappedFilters.asset_layout_id = mappedFilters.filter_layout_id;
-        delete mappedFilters.filter_layout_id;
-      }
       if (mappedFilters.hasOwnProperty('archived')) {
         mappedFilters.archived = String(mappedFilters.archived).toLowerCase() === 'true';
       }
@@ -212,7 +202,7 @@ export async function handleAssetsOperation(
       
       responseData = await handleGetAllOperation.call(
         this,
-        assetsResourceEndpoint,
+        endpoint,
         'assets',
         qs,
         returnAll,

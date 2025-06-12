@@ -122,11 +122,30 @@ export const assetsFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['assets'],
-        operation: ['create', 'getAll'],
+        operation: ['create'],
       },
     },
     default: '',
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+  },
+  {
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+      loadOptionsParameters: {
+        includeBlank: true,
+      },
+    },
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['getAll'],
+      },
+    },
+    default: '',
+    description: 'Optionally filter assets by a parent company. If not provided, assets will be fetched from all companies, and more filtering options will be available. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
 
   // ----------------------------------
@@ -247,7 +266,7 @@ export const assetsFields: INodeProperties[] = [
       },
       {
         displayName: 'Asset Layout Name or ID',
-        name: 'filter_layout_id',
+        name: 'asset_layout_id',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getAssetLayouts',
@@ -257,6 +276,38 @@ export const assetsFields: INodeProperties[] = [
         },
         default: '',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
+      },
+      {
+        displayName: 'Company Name or ID',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+        },
+        default: '',
+        description: 'Filter assets by the parent company\'s ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
+      },
+      {
+        displayName: 'ID',
+        name: 'id',
+        type: 'number',
+        default: 0,
+        description: 'Filter assets by their ID',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
       },
       {
         displayName: 'Name',
@@ -264,6 +315,11 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets by name',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
       },
       {
         displayName: 'Primary Serial',
@@ -271,6 +327,11 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets by their primary serial number',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
       },
       {
         displayName: 'Search',
@@ -278,6 +339,11 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets using a search query',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
       },
       {
         displayName: 'Slug',
@@ -285,6 +351,11 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets by their URL slug',
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
+        },
       },
       {
         displayName: 'Updated At',
@@ -294,6 +365,11 @@ export const assetsFields: INodeProperties[] = [
         default: {},
         typeOptions: {
           multipleValues: false,
+        },
+        displayOptions: {
+          show: {
+            '/company_id': [''],
+          },
         },
         options: [
           {

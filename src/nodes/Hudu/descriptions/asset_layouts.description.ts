@@ -323,13 +323,6 @@ export const assetLayoutFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Active',
-        name: 'active',
-        type: 'boolean',
-        default: true,
-        description: 'Whether the Asset Layout is active',
-      },
-      {
         displayName: 'Color',
         name: 'color',
         type: 'color',
@@ -405,7 +398,7 @@ export const assetLayoutManageFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['asset_layouts'],
-        operation: ['create', 'update'],
+        operation: ['create'],
       },
     },
     options: [
@@ -539,6 +532,18 @@ export const assetLayoutUpdateFields: INodeProperties[] = [
         type: 'color',
         default: '',
         description: 'Hex code for the background color',
+      },
+      {
+        displayName: 'Fields',
+        name: 'fields',
+        type: 'string',
+        typeOptions: {
+          multipleValues: true,
+          multipleValueButtonText: 'Add Field Name',
+        },
+        default: [],
+        description: 'An array of field names for the Asset Layout, used for reordering',
+        hint: 'Enter the exact names of the fields in the order you want them to appear.',
       },
       {
         displayName: 'Icon',

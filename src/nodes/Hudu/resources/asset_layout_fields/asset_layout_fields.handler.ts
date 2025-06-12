@@ -1,10 +1,11 @@
-import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, INodeExecutionData } from 'n8n-workflow';
 import {
 	handleGetOperation,
 	handleUpdateOperation,
 } from '../../utils/operations';
 import type { AssetLayoutFieldOperation, IAssetLayoutFieldEntity } from './asset_layout_fields.types';
 import { debugLog } from '../../utils/debugConfig';
+import { NodeOperationError } from 'n8n-workflow';
 
 export async function handleAssetLayoutFieldOperation(
 	this: IExecuteFunctions,
@@ -13,19 +14,17 @@ export async function handleAssetLayoutFieldOperation(
 ): Promise<IDataObject | IDataObject[]> {
 	debugLog(`[OPERATION_${operation.toUpperCase()}] Starting asset layout field operation`, { operation, index: i });
 	const assetLayoutId = this.getNodeParameter('asset_layout_id', i) as string;
-	let responseData: IDataObject | IDataObject[] = {};
+	let responseData: IDataObject | IDataObject[] | INodeExecutionData[] = {};
 
-	debugLog('[API_REQUEST] Getting asset layout', { assetLayoutId });
-	// Get the current asset layout
-	const assetLayout = await handleGetOperation.call(this, '/asset_layouts', assetLayoutId);
-	const fields = ((assetLayout as { asset_layout: { fields: IAssetLayoutFieldEntity[] } }).asset_layout.fields || []) as IAssetLayoutFieldEntity[];
+	debugLog('[API_REQUEST] Getting asset layout to operate on its fields', { assetLayoutId });
+	const assetLayout = (await handleGetOperation.call(this, '/asset_layouts', assetLayoutId)) as { asset_layout: { fields: IAssetLayoutFieldEntity[] }};
+	const fields = (assetLayout.asset_layout.fields || []) as IAssetLayoutFieldEntity[];
 	debugLog('[RESOURCE_PARAMS] Retrieved asset layout fields', fields);
 
 	switch (operation) {
 		case 'getAll': {
 			debugLog('[OPERATION_GET_ALL] Processing get all fields operation');
-			// Return all fields from the asset layout
-			responseData = fields;
+			responseData = this.helpers.returnJsonArray(fields as IDataObject[]);
 			debugLog('[API_RESPONSE] Get all fields response', responseData);
 			break;
 		}
@@ -35,63 +34,38 @@ export async function handleAssetLayoutFieldOperation(
 			const fieldId = this.getNodeParameter('field_id', i) as string;
 			debugLog('[RESOURCE_PARAMS] Get field parameters', { fieldId });
 
-			// Find the specific field
 			const field = fields.find((f) => f.id === Number.parseInt(fieldId, 10));
 			if (!field) {
-				throw new Error(`Field with ID ${fieldId} not found in Asset Layout ${assetLayoutId}`);
+				throw new NodeOperationError(this.getNode(), `Field with ID ${fieldId} not found in Asset Layout ${assetLayoutId}`);
 			}
-			responseData = field;
+			responseData = field as IDataObject;
 			debugLog('[API_RESPONSE] Get field response', responseData);
 			break;
 		}
 
 		case 'create': {
 			debugLog('[OPERATION_CREATE] Processing create field operation');
-			// Get the field details
 			const fieldType = this.getNodeParameter('field_type', i) as string;
 			const label = this.getNodeParameter('label', i) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
 			debugLog('[RESOURCE_PARAMS] Create field parameters', { fieldType, label, additionalFields });
 
-			// Create the new field
-			const newField: IAssetLayoutFieldEntity = {
-				id: Math.max(0, ...fields.map((f) => f.id)) + 1, // Generate a temporary ID
+			const newField: Partial<IAssetLayoutFieldEntity> = {
 				label,
 				field_type: fieldType,
-				show_in_list: false,
-				hint: '',
-				expiration: false,
-				options: '',
-				position: fields.length + 1,
-				is_destroyed: false,
-				linkable_id: 0,
 				...additionalFields,
 			};
 
-			debugLog('[RESOURCE_TRANSFORM] Created new field', newField);
+			if (newField.field_type !== 'ListSelect') {
+				delete newField.list_id;
+			}
 
-			// Add the new field to the layout
-			fields.push(newField);
+			const allFields = [...fields, newField];
+			debugLog('[API_REQUEST] Updating asset layout with new field', { assetLayoutId, fields: allFields });
 
-			debugLog('[API_REQUEST] Updating asset layout with new field', { assetLayoutId, fields });
-
-			// Update the asset layout with the new field
-			const updatedAssetLayout = await handleUpdateOperation.call(
-				this,
-				'/asset_layouts',
-				assetLayoutId,
-				{
-					asset_layout: {
-						...assetLayout,
-						fields,
-					},
-				},
-			);
-
-			// Return the newly created field
-			const updatedFields = ((updatedAssetLayout as { asset_layout: { fields: IAssetLayoutFieldEntity[] } }).asset_layout.fields || []) as IAssetLayoutFieldEntity[];
-			responseData = updatedFields[updatedFields.length - 1];
+			const updatedLayout = await handleUpdateOperation.call(this, '/asset_layouts', assetLayoutId, { asset_layout: { fields: allFields } });
+			const updatedFields = ((updatedLayout as { asset_layout: { fields: IAssetLayoutFieldEntity[] } }).asset_layout.fields || []);
+			responseData = updatedFields.find(f => f.label === label && f.field_type === fieldType) || updatedFields[updatedFields.length - 1];
 			debugLog('[API_RESPONSE] Create field response', responseData);
 			break;
 		}
@@ -100,40 +74,25 @@ export async function handleAssetLayoutFieldOperation(
 			debugLog('[OPERATION_UPDATE] Processing update field operation');
 			const fieldId = this.getNodeParameter('field_id', i) as string;
 			const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
-
 			debugLog('[RESOURCE_PARAMS] Update field parameters', { fieldId, updateFields });
 
-			// Find the field to update
 			const fieldIndex = fields.findIndex((f) => f.id === Number.parseInt(fieldId, 10));
 			if (fieldIndex === -1) {
-				throw new Error(`Field with ID ${fieldId} not found in Asset Layout ${assetLayoutId}`);
+				throw new NodeOperationError(this.getNode(), `Field with ID ${fieldId} not found in Asset Layout ${assetLayoutId}`);
 			}
 
-			// Update the field
-			fields[fieldIndex] = {
-				...fields[fieldIndex],
-				...updateFields,
-			};
+			const updatedField = { ...fields[fieldIndex], ...updateFields };
+			if (updatedField.field_type !== 'ListSelect') {
+				delete updatedField.list_id;
+			}
 
-			debugLog('[RESOURCE_TRANSFORM] Updated field', fields[fieldIndex]);
+			const allFields = [...fields];
+			allFields[fieldIndex] = updatedField;
 
-			debugLog('[API_REQUEST] Updating asset layout with modified field', { assetLayoutId, fields });
+			debugLog('[API_REQUEST] Updating asset layout with modified field', { assetLayoutId, fields: allFields });
+			await handleUpdateOperation.call(this, '/asset_layouts', assetLayoutId, { asset_layout: { fields: allFields } });
 
-			// Update the asset layout with the modified fields
-			const updatedAssetLayout = await handleUpdateOperation.call(
-				this,
-				'/asset_layouts',
-				assetLayoutId,
-				{
-					asset_layout: {
-						fields,
-					},
-				},
-			);
-
-			// Return the updated field
-			const updatedFields = ((updatedAssetLayout as { asset_layout: { fields: IAssetLayoutFieldEntity[] } }).asset_layout.fields || []) as IAssetLayoutFieldEntity[];
-			responseData = updatedFields[fieldIndex];
+			responseData = updatedField as IDataObject;
 			debugLog('[API_RESPONSE] Update field response', responseData);
 			break;
 		}
@@ -141,85 +100,30 @@ export async function handleAssetLayoutFieldOperation(
 		case 'delete': {
 			debugLog('[OPERATION_DELETE] Processing delete field operation');
 			const fieldId = this.getNodeParameter('field_id', i) as string;
-
 			debugLog('[RESOURCE_PARAMS] Delete field parameters', { fieldId });
 
-			// Find the field to delete
 			const fieldIndex = fields.findIndex((f) => f.id === Number.parseInt(fieldId, 10));
 			if (fieldIndex === -1) {
-				throw new Error(`Field with ID ${fieldId} not found in Asset Layout ${assetLayoutId}`);
+				throw new NodeOperationError(this.getNode(), `Field with ID ${fieldId} not found in Asset Layout ${assetLayoutId}`);
 			}
 
-			// Mark the field as destroyed
-			fields[fieldIndex] = {
-				...fields[fieldIndex],
-				is_destroyed: true,
-			};
+			const updatedField = { ...fields[fieldIndex], _destroy: true };
+			const allFields = [...fields];
+			allFields[fieldIndex] = updatedField;
 
-			debugLog('[RESOURCE_TRANSFORM] Marked field as destroyed', fields[fieldIndex]);
+			debugLog('[API_REQUEST] Updating asset layout with destroyed field', { assetLayoutId, fields: allFields });
+			await handleUpdateOperation.call(this, '/asset_layouts', assetLayoutId, { asset_layout: { fields: allFields } });
 
-			debugLog('[API_REQUEST] Updating asset layout with destroyed field', { assetLayoutId, fields });
-
-			// Update the asset layout with the field marked as destroyed
-			await handleUpdateOperation.call(
-				this,
-				'/asset_layouts',
-				assetLayoutId,
-				{
-					asset_layout: {
-						fields,
-					},
-				},
-			);
-
-			// Return an empty object for successful deletion
-			responseData = {};
+			responseData = { success: true };
 			debugLog('[API_RESPONSE] Delete field response', responseData);
 			break;
 		}
 
-		case 'reorder': {
-			debugLog('[OPERATION_REORDER] Processing reorder fields operation');
-			const fieldOrder = this.getNodeParameter('fieldOrder', i) as { fields: { field_id: string }[] };
-
-			debugLog('[RESOURCE_PARAMS] Reorder fields parameters', { fieldOrder });
-
-			// Update positions based on the new order
-			const newFields = [...fields];
-			fieldOrder.fields.forEach((item, index) => {
-				const fieldIndex = newFields.findIndex((f) => f.id === Number.parseInt(item.field_id, 10));
-				if (fieldIndex !== -1) {
-					newFields[fieldIndex] = {
-						...newFields[fieldIndex],
-						position: index + 1,
-					};
-				}
-			});
-
-			debugLog('[RESOURCE_TRANSFORM] Reordered fields', newFields);
-
-			debugLog('[API_REQUEST] Updating asset layout with reordered fields', { assetLayoutId, fields: newFields });
-
-			// Update the asset layout with the reordered fields
-			const updatedAssetLayout = await handleUpdateOperation.call(
-				this,
-				'/asset_layouts',
-				assetLayoutId,
-				{
-					asset_layout: {
-						...assetLayout,
-						fields: newFields,
-					},
-				},
-			);
-
-			// Return the reordered fields
-			responseData = ((updatedAssetLayout as { asset_layout: { fields: IAssetLayoutFieldEntity[] } }).asset_layout.fields || []) as IAssetLayoutFieldEntity[];
-			debugLog('[API_RESPONSE] Reorder fields response', responseData);
-			break;
+		default: {
+			throw new NodeOperationError(this.getNode(), `The operation "${operation}" is not supported for this resource.`);
 		}
 	}
 
 	debugLog(`[OPERATION_${operation.toUpperCase()}] Operation completed`, responseData);
-	return responseData;
-} 
+	return responseData as IDataObject | IDataObject[];
+}
