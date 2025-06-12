@@ -10,6 +10,25 @@ This community node enables seamless integration with the Hudu documentation pla
 
 ## Recent Changes
 
+### [1.4.1] - 2025-06-12
+
+#### Enhanced
+- **Assets**:
+  - The `Get Many` operation now supports fetching assets across all companies by making the `Company ID` field optional. When the `Company ID` is omitted, a wider range of filters becomes available.
+- **Asset Layouts**:
+  - Aligned the `update` operation with the Hudu API, which now correctly accepts an array of field names for reordering.
+- **Asset Layout Fields**:
+  - The `linkable_id` field now uses a dynamic asset layout picker, improving UX for `Asset Link` and `Asset Tag` fields.
+
+#### Fixed
+- **Asset Layouts**:
+  - Removed the `active` field from the `create` operation, as it is only supported for updates.
+  - Corrected the `update` operation to no longer show a UI for creating new fields, which was misaligned with the API's reordering functionality.
+- **Asset Layout Fields**:
+  - Fixed a parameter dependency loop that caused the UI to crash.
+  - Refactored handler logic to use dedicated API endpoints for `create`, `update`, and `delete` operations, improving efficiency and reliability.
+
+
 ### [1.4.0] - 2025-06-11
 
 - **Major**: Enhanced `Assets` and `Asset Layouts` resources to fully support all API operations, improving functionality and resolving previous inconsistencies.
@@ -23,11 +42,6 @@ This community node enables seamless integration with the Hudu documentation pla
   - Filter fields (`Record Type Filter` and `Record ID Filter`) are now grouped in a single optional "Filter" fixed collection for the Get Many operation, improving UI consistency and usability.
   - The Get by ID operation now fetches public photos page by page, checking each page for the requested ID and returning as soon as it is found. This is much more efficient for large datasets.
   - Documentation and type definitions for Public Photos have been updated for clarity and alignment with the API.
-
-### [1.3.4] - 2025-05-17
-- Enhanced website operations with full field support, including new email security fields
-- Added full CRUD support for VLAN Zones and VLAN resources (new in Hudu API v2.37)
-- Fixed Asset Link Field Selector not loading properly in update operations
 
 > **Note:** Some features in this version require Hudu API v2.37.0 to function properly.
 
