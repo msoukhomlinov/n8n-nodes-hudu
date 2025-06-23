@@ -10,6 +10,13 @@ This community node enables seamless integration with the Hudu documentation pla
 
 ## Recent Changes
 
+### [1.4.2] - 2025-06-23
+
+#### Fixed
+- **Magic Dash**:
+  - The `Get` operation now correctly retrieves an item even if it is not on the first page of results.
+  - Removed the non-standard `delete by title` operation in favour of the standard `delete by ID`.
+
 ### [1.4.1] - 2025-06-12
 
 #### Enhanced
@@ -139,9 +146,8 @@ To use this node, you need to:
 - Use this resource to manage the items/options of a list
 
 ### Magic Dash
-- Access Magic Dash functionality
-- Filter by company and title
-- Delete by title and company name
+- Create, update, get, and delete Magic Dash items
+- List all items with filtering by company and title
 
 ### Matchers
 - Configure and manage integration matchers
