@@ -5,9 +5,9 @@
 
 export const DEBUG_CONFIG = {
   // API Communication
-  API_REQUEST: false,     // Debug API request details
-  API_RESPONSE: false,    // Debug API response details
-  API_ERROR: false,       // Debug API error handling and parsing
+  API_REQUEST: true,     // Debug API request details
+  API_RESPONSE: true,    // Debug API response details
+  API_ERROR: true,       // Debug API error handling and parsing
 
   // Core Operations
   OPERATION_CREATE: false,   // Debug create operations

@@ -1,9 +1,8 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
-import { handleCreateOperation, handleDeleteOperation, handleUpdateOperation } from '../../utils/operations';
+import { handleCreateOperation, handleDeleteOperation } from '../../utils/operations';
 import {
   handleMagicDashGetAllOperation,
   handleMagicDashGetByIdOperation,
-  handleMagicDashDeleteByTitleOperation,
 } from '../../utils/operations/magic_dash';
 import type { MagicDashOperation } from './magic_dash.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
@@ -30,8 +29,7 @@ export async function handleMagicDashOperation(
       return await handleMagicDashGetByIdOperation.call(this, id);
     }
 
-    case 'create':
-    case 'update': {
+    case 'createOrUpdate': {
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
       const message = this.getNodeParameter('message', i) as string;
       const companyName = this.getNodeParameter('companyName', i) as string;
@@ -57,20 +55,22 @@ export async function handleMagicDashOperation(
         }
       }
 
-      const body = {
-        magic_dash: magicDashBody,
-      };
+      // Ensure mutually exclusive fields are handled
+      // content and content_link are mutually exclusive
+      if (magicDashBody.content && magicDashBody.content_link) {
+        delete magicDashBody.content_link;
+      }
 
-      responseData = operation === 'create' 
-        ? await handleCreateOperation.call(this, resourceEndpoint, body)
-        : await handleUpdateOperation.call(this, resourceEndpoint, title, body);
-      break;
-    }
+      // icon and image_url are mutually exclusive
+      if (magicDashBody.icon && magicDashBody.image_url) {
+        delete magicDashBody.image_url;
+      }
 
-    case 'delete': {
-      const title = this.getNodeParameter('title', i) as string;
-      const companyName = this.getNodeParameter('companyName', i) as string;
-      responseData = await handleMagicDashDeleteByTitleOperation.call(this, title, companyName);
+      responseData = await handleCreateOperation.call(
+        this,
+        resourceEndpoint,
+        magicDashBody,
+      );
       break;
     }
 

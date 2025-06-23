@@ -14,19 +14,13 @@ export const magicDashOperations: INodeProperties[] = [
     },
     options: [
       {
-        name: 'Create',
-        value: 'create',
-        description: 'Create a Magic Dash item',
-        action: 'Create a magic dash item',
+        name: 'Create or Update',
+        value: 'createOrUpdate',
+        description: 'Create or update a Magic Dash Item',
+        action: 'Create or update a magic dash item',
       },
       {
         name: 'Delete',
-        value: 'delete',
-        description: 'Delete a Magic Dash item by title and company name',
-        action: 'Delete a magic dash item by title and company name',
-      },
-      {
-        name: 'Delete By ID',
         value: 'deleteById',
         description: 'Delete a Magic Dash item by ID',
         action: 'Delete a magic dash item by id',
@@ -42,12 +36,6 @@ export const magicDashOperations: INodeProperties[] = [
         value: 'getAll',
         description: 'Get many Magic Dash items',
         action: 'Get many magic dash items',
-      },
-      {
-        name: 'Update',
-        value: 'update',
-        description: 'Update a Magic Dash item by title and company name',
-        action: 'Update a magic dash item',
       },
     ],
     default: 'getAll',
@@ -125,7 +113,7 @@ export const magicDashFields: INodeProperties[] = [
   },
 
   // ----------------------------------
-  //         create & update
+  //         createOrUpdate
   // ----------------------------------
   {
     displayName: 'Message',
@@ -135,7 +123,7 @@ export const magicDashFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['magic_dash'],
-        operation: ['create', 'update'],
+        operation: ['createOrUpdate'],
       },
     },
     default: '',
@@ -149,7 +137,7 @@ export const magicDashFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['magic_dash'],
-        operation: ['create', 'update', 'delete'],
+        operation: ['createOrUpdate'],
       },
     },
     default: '',
@@ -163,7 +151,7 @@ export const magicDashFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['magic_dash'],
-        operation: ['create', 'update', 'delete'],
+        operation: ['createOrUpdate'],
       },
     },
     default: '',
@@ -180,7 +168,7 @@ export const magicDashFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['magic_dash'],
-        operation: ['create', 'update'],
+        operation: ['createOrUpdate'],
       },
     },
     default: '',
@@ -196,7 +184,7 @@ export const magicDashFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['magic_dash'],
-        operation: ['create', 'update'],
+        operation: ['createOrUpdate'],
       },
     },
     options: [

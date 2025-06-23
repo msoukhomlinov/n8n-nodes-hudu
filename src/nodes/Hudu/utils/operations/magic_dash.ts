@@ -56,31 +56,14 @@ export async function handleMagicDashGetByIdOperation(
   this: IExecuteFunctions,
   id: number,
 ): Promise<IDataObject> {
-  const response = await huduApiRequest.call(this, 'GET', '/magic_dash');
+  // Use the getAll operation to fetch all items, ensuring pagination is handled.
+  const allItems = await handleMagicDashGetAllOperation.call(this, {}, true);
 
-  const items = Array.isArray(response) ? response : [];
-  const item = items.find((item) => item.id === id);
+  const item = allItems.find((item) => item.id === id);
 
   if (!item) {
-    throw new Error(`Magic Dash item with ID ${id} not found`);
+    throw new Error(`Magic Dash item with ID ${id} not found.`);
   }
+
   return item;
-}
-
-export async function handleMagicDashDeleteByTitleOperation(
-  this: IExecuteFunctions,
-  title: string,
-  companyName: string,
-): Promise<IDataObject | IDataObject[]> {
-  const body = {
-    title,
-    company_name: companyName,
-  };
-
-  return await huduApiRequest.call(
-    this,
-    'DELETE',
-    '/magic_dash',
-    body,
-  );
 } 

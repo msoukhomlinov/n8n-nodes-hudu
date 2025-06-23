@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2025-06-23
+
+### Fixed
+- **Magic Dash**:
+  - Corrected Creating or Updating operations by merging them into a single operation, aligning to the API
+  - Fixed an issue where the `Get` operation failed to retrieve an item if it was not on the first page of results.
+
 ## [1.4.1] - 2025-06-12
 
 ### Enhanced
