@@ -1,6 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { handleUpdateOperation, handleDeleteOperation } from '../../utils/operations';
-import { handleMatcherGetAllOperation } from '../../utils/operations/matchers';
+import { handleGetAllOperation, handleUpdateOperation, handleDeleteOperation } from '../../utils/operations';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { MatcherOperation } from './matchers.types';
 
@@ -19,10 +18,30 @@ export async function handleMatcherOperation(
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const integrationId = this.getNodeParameter('integrationId', i) as number;
 
-      responseData = await handleMatcherGetAllOperation.call(
+      const queryParams: IDataObject = {
+        integration_id: integrationId,
+        ...filters,
+      };
+
+      // Add optional filters with proper field names
+      if (filters.matched !== undefined) {
+        queryParams.matched = filters.matched;
+      }
+      if (filters.sync_id !== undefined) {
+        queryParams.sync_id = filters.sync_id;
+      }
+      if (filters.identifier !== undefined) {
+        queryParams.identifier = filters.identifier;
+      }
+      if (filters.company_id !== undefined) {
+        queryParams.company_id = Number.parseInt(filters.company_id as string, 10);
+      }
+
+      responseData = await handleGetAllOperation.call(
         this,
-        integrationId,
-        filters,
+        resourceEndpoint,
+        'matchers',
+        queryParams,
         returnAll,
         limit,
       );
