@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { huduApiRequest } from '../requestUtils';
+import { handleListing } from '../requestUtils';
 
 export async function handleMatcherGetAllOperation(
   this: IExecuteFunctions,
@@ -25,26 +25,16 @@ export async function handleMatcherGetAllOperation(
   if (filters.company_id !== undefined) {
     queryParams.company_id = Number.parseInt(filters.company_id as string, 10);
   }
-  if (!returnAll) {
-    queryParams.page_size = limit;
-  }
 
-  const response = await huduApiRequest.call(
+  // Use the shared handleListing function for proper pagination support
+  return await handleListing.call(
     this,
     'GET',
     '/matchers',
-    undefined,
+    'matchers',
+    {},
     queryParams,
+    returnAll,
+    limit,
   );
-
-  // Extract the matchers array from the response
-  let matchers = Array.isArray(response)
-    ? response
-    : ((response as IDataObject).matchers as IDataObject[]) || [];
-
-  if (!returnAll && matchers.length > limit) {
-    matchers = matchers.slice(0, limit);
-  }
-
-  return matchers;
 } 
