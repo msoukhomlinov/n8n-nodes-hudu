@@ -73,6 +73,7 @@ export class Hudu implements INodeType {
 			...descriptions.companiesOperations,
 			...descriptions.expirationsOperations,
 			...descriptions.folderOperations,
+			...descriptions.groupsOperations,
 			...descriptions.ipAddressOperations,
 			...descriptions.listOptionsOperations,
 			...descriptions.listsOperations,
@@ -105,6 +106,7 @@ export class Hudu implements INodeType {
 			...descriptions.companiesFields,
 			...descriptions.expirationsFields,
 			...descriptions.folderFields,
+			...descriptions.groupsFields,
 			...descriptions.ipAddressFields,
 			...descriptions.listOptionsFields,
 			...descriptions.listsFields,
@@ -137,6 +139,10 @@ export class Hudu implements INodeType {
 			getAssetsForCompany,
 			getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
 			getLists: optionLoaders.getLists,
+			getGroups: (optionLoaders as any).getGroups,
+			getNetworks: (optionLoaders as any).getNetworks,
+			getVlans: (optionLoaders as any).getVlans,
+			getVlanZones: (optionLoaders as any).getVlanZones,
 			async getStandardAssetFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				return [
 					{ name: 'Name', value: 'name' },
@@ -264,6 +270,13 @@ export class Hudu implements INodeType {
 						responseData = await resources.handleFolderOperation.call(
 							this,
 							operation as resources.FolderOperation,
+							i,
+						);
+						break;
+					case 'groups':
+						responseData = await resources.handleGroupsOperation.call(
+							this,
+							operation as resources.GroupsOperation,
 							i,
 						);
 						break;

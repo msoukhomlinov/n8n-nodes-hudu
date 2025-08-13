@@ -6,6 +6,8 @@ export interface IPasswordFolder extends IDataObject {
   description: string; // A brief description of the password folder
   name: string; // The name of the password folder
   slug: string; // A slug representing the password folder
+  security?: 'all_users' | 'specific';
+  allowed_groups?: number[];
   created_at: string; // The timestamp of password folder creation
   updated_at: string; // The timestamp of the last password folder update
 }
@@ -14,4 +16,4 @@ export interface IPasswordFolderResponse extends IDataObject {
   password_folders: IPasswordFolder[];
 }
 
-export type PasswordFoldersOperations = 'get' | 'getAll';
+export type PasswordFoldersOperations = 'get' | 'getAll' | 'create' | 'update' | 'delete';

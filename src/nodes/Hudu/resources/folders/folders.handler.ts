@@ -83,7 +83,7 @@ export async function handleFolderOperation(
 
     case 'update': {
       const folderId = this.getNodeParameter('folderId', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('folderUpdateFields', i) as IDataObject;
 
       // Ensure proper field handling
       if (updateFields.parent_folder_id === '') {

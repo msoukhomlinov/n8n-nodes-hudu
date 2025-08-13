@@ -116,7 +116,7 @@ export async function handleNetworksOperation(
 
     case 'update': {
       const networkId = this.getNodeParameter('networkId', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('networkUpdateFields', i) as IDataObject;
 
       // Only include non-empty update fields
       const networkBody: IDataObject = {};

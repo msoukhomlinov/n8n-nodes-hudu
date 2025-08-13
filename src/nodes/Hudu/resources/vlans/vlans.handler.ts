@@ -173,7 +173,7 @@ export async function handleVlansOperation(
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('vlanUpdateFields', i) as IDataObject;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('[ResourceParams] VLAN update parameters', { id, updateFields });

@@ -33,6 +33,30 @@ export interface IHuduRequestOptions {
   contentType?: 'application/json' | 'application/x-www-form-urlencoded' | 'multipart/form-data';
 }
 
+/**
+ * Remove empty values and coerce primitives for query strings
+ */
+export function sanitizeQueryParams<T extends IDataObject>(qs: T): T {
+  const cleaned: IDataObject = {};
+  for (const [key, value] of Object.entries(qs || {})) {
+    if (value === '' || value === undefined || value === null) continue;
+    cleaned[key] = value as any;
+  }
+  return cleaned as T;
+}
+
+/**
+ * Remove empty values and coerce primitives for request bodies
+ */
+export function sanitizeRequestPayload<T extends IDataObject>(body: T): T {
+  const cleaned: IDataObject = {};
+  for (const [key, value] of Object.entries(body || {})) {
+    if (value === '' || value === undefined || value === null) continue;
+    cleaned[key] = value as any;
+  }
+  return cleaned as T;
+}
+
 // Rate limiting constants
 const RATE_LIMIT_CONFIG = {
   MAX_RETRIES: 3,
@@ -109,7 +133,7 @@ export function createHuduRequest(
   const requestOptions: IHttpRequestOptions = {
     method,
     url: `${credentials.baseUrl}${HUDU_API_CONSTANTS.BASE_API_PATH}${endpoint}`,
-    qs: toJsonObject(qs),
+    qs: toJsonObject(sanitizeQueryParams(qs)),
     headers: {
       'x-api-key': credentials.apiKey as string,
     },
@@ -124,7 +148,7 @@ export function createHuduRequest(
     if (contentType === 'application/json') {
       requestOptions.json = true;
     }
-    requestOptions.body = toJsonObject(body);
+    requestOptions.body = toJsonObject(sanitizeRequestPayload(body));
   }
 
   if (requestOptions.headers) {

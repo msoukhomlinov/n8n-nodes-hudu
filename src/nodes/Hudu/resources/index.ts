@@ -33,6 +33,8 @@ export * from './networks/networks.handler';
 export * from './networks/networks.types';
 export * from './password_folders/password_folders.handler';
 export * from './password_folders/password_folders.types';
+export * from './groups/groups.handler';
+export * from './groups/groups.types';
 export * from './procedures/procedures.handler';
 export * from './procedures/procedures.types';
 export * from './procedure_tasks/procedure_tasks.handler';

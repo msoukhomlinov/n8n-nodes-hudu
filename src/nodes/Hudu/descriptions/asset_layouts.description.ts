@@ -114,13 +114,7 @@ export const assetLayoutFields: INodeProperties[] = [
         default: '',
         description: 'Filter by the name of the Asset Layout',
       },
-      {
-        displayName: 'Page',
-        name: 'page',
-        type: 'number',
-        default: 1,
-        description: 'Get the current page of results',
-      },
+      
       {
         displayName: 'Updated At',
         name: 'updated_at',

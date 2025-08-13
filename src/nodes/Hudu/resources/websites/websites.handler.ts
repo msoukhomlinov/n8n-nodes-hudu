@@ -132,7 +132,7 @@ export async function handleWebsitesOperation(
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('websiteUpdateFields', i) as IDataObject;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('[ResourceParams] Websites update parameters', { id, updateFields });

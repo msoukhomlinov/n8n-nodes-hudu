@@ -16,26 +16,26 @@ export const articlesOperations: INodeProperties[] = [
       {
         name: 'Archive',
         value: 'archive',
-        description: 'Archive an article',
-        action: 'Archive an article',
+        description: 'Archive article',
+        action: 'Archive article',
       },
       {
         name: 'Create',
         value: 'create',
-        description: 'Create a new article',
-        action: 'Create an article',
+        description: 'Create article',
+        action: 'Create article',
       },
       {
         name: 'Delete',
         value: 'delete',
-        description: 'Delete an article',
-        action: 'Delete an article',
+        description: 'Delete article',
+        action: 'Delete article',
       },
       {
         name: 'Get',
         value: 'get',
-        description: 'Get a specific article',
-        action: 'Get an article',
+        description: 'Get article',
+        action: 'Get article',
       },
       {
         name: 'Get Many',
@@ -52,14 +52,14 @@ export const articlesOperations: INodeProperties[] = [
       {
         name: 'Unarchive',
         value: 'unarchive',
-        description: 'Unarchive an article',
-        action: 'Unarchive an article',
+        description: 'Unarchive article',
+        action: 'Unarchive article',
       },
       {
         name: 'Update',
         value: 'update',
-        description: 'Update an article',
-        action: 'Update an article',
+        description: 'Update article',
+        action: 'Update article',
       },
     ],
     default: 'getAll',
@@ -379,8 +379,8 @@ export const articlesFields: INodeProperties[] = [
 
   // Additional Fields for Create and Update operations
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Article Update Fields',
+    name: 'articleUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

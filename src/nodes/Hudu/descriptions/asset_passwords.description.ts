@@ -222,8 +222,8 @@ export const assetPasswordFields: INodeProperties[] = [
 
   // Update Fields
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Asset Password Update Fields',
+    name: 'assetPasswordUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

@@ -102,6 +102,7 @@ export const RESOURCES_WITH_PAGE_SIZE = [
   'magic_dash',
   'matchers',
   'password_folders',
+  'groups',
   'procedures',
   'public_photos',
   'relations',

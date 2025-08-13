@@ -155,8 +155,8 @@ export const matchersFields: INodeProperties[] = [
     description: 'The ID of the matcher',
   },
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Matcher Update Fields',
+    name: 'matcherUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

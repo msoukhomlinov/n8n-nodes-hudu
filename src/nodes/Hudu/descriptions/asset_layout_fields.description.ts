@@ -286,8 +286,8 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 
 	// Fields for Update operation
 	{
-		displayName: 'Update Fields',
-		name: 'updateFields',
+		displayName: 'Asset Layout Field Update Fields',
+		name: 'assetLayoutFieldUpdateFields',
 		type: 'collection',
 		placeholder: 'Add Field',
 		default: {},

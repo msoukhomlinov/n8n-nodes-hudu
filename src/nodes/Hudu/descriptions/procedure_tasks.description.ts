@@ -281,8 +281,8 @@ export const procedureTasksFields: INodeProperties[] = [
     description: 'The ID of the procedure task to update',
   },
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Procedure Task Update Fields',
+    name: 'procedureTaskUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

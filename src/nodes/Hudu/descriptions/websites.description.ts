@@ -16,20 +16,20 @@ export const websitesOperations: INodeProperties[] = [
       {
         name: 'Create',
         value: 'create',
-        description: 'Create a new website',
-        action: 'Create a new website',
+        description: 'Create website',
+        action: 'Create website',
       },
       {
         name: 'Delete',
         value: 'delete',
-        description: 'Delete a website',
-        action: 'Delete a website',
+        description: 'Delete website',
+        action: 'Delete website',
       },
       {
         name: 'Get',
         value: 'get',
-        description: 'Get a website by ID',
-        action: 'Get a website by ID',
+        description: 'Get website',
+        action: 'Get website',
       },
       {
         name: 'Get Many',
@@ -40,8 +40,8 @@ export const websitesOperations: INodeProperties[] = [
       {
         name: 'Update',
         value: 'update',
-        description: 'Update a website',
-        action: 'Update a website',
+        description: 'Update website',
+        action: 'Update website',
       },
     ],
     default: 'getAll',
@@ -681,8 +681,8 @@ export const websitesFields: INodeProperties[] = [
   //         websites:update
   // ----------------------------------
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Website Update Fields',
+    name: 'websiteUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

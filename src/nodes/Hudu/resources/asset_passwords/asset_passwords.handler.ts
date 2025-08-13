@@ -98,7 +98,7 @@ export async function handleAssetPasswordOperation(
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
 
-        const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+        const updateFields = this.getNodeParameter('assetPasswordUpdateFields', i) as IDataObject;
         responseData = await handleUpdateOperation.call(this, resourceEndpoint, id, { asset_password: updateFields });
         break;
       }
