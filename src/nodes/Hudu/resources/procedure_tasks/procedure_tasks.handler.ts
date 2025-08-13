@@ -66,7 +66,7 @@ export async function handleProcedureTasksOperation(
 
     case 'update': {
       const taskId = this.getNodeParameter('taskId', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('procedureTaskUpdateFields', i) as IDataObject;
 
       // Only include non-empty update fields
       const body: IDataObject = {};

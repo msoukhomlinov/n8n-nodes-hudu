@@ -241,8 +241,8 @@ export const proceduresFields: INodeProperties[] = [
 
   // Update
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Procedure Update Fields',
+    name: 'procedureUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

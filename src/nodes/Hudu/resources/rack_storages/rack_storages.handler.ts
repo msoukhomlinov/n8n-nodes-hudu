@@ -99,7 +99,7 @@ export async function handleRackStorageOperation(
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('rackStorageUpdateFields', i) as IDataObject;
 
       if (updateFields.company_id) {
         updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);

@@ -16,6 +16,7 @@ export * from './magic_dash.description';
 export * from './matchers.description';
 export * from './networks.description';
 export * from './passwordFolders.descriptions';
+export * from './groups.description';
 export * from './procedures.description';
 export * from './procedure_tasks.description';
 export * from './public_photos.description';

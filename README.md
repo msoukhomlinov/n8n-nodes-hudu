@@ -4,55 +4,10 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.37.0. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.38.0. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
-## Recent Changes
-
-### [1.4.2] - 2025-06-23
-
-#### Fixed
-- **Magic Dash**:
-  - The `Get` operation now correctly retrieves an item even if it is not on the first page of results.
-  - Removed the non-standard `delete by title` operation in favour of the standard `delete by ID`.
-
-### [1.4.1] - 2025-06-12
-
-#### Enhanced
-- **Assets**:
-  - The `Get Many` operation now supports fetching assets across all companies by making the `Company ID` field optional. When the `Company ID` is omitted, a wider range of filters becomes available.
-- **Asset Layouts**:
-  - Aligned the `update` operation with the Hudu API, which now correctly accepts an array of field names for reordering.
-- **Asset Layout Fields**:
-  - The `linkable_id` field now uses a dynamic asset layout picker, improving UX for `Asset Link` and `Asset Tag` fields.
-
-#### Fixed
-- **Asset Layouts**:
-  - Removed the `active` field from the `create` operation, as it is only supported for updates.
-  - Corrected the `update` operation to no longer show a UI for creating new fields, which was misaligned with the API's reordering functionality.
-- **Asset Layout Fields**:
-  - Fixed a parameter dependency loop that caused the UI to crash.
-  - Refactored handler logic to use dedicated API endpoints for `create`, `update`, and `delete` operations, improving efficiency and reliability.
-
-
-### [1.4.0] - 2025-06-11
-
-- **Major**: Enhanced `Assets` and `Asset Layouts` resources to fully support all API operations, improving functionality and resolving previous inconsistencies.
-- **Changed**: Reverted the separation of asset field management. Operations for standard, custom, and link fields are now handled directly within the `Asset` resource's `update` operation via the unified resource mapper.
-- **Fix**: Corrected an issue with the Asset Layout update operation that was causing a 500 Internal Server Error.
-
-### [1.3.5] - 2025-05-27
-
-- The `Lists` and `List Options` resources are now managed as separate, distinct resources, each with their own full set of CRUD operations for improved clarity and flexibility. This change allows you to manage lists themselves and the items within those lists independently.
-- **Public Photos resource improvements:**
-  - Filter fields (`Record Type Filter` and `Record ID Filter`) are now grouped in a single optional "Filter" fixed collection for the Get Many operation, improving UI consistency and usability.
-  - The Get by ID operation now fetches public photos page by page, checking each page for the requested ID and returning as soon as it is found. This is much more efficient for large datasets.
-  - Documentation and type definitions for Public Photos have been updated for clarity and alignment with the API.
-
-> **Note:** Some features in this version require Hudu API v2.37.0 to function properly.
-
-(For full change history, see [CHANGELOG.md](CHANGELOG.md))
 
 ## Installation
 
@@ -70,16 +25,16 @@ To use this node, you need to:
 
 ## Features
 
-- Comprehensive pagination support for all applicable resources
+- Comprehensive pagination support for applicable resources
 - Robust error handling and debugging capabilities
 - Advanced filtering options with both API-side and client-side filtering
 - Support for both single and bulk operations
-- Dynamic loading of related resources (companies, layouts, etc.)
+- Dynamic loading of related resources (companies, users, assets, layouts, networks, groups, VLANs, VLAN Zones)
 - Date range filtering with preset options
 - Automatic type conversion and validation
 - Debug logging for troubleshooting
-- **Full CRUD support for VLANs and VLAN Zones**
-- **Websites resource now supports all fields, including new email security options**
+- Central request sanitisation (omits empty optionals to prevent API 500s)
+- Resource-specific update collections across all resources
 
 ## Supported Resources & Operations
 
@@ -158,11 +113,13 @@ To use this node, you need to:
 - Create and manage network information
 - Link to companies
 - Filter by company and attributes
+- Pick related VLANs with an option loader
 
 ### Password Folders
-- Create and organise password folders
-- Support for folder hierarchy
-- Filter by parent folder
+- Create, update, delete, and retrieve password folders
+- Security modes: all users or specific groups (`allowed_groups` when `security = specific`)
+- Filter by name, company, search
+- Pick allowed groups with an option loader
 
 ### Procedures
 - Create and manage procedures
@@ -176,6 +133,10 @@ To use this node, you need to:
 - Support for various resource types
 - Filter by relationship types and directions
 
+### Groups
+- Retrieve groups and retrieve a group by ID
+- Filters: name, default, search; supports pagination
+
 ### Users
 - Get user information
 - List all users
@@ -183,9 +144,11 @@ To use this node, you need to:
 
 ### VLANs
 - Full CRUD support for VLANs, including filtering by company, name, and VLAN ID
+- Pick VLAN Zone and Status List via option loaders
 
 ### VLAN Zones
 - Full CRUD support for VLAN Zones, including filtering by company, name, archive status, and date ranges
+- Option loader available for selecting zones where referenced
 
 ### Uploads
 - Manage file uploads

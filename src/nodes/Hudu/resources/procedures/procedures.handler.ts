@@ -98,7 +98,7 @@ export async function handleProceduresOperation(
 
     case 'update': {
       const procedureId = this.getNodeParameter('id', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('procedureUpdateFields', i) as IDataObject;
 
       // Validate company_id if provided
       if (updateFields.company_id) {

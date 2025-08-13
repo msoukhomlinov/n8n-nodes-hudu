@@ -59,7 +59,7 @@ export async function handleRackStorageItemOperation(
       const id = this.getNodeParameter('id', i) as number;
       const body = {
         rack_storage_item: {
-          ...(this.getNodeParameter('updateFields', i) as IDataObject),
+      ...(this.getNodeParameter('rackStorageItemUpdateFields', i) as IDataObject),
         },
       };
       return await handleUpdateOperation.call(this, resourceEndpoint, id, body);

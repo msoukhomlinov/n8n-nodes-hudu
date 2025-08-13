@@ -166,8 +166,8 @@ export const rackStorageFields: INodeProperties[] = [
   //         update
   // ----------------------------------
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Rack Storage Update Fields',
+    name: 'rackStorageUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

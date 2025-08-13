@@ -507,8 +507,8 @@ export const companiesFields: INodeProperties[] = [
   //         companies:update
   // ----------------------------------
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Company Update Fields',
+    name: 'companyUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

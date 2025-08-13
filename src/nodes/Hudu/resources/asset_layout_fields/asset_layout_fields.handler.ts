@@ -73,7 +73,7 @@ export async function handleAssetLayoutFieldOperation(
 		case 'update': {
 			debugLog('[OPERATION_UPDATE] Processing update field operation');
 			const fieldId = this.getNodeParameter('field_id', i) as string;
-			const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+			const updateFields = this.getNodeParameter('assetLayoutFieldUpdateFields', i) as IDataObject;
 			debugLog('[RESOURCE_PARAMS] Update field parameters', { fieldId, updateFields });
 
 			const fieldIndex = fields.findIndex((f) => f.id === Number.parseInt(fieldId, 10));

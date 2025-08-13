@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2025-08-14
+
+### Enhanced
+- Added support for Password Folders and Groups from Hudu API v2.38.0
+- Standardised concise operation descriptions across resources for a consistent UX
+- Centralised request sanitisation to omit empty optional fields and reduce API 500s
+- Adopted resource-specific update collections across all resources (e.g. `companyUpdateFields`)
+- Added option loaders and integrated them in UIs:
+  - Groups (for Password Folders allowed groups)
+  - Networks, VLANs, VLAN Zones (used by IP Addresses, Networks, VLANs)
+- Unified pagination UX (Return All/Limit) and removed manual page/page_size fields where present
+- Aligned handlers to correct response wrappers and direct arrays per endpoint
+- Enforced Magic Dash mutual exclusivity constraints (content vs content_link, icon vs image_url)
+- Improved filter UIs (date ranges, booleans) for safer defaults
+
+
 ## [1.4.3] - 2025-08-03
 
 ### Fixed

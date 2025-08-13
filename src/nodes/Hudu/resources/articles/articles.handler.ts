@@ -153,7 +153,7 @@ export async function handleArticlesOperation(
 
     case 'update': {
       const articleId = this.getNodeParameter('articleId', i) as string;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('articleUpdateFields', i) as IDataObject;
 
       if (Object.keys(updateFields).length === 0) {
         throw new Error('No fields to update were provided');

@@ -227,8 +227,8 @@ export const vlanZonesFields: INodeProperties[] = [
   },
   // update
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'VLAN Zone Update Fields',
+    name: 'vlanZoneUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},

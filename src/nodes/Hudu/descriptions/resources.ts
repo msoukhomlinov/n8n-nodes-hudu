@@ -46,6 +46,10 @@ export const resourceOptions = [
     value: 'folders',
   },
   {
+    name: 'Group',
+    value: 'groups',
+  },
+  {
     name: 'IP Address',
     value: 'ipAddresses',
   },
@@ -106,16 +110,16 @@ export const resourceOptions = [
     value: 'users',
   },
   {
-    name: 'Website',
-    value: 'websites',
-  },
-  {
     name: 'VLAN',
     value: 'vlans',
   },
   {
     name: 'VLAN Zone',
     value: 'vlan_zones',
+  },
+  {
+    name: 'Website',
+    value: 'websites',
   },
 ];
 

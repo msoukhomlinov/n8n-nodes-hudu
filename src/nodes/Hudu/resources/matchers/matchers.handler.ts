@@ -31,7 +31,7 @@ export async function handleMatcherOperation(
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('matcherUpdateFields', i) as IDataObject;
 
       // Build the request body with only defined fields
       const matcherUpdate: IDataObject = {};

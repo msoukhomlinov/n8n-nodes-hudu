@@ -110,7 +110,7 @@ export async function handleCompaniesOperation(
         this.getNode(),
         'Company ID'
       );
-      const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+      const updateFields = this.getNodeParameter('companyUpdateFields', i) as IDataObject;
 
       // Validate parent_company_id if provided
       if (updateFields.parent_company_id) {

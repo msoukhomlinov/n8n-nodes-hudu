@@ -15,8 +15,8 @@ export const ipAddressOperations: INodeProperties[] = [
       {
         name: 'Create',
         value: 'create',
-        description: 'Create a new IP address',
-        action: 'Create an IP address',
+        description: 'Create IP address',
+        action: 'Create IP address',
       },
       {
         name: 'Delete',
@@ -27,20 +27,20 @@ export const ipAddressOperations: INodeProperties[] = [
       {
         name: 'Get',
         value: 'get',
-        description: 'Retrieve a single IP address',
-        action: 'Get an IP address',
+        description: 'Get IP address',
+        action: 'Get IP address',
       },
       {
         name: 'Get Many',
         value: 'getAll',
-        description: '⚠️ Retrieve many IP addresses (no pagination support - may return large datasets)',
+        description: '⚠️ Get many IP addresses (no pagination support - may return large datasets)',
         action: 'Get many IP addresses',
       },
       {
         name: 'Update',
         value: 'update',
-        description: 'Update an IP address',
-        action: 'Update an IP address',
+        description: 'Update IP address',
+        action: 'Update IP address',
       },
     ],
     default: 'getAll',
@@ -239,11 +239,17 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'Filter by exact FQDN match',
       },
       {
-        displayName: 'Network ID',
+        displayName: 'Network Name or ID',
         name: 'network_id',
-        type: 'number',
-        default: 0,
-        description: 'Filter by network ID',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getNetworks',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Status',
@@ -575,11 +581,17 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'The Fully Qualified Domain Name associated with the IP address',
       },
       {
-        displayName: 'Network ID',
+        displayName: 'Network Name or ID',
         name: 'network_id',
-        type: 'number',
-        default: 0,
-        description: 'The identifier of the network to which this IP address belongs',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getNetworks',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Skip DNS Validation',
@@ -660,8 +672,8 @@ export const ipAddressFields: INodeProperties[] = [
     description: 'ID of the IP address to update',
   },
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'IP Address Update Fields',
+    name: 'ipAddressUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},
@@ -708,11 +720,17 @@ export const ipAddressFields: INodeProperties[] = [
         description: 'The Fully Qualified Domain Name associated with the IP address',
       },
       {
-        displayName: 'Network ID',
+        displayName: 'Network Name or ID',
         name: 'network_id',
-        type: 'number',
-        default: 0,
-        description: 'The identifier of the network to which this IP address belongs',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getNetworks',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
         displayName: 'Skip DNS Validation',

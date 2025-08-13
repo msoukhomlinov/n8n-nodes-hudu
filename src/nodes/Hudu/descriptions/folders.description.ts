@@ -248,8 +248,8 @@ export const folderFields: INodeProperties[] = [
   //         folders: update
   // ----------------------------------
   {
-    displayName: 'Update Fields',
-    name: 'updateFields',
+    displayName: 'Folder Update Fields',
+    name: 'folderUpdateFields',
     type: 'collection',
     placeholder: 'Add Field',
     default: {},
