@@ -37,9 +37,8 @@ export class Hudu implements INodeType {
 			name: 'Hudu',
 		},
 		usableAsTool: true,
-		inputs: ['main'],
-		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
-		outputs: ['main'],
+		inputs: ['main'] as any,
+		outputs: ['main'] as any,
 		
 		credentials: [
 			{
