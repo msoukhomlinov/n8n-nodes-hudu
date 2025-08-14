@@ -1,2 +1,1 @@
-export * from './getAssets';
-export * from './getAssetsForCompany';
+// Intentionally empty: heavy asset loaders removed due to scale concerns

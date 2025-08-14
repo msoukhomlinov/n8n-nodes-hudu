@@ -9,7 +9,7 @@ import {
 } from '../../utils/operations';
 import type { IpAddressOperations } from './ip_addresses.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
-import { HUDU_API_CONSTANTS } from '../../utils/constants';
+// No pagination support for IP Addresses; no constants needed here
 import { debugLog } from '../../utils/debugConfig';
 
 export async function handleIpAddressesOperation(
@@ -25,6 +25,17 @@ export async function handleIpAddressesOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       if (filters.company_id) {
         filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+      }
+      // Normalise network_id: remove empty strings, parse numeric strings
+      if (filters.network_id !== undefined) {
+        if (typeof filters.network_id === 'string') {
+          const trimmed = (filters.network_id as string).trim();
+          if (trimmed === '') {
+            delete filters.network_id;
+          } else if (!Number.isNaN(Number.parseInt(trimmed, 10))) {
+            filters.network_id = Number.parseInt(trimmed, 10);
+          }
+        }
       }
       const qs: IDataObject = {
         ...filters,
@@ -64,8 +75,10 @@ export async function handleIpAddressesOperation(
         }
       }
 
-      const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+      // IP Addresses do not support pagination in the API. Always fetch all results.
+      // The `limit` parameter is unused when `returnAll` is true and no pagination is supported.
+      const returnAll = true;
+      const limit = 0;
 
       responseData = await handleGetAllOperation.call(
         this,
@@ -97,6 +110,18 @@ export async function handleIpAddressesOperation(
         ...additionalFields,
       };
 
+      // Normalise network_id for create: parse numeric strings
+      if (body.network_id !== undefined) {
+        if (typeof body.network_id === 'string') {
+          const trimmed = (body.network_id as string).trim();
+          if (trimmed === '') {
+            delete body.network_id;
+          } else if (!Number.isNaN(Number.parseInt(trimmed, 10))) {
+            body.network_id = Number.parseInt(trimmed, 10);
+          }
+        }
+      }
+
       // Map comments to notes if it exists
       if (body.comments !== undefined) {
         debugLog('[RESOURCE_TRANSFORM] Mapping comments to notes field for IP address', { comments: body.comments });
@@ -113,6 +138,18 @@ export async function handleIpAddressesOperation(
 
       if (updateFields.company_id) {
         updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+      }
+
+      // Normalise network_id for update: parse numeric strings
+      if (updateFields.network_id !== undefined) {
+        if (typeof updateFields.network_id === 'string') {
+          const trimmed = (updateFields.network_id as string).trim();
+          if (trimmed === '') {
+            delete updateFields.network_id;
+          } else if (!Number.isNaN(Number.parseInt(trimmed, 10))) {
+            updateFields.network_id = Number.parseInt(trimmed, 10);
+          }
+        }
       }
 
       // Map comments to notes if it exists

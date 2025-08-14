@@ -20,8 +20,6 @@ import * as resources from './resources';
 
 // Import all option loaders centrally
 import * as optionLoaders from './optionLoaders';
-import { getAssets } from './optionLoaders/assets/getAssets';
-import { getAssetsForCompany } from './optionLoaders/assets/getAssetsForCompany';
 import { mapAssetLayoutFieldsForResource } from './optionLoaders/asset_layouts/getAssetLayoutFields';
 
 export class Hudu implements INodeType {
@@ -134,13 +132,9 @@ export class Hudu implements INodeType {
 			getAssetLayouts: optionLoaders.getAssetLayouts,
 			getAssetLayoutFields: optionLoaders.getAssetLayoutFields,
 			getAssetLayoutFieldValues: optionLoaders.getAssetLayoutFieldValues,
-			getAssets,
-			getAssetsForCompany,
 			getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
 			getLists: optionLoaders.getLists,
 			getGroups: (optionLoaders as any).getGroups,
-			getNetworks: (optionLoaders as any).getNetworks,
-			getVlans: (optionLoaders as any).getVlans,
 			getVlanZones: (optionLoaders as any).getVlanZones,
 			async getStandardAssetFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				return [
