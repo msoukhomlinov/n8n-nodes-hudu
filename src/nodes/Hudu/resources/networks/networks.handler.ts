@@ -31,9 +31,13 @@ export async function handleNetworksOperation(
       // Only add non-empty additional fields
       for (const [key, value] of Object.entries(additionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          // Convert company_id to number if present
           if (key === 'company_id') {
             body[key] = Number.parseInt(value as string, 10);
+          } else if (key === 'vlan_id') {
+            const v = String(value).trim();
+            if (v !== '' && !Number.isNaN(Number.parseInt(v, 10))) {
+              body[key] = Number.parseInt(v, 10);
+            }
           } else {
             body[key] = value;
           }
@@ -122,9 +126,13 @@ export async function handleNetworksOperation(
       const networkBody: IDataObject = {};
       for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          // Validate company_id if present
           if (key === 'company_id') {
             networkBody[key] = validateCompanyId(value, this.getNode(), 'Company ID');
+          } else if (key === 'vlan_id') {
+            const v = String(value).trim();
+            if (v !== '' && !Number.isNaN(Number.parseInt(v, 10))) {
+              networkBody[key] = Number.parseInt(v, 10);
+            }
           } else {
             networkBody[key] = value;
           }

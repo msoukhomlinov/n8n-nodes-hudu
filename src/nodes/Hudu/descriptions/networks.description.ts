@@ -608,17 +608,11 @@ export const networksFields: INodeProperties[] = [
         description: 'External identifier for synchronisation purposes',
       },
       {
-        displayName: 'VLAN Name or ID',
+        displayName: 'VLAN ID',
         name: 'vlan_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getVlans',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
+        type: 'string',
         default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        description: 'Enter the VLAN ID',
       },
     ],
   },
@@ -769,17 +763,11 @@ export const networksFields: INodeProperties[] = [
         description: 'External identifier for synchronisation purposes',
       },
       {
-        displayName: 'VLAN Name or ID',
+        displayName: 'VLAN ID',
         name: 'vlan_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getVlans',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
+        type: 'string',
         default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        description: 'Enter the VLAN ID',
       },
     ],
   },
