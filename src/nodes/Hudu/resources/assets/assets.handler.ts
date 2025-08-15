@@ -22,6 +22,7 @@ import {
 import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layout_fields.types';
 import { isStandardField } from '../../utils/fieldTypeUtils';
 import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
+import { toSnakeCase } from '../../utils/formatters';
 
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
@@ -87,7 +88,7 @@ export async function handleAssetsOperation(
             i
           );
           const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
-					const customFieldObject = { [fieldDef.label]: transformedValue };
+          const customFieldObject = { [toSnakeCase(fieldDef.label)]: transformedValue };
           customFields.push(customFieldObject);
           debugLog('[RESOURCE_PROCESSING] Mapped custom field', { fieldId, fieldLabel: fieldDef.label, field: customFieldObject });
         }
@@ -173,7 +174,7 @@ export async function handleAssetsOperation(
 
       debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, companyId });
 
-			const endpoint = companyId ? `/companies/${companyId}/assets` : '/assets';
+      const endpoint = companyId ? `/companies/${companyId}/assets` : '/assets';
 
       const mappedFilters: IDataObject = { ...filters };
 
@@ -257,7 +258,7 @@ export async function handleAssetsOperation(
                 i
               );
               const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
-							const customFieldObject = { [fieldDef.label]: transformedValue };
+              const customFieldObject = { [toSnakeCase(fieldDef.label)]: transformedValue };
               customUpdateFields.push(customFieldObject);
             } catch (error) {
               debugLog(`[RESOURCE_VALIDATION] Error validating field id '${fieldId}' for update.`, { error: (error as Error).message });

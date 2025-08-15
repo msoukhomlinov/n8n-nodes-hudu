@@ -128,16 +128,36 @@ export function validateFieldForMapping(
   const normalisedFieldType = normaliseFieldType(field.field_type);
   const expectedFieldJsType = getExpectedJavaScriptType(normalisedFieldType);
 
-  // Validate field type compatibility
-  if (normalisedFieldType === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG || normalisedFieldType === ASSET_LAYOUT_FIELD_TYPES.RELATION) {
-    if (expectedJsType !== 'string' && expectedJsType !== 'number') {
-      throw new NodeOperationError(
-        context.getNode(),
-        `Field '${fieldIdentifier}' of type ${normalisedFieldType} expects a string or a number, but got ${expectedJsType}.`,
-        { itemIndex },
-      );
+  // Validate field type compatibility with flexible input acceptance
+  const inputIsCompatible = (): boolean => {
+    // Allow multiple input forms that can be transformed later
+    switch (normalisedFieldType) {
+      case ASSET_LAYOUT_FIELD_TYPES.CHECKBOX:
+        // Accept boolean or string ("true"/"false")
+        return expectedJsType === 'boolean' || expectedJsType === 'string';
+      case ASSET_LAYOUT_FIELD_TYPES.NUMBER:
+        // Accept number or string (numeric)
+        return expectedJsType === 'number' || expectedJsType === 'string';
+      case ASSET_LAYOUT_FIELD_TYPES.DATE:
+        // Accept strings (we'll normalise)
+        return expectedJsType === 'string';
+      case ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA:
+        // Accept object or JSON string
+        return expectedJsType === 'object' || expectedJsType === 'string';
+      case ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT:
+        // Accept array, object (array is typeof 'object'), or comma-separated string
+        return expectedJsType === 'object' || expectedJsType === 'string';
+      case ASSET_LAYOUT_FIELD_TYPES.RELATION:
+      case ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG:
+        // Accept single id (number), comma-separated string, or array of ids (object)
+        return expectedJsType === 'number' || expectedJsType === 'string' || expectedJsType === 'object';
+      default:
+        // Default strict check: expected must match
+        return expectedFieldJsType === expectedJsType;
     }
-  } else if (expectedFieldJsType !== expectedJsType) {
+  };
+
+  if (!inputIsCompatible()) {
     debugLog('[RESOURCE_VALIDATION] Field type mismatch', {
       fieldIdentifier,
       expected: expectedJsType,
@@ -146,7 +166,7 @@ export function validateFieldForMapping(
     });
     throw new NodeOperationError(
       context.getNode(),
-      `Field '${fieldIdentifier}' type mismatch: expected JavaScript type '${expectedJsType}', but field type '${normalisedFieldType}' expects '${expectedFieldJsType}'.`,
+      `Field '${fieldIdentifier}' type mismatch: received '${expectedJsType}', but field type '${normalisedFieldType}' expects '${expectedFieldJsType}'.`,
       { itemIndex }
     );
   }
@@ -299,21 +319,23 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
       throw new Error(`Invalid value for Date field: '${value}'. Expected a valid date string (e.g., YYYY-MM-DD or a full ISO timestamp).`);
 
     case ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT:
-      // List fields may require JSON stringification for complex values
-      if (typeof value === 'object' && value !== null) {
-        const jsonString = JSON.stringify(value);
-        debugLog('[RESOURCE_TRANSFORM] Stringified object for List field', { original: value, converted: jsonString });
-        return jsonString;
-      }
+      // API expects an array of item names. Normalise accordingly.
       if (Array.isArray(value)) {
-        const jsonString = JSON.stringify(value);
-        debugLog('[RESOURCE_TRANSFORM] Stringified array for List field', { original: value, converted: jsonString });
-        return jsonString;
+        const arr = value.map(v => String(v));
+        debugLog('[RESOURCE_TRANSFORM] Using array for List field', { original: value, converted: arr });
+        return arr;
       }
-      // For simple values, return as string
-      const stringValue = String(value);
-      debugLog('[RESOURCE_TRANSFORM] Converted to string for List field', { original: value, converted: stringValue });
-      return stringValue;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') return [];
+        const arr = trimmed.includes(',') ? trimmed.split(',').map(v => v.trim()).filter(v => v !== '') : [trimmed];
+        debugLog('[RESOURCE_TRANSFORM] Normalised string to array for List field', { original: value, converted: arr });
+        return arr;
+      }
+      // Unsupported types should be converted to a single string entry
+      const single = String(value);
+      debugLog('[RESOURCE_TRANSFORM] Coerced value to single-item array for List field', { original: value, converted: [single] });
+      return [single];
 
     case ASSET_LAYOUT_FIELD_TYPES.RELATION:
     case ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG:
@@ -414,11 +436,13 @@ export async function updateAssetWithMappedFields(
 ): Promise<IDataObject> {
   debugLog('[RESOURCE_PROCESSING] Preparing to update asset with mapped fields', { assetId, companyId, mappedFields });
 
-  // Construct the update payload
-  const payload: IDataObject = {};
+  // Construct the update payload wrapped under 'asset' as per API docs
+  const assetPayload: IDataObject = {};
   for (const [key, value] of Object.entries(mappedFields)) {
-    payload[key] = value;
+    assetPayload[key] = value;
   }
+
+  const payload: IDataObject = { asset: assetPayload };
 
   debugLog('[RESOURCE_PROCESSING] Final update payload', payload);
 
