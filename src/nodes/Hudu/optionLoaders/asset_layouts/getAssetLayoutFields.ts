@@ -183,6 +183,8 @@ async function getLayoutFields(
 					displayName += ' - Use comma-separated IDs';
 				} else if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT && (field as IDataObject).multiple_options == true) {
 					displayName += ' - Use comma-separated values for multiple options';
+				} else if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA) {
+					displayName += ' - Address object: address_line_1, address_line_2, city, state, zip, country_name (ISO alpha-2, e.g., AU), state uses region code (e.g., NSW)';
 				}
 				return {
 					id: field.id.toString(),

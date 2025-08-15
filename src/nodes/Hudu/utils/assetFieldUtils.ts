@@ -364,17 +364,57 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
       return [];
 
     case ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA:
-      // Address fields expect objects
+      // Address fields expect objects. Normalise common alias keys and drop empties.
       if (typeof value === 'object' && value !== null) {
-        debugLog('[RESOURCE_TRANSFORM] Using object for Address field', { value });
-        return value;
+        const input = value as IDataObject;
+        const out: IDataObject = {};
+        const getStr = (v: unknown) => (v === undefined || v === null ? '' : String(v));
+        const candidateMap: Record<string, string> = {
+          address_line_1: 'address_line_1',
+          addressLine1: 'address_line_1',
+          line1: 'address_line_1',
+          address_line_2: 'address_line_2',
+          addressLine2: 'address_line_2',
+          line2: 'address_line_2',
+          city: 'city',
+          town: 'city',
+          state: 'state',
+          province: 'state',
+          region: 'state',
+          zip: 'zip',
+          zip_code: 'zip',
+          postcode: 'zip',
+          postal_code: 'zip',
+          country_name: 'country_name',
+          country: 'country_name',
+        };
+        for (const [key, val] of Object.entries(input)) {
+          const normalisedKey = candidateMap[key] || key;
+          let strVal = getStr(val).trim();
+          if (strVal === '') continue;
+          if (normalisedKey === 'country_name') {
+            // Prefer ISO codes; upper-case short codes like 'au' -> 'AU'. Leave longer names as-is.
+            if (/^[a-z]{2,3}$/i.test(strVal)) {
+              strVal = strVal.toUpperCase();
+            }
+          } else if (normalisedKey === 'state') {
+            // Upper-case common subdivision codes like 'nsw' -> 'NSW'
+            if (/^[a-z\-]{2,10}$/i.test(strVal)) {
+              strVal = strVal.toUpperCase();
+            }
+          }
+          out[normalisedKey] = strVal;
+        }
+        debugLog('[RESOURCE_TRANSFORM] Normalised object for Address field', { original: value, normalised: out });
+        return out;
       }
       if (typeof value === 'string') {
         try {
           const parsed = JSON.parse(value);
           if (typeof parsed === 'object' && parsed !== null) {
+            // Recurse through normalisation by calling self with parsed object path
             debugLog('[RESOURCE_TRANSFORM] Parsed JSON string for Address field', { original: value, parsed });
-            return parsed;
+            return transformFieldValueForUpdate(parsed, ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA);
           }
         } catch (error) {
           throw new Error(`Invalid JSON for Address field: ${value}. Please provide a valid JSON object string. Error: ${(error as Error).message}`);
