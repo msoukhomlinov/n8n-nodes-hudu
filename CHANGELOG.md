@@ -16,6 +16,9 @@ All notable changes to this project will be documented in this file.
 - Enforced Magic Dash mutual exclusivity constraints (content vs content_link, icon vs image_url)
 - Improved filter UIs (date ranges, booleans) for safer defaults
 
+### Fixed
+- Assets: Corrected AddressData custom field updates by sending snake_case field label keys and wrapping update payloads under `asset`.
+
 
 ## [1.4.3] - 2025-08-03
 
