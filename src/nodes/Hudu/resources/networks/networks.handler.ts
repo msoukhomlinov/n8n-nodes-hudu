@@ -55,7 +55,7 @@ export async function handleNetworksOperation(
 
     case 'get': {
       const networkId = this.getNodeParameter('networkId', i) as string;
-      return await handleGetOperation.call(this, resourceEndpoint, networkId);
+      return await handleGetOperation.call(this, resourceEndpoint, networkId, 'network');
     }
 
     case 'getAll': {

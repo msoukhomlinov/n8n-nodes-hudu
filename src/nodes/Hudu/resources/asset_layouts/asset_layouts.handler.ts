@@ -74,7 +74,7 @@ export async function handleAssetLayoutOperation(
 
       debugLog('[API_REQUEST] Getting asset layout', { id });
 
-      responseData = await handleGetOperation.call(this, resourceEndpoint, id);
+      responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'asset_layout');
 
       debugLog('[API_RESPONSE] Get asset layout response', responseData);
       break;

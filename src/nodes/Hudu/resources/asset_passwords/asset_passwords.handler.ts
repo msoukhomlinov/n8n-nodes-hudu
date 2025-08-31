@@ -67,7 +67,7 @@ export async function handleAssetPasswordOperation(
         if (!id) {
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
-        responseData = await handleGetOperation.call(this, resourceEndpoint, id);
+        responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'asset_password');
         break;
       }
 

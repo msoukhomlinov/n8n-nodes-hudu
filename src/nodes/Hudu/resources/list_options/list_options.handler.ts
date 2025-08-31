@@ -39,6 +39,7 @@ export async function handleListOptionsOperation(
           this,
           '/lists',
           listId,
+          'list',
         ) as IDataObject;
         
         if (DEBUG_CONFIG.RESOURCE_PROCESSING) {

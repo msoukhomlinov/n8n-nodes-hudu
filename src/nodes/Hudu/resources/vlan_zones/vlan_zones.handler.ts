@@ -131,7 +131,7 @@ export async function handleVlanZonesOperation(
         debugLog('[ResourceParams] VLAN Zone get parameters', { id });
       }
 
-      return await handleGetOperation.call(this, resourceEndpoint, id);
+      return await handleGetOperation.call(this, resourceEndpoint, id, 'vlan_zone');
     }
 
     case 'create': {

@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## [1.4.5] - 2025-08-31
+
+### Enhanced
+- **Articles**: Added optional markdown content conversion for `Get` and `Get Many` operations with a user-controlled boolean toggle (default: off). When enabled, returns both original HTML content and a new `markdown_content` field, perfect for AI tooling workflows.
+
+### Fixed
+- **All Resources**: Fixed `Get` operation response unwrapping issue across all 20+ resources (Articles, Companies, Assets, Procedures, Websites, Users, Networks, Folders, Groups, Asset Passwords, Asset Layouts, Password Folders, Procedure Tasks, Rack Storages, Rack Storage Items, VLANs, VLAN Zones, Lists, List Options, Asset Layout Fields) where individual item responses were wrapped in resource-specific containers (e.g., `{ articles: [...] }`, `{ companies: [...] }`) instead of returning the data directly. Updated 32 files total including core operations and option loaders to ensure consistency with `Get Many` operations and provide uniform response handling across the entire node. Additionally fixed single-item GET operations to return the object directly instead of wrapping it in an array. 
+
+
+
 ## [1.4.4] - 2025-08-14
 
 ### Enhanced
