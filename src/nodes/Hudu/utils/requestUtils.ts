@@ -443,7 +443,10 @@ export async function handleListing<T extends IDataObject>(
 
   // Check if this resource supports pagination
   const resourcePath = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-  const supportsPagination = RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any);
+  // Handle dynamic nested endpoints like companies/{id}/assets where pagination is supported
+  const supportsPagination =
+    RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any) ||
+    (resourcePath.startsWith('companies/') && resourcePath.endsWith('/assets'));
 
   // Keep fetching until we have enough filtered results or no more data
   while (hasMore) {
@@ -512,4 +515,4 @@ export async function handleListing<T extends IDataObject>(
   }
 
   return filteredResults;
-} 
+}

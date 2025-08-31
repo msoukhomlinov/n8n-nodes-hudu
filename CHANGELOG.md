@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **All Resources**: Fixed `Get` operation response unwrapping issue across all 20+ resources (Articles, Companies, Assets, Procedures, Websites, Users, Networks, Folders, Groups, Asset Passwords, Asset Layouts, Password Folders, Procedure Tasks, Rack Storages, Rack Storage Items, VLANs, VLAN Zones, Lists, List Options, Asset Layout Fields) where individual item responses were wrapped in resource-specific containers (e.g., `{ articles: [...] }`, `{ companies: [...] }`) instead of returning the data directly. Updated 32 files total including core operations and option loaders to ensure consistency with `Get Many` operations and provide uniform response handling across the entire node. Additionally fixed single-item GET operations to return the object directly instead of wrapping it in an array. 
+- **Pagination**: Correctly detect and paginate nested endpoint `companies/{id}/assets` so `Return All` and `Limit` behave as expected for company-scoped assets.
+- **UI Text**: Cleaned up minor UI strings for consistency: normalized Articles filter label to "Folder ID" and removed emoji from IP Addresses "Get Many" description.
+- **Metadata**: Corrected Codex JSON node identifier to `n8n-nodes-hudu.hudu`.
 
 
 ## [1.4.4] - 2025-08-14

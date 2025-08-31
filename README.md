@@ -35,6 +35,7 @@ To use this node, you need to:
 - Debug logging for troubleshooting
 - Central request sanitisation (omits empty optionals to prevent API 500s)
 - Resource-specific update collections across all resources
+- Optional article markdown conversion (HTML to Markdown) for Articles get/get many
 
 ## Supported Resources & Operations
 
@@ -49,6 +50,7 @@ To use this node, you need to:
 - Create, update, archive, unarchive, delete, and retrieve articles
 - List all articles with comprehensive filtering (company, draft, sharing, folder, name, fuzzy search, updated date range)
 - Get article version history
+- Include Markdown Content toggle to return `markdown_content` alongside original HTML
 
 ### Asset
 - **Manage core asset lifecycle & properties**: Create, retrieve, update core details, archive, unarchive, move layout, and delete assets
