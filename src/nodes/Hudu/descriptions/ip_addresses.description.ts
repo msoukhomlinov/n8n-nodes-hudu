@@ -33,7 +33,7 @@ export const ipAddressOperations: INodeProperties[] = [
       {
         name: 'Get Many',
         value: 'getAll',
-        description: '⚠️ Get many IP addresses (no pagination support - may return large datasets)',
+        description: 'Get many IP addresses (no pagination support - may return large datasets)',
         action: 'Get many IP addresses',
       },
       {

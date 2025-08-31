@@ -511,7 +511,7 @@ export const articlesFields: INodeProperties[] = [
         description: 'Whether to filter by shareable articles',
       },
       {
-        displayName: 'Folder ID 🐌',
+        displayName: 'Folder ID',
         name: 'folder_id',
         type: 'number',
         default: undefined,
