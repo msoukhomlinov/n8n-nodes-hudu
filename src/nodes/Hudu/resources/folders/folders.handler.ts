@@ -55,7 +55,7 @@ export async function handleFolderOperation(
 
     case 'get': {
       const folderId = this.getNodeParameter('folderId', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, folderId);
+      responseData = await handleGetOperation.call(this, resourceEndpoint, folderId, 'folder');
       break;
     }
 
@@ -109,7 +109,7 @@ export async function handleFolderOperation(
       
       // Recursively get all folders in the path
       while (currentFolderId) {
-        const folderData = await handleGetOperation.call(this, resourceEndpoint, currentFolderId) as IDataObject;
+        const folderData = await handleGetOperation.call(this, resourceEndpoint, currentFolderId, 'folder') as IDataObject;
         const folder = folderData.folder as IFolder;
         folders.unshift(folder); // Add to start of array to maintain correct order
         currentFolderId = folder.parent_folder_id ? folder.parent_folder_id.toString() : null;

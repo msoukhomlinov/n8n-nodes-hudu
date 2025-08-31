@@ -11,6 +11,7 @@ import type { ArticlesOperation } from './articles.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
 import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { processArticleContent, processArticlesContent } from '../../utils/markdownUtils';
 
 export async function handleArticlesOperation(
   this: IExecuteFunctions,
@@ -84,11 +85,20 @@ export async function handleArticlesOperation(
 
     case 'get': {
       const articleId = this.getNodeParameter('articleId', i) as string;
+      const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+
       responseData = await handleGetOperation.call(
         this,
         resourceEndpoint,
         articleId,
+        'article',
       );
+
+      // Process markdown content if requested
+      if (includeMarkdownContent && responseData && typeof responseData === 'object') {
+        responseData = processArticleContent(responseData, true);
+      }
+
       break;
     }
 
@@ -96,6 +106,7 @@ export async function handleArticlesOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+      const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
 
       // Validate company_id if provided in filters
       if (filters.company_id) {
@@ -148,6 +159,12 @@ export async function handleArticlesOperation(
         returnAll,
         limit,
       );
+
+      // Process markdown content if requested
+      if (includeMarkdownContent && responseData && Array.isArray(responseData)) {
+        responseData = processArticlesContent(responseData, true);
+      }
+
       break;
     }
 
