@@ -83,6 +83,21 @@ export const articlesFields: INodeProperties[] = [
     description: 'The unique ID of the article',
   },
 
+  // Include Markdown Content option for get operation
+  {
+    displayName: 'Include Markdown Content',
+    name: 'includeMarkdownContent',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+      },
+    },
+    default: false,
+    description: 'Whether to include the article content converted to markdown format. Useful for AI tooling and text processing workflows.',
+  },
+
   // Optional filters for getVersionHistory operation
   {
     displayName: 'Filters',
@@ -377,6 +392,21 @@ export const articlesFields: INodeProperties[] = [
     description: 'Max number of results to return',
   },
 
+  // Include Markdown Content option for getAll operation
+  {
+    displayName: 'Include Markdown Content',
+    name: 'includeMarkdownContent',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+      },
+    },
+    default: false,
+    description: 'Whether to include article content converted to markdown format for each article. Useful for AI tooling and text processing workflows.',
+  },
+
   // Additional Fields for Create and Update operations
   {
     displayName: 'Article Update Fields',
@@ -481,7 +511,7 @@ export const articlesFields: INodeProperties[] = [
         description: 'Whether to filter by shareable articles',
       },
       {
-        displayName: 'Folder ID 🐌',
+        displayName: 'Folder ID',
         name: 'folder_id',
         type: 'number',
         default: undefined,

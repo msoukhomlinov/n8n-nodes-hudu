@@ -95,7 +95,7 @@ export async function handleWebsitesOperation(
         debugLog('[ResourceParams] Websites get parameters', { id });
       }
       
-      return await handleGetOperation.call(this, resourceEndpoint, id);
+      return await handleGetOperation.call(this, resourceEndpoint, id, 'website');
     }
 
     case 'create': {

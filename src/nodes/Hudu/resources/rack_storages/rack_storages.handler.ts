@@ -78,7 +78,7 @@ export async function handleRackStorageOperation(
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      return await handleGetOperation.call(this, resourceEndpoint, id);
+      return await handleGetOperation.call(this, resourceEndpoint, id, 'rack_storage');
     }
 
     case 'create': {

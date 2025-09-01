@@ -16,7 +16,7 @@ export async function handlePasswordFoldersOperation(
   switch (operation) {
     case 'get': {
       const folderId = this.getNodeParameter('id', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, folderId);
+      responseData = await handleGetOperation.call(this, resourceEndpoint, folderId, 'password_folder');
       break;
     }
 

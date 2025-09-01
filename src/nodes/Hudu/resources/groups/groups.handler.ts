@@ -33,7 +33,7 @@ export async function handleGroupsOperation(
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, id);
+      responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'group');
       break;
     }
   }

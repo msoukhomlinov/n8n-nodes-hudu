@@ -60,6 +60,7 @@ async function getFieldTypeAndOptions(
 						this,
 						'/lists',
 						listId,
+						'list',
 					);
 
 					let listItems: IDataObject[] = [];

@@ -6,6 +6,7 @@ export async function handleGetOperation(
   this: IExecuteFunctions | ILoadOptionsFunctions,
   resourceEndpoint: string,
   id: string | number,
+  resourceName?: string,
 ): Promise<IDataObject | IDataObject[]> {
   if (DEBUG_CONFIG.OPERATION_GET) {
     debugLog('Get Operation - Input', {
@@ -18,10 +19,18 @@ export async function handleGetOperation(
     this,
     'GET',
     `${resourceEndpoint}/${id}`,
+    {},
+    {},
+    resourceName,
   );
 
   if (DEBUG_CONFIG.OPERATION_GET) {
     debugLog('Get Operation - Response', response);
+  }
+
+  // For GET operations, if we get an array with a single item, return the item directly
+  if (Array.isArray(response) && response.length === 1) {
+    return response[0];
   }
 
   return response;

@@ -42,7 +42,7 @@ export async function handleProcedureTasksOperation(
 
     case 'get': {
       const taskId = this.getNodeParameter('taskId', i) as string;
-      return await handleGetOperation.call(this, resourceEndpoint, taskId);
+      return await handleGetOperation.call(this, resourceEndpoint, taskId, 'procedure_task');
     }
 
     case 'getAll': {

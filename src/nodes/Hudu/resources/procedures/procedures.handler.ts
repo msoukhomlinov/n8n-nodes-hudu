@@ -46,7 +46,7 @@ export async function handleProceduresOperation(
 
     case 'get': {
       const procedureId = this.getNodeParameter('id', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, procedureId);
+      responseData = await handleGetOperation.call(this, resourceEndpoint, procedureId, 'procedure');
       break;
     }
 
