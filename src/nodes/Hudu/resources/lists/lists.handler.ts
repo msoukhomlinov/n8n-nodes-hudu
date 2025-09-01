@@ -50,6 +50,7 @@ export async function handleListsOperation(
         this,
         resourceEndpoint,
         listId,
+        'list',
       );
       break;
     }

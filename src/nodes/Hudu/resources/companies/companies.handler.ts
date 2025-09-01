@@ -60,7 +60,7 @@ export async function handleCompaniesOperation(
         this.getNode(),
         'Company ID'
       );
-      responseData = await handleGetOperation.call(this, resourceEndpoint, companyId.toString());
+      responseData = await handleGetOperation.call(this, resourceEndpoint, companyId.toString(), 'company');
       break;
     }
 

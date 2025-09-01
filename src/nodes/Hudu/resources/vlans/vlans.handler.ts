@@ -133,7 +133,7 @@ export async function handleVlansOperation(
         debugLog('[ResourceParams] VLAN get parameters', { id });
       }
       
-      return await handleGetOperation.call(this, resourceEndpoint, id);
+      return await handleGetOperation.call(this, resourceEndpoint, id, 'vlan');
     }
 
     case 'create': {

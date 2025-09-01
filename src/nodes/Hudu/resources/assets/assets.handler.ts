@@ -64,7 +64,7 @@ export async function handleAssetsOperation(
       }
 
       // Fetch layout fields for validation of custom fields
-      const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(layoutId)) as IDataObject;
+      const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(layoutId), 'asset_layout') as IDataObject;
 
       const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] } | undefined;
         
@@ -235,7 +235,7 @@ export async function handleAssetsOperation(
         const assetMeta = await getAssetWithMetadata(this, Number(assetId), i);
         
         // Fetch layout fields for efficient validation
-        const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(assetMeta.assetLayoutId)) as IDataObject;
+        const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(assetMeta.assetLayoutId), 'asset_layout') as IDataObject;
         const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] } | undefined;
 
         if (!layout || !Array.isArray(layout.fields)) {

@@ -17,7 +17,7 @@ export async function handleAssetLayoutFieldOperation(
 	let responseData: IDataObject | IDataObject[] | INodeExecutionData[] = {};
 
 	debugLog('[API_REQUEST] Getting asset layout to operate on its fields', { assetLayoutId });
-	const assetLayout = (await handleGetOperation.call(this, '/asset_layouts', assetLayoutId)) as { asset_layout: { fields: IAssetLayoutFieldEntity[] }};
+	const assetLayout = (await handleGetOperation.call(this, '/asset_layouts', assetLayoutId, 'asset_layout')) as { asset_layout: { fields: IAssetLayoutFieldEntity[] }};
 	const fields = (assetLayout.asset_layout.fields || []) as IAssetLayoutFieldEntity[];
 	debugLog('[RESOURCE_PARAMS] Retrieved asset layout fields', fields);
 

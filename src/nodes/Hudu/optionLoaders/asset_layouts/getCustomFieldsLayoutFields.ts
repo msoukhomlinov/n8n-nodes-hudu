@@ -35,7 +35,7 @@ export async function getCustomFieldsLayoutFields(
 
 		// Fetch the layout details
 		debugLog('[ASSET_OPTIONS] Fetching layout details for ID:', layoutId);
-		const response = await handleGetOperation.call(this, '/asset_layouts', layoutId);
+		const response = await handleGetOperation.call(this, '/asset_layouts', layoutId, 'asset_layout');
 		const layout = response as unknown as IAssetLayoutResponse;
 		debugLog('[ASSET_OPTIONS] Layout response:', layout);
 		
