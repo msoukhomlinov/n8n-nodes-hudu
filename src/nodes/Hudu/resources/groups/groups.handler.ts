@@ -19,11 +19,11 @@ export async function handleGroupsOperation(
 
       const qs: IDataObject = { ...filters };
 
-      // API returns an array directly (no wrapper key)
+      // API returns groups wrapped in { "groups": [...] }
       responseData = await handleGetAllOperation.call(
         this,
         resourceEndpoint,
-        undefined,
+        'groups',
         qs,
         returnAll,
         limit,

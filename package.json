@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-hudu",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "This n8n custom node facilitates integration with Hudu's API.",
   "keywords": [
     "n8n-community-node-package",
@@ -49,14 +49,9 @@
     "n8n": ">=1.69.2"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.35",
-    "@types/diff": "^7.0.0",
     "@types/express": "^4.17.6",
-    "@types/got": "^9.6.12",
-    "@types/lodash": "^4.17.14",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.17.50",
-    "@types/node-fetch": "^2.6.11",
     "@types/request-promise-native": "~1.0.15",
     "@types/turndown": "^5.0.5",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
@@ -65,23 +60,16 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
     "eslint-plugin-prettier": "^4.2.1",
-    "got": "^14.4.5",
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "jsonc-eslint-parser": "^2.4.0",
     "n8n-core": "^1.69.2",
     "n8n-workflow": "^1.69.2",
-    "node-fetch": "^2.7.0",
     "prettier": "^2.7.1",
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "cheerio": "^1.0.0",
-    "diff": "^5.1.0",
-    "html-entities": "^2.5.2",
-    "lodash": "^4.17.21",
     "luxon": "^3.4.4",
-    "parse5": "^7.1.2",
     "turndown": "^7.2.1"
   }
 }
