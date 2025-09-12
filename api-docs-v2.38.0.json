@@ -435,6 +435,12 @@
             "description": "Filter by URL slug"
           },
           {
+            "name": "active",
+            "type": "boolean",
+            "in": "query",
+            "description": "If true, the Asset Layout is active"
+          },
+          {
             "name": "updated_at",
             "type": "string",
             "in": "query",
@@ -455,7 +461,8 @@
             }
           },
           "401": { "description": "Unauthorized" },
-          "404": { "description": "Not Found" }
+          "404": { "description": "Not Found" },
+          "422": { "description": "Unable to process request" }
         },
         "description": "Retrieve a list of available Asset Layouts."
       },
@@ -543,6 +550,7 @@
                     {
                       "label": "Another-field-name-here E.g. Brand",
                       "field_type": "ListSelect",
+                      "list_id": 1,
                       "required": false,
                       "show_in_list": false,
                       "multiple_options": true,
@@ -689,6 +697,7 @@
                       "id": 2,
                       "label": "Another-field-name-here E.g. Brand",
                       "field_type": "Another-type-of-field E.g. ListSelect",
+                      "list_id": 1,
                       "required": false,
                       "show_in_list": false,
                       "multiple_options": true,
@@ -1183,7 +1192,7 @@
             "name": "asset",
             "in": "body",
             "required": true,
-            "description": "Create a new asset with the specified information. Asset data should be sent in the body of the request in JSON format.\n\nNOTE: to create fields you must use the 'custom_fields' key. Then specify the label and value as a key pair.\nThe label must be in snake case (lowercase with underscores instead of spaces).\n\nThe system supports the following field types and formats:\n\n- Text fields: Simple string values (e.g., `{\"field_one\": \"Value One\"}`)\n- Date fields: Date string in YYYY/MM/DD format (e.g., `{\"due_date\": \"01/15/2024\"}`)\n- Checkbox fields: String boolean (e.g., `{\"is_active\": \"true\"}`)\n- Number fields: Numeric string (e.g., `{\"score\": \"5\"}`)\n- Address fields: Object with required address components\n(e.g., `{\"location\": {\"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\"}}`)\n- Asset tag fields: Array of asset IDs (e.g., `{\"related_assets\": [456, 789]}`)\n- List select fields: Array of item names (e.g., `{\"categories\": [\"Item 1\", \"Item 2\"]}`)",
+            "description": "Create a new asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a key-value pair, where the **key** must exactly match the name of the custom field you've created in your Asset Layout (converted to snake case: lowercase letters and underscores in place of spaces).\n\nExamples of custom field types and formats:\n\n* **Text fields:** A simple string value.\n  * Example: `{ \"your_custom_text_field\": \"Some text here\" }`\n\n* **Date fields:** Date formatted as YYYY/MM/DD.\n  * Example: `{ \"your_due_date\": \"2024/01/15\" }`\n\n* **Checkbox fields:** Boolean as a string (\"true\" or \"false\").\n  * Example: `{ \"is_active\": \"true\" }`\n\n* **Number fields:** Numeric value as a string.\n  * Example: `{ \"your_score\": \"5\" }`\n\n* **Address fields:** Object containing required address components.\n  * Example: `{ \"office_location\": { \"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\" } }`\n\n* **Asset tag fields:** Array of asset IDs.\n  * Example: `{ \"your_linked_assets\": [456, 789] }`\n\n* **List select fields:** Array of item names.\n  * Example: `{ \"your_categories\": [\"Item 1\", \"Item 2\"] }`\n\nReplace placeholder keys (like `your_custom_text_field`) with the exact name of your Asset Layout's custom fields.",
             "schema": {
               "type": "object",
               "example": {
@@ -1194,13 +1203,13 @@
                 "primary_model": "Model X",
                 "primary_manufacturer": "ACME Corp",
                 "custom_fields": [
-                  { "field_one": "Value One" },
-                  { "field_two": "Value Two" },
-                  { "due_date": "01/15/2024" },
+                  { "your_custom_text_field_one": "Some text here" },
+                  { "your_custom_text_field_two": "Other text here" },
+                  { "your_due_date": "01/15/2024" },
                   { "is_active": "true" },
-                  { "score": "5" },
+                  { "your_score": "5" },
                   {
-                    "location": {
+                    "office_location": {
                       "address_line_1": "123 Main St",
                       "city": "Denver",
                       "state": "CO",
@@ -1208,8 +1217,8 @@
                       "country_name": "USA"
                     }
                   },
-                  { "related_assets": [456, 789] },
-                  { "categories": ["Item 1", "Item 2"] }
+                  { "your_linked_assets": [456, 789] },
+                  { "your_categories": ["Item 1", "Item 2"] }
                 ]
               },
               "properties": {
@@ -1294,33 +1303,29 @@
             "name": "asset",
             "in": "body",
             "required": true,
-            "description": "Update the specified asset with new information. Asset data should be sent in the body of the request in JSON format.\n\nNOTE: to update fields you must use the 'custom_fields' key. Then specify the label and value as a key pair.\nThe label must be in snake case (lowercase with underscores instead of spaces).\n\nThe system supports the following field types and formats:\n\n- Text fields: Simple string values (e.g., `{\"field_one\": \"Value One\"}`)\n- Date fields: Date string in YYYY/MM/DD format (e.g., `{\"due_date\": \"01/15/2024\"}`)\n- Checkbox fields: String boolean (e.g., `{\"is_active\": \"true\"}`)\n- Number fields: Numeric string (e.g., `{\"score\": \"5\"}`)\n- Address fields: Object with required address components\n(e.g., `{\"location\": {\"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\"}}`)\n- Asset tag fields: Array of asset IDs (e.g., `{\"related_assets\": [456, 789]}`)\n- List select fields: Array of item names (e.g., `{\"categories\": [\"Item 1\", \"Item 2\"]}`)",
+            "description": "Update an existing asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `fields` key to specify values for the asset's custom fields. Each field must include the `asset_layout_field_id` (identifying the field in the layout) and a `value`.\n\nExamples of field types and formats:\n\n* **Text fields:** `{ \"asset_layout_field_id\": 456, \"value\": \"Some updated text\" }`\n* **Date fields:** `{ \"asset_layout_field_id\": 457, \"value\": \"2025/02/15\" }`\n* **Checkbox fields:** `{ \"asset_layout_field_id\": 458, \"value\": true }`\n* **Number fields:** `{ \"asset_layout_field_id\": 459, \"value\": 8 }`\n* **Asset tag fields:** `{ \"asset_layout_field_id\": 460, \"value\": [123, 456] }`\n* **List select fields:** `{ \"asset_layout_field_id\": 461, \"value\": [\"Item 2\", \"Item 3\"] }`",
             "schema": {
               "type": "object",
               "example": {
-                "name": "Updated Asset",
                 "asset_layout_id": 123,
+                "name": "Updated Asset",
                 "primary_serial": "SN789012",
                 "primary_mail": "updated@example.com",
                 "primary_model": "Model Y",
                 "primary_manufacturer": "ACME Corp",
-                "custom_fields": [
-                  { "field_one": "Updated Value" },
-                  { "field_two": "New Value" },
-                  { "due_date": "02/15/2024" },
-                  { "is_active": "false" },
-                  { "score": "8" },
+                "fields": [
                   {
-                    "location": {
-                      "address_line_1": "456 Oak St",
-                      "city": "Boulder",
-                      "state": "CO",
-                      "zip": "80301",
-                      "country_name": "USA"
-                    }
+                    "asset_layout_field_id": 456,
+                    "value": "Some updated text"
                   },
-                  { "related_assets": [123, 456] },
-                  { "categories": ["Item 2", "Item 3"] }
+                  { "asset_layout_field_id": 457, "value": "2025/02/15" },
+                  { "asset_layout_field_id": 458, "value": true },
+                  { "asset_layout_field_id": 459, "value": 8 },
+                  { "asset_layout_field_id": 460, "value": [123, 456] },
+                  {
+                    "asset_layout_field_id": 461,
+                    "value": ["Item 2", "Item 3"]
+                  }
                 ]
               }
             }
@@ -7540,7 +7545,7 @@
   "host": "hudu.yourserver.com",
   "info": {
     "title": "Hudu API Documentation",
-    "description": "\u003cp\u003eWelcome to the Hudu REST API documentation. The Hudu REST API enables seamless automation of your IT documentation. The API is organized into various resources, each with its own specific endpoint.\u003c/p\u003e \n\u003cp\u003eAll API requests require authentication using an API key. To obtain an API key, navigate to \u003cb\u003eHudu Admin\u003c/b\u003e → \u003cb\u003eBasic Information\u003c/b\u003e → \u003cb\u003eAPI Keys\u003c/b\u003e. Include the API key in your request headers as shown below:\u003c/p\u003e\n\u003cpre\u003ecurl https://[YOUR_DOMAIN]/api/v1/companies?page=1 -H \"x-api-key: YOUR_API_KEY_HERE\"\u003c/pre\u003e\n\u003cp\u003eYou can create and delete API keys at any time.\u003c/p\u003e\n\u003ch2\u003eScoping API Keys\u003c/h2\u003e\n\u003cp\u003eAPI keys can be configured with the following options:\u003c/p\u003e\n\u003cp\u003e1. Access to passwords (all REST actions)\u003cbr /\u003e 2. Ability to perform destructive actions (DELETE actions)\u003cbr /\u003e 3. Ability to perform exports\u003cbr /\u003e 4. Specify whitelisted IPs\u003cbr /\u003e 5. Specify company scopes\u003c/p\u003e\n\u003cp\u003eThese options can only be configured during the creation of the key.\u003c/p\u003e\n\u003cp\u003eWe recommend limiting access and providing only the required permissions for each application.\u003c/p\u003e\n\u003ch2\u003eFormat\u003c/h2\u003e\n\u003cp\u003eAll API requests must use JSON format, unless otherwise specified.\u003c/p\u003e\n\u003ch2\u003eNames in the API\u003c/h2\u003e\n\u003cp\u003eNote that some names in the API may differ from those in your Hudu application:\u003c/p\u003e\n\u003ctable\u003e \u003ctr\u003e\n    \u003ctd\u003eName in Hudu\u003c/td\u003e\n    \u003ctd\u003eName in API\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003eCompany (customizable)\u003c/td\u003e\n    \u003ctd\u003eCompany\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003ePassword\u003c/td\u003e\n    \u003ctd\u003eAssetPassword\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003eKnowledge Base Article\u003c/td\u003e\n    \u003ctd\u003eArticle\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003eProcess\u003c/td\u003e\n    \u003ctd\u003eProcedure\u003c/td\u003e\n\u003c/tr\u003e \u003c/table\u003e\n\u003ch2\u003ePagination\u003c/h2\u003e\n\u003cp\u003eAPI requests are paginated by default. To navigate between pages, simply add ?page=X to your request. Pagination is in sets of 25 results.\u003c/p\u003e\n\u003ch2\u003eRate Limiting\u003c/h2\u003e\n\u003cp\u003eThe rate limit is set at 300 requests per minute.\u003c/p\u003e \u0026copy; 2023 Hudu Technologies, Inc. All rights reserved.",
+    "description": "\u003ch1\u003eWelcome to the Hudu REST API\u003c/h1\u003e\n\u003cp\u003eThe Hudu REST API enables seamless automation of your IT documentation. It's organized into various resources, each with its own specific endpoint.\u003c/p\u003e\n\n\u003ch2\u003eAuthentication\u003c/h2\u003e\n\u003cp\u003eAll API requests require authentication using an API key. To obtain a key, go to \u003cstrong\u003eHudu Admin → Basic Information → API Keys\u003c/strong\u003e.\u003c/p\u003e\n\u003cp\u003eInclude your API key in the request header, like so:\u003c/p\u003e\n\u003cpre\u003e\u003ccode\u003ecurl https://[YOUR_DOMAIN]/api/v1/companies?page=1 \\\n  -H \"x-api-key: YOUR_API_KEY_HERE\"\u003c/code\u003e\u003c/pre\u003e\n\u003cp\u003eYou can create and delete API keys at any time.\u003c/p\u003e\n\n\u003ch2\u003eScoping API Keys\u003c/h2\u003e\n\u003cp\u003eWhen creating an API key, you can configure the following permissions:\u003c/p\u003e\n\u003cul\u003e\n  \u003cli\u003eAccess to passwords (all REST actions)\u003c/li\u003e\n  \u003cli\u003eDestructive actions (DELETE)\u003c/li\u003e\n  \u003cli\u003eExport capabilities\u003c/li\u003e\n  \u003cli\u003eWhitelisted IPs\u003c/li\u003e\n  \u003cli\u003eCompany-specific access\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003eWe recommend only granting the minimum required access for each application.\u003c/p\u003e\n\n\u003ch2\u003eFormat\u003c/h2\u003e\n\u003cp\u003eAll API requests must use \u003cstrong\u003eJSON\u003c/strong\u003e format unless otherwise specified.\u003c/p\u003e\n\n\u003ch2\u003eTerminology\u003c/h2\u003e\n\u003cp\u003eSome names in the API differ from those in the Hudu UI:\u003c/p\u003e\n\u003ctable\u003e\n  \u003cthead\u003e\n    \u003ctr\u003e\n      \u003cth\u003eName in Hudu\u003c/th\u003e\n      \u003cth\u003eName in API\u003c/th\u003e\n    \u003c/tr\u003e\n  \u003c/thead\u003e\n  \u003ctbody\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eCompany (customizable)\u003c/td\u003e\n      \u003ctd\u003eCompany\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003ePassword\u003c/td\u003e\n      \u003ctd\u003eAssetPassword\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eKnowledge Base Article\u003c/td\u003e\n      \u003ctd\u003eArticle\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eProcess\u003c/td\u003e\n      \u003ctd\u003eProcedure\u003c/td\u003e\n    \u003c/tr\u003e\n  \u003c/tbody\u003e\n\u003c/table\u003e\n\n\u003ch2\u003ePagination\u003c/h2\u003e\n\u003cp\u003eAll responses are paginated with 25 results per page. Use the \u003ccode\u003e?page=X\u003c/code\u003e query parameter to navigate.\u003c/p\u003e\n\n\u003ch2\u003eRate Limiting\u003c/h2\u003e\n\u003cp\u003eThe API supports up to \u003cstrong\u003e300 requests per minute\u003c/strong\u003e.\u003c/p\u003e\n\n\u003cp\u003e\u0026copy; 2023 Hudu Technologies, Inc. All rights reserved.\u003c/p\u003e",
     "version": "1.0",
     "x-copyright": "\u0026copy; 2023 Hudu Technologies, Inc. All rights reserved."
   }

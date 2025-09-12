@@ -22,7 +22,6 @@ import {
 import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layout_fields.types';
 import { isStandardField } from '../../utils/fieldTypeUtils';
 import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
-import { toSnakeCase } from '../../utils/formatters';
 
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
@@ -64,12 +63,16 @@ export async function handleAssetsOperation(
       }
 
       // Fetch layout fields for validation of custom fields
-      const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(layoutId), 'asset_layout') as IDataObject;
+      const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(layoutId)) as IDataObject;
 
-      const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] } | undefined;
+      if (!layoutResponse || !layoutResponse.asset_layout) {
+        throw new NodeOperationError(this.getNode(), `Asset layout with ID '${layoutId}' not found or inaccessible.`, { itemIndex: i });
+      }
+      
+      const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] };
         
-      if (!layout || !Array.isArray(layout.fields)) {
-        throw new NodeOperationError(this.getNode(), `Asset layout with ID '${layoutId}' not found or has no fields.`, { itemIndex: i });
+      if (!Array.isArray(layout.fields)) {
+        throw new NodeOperationError(this.getNode(), `Asset layout with ID '${layoutId}' has no fields.`, { itemIndex: i });
       }
       
       // Process each mapped field
@@ -88,9 +91,12 @@ export async function handleAssetsOperation(
             i
           );
           const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
-          const customFieldObject = { [toSnakeCase(fieldDef.label)]: transformedValue };
-          customFields.push(customFieldObject);
-          debugLog('[RESOURCE_PROCESSING] Mapped custom field', { fieldId, fieldLabel: fieldDef.label, field: customFieldObject });
+          const fieldObject = { 
+            asset_layout_field_id: Number(fieldId), 
+            value: transformedValue 
+          };
+          customFields.push(fieldObject);
+          debugLog('[RESOURCE_PROCESSING] Mapped field', { fieldId, fieldLabel: fieldDef.label, field: fieldObject });
         }
       }
 
@@ -99,7 +105,7 @@ export async function handleAssetsOperation(
       }
       
       if (customFields.length > 0) {
-        body.custom_fields = customFields;
+        body.fields = customFields;
       }
 
       debugLog('[API_REQUEST] Creating asset with body', body);
@@ -235,11 +241,16 @@ export async function handleAssetsOperation(
         const assetMeta = await getAssetWithMetadata(this, Number(assetId), i);
         
         // Fetch layout fields for efficient validation
-        const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(assetMeta.assetLayoutId), 'asset_layout') as IDataObject;
-        const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] } | undefined;
-
-        if (!layout || !Array.isArray(layout.fields)) {
-          throw new NodeOperationError(this.getNode(), `Asset layout with ID '${assetMeta.assetLayoutId}' not found or has no fields.`, { itemIndex: i });
+        const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(assetMeta.assetLayoutId)) as IDataObject;
+        
+        if (!layoutResponse || !layoutResponse.asset_layout) {
+          throw new NodeOperationError(this.getNode(), `Asset layout with ID '${assetMeta.assetLayoutId}' not found or inaccessible.`, { itemIndex: i });
+        }
+        
+        const layout = layoutResponse.asset_layout as { fields: IAssetLayoutFieldEntity[] };
+        
+        if (!Array.isArray(layout.fields)) {
+          throw new NodeOperationError(this.getNode(), `Asset layout with ID '${assetMeta.assetLayoutId}' has no fields.`, { itemIndex: i });
         }
         
         const updatePayload: IDataObject = {};
@@ -258,8 +269,11 @@ export async function handleAssetsOperation(
                 i
               );
               const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
-              const customFieldObject = { [toSnakeCase(fieldDef.label)]: transformedValue };
-              customUpdateFields.push(customFieldObject);
+              const fieldObject = { 
+                asset_layout_field_id: Number(fieldId), 
+                value: transformedValue 
+              };
+              customUpdateFields.push(fieldObject);
             } catch (error) {
               debugLog(`[RESOURCE_VALIDATION] Error validating field id '${fieldId}' for update.`, { error: (error as Error).message });
             }
@@ -267,7 +281,7 @@ export async function handleAssetsOperation(
         }
         
         if (customUpdateFields.length > 0) {
-          updatePayload.custom_fields = customUpdateFields;
+          updatePayload.fields = customUpdateFields;
         }
 
         // Always include name and asset_layout_id, but don't overwrite name if it was provided

@@ -108,13 +108,19 @@ export const assetLayoutFields: INodeProperties[] = [
     },
     options: [
       {
+        displayName: 'Active',
+        name: 'active',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to filter for active Asset Layouts only',
+      },
+      {
         displayName: 'Name',
         name: 'name',
         type: 'string',
         default: '',
         description: 'Filter by the name of the Asset Layout',
       },
-      
       {
         displayName: 'Updated At',
         name: 'updated_at',
@@ -316,6 +322,13 @@ export const assetLayoutFields: INodeProperties[] = [
       },
     },
     options: [
+      {
+        displayName: 'Active',
+        name: 'active',
+        type: 'boolean',
+        default: true,
+        description: 'Whether the Asset Layout is active',
+      },
       {
         displayName: 'Color',
         name: 'color',

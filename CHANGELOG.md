@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## [1.4.6] - 2025-09-12
+
+### Improved
+- **Dependencies**: Removed 5 unused production dependencies (`cheerio`, `diff`, `html-entities`, `lodash`, `parse5`) and 7 corresponding dev dependencies
+- **API Compliance**: Updated schema definitions to fully align with Hudu API v2.38.0:
+  - **Groups**: Enhanced `Group` interface with new fields (`slug`, `url`, `created_at`, `updated_at`, `member_count`) and made `default` and `members` required
+  - **Groups**: Updated `GroupMember` interface with proper v2.38.0 structure (`first_name`, `last_name`, `security_level`, `slug`), removed deprecated `name` field, and made `email` required
+  - **Password Folders**: Updated `IPasswordFolder` interface to make `security` and `allowed_groups` fields required (matching API v2.38.0 response structure)
+
+### Fixed
+- **Assets**: Fixed "Asset layout with ID 'X' not found or has no fields" error during asset update operations caused by incorrect resource name parameter in layout validation requests
+- **Groups**: Fixed "Get Many" operation response wrapping issue where results were double-wrapped instead of returning the groups array directly
+
+
 ## [1.4.5] - 2025-08-31
 
 ### Enhanced
