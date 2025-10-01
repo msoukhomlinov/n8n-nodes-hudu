@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.4.7] - 2025-10-01
+
+### Improved
+- **AddressData Fields**: Enhanced address field input to accept CSV format for easier data entry. You can now input addresses as comma-separated values (e.g., "123 Main St, Suite 100, Sydney, NSW, 2000, AU") in addition to JSON objects. The order is: address_line_1, address_line_2, city, state, zip, country_name. Changed field type from 'object' to 'string' to allow direct CSV string input. **Note:** country_name must use ISO 3166-1 alpha-2 codes (2-letter codes like AU, US, GB), and state should use ISO 3166-2 subdivision codes (e.g., NSW, CO, CA)
+
+### Fixed
+- **Asset Layout Fields**: Fixed "Cannot read properties of undefined (reading 'fields')" error in "Get Many" operation caused by incorrect response unwrapping when calling `handleGetOperation` with the `resourceName` parameter. This affected three files:
+  - `asset_layout_fields.handler.ts` - Main handler for all Asset Layout Field operations (Get, Get Many, Create, Update, Delete)
+  - `getAssetLayoutFieldValues.ts` - Option loader for field value dropdowns
+  - `getCustomFieldsLayoutFields.ts` - Option loader for custom asset tag fields
+
+
 ## [1.4.6] - 2025-09-12
 
 ### Improved

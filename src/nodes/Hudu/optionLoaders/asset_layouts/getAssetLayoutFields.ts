@@ -93,7 +93,9 @@ async function getFieldTypeAndOptions(
 			return { type: 'string' };
 		}
 		case ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA:
-			return { type: 'object' };
+			// Return 'string' type to allow CSV input: line1, line2, city, state, zip, country
+			// Parser in assetFieldUtils.ts handles both CSV and JSON object formats
+			return { type: 'string' };
 		case ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG:
 		case ASSET_LAYOUT_FIELD_TYPES.PASSWORD:
 		case ASSET_LAYOUT_FIELD_TYPES.TEXT:
@@ -180,13 +182,15 @@ async function getLayoutFields(
 				const { type, options } = await getFieldTypeAndOptions.call(this, field.field_type, field);
 				debugLog('[RESOURCE_MAPPING] getFieldTypeAndOptions returned:', { id: field.id, label: field.label, type, options: options ? `${options.length} options` : 'none' });
 				let displayName = `${field.label} (${field.field_type})${!layout.asset_layout.active ? ' [Archived Layout]' : ''}`;
+				
 				if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.ASSET_TAG || field.field_type === ASSET_LAYOUT_FIELD_TYPES.RELATION) {
 					displayName += ' - Use comma-separated IDs';
 				} else if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT && (field as IDataObject).multiple_options == true) {
 					displayName += ' - Use comma-separated values for multiple options';
-				} else if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA) {
-					displayName += ' - Address object: address_line_1, address_line_2, city, state, zip, country_name (ISO alpha-2, e.g., AU), state uses region code (e.g., NSW)';
-				}
+			} else if (field.field_type === ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA) {
+				displayName += ' - CSV: line1, line2, city, state, zip, country_code (ISO alpha-2, e.g., AU, US) or JSON';
+			}
+				
 				return {
 					id: field.id.toString(),
 					displayName: displayName,

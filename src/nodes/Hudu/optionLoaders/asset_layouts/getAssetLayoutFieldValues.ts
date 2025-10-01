@@ -15,7 +15,7 @@ export async function getAssetLayoutFieldValues(
 
 		// Fetch the layout details
 		const layout = await handleGetOperation.call(this, '/asset_layouts', layoutId, 'asset_layout');
-		const fields = (layout as { asset_layout: { fields: IAssetLayoutFieldEntity[] } }).asset_layout.fields || [];
+		const fields = (layout as { fields: IAssetLayoutFieldEntity[] }).fields || [];
 		const field = fields.find((f) => f.id === Number.parseInt(fieldId, 10));
 
 		if (!field) {

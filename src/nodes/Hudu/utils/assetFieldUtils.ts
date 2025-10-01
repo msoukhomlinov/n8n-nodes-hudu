@@ -392,14 +392,12 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
           const normalisedKey = candidateMap[key] || key;
           let strVal = getStr(val).trim();
           if (strVal === '') continue;
-          if (normalisedKey === 'country_name') {
-            // Prefer ISO codes; upper-case short codes like 'au' -> 'AU'. Leave longer names as-is.
+          // Hudu API requires ISO alpha-2 codes (2-character country/state codes)
+          // - country_name: ISO 3166-1 alpha-2 (e.g., 'AU', 'US', 'GB')
+          // - state: ISO 3166-2 subdivision codes (e.g., 'NSW', 'CO', 'CA')
+          // Upper-case short codes for consistency
+          if (normalisedKey === 'country_name' || normalisedKey === 'state') {
             if (/^[a-z]{2,3}$/i.test(strVal)) {
-              strVal = strVal.toUpperCase();
-            }
-          } else if (normalisedKey === 'state') {
-            // Upper-case common subdivision codes like 'nsw' -> 'NSW'
-            if (/^[a-z\-]{2,10}$/i.test(strVal)) {
               strVal = strVal.toUpperCase();
             }
           }
@@ -409,6 +407,7 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
         return out;
       }
       if (typeof value === 'string') {
+        // Try JSON first
         try {
           const parsed = JSON.parse(value);
           if (typeof parsed === 'object' && parsed !== null) {
@@ -416,11 +415,33 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
             debugLog('[RESOURCE_TRANSFORM] Parsed JSON string for Address field', { original: value, parsed });
             return transformFieldValueForUpdate(parsed, ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA);
           }
-        } catch (error) {
-          throw new Error(`Invalid JSON for Address field: ${value}. Please provide a valid JSON object string. Error: ${(error as Error).message}`);
+        } catch (jsonError) {
+          // Not JSON, try CSV format: address_line_1, address_line_2, city, state, zip, country_name
+          const csvParts = value.split(',').map(part => part.trim());
+          
+          if (csvParts.length >= 1 && csvParts.length <= 6) {
+            const out: IDataObject = {};
+            
+            // Map CSV parts to address fields in order
+            // Expected order: address_line_1, address_line_2, city, state, zip, country_name
+            if (csvParts[0]) out.address_line_1 = csvParts[0];
+            if (csvParts.length > 1 && csvParts[1]) out.address_line_2 = csvParts[1];
+            if (csvParts.length > 2 && csvParts[2]) out.city = csvParts[2];
+            if (csvParts.length > 3 && csvParts[3]) out.state = csvParts[3];
+            if (csvParts.length > 4 && csvParts[4]) out.zip = csvParts[4];
+            if (csvParts.length > 5 && csvParts[5]) out.country_name = csvParts[5];
+            
+            // Only return if we have at least one field
+            if (Object.keys(out).length > 0) {
+              debugLog('[RESOURCE_TRANSFORM] Parsed CSV string for Address field', { original: value, parsed: out });
+              return out;
+            }
+          }
+          
+          throw new Error(`Invalid address format: "${value}". Expected either:\n- JSON object: {"address_line_1":"...","city":"..."}\n- CSV format: address_line_1, address_line_2, city, state, zip, country_name (up to 6 comma-separated values)`);
         }
       }
-      throw new Error(`Invalid value for Address field: ${value}. Expected an address object or JSON string.`);
+      throw new Error(`Invalid value for Address field: ${value}. Expected an address object, JSON string, or CSV string.`);
 
     case ASSET_LAYOUT_FIELD_TYPES.EMAIL:
     case ASSET_LAYOUT_FIELD_TYPES.PHONE:

@@ -11,10 +11,6 @@ interface IAssetLayout {
 	fields: IAssetLayoutFieldEntity[];
 }
 
-interface IAssetLayoutResponse {
-	asset_layout: IAssetLayout;
-}
-
 export async function getCustomFieldsLayoutFields(
 	this: ILoadOptionsFunctions,
 ): Promise<INodePropertyOptions[]> {
@@ -33,20 +29,20 @@ export async function getCustomFieldsLayoutFields(
 			return [];
 		}
 
-		// Fetch the layout details
-		debugLog('[ASSET_OPTIONS] Fetching layout details for ID:', layoutId);
-		const response = await handleGetOperation.call(this, '/asset_layouts', layoutId, 'asset_layout');
-		const layout = response as unknown as IAssetLayoutResponse;
-		debugLog('[ASSET_OPTIONS] Layout response:', layout);
-		
-		// Check if layout exists
-		if (!layout || !layout.asset_layout) {
-			debugLog('[ASSET_OPTIONS] Layout not found or inaccessible');
-			throw new NodeOperationError(this.getNode(), 'Asset layout not found or inaccessible');
-		}
+	// Fetch the layout details
+	debugLog('[ASSET_OPTIONS] Fetching layout details for ID:', layoutId);
+	const response = await handleGetOperation.call(this, '/asset_layouts', layoutId, 'asset_layout');
+	const layout = response as unknown as IAssetLayout;
+	debugLog('[ASSET_OPTIONS] Layout response:', layout);
+	
+	// Check if layout exists
+	if (!layout || !layout.fields) {
+		debugLog('[ASSET_OPTIONS] Layout not found or inaccessible');
+		throw new NodeOperationError(this.getNode(), 'Asset layout not found or inaccessible');
+	}
 
-		const layoutData = layout.asset_layout;
-		const fields = layoutData.fields || [];
+	const layoutData = layout;
+	const fields = layoutData.fields || [];
 		debugLog('[ASSET_OPTIONS] Found fields:', fields);
 
 		// If no fields are found
