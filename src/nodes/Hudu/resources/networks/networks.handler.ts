@@ -23,7 +23,11 @@ export async function handleNetworksOperation(
       const body: IDataObject = {
         name: this.getNodeParameter('name', i) as string,
         address: this.getNodeParameter('address', i) as string,
-        network_type: this.getNodeParameter('network_type', i) as number,
+        company_id: validateCompanyId(
+          this.getNodeParameter('company_id', i),
+          this.getNode(),
+          'Company ID',
+        ),
       };
 
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
@@ -31,9 +35,7 @@ export async function handleNetworksOperation(
       // Only add non-empty additional fields
       for (const [key, value] of Object.entries(additionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          if (key === 'company_id') {
-            body[key] = Number.parseInt(value as string, 10);
-          } else if (key === 'vlan_id') {
+          if (key === 'vlan_id') {
             const v = String(value).trim();
             if (v !== '' && !Number.isNaN(Number.parseInt(v, 10))) {
               body[key] = Number.parseInt(v, 10);

@@ -654,33 +654,4 @@ export const companiesFields: INodeProperties[] = [
       },
     },
   },
-  {
-    displayName: 'Additional Fields',
-    name: 'additionalFields',
-    type: 'collection',
-    placeholder: 'Add Field',
-    default: {},
-    displayOptions: {
-      show: {
-        resource: ['companies'],
-        operation: ['jump'],
-      },
-    },
-    options: [
-      {
-        displayName: 'Integration ID',
-        name: 'integrationId',
-        type: 'string',
-        default: '',
-        description: 'ID in the external integration',
-      },
-      {
-        displayName: 'Integration Identifier',
-        name: 'integrationIdentifier',
-        type: 'string',
-        default: '',
-        description: 'Identifier in the external integration (used if Integration ID is not set)',
-      },
-    ],
-  },
 ];

@@ -93,6 +93,14 @@ export const vlansFields: INodeProperties[] = [
     },
     options: [
       {
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description:
+          'Whether to filter by archived status (true = archived only, false = active only)',
+      },
+      {
         displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
@@ -118,6 +126,20 @@ export const vlansFields: INodeProperties[] = [
         type: 'number',
         default: 0,
         description: 'Filter by VLAN numeric ID',
+      },
+      {
+        displayName: 'VLAN Zone Name or ID',
+        name: 'vlan_zone_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getVlanZones',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description:
+          'Filter by VLAN Zone. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },
@@ -195,6 +217,13 @@ export const vlansFields: INodeProperties[] = [
       },
     },
     options: [
+      {
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the VLAN is archived (true) or active (false)',
+      },
       {
         displayName: 'Description',
         name: 'description',
@@ -278,6 +307,20 @@ export const vlansFields: INodeProperties[] = [
         type: 'boolean',
         default: false,
         description: 'Whether the VLAN is archived (set to true to archive, false to activate)',
+      },
+      {
+        displayName: 'Company Name or ID',
+        name: 'company_id',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getCompanies',
+          loadOptionsParameters: {
+            includeBlank: true,
+          },
+        },
+        default: '',
+        description:
+          'Change VLAN company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',

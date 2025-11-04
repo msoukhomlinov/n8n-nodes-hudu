@@ -58,6 +58,7 @@ export async function handleAssetLayoutFieldOperation(
 
 			if (newField.field_type !== 'ListSelect') {
 				delete newField.list_id;
+				delete newField.multiple_options;
 			}
 
 			const allFields = [...fields, newField];
@@ -84,6 +85,7 @@ export async function handleAssetLayoutFieldOperation(
 			const updatedField = { ...fields[fieldIndex], ...updateFields };
 			if (updatedField.field_type !== 'ListSelect') {
 				delete updatedField.list_id;
+				delete updatedField.multiple_options;
 			}
 
 			const allFields = [...fields];

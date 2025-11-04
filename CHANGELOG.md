@@ -2,6 +2,46 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.5.0] - 2025-11-04
+
+### Added
+- **Exports**: New resource to initiate company exports (POST /exports). Supports `format` (pdf, csv, s3), `company_id`, `include_websites`, `include_passwords`, and `asset_layout_ids`.
+- **S3 Exports**: New resource to initiate S3 exports (POST /s3_exports). Uses account-configured S3 credentials; no parameters required.
+- **Magic Dash**: Added Delete by Title operation (DELETE /magic_dash) allowing deletion without an ID using `title` and `company_name`.
+
+### Improved
+- **Articles**: Removed unsupported `created_at` filter processing to align with API v2.39.6 specification (only `updated_at` filter is supported for GET /articles)
+- **Asset Layout Fields**: Added missing `multiple_options` field support for ListSelect field types in create and update operations. Updated type definitions to align with API v2.39.6 schema (made `linkable_id` required, added `list_id` and `multiple_options` optional fields)
+- **Asset Layouts**: Added missing `slug` filter parameter to Get Many operation to align with API v2.39.6 specification
+- **Asset Layouts**: Added support for `list_id` and `multiple_options` fields when creating Asset Layout Fields with ListSelect field type (aligns with API v2.39.6 specification)
+- **Companies**: Aligned jump operation with API v2.39.6 specification by removing undocumented `integration_id` and `integration_identifier` parameters (only `integration_slug` is documented)
+- **IP Addresses**: Removed duplicate address and status fields from Additional Fields collection to improve UI consistency
+- **Lists**: Added support for `list_items_attributes` in Create and Update operations to manage list items when creating or updating lists (aligns with API v2.39.6 specification)
+ - **Procedures**: Added `Updated At` filter to Get Many to support date range queries per API v2.39.6
+- **Public Photos**: Aligned with API v2.39.6 — `id` is now a slug (string), added `numeric_id`; Update now requires both `record_type` and `record_id`.
+ - **Uploads**: Added Create operation for file upload (POST /uploads) to align with API v2.39.6.
+ - **VLANs**: Added `vlan_zone_id` and `archived` filters to Get Many; added `archived` to Create; added `company_id` to Update (API v2.39.6 alignment)
+
+### Fixed
+- **Activity Logs**: Implemented missing DELETE operation handler to support deleting logs by datetime with optional unassigned logs filter
+- **Activity Logs**: Fixed resource_id filter sending 0 value when not provided - now properly omits the parameter to avoid invalid API queries
+- **Assets**: Fixed moveLayout operation to use correct HTTP method (PUT) and endpoint path (`/companies/{company_id}/assets/{id}/move_layout`) per API v2.39.6 specification. Removed invalid `preserve_fields` parameter (field preservation is automatic)
+- **Cards**: Removed non-existent `jumpByIdentifier` operation and aligned jump operation with API v2.39.6 specification. Both `integration_id` and `integration_identifier` are now optional in additional fields, with validation ensuring at least one is provided
+- **Expirations**: Fixed response parsing to handle direct array response per API v2.39.6 specification (API returns array directly, not wrapped in object)
+- **Groups**: Fixed response parsing to handle direct array response per API v2.39.6 specification (API returns array directly, not wrapped in object)
+- **List Options**: Fixed item ID type handling to ensure numeric IDs are sent to API (coerce to integer for update/delete operations)
+- **Magic Dash**: Fixed POST request body structure to wrap payload in `magic_dash_item` key per API v2.39.6 specification (previously sent flat body)
+- **Matchers**: Fixed sync_id type in update operation to send string value per API v2.39.6 specification (previously sent as number)
+- **Networks**: Fixed create operation to require company_id and make network_type optional per API v2.39.6. Renamed is_discovery field to is_radar to match API schema
+- **Procedure Tasks**: Fixed `due_date` field format conversion to send date-only values (YYYY-MM-DD) instead of ISO datetime strings per API v2.39.6 specification
+- **Procedures**: Fixed createFromTemplate operation to use query parameters instead of request body per API v2.39.6 specification (`company_id`, `name`, `description` are now sent as query parameters)
+- **Procedures**: Fixed duplicate operation to use query parameters instead of request body per API v2.39.6 specification. Updated handler to read `company_id` from top-level required parameter instead of additionalFields
+ - **Procedures**: Removed unsupported Archive/Unarchive operations; use Update with `archived` boolean per API v2.39.6
+ - **Procedures**: Fixed create operation to send flat JSON body (no `procedure` wrapper) per API v2.39.6
+ - **Procedures**: Renamed Create From Template parameter to `template_id` to match handler and API naming
+ - **Relations**: Made `description` optional in Create to align with API v2.39.6
+
+
 ## [1.4.7] - 2025-10-01
 
 ### Improved

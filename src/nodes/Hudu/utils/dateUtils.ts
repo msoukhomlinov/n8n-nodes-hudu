@@ -6,8 +6,10 @@
  * - ISO 8601 date validation and formatting
  * - Common date range presets (today, yesterday, last N days, etc.)
  * - Date range error handling and validation
+ * - Date format conversion (ISO datetime to date-only YYYY-MM-DD)
  */
 
+import { DateTime } from 'luxon';
 import { DEBUG_CONFIG, debugLog } from './debugConfig';
 
 export type DateRangePreset =
@@ -201,4 +203,46 @@ export function processDateRange(dateRange: IDateRange): string | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * Convert dateTime value to date-only format (YYYY-MM-DD) as required by Hudu API
+ * This function is lenient and handles various input formats including ISO datetime strings
+ * from n8n's dateTime picker. Returns undefined for empty/invalid values (suitable for optional fields).
+ * 
+ * @param value - Date value (can be ISO datetime string, date string, or empty)
+ * @returns Date string in YYYY-MM-DD format, undefined if empty/invalid, or original value if parsing fails
+ */
+export function convertToDateOnlyFormat(value: any): string | undefined {
+  if (!value || value === '') {
+    return undefined;
+  }
+
+  // If already in YYYY-MM-DD format, return as-is
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  // Try parsing as ISO datetime string
+  try {
+    const dt = DateTime.fromISO(value);
+    if (dt.isValid) {
+      return dt.toFormat('yyyy-MM-dd');
+    }
+  } catch (e) {
+    // Fall through to other parsing attempts
+  }
+
+  // Try parsing as Date object
+  try {
+    const dt = DateTime.fromJSDate(new Date(value));
+    if (dt.isValid) {
+      return dt.toFormat('yyyy-MM-dd');
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  // If all parsing fails, return original value (will be validated by API)
+  return value;
 } 

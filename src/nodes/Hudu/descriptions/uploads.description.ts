@@ -14,6 +14,12 @@ export const uploadsOperations: INodeProperties[] = [
     },
     options: [
       {
+        name: 'Create',
+        value: 'create',
+        description: 'Upload a file',
+        action: 'Upload a file',
+      },
+      {
         name: 'Get Many',
         value: 'getAll',
         description: 'Get many uploads',
@@ -37,6 +43,65 @@ export const uploadsOperations: INodeProperties[] = [
 ];
 
 export const uploadsFields: INodeProperties[] = [
+  // ----------------------------------
+  //         create
+  // ----------------------------------
+  {
+    displayName: 'File',
+    name: 'file',
+    type: 'string',
+    default: 'data',
+    required: true,
+    description: 'Name of the binary property containing the file to upload',
+    typeOptions: {
+      loadOptionsMethod: 'getBinaryProperties',
+    },
+    displayOptions: {
+      show: {
+        resource: ['uploads'],
+        operation: ['create'],
+      },
+    },
+  },
+  {
+    displayName: 'Uploadable Type',
+    name: 'uploadable_type',
+    type: 'options',
+    options: [
+      { name: 'Article', value: 'Article' },
+      { name: 'Asset', value: 'Asset' },
+      { name: 'Asset Password', value: 'AssetPassword' },
+      { name: 'Company', value: 'Company' },
+      { name: 'Procedure', value: 'Procedure' },
+      { name: 'Website', value: 'Website' },
+    ],
+    default: 'Asset',
+    required: true,
+    description: 'Type of record to be attached to',
+    displayOptions: {
+      show: {
+        resource: ['uploads'],
+        operation: ['create'],
+      },
+    },
+  },
+  {
+    displayName: 'Uploadable ID',
+    name: 'uploadable_id',
+    type: 'number',
+    default: 0,
+    required: true,
+    description: 'ID of the record to be attached to',
+    displayOptions: {
+      show: {
+        resource: ['uploads'],
+        operation: ['create'],
+      },
+    },
+    typeOptions: {
+      minValue: 1,
+    },
+  },
   // ----------------------------------
   //         getAll
   // ----------------------------------

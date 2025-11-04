@@ -8,6 +8,7 @@ import {
 } from '../../utils/operations';
 import type { ProcedureTasksOperations } from './procedure_tasks.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { convertToDateOnlyFormat } from '../../utils/dateUtils';
 
 export async function handleProcedureTasksOperation(
   this: IExecuteFunctions,
@@ -28,7 +29,15 @@ export async function handleProcedureTasksOperation(
       // Only add non-empty additional fields
       for (const [key, value] of Object.entries(additionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          body[key] = value;
+          // Convert due_date from ISO datetime to YYYY-MM-DD format
+          if (key === 'due_date') {
+            const convertedDate = convertToDateOnlyFormat(value);
+            if (convertedDate) {
+              body[key] = convertedDate;
+            }
+          } else {
+            body[key] = value;
+          }
         }
       }
 
@@ -72,7 +81,15 @@ export async function handleProcedureTasksOperation(
       const body: IDataObject = {};
       for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          body[key] = value;
+          // Convert due_date from ISO datetime to YYYY-MM-DD format
+          if (key === 'due_date') {
+            const convertedDate = convertToDateOnlyFormat(value);
+            if (convertedDate) {
+              body[key] = convertedDate;
+            }
+          } else {
+            body[key] = value;
+          }
         }
       }
 

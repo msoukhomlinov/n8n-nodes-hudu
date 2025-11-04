@@ -94,7 +94,18 @@ export async function handleAssetLayoutOperation(
       };
 
       if (fields && (fields as IDataObject).field) {
-        body.fields = (fields as IDataObject).field;
+        const fieldArray = (fields as IDataObject).field as IDataObject[];
+        // Process each field to extract list_id from resourceLocator format
+        const processedFields = fieldArray.map((field: IDataObject) => {
+          const processedField = { ...field };
+          // Extract list_id from resourceLocator if present
+          if (processedField.list_id && typeof processedField.list_id === 'object') {
+            const listIdObj = processedField.list_id as IDataObject;
+            processedField.list_id = Number(listIdObj.value);
+          }
+          return processedField;
+        });
+        body.fields = processedFields;
       }
 
       debugLog('[API_REQUEST] Creating asset layout with body', body);

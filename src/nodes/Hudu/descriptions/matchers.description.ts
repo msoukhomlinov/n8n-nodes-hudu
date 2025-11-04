@@ -203,9 +203,9 @@ export const matchersFields: INodeProperties[] = [
       {
         displayName: 'Sync ID',
         name: 'sync_id',
-        type: 'number',
-        default: undefined,
-        description: 'The updated sync ID',
+        type: 'string',
+        default: '',
+        description: 'The updated sync ID (string value)',
       },
     ],
   },

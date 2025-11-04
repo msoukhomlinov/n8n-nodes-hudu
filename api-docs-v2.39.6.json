@@ -435,6 +435,12 @@
             "description": "Filter by URL slug"
           },
           {
+            "name": "active",
+            "type": "boolean",
+            "in": "query",
+            "description": "If true, the Asset Layout is active"
+          },
+          {
             "name": "updated_at",
             "type": "string",
             "in": "query",
@@ -455,7 +461,8 @@
             }
           },
           "401": { "description": "Unauthorized" },
-          "404": { "description": "Not Found" }
+          "404": { "description": "Not Found" },
+          "422": { "description": "Unable to process request" }
         },
         "description": "Retrieve a list of available Asset Layouts."
       },
@@ -523,27 +530,30 @@
               },
               "example": {
                 "asset_layout": {
-                  "name": "Asset-Layout-Name-Here",
-                  "icon": "icon-emblem-here E.g. --\u003e fas fa-home",
-                  "color": "icon-color-here E.g. --\u003e #FFFFF",
-                  "icon_color": "icon-background-color-here E.g. --\u003e #FFFFF",
+                  "name": "Asset-Layout-Name-Here E.g. Computer Assets",
+                  "icon": "icon-emblem-here E.g. fas fa-laptop",
+                  "color": "icon-color-here E.g. #FFFFFF",
+                  "icon_color": "icon-background-color-here E.g. #FFFFFF",
+                  "active": true,
                   "include_passwords": true,
                   "include_photos": true,
                   "include_comments": true,
                   "include_files": true,
                   "fields": [
                     {
-                      "label": "Name-of-the-field-here",
-                      "field_type": "type-of-field-here E.g. Text, RichText, Number",
+                      "label": "Name-of-the-field-here E.g. Operating System",
+                      "field_type": "RichText",
                       "required": true,
                       "show_in_list": true,
                       "position": 1
                     },
                     {
-                      "label": "Another-field-name-here",
-                      "field_type": "Another-type-of-field E.g. Text, RichText, Number",
+                      "label": "Another-field-name-here E.g. Brand",
+                      "field_type": "ListSelect",
+                      "list_id": 1,
                       "required": false,
                       "show_in_list": false,
+                      "multiple_options": true,
                       "position": 2
                     }
                   ]
@@ -661,6 +671,39 @@
                 "password_types": {
                   "type": "string",
                   "description": "List of password types, separated with new line characters"
+                }
+              },
+              "example": {
+                "asset_layout": {
+                  "name": "Asset-Layout-Name-Here E.g. Computer Assets",
+                  "icon": "icon-emblem-here E.g. fas fa-laptop",
+                  "color": "icon-color-here E.g. #FFFFFF",
+                  "icon_color": "icon-background-color-here E.g. #FFFFFF",
+                  "active": true,
+                  "include_passwords": true,
+                  "include_photos": true,
+                  "include_comments": true,
+                  "include_files": true,
+                  "fields": [
+                    {
+                      "id": 1,
+                      "label": "Name-of-the-field-here E.g. Operating System",
+                      "field_type": "type-of-field-here E.g. Text, RichText, Number",
+                      "required": true,
+                      "show_in_list": true,
+                      "position": 1
+                    },
+                    {
+                      "id": 2,
+                      "label": "Another-field-name-here E.g. Brand",
+                      "field_type": "Another-type-of-field E.g. ListSelect",
+                      "list_id": 1,
+                      "required": false,
+                      "show_in_list": false,
+                      "multiple_options": true,
+                      "position": 2
+                    }
+                  ]
                 }
               }
             }
@@ -1149,7 +1192,7 @@
             "name": "asset",
             "in": "body",
             "required": true,
-            "description": "Create a new asset with the specified information. Asset data should be sent in the body of the request in JSON format.\n\nNOTE: to create fields you must use the 'custom_fields' key. Then specify the label and value as a key pair.\nThe label must be in snake case (lowercase with underscores instead of spaces).\n\nThe system supports the following field types and formats:\n\n- Text fields: Simple string values (e.g., `{\"field_one\": \"Value One\"}`)\n- Date fields: Date string in YYYY/MM/DD format (e.g., `{\"due_date\": \"01/15/2024\"}`)\n- Checkbox fields: String boolean (e.g., `{\"is_active\": \"true\"}`)\n- Number fields: Numeric string (e.g., `{\"score\": \"5\"}`)\n- Address fields: Object with required address components\n(e.g., `{\"location\": {\"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\"}}`)\n- Asset tag fields: Array of asset IDs (e.g., `{\"related_assets\": [456, 789]}`)\n- List select fields: Array of item names (e.g., `{\"categories\": [\"Item 1\", \"Item 2\"]}`)",
+            "description": "Create a new asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a key-value pair, where the **key** must exactly match the name of the custom field you've created in your Asset Layout (converted to snake case: lowercase letters and underscores in place of spaces).\n\nExamples of custom field types and formats:\n\n* **Text fields:** A simple string value.\n  * Example: `{ \"your_custom_text_field\": \"Some text here\" }`\n\n* **Date fields:** Date formatted as YYYY/MM/DD.\n  * Example: `{ \"your_due_date\": \"2024/01/15\" }`\n\n* **Checkbox fields:** Boolean as a string (\"true\" or \"false\").\n  * Example: `{ \"is_active\": \"true\" }`\n\n* **Number fields:** Numeric value as a string.\n  * Example: `{ \"your_score\": \"5\" }`\n\n* **Address fields:** Object containing required address components.\n  * Example: `{ \"office_location\": { \"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\" } }`\n\n* **Asset tag fields:** Array of asset IDs.\n  * Example: `{ \"your_linked_assets\": [456, 789] }`\n\n* **List select fields:** Array of item names.\n  * Example: `{ \"your_categories\": [\"Item 1\", \"Item 2\"] }`\n\nReplace placeholder keys (like `your_custom_text_field`) with the exact name of your Asset Layout's custom fields.",
             "schema": {
               "type": "object",
               "example": {
@@ -1160,13 +1203,13 @@
                 "primary_model": "Model X",
                 "primary_manufacturer": "ACME Corp",
                 "custom_fields": [
-                  { "field_one": "Value One" },
-                  { "field_two": "Value Two" },
-                  { "due_date": "01/15/2024" },
+                  { "your_custom_text_field_one": "Some text here" },
+                  { "your_custom_text_field_two": "Other text here" },
+                  { "your_due_date": "01/15/2024" },
                   { "is_active": "true" },
-                  { "score": "5" },
+                  { "your_score": "5" },
                   {
-                    "location": {
+                    "office_location": {
                       "address_line_1": "123 Main St",
                       "city": "Denver",
                       "state": "CO",
@@ -1174,8 +1217,8 @@
                       "country_name": "USA"
                     }
                   },
-                  { "related_assets": [456, 789] },
-                  { "categories": ["Item 1", "Item 2"] }
+                  { "your_linked_assets": [456, 789] },
+                  { "your_categories": ["Item 1", "Item 2"] }
                 ]
               },
               "properties": {
@@ -1260,34 +1303,35 @@
             "name": "asset",
             "in": "body",
             "required": true,
-            "description": "Update the specified asset with new information. Asset data should be sent in the body of the request in JSON format.\n\nNOTE: to update fields you must use the 'custom_fields' key. Then specify the label and value as a key pair.\nThe label must be in snake case (lowercase with underscores instead of spaces).\n\nThe system supports the following field types and formats:\n\n- Text fields: Simple string values (e.g., `{\"field_one\": \"Value One\"}`)\n- Date fields: Date string in YYYY/MM/DD format (e.g., `{\"due_date\": \"01/15/2024\"}`)\n- Checkbox fields: String boolean (e.g., `{\"is_active\": \"true\"}`)\n- Number fields: Numeric string (e.g., `{\"score\": \"5\"}`)\n- Address fields: Object with required address components\n(e.g., `{\"location\": {\"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\"}}`)\n- Asset tag fields: Array of asset IDs (e.g., `{\"related_assets\": [456, 789]}`)\n- List select fields: Array of item names (e.g., `{\"categories\": [\"Item 1\", \"Item 2\"]}`)",
+            "description": "Update an existing asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a hash keyed by the field's label (case-insensitive, spaces or underscores allowed).\n\nExamples of field types and formats:\n\n* **Text fields:** `{ \"your_custom_text_field_one\": \"Some updated text\" }`\n* **Date fields:** `{ \"your_due_date\": \"2025/02/15\" }`\n* **Checkbox fields:** `{ \"is_active\": true }`\n* **Number fields:** `{ \"your_score\": 8 }`\n* **Asset tag fields:** `{ \"your_linked_assets\": [123, 456] }`\n* **List select fields:** `{ \"your_categories\": [\"Item 2\", \"Item 3\"] }`\n* **Address fields:** `{ \"office_location\": { \"address_line_1\": \"123 Test Street\", \"address_line_2\": \"Suite 1\", \"city\": \"Boulder\", \"state\": \"CO\", \"zip\": \"80301\", \"country_name\": \"US\" } }`",
             "schema": {
               "type": "object",
               "example": {
-                "name": "Updated Asset",
-                "asset_layout_id": 123,
-                "primary_serial": "SN789012",
-                "primary_mail": "updated@example.com",
-                "primary_model": "Model Y",
-                "primary_manufacturer": "ACME Corp",
-                "custom_fields": [
-                  { "field_one": "Updated Value" },
-                  { "field_two": "New Value" },
-                  { "due_date": "02/15/2024" },
-                  { "is_active": "false" },
-                  { "score": "8" },
-                  {
-                    "location": {
-                      "address_line_1": "456 Oak St",
-                      "city": "Boulder",
-                      "state": "CO",
-                      "zip": "80301",
-                      "country_name": "USA"
-                    }
-                  },
-                  { "related_assets": [123, 456] },
-                  { "categories": ["Item 2", "Item 3"] }
-                ]
+                "asset": {
+                  "name": "Updated Asset",
+                  "primary_serial": "SN789012",
+                  "primary_mail": "updated@example.com",
+                  "primary_model": "Model Y",
+                  "primary_manufacturer": "ACME Corp",
+                  "custom_fields": [
+                    { "your_custom_text_field_one": "Updated text" },
+                    { "your_due_date": "2025/02/15" },
+                    { "is_active": true },
+                    { "your_score": 8 },
+                    {
+                      "office_location": {
+                        "address_line_1": "456 Updated St",
+                        "address_line_2": "Suite 200",
+                        "city": "Melbourne",
+                        "state": "VIC",
+                        "zip": "3000",
+                        "country_name": "AU"
+                      }
+                    },
+                    { "your_linked_assets": [123, 456] },
+                    { "your_categories": ["Item 2", "Item 3"] }
+                  ]
+                }
               }
             }
           },
@@ -2330,6 +2374,87 @@
         "description": "Delete a folder by its ID."
       }
     },
+    "/groups": {
+      "get": {
+        "tags": ["Groups"],
+        "produces": ["application/json"],
+        "operationId": "get_groups",
+        "summary": "Retrieve a list of groups",
+        "description": "Retrieve a list of groups. Member lists exclude admins and super admins.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "in": "query",
+            "description": "Filter groups by name (case-insensitive)"
+          },
+          {
+            "name": "default",
+            "type": "boolean",
+            "in": "query",
+            "description": "Filter by default group status"
+          },
+          {
+            "name": "search",
+            "type": "string",
+            "in": "query",
+            "description": "Search across group names"
+          },
+          {
+            "name": "page",
+            "type": "integer",
+            "format": "int32",
+            "in": "query",
+            "description": "The current page of results to retrieve"
+          },
+          {
+            "name": "page_size",
+            "type": "integer",
+            "format": "int32",
+            "in": "query",
+            "description": "The number of results to return per page (max 1000)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of groups",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/Group" }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Not Found" }
+        }
+      }
+    },
+    "/groups/{id}": {
+      "get": {
+        "tags": ["Groups"],
+        "produces": ["application/json"],
+        "operationId": "get_group_by_id",
+        "summary": "Retrieve a group by ID",
+        "description": "Retrieve a group by its ID. Member lists exclude admins and super admins.",
+        "parameters": [
+          {
+            "name": "id",
+            "type": "integer",
+            "format": "int64",
+            "in": "path",
+            "required": true,
+            "description": "ID of the requested group"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group retrieved successfully",
+            "schema": { "$ref": "#/definitions/Group" }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Group not found" }
+        }
+      }
+    },
     "/ip_addresses": {
       "get": {
         "tags": ["IP Addresses"],
@@ -3329,7 +3454,7 @@
       "get": {
         "tags": ["Password Folders"],
         "produces": ["application/json"],
-        "operationId": "get_password_folders",
+        "operationId": "getPasswordFolders",
         "summary": "Retrieve a list of password folders",
         "parameters": [
           {
@@ -3374,7 +3499,31 @@
               "properties": {
                 "password_folders": {
                   "type": "array",
-                  "items": { "$ref": "#/definitions/Password_Folder" }
+                  "items": { "$ref": "#/definitions/Password_Folder" },
+                  "example": [
+                    {
+                      "id": 17,
+                      "company_id": 2,
+                      "name": "Client Secrets",
+                      "slug": "client-secrets",
+                      "description": "Folders shared with external clients",
+                      "security": "specific",
+                      "allowed_groups": [3, 5],
+                      "created_at": "2025-05-13T22:10:15Z",
+                      "updated_at": "2025-05-13T22:10:15Z"
+                    },
+                    {
+                      "id": 18,
+                      "company_id": null,
+                      "name": "Engineering Vault",
+                      "slug": "engineering-vault",
+                      "description": "Internal engineering passwords",
+                      "security": "all_users",
+                      "allowed_groups": [],
+                      "created_at": "2025-05-13T22:12:44Z",
+                      "updated_at": "2025-05-13T22:12:44Z"
+                    }
+                  ]
                 }
               }
             }
@@ -3382,13 +3531,69 @@
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
         }
+      },
+      "post": {
+        "tags": ["Password Folders"],
+        "operationId": "createPasswordFolder",
+        "summary": "Create a new password folder",
+        "description": "Add a new password folder to the system.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "password_folder",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["name", "security"],
+              "properties": {
+                "name": { "type": "string" },
+                "company_id": { "type": "integer", "format": "int64" },
+                "description": { "type": "string" },
+                "security": {
+                  "type": "string",
+                  "description": "Who has permission to see the folder",
+                  "enum": ["all_users", "specific"]
+                },
+                "allowed_groups": {
+                  "type": "array",
+                  "description": "Field for Group IDs with access when security = specific",
+                  "items": { "type": "integer", "format": "int64" }
+                }
+              },
+              "example": {
+                "password_folder": {
+                  "name": "Client Secrets",
+                  "company_id": 2,
+                  "description": "Folders shared with external clients",
+                  "security": "specific",
+                  "allowed_groups": [3, 5]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created Password Folder",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "password_folder": { "$ref": "#/definitions/Password_Folder" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "422": { "description": "Validation errors" }
+        }
       }
     },
     "/password_folders/{id}": {
       "get": {
         "tags": ["Password Folders"],
         "produces": ["application/json"],
-        "operationId": "get_password_folders_id",
+        "operationId": "getPasswordFolderById",
         "summary": "Retrieve a password folder by ID",
         "description": "Retrieve a password folder by its ID.",
         "parameters": [
@@ -3413,6 +3618,93 @@
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Password Folder not found" }
+        }
+      },
+      "put": {
+        "tags": ["Password Folders"],
+        "operationId": "updatePasswordFolder",
+        "summary": "Update an existing password folder",
+        "description": "Modify details of an existing password folder.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of the folder to update"
+          },
+          {
+            "in": "body",
+            "name": "password_folder",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "company_id": { "type": "integer", "format": "int64" },
+                "description": { "type": "string" },
+                "security": {
+                  "type": "string",
+                  "description": "Who has permission to see the folder",
+                  "enum": ["all_users", "specific"]
+                },
+                "allowed_groups": {
+                  "type": "array",
+                  "description": "Field for Group IDs with access when security = specific",
+                  "items": { "type": "integer", "format": "int64" }
+                }
+              },
+              "example": {
+                "password_folder": {
+                  "name": "Client Secrets - Updated",
+                  "description": "Updated description",
+                  "security": "specific",
+                  "allowed_groups": [3, 7, 8]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Password Folder updated successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "password_folder": { "$ref": "#/definitions/Password_Folder" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Not found" },
+          "422": { "description": "Validation errors" }
+        }
+      },
+      "delete": {
+        "tags": ["Password Folders"],
+        "operationId": "deletePasswordFolder",
+        "summary": "Delete a password folder",
+        "description": "Remove a password folder from the system.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Password folder successfully deleted",
+            "schema": { "type": "string" }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Not found" }
         }
       }
     },
@@ -4087,7 +4379,7 @@
       "get": {
         "tags": ["Public Photos"],
         "summary": "Get a list of public photos",
-        "description": "Retrieve a list of public photos with pagination options.",
+        "description": "Retrieve a list of public photos with pagination options. **Note**: Response now includes slug-based IDs for improved security. See PublicPhoto definition for details on the new `id` and `numeric_id` fields.",
         "operationId": "getPublicPhotos",
         "consumes": ["application/json"],
         "produces": ["application/json"],
@@ -4125,7 +4417,7 @@
       "post": {
         "tags": ["Public Photos"],
         "summary": "Create a public photo",
-        "description": "Upload a public photo and associate it with a specific record type and ID. This will not upload the photo to the photos module or sidebar of the associated record (Upcoming Feature). This endpoint exists to add photos to articles and asset notes.",
+        "description": "Upload a public photo and associate it with a specific record type and ID. This will not upload the photo to the photos module or sidebar of the associated record (Upcoming Feature). This endpoint exists to add photos to articles and asset notes. **Note**: Response includes slug-based ID for improved security.",
         "operationId": "createPublicPhoto",
         "consumes": ["multipart/form-data"],
         "produces": ["application/json"],
@@ -4167,7 +4459,7 @@
       "put": {
         "tags": ["Public Photos"],
         "summary": "Update a public photo",
-        "description": "Update the associated record type and ID for a specific public photo.",
+        "description": "Update the associated record type and ID for a specific public photo. **Backward Compatibility**: This endpoint still accepts numeric IDs in the path parameter for existing integrations, but responses will include the new slug-based ID format.",
         "operationId": "updatePublicPhoto",
         "consumes": ["multipart/form-data"],
         "produces": ["application/json"],
@@ -4177,7 +4469,7 @@
             "type": "integer",
             "in": "path",
             "required": true,
-            "description": "The ID of the public photo to update."
+            "description": "The numeric ID of the public photo to update. **Backward Compatibility**: This endpoint continues to accept numeric IDs for existing integrations."
           },
           {
             "name": "record_type",
@@ -6122,6 +6414,80 @@
       },
       "required": ["id", "name"]
     },
+    "Group": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The unique identifier of the group."
+        },
+        "name": { "type": "string", "description": "The name of the group." },
+        "slug": {
+          "type": "string",
+          "description": "A slug representing the group."
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL to view the group in the web interface."
+        },
+        "default": {
+          "type": "boolean",
+          "description": "Indicates if this is the default group for new users."
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the group was created."
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the last group update."
+        },
+        "member_count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The number of members in the group (excludes admins and super admins)."
+        },
+        "members": {
+          "type": "array",
+          "description": "List of group members (excludes admins and super admins).",
+          "items": { "$ref": "#/definitions/GroupMember" }
+        }
+      }
+    },
+    "GroupMember": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The unique identifier of the user."
+        },
+        "first_name": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "last_name": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the user."
+        },
+        "security_level": {
+          "type": "string",
+          "description": "Security level assigned to the user."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A slug representing the user."
+        }
+      }
+    },
     "Integrator_Card": {
       "type": "object",
       "description": "Represents an Integrator Card containing information about an integration with an external system.",
@@ -6365,7 +6731,7 @@
           "type": "string",
           "description": "External identifier for synchronization purposes."
         },
-        "is_discovery": {
+        "is_radar": {
           "type": "boolean",
           "description": "Indicates if the network was discovered automatically."
         },
@@ -6429,6 +6795,16 @@
         "slug": {
           "type": "string",
           "description": "A slug representing the password folder."
+        },
+        "security": {
+          "type": "string",
+          "enum": ["all_users", "specific"],
+          "description": "Who has permission to see the folder"
+        },
+        "allowed_groups": {
+          "type": "array",
+          "items": { "type": "integer", "format": "int64" },
+          "description": "Group IDs with access when security = specific"
         },
         "created_at": {
           "type": "string",
@@ -6582,16 +6958,20 @@
     },
     "PublicPhoto": {
       "type": "object",
-      "description": "A public photo associated with a record.",
+      "description": "A public photo associated with a record. **Important**: As of the latest API version, the `id` field now returns a slug (unique string identifier) instead of a numeric ID for improved security and URL structure. The original numeric ID is available in the `numeric_id` field for backward compatibility.",
       "properties": {
         "id": {
+          "type": "string",
+          "description": "The unique slug identifier of the public photo (e.g., 'a1b2c3d4e5f6'). This is used in URLs and API calls. **Changed**: Previously this was a numeric ID, now it's a slug for improved security."
+        },
+        "numeric_id": {
           "type": "integer",
-          "description": "The ID of the public photo."
+          "description": "The original numeric database ID of the public photo. **New field**: Added for backward compatibility. Use this if you need the original numeric identifier."
         },
         "url": {
           "type": "string",
           "format": "uri",
-          "description": "The URL of the public photo."
+          "description": "The URL of the public photo using the slug-based path (e.g., '/public_photo/a1b2c3d4e5f6')."
         },
         "record_type": {
           "type": "string",
@@ -7171,10 +7551,10 @@
     "APIKeyHeader": { "type": "apiKey", "in": "header", "name": "x-api-key" }
   },
   "security": [{ "APIKeyHeader": [] }],
-  "host": "hudu.site.com",
+  "host": "hudu.yourserver.com",
   "info": {
     "title": "Hudu API Documentation",
-    "description": "\u003cp\u003eWelcome to the Hudu REST API documentation. The Hudu REST API enables seamless automation of your IT documentation. The API is organized into various resources, each with its own specific endpoint.\u003c/p\u003e \n\u003cp\u003eAll API requests require authentication using an API key. To obtain an API key, navigate to \u003cb\u003eHudu Admin\u003c/b\u003e → \u003cb\u003eBasic Information\u003c/b\u003e → \u003cb\u003eAPI Keys\u003c/b\u003e. Include the API key in your request headers as shown below:\u003c/p\u003e\n\u003cpre\u003ecurl https://[YOUR_DOMAIN]/api/v1/companies?page=1 -H \"x-api-key: YOUR_API_KEY_HERE\"\u003c/pre\u003e\n\u003cp\u003eYou can create and delete API keys at any time.\u003c/p\u003e\n\u003ch2\u003eScoping API Keys\u003c/h2\u003e\n\u003cp\u003eAPI keys can be configured with the following options:\u003c/p\u003e\n\u003cp\u003e1. Access to passwords (all REST actions)\u003cbr /\u003e 2. Ability to perform destructive actions (DELETE actions)\u003cbr /\u003e 3. Ability to perform exports\u003cbr /\u003e 4. Specify whitelisted IPs\u003cbr /\u003e 5. Specify company scopes\u003c/p\u003e\n\u003cp\u003eThese options can only be configured during the creation of the key.\u003c/p\u003e\n\u003cp\u003eWe recommend limiting access and providing only the required permissions for each application.\u003c/p\u003e\n\u003ch2\u003eFormat\u003c/h2\u003e\n\u003cp\u003eAll API requests must use JSON format, unless otherwise specified.\u003c/p\u003e\n\u003ch2\u003eNames in the API\u003c/h2\u003e\n\u003cp\u003eNote that some names in the API may differ from those in your Hudu application:\u003c/p\u003e\n\u003ctable\u003e \u003ctr\u003e\n    \u003ctd\u003eName in Hudu\u003c/td\u003e\n    \u003ctd\u003eName in API\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003eCompany (customizable)\u003c/td\u003e\n    \u003ctd\u003eCompany\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003ePassword\u003c/td\u003e\n    \u003ctd\u003eAssetPassword\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003eKnowledge Base Article\u003c/td\u003e\n    \u003ctd\u003eArticle\u003c/td\u003e\n\u003c/tr\u003e \u003ctr\u003e\n    \u003ctd\u003eProcess\u003c/td\u003e\n    \u003ctd\u003eProcedure\u003c/td\u003e\n\u003c/tr\u003e \u003c/table\u003e\n\u003ch2\u003ePagination\u003c/h2\u003e\n\u003cp\u003eAPI requests are paginated by default. To navigate between pages, simply add ?page=X to your request. Pagination is in sets of 25 results.\u003c/p\u003e\n\u003ch2\u003eRate Limiting\u003c/h2\u003e\n\u003cp\u003eThe rate limit is set at 300 requests per minute.\u003c/p\u003e \u0026copy; 2023 Hudu Technologies, Inc. All rights reserved.",
+    "description": "\u003ch1\u003eWelcome to the Hudu REST API\u003c/h1\u003e\n\u003cp\u003eThe Hudu REST API enables seamless automation of your IT documentation. It's organized into various resources, each with its own specific endpoint.\u003c/p\u003e\n\n\u003ch2\u003eAuthentication\u003c/h2\u003e\n\u003cp\u003eAll API requests require authentication using an API key. To obtain a key, go to \u003cstrong\u003eHudu Admin → Basic Information → API Keys\u003c/strong\u003e.\u003c/p\u003e\n\u003cp\u003eInclude your API key in the request header, like so:\u003c/p\u003e\n\u003cpre\u003e\u003ccode\u003ecurl https://[YOUR_DOMAIN]/api/v1/companies?page=1 \\\n  -H \"x-api-key: YOUR_API_KEY_HERE\"\u003c/code\u003e\u003c/pre\u003e\n\u003cp\u003eYou can create and delete API keys at any time.\u003c/p\u003e\n\n\u003ch2\u003eScoping API Keys\u003c/h2\u003e\n\u003cp\u003eWhen creating an API key, you can configure the following permissions:\u003c/p\u003e\n\u003cul\u003e\n  \u003cli\u003eAccess to passwords (all REST actions)\u003c/li\u003e\n  \u003cli\u003eDestructive actions (DELETE)\u003c/li\u003e\n  \u003cli\u003eExport capabilities\u003c/li\u003e\n  \u003cli\u003eWhitelisted IPs\u003c/li\u003e\n  \u003cli\u003eCompany-specific access\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003eWe recommend only granting the minimum required access for each application.\u003c/p\u003e\n\n\u003ch2\u003eFormat\u003c/h2\u003e\n\u003cp\u003eAll API requests must use \u003cstrong\u003eJSON\u003c/strong\u003e format unless otherwise specified.\u003c/p\u003e\n\n\u003ch2\u003eTerminology\u003c/h2\u003e\n\u003cp\u003eSome names in the API differ from those in the Hudu UI:\u003c/p\u003e\n\u003ctable\u003e\n  \u003cthead\u003e\n    \u003ctr\u003e\n      \u003cth\u003eName in Hudu\u003c/th\u003e\n      \u003cth\u003eName in API\u003c/th\u003e\n    \u003c/tr\u003e\n  \u003c/thead\u003e\n  \u003ctbody\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eCompany (customizable)\u003c/td\u003e\n      \u003ctd\u003eCompany\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003ePassword\u003c/td\u003e\n      \u003ctd\u003eAssetPassword\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eKnowledge Base Article\u003c/td\u003e\n      \u003ctd\u003eArticle\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eProcess\u003c/td\u003e\n      \u003ctd\u003eProcedure\u003c/td\u003e\n    \u003c/tr\u003e\n  \u003c/tbody\u003e\n\u003c/table\u003e\n\n\u003ch2\u003ePagination\u003c/h2\u003e\n\u003cp\u003eAll responses are paginated with 25 results per page. Use the \u003ccode\u003e?page=X\u003c/code\u003e query parameter to navigate.\u003c/p\u003e\n\n\u003ch2\u003eRate Limiting\u003c/h2\u003e\n\u003cp\u003eThe API supports up to \u003cstrong\u003e300 requests per minute\u003c/strong\u003e.\u003c/p\u003e\n\n\u003cp\u003e\u0026copy; 2023 Hudu Technologies, Inc. All rights reserved.\u003c/p\u003e",
     "version": "1.0",
     "x-copyright": "\u0026copy; 2023 Hudu Technologies, Inc. All rights reserved."
   }

@@ -162,6 +162,76 @@ export const proceduresFields: INodeProperties[] = [
         default: '',
         description: 'Filter by the URL slug of the procedure',
       },
+      {
+        displayName: 'Updated At',
+        name: 'updated_at',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'End Datetime',
+                name: 'end',
+                type: 'dateTime',
+                default: '',
+                displayOptions: {
+                  show: { '/mode': ['range'] },
+                },
+              },
+              {
+                displayName: 'Exact Datetime',
+                name: 'exact',
+                type: 'dateTime',
+                default: '',
+                displayOptions: {
+                  show: { '/mode': ['exact'] },
+                },
+              },
+              {
+                displayName: 'Mode',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  { name: 'Exact', value: 'exact' },
+                  { name: 'Preset', value: 'preset' },
+                  { name: 'Range', value: 'range' },
+                ],
+                default: 'preset',
+              },
+              {
+                displayName: 'Preset',
+                name: 'preset',
+                type: 'options',
+                options: [
+                  { name: 'Last 24 Hours', value: 'last24h' },
+                  { name: 'Last 7 Days', value: 'last7d' },
+                  { name: 'Last 30 Days', value: 'last30d' },
+                ],
+                default: 'last7d',
+                displayOptions: {
+                  show: { '/mode': ['preset'] },
+                },
+              },
+              {
+                displayName: 'Start Datetime',
+                name: 'start',
+                type: 'dateTime',
+                default: '',
+                displayOptions: {
+                  show: { '/mode': ['range'] },
+                },
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
 
@@ -300,7 +370,7 @@ export const proceduresFields: INodeProperties[] = [
   // Create From Template
   {
     displayName: 'Template ID',
-    name: 'templateId',
+    name: 'template_id',
     type: 'string',
     required: true,
     displayOptions: {

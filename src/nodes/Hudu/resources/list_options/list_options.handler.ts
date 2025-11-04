@@ -181,8 +181,8 @@ export async function handleListOptionsOperation(
     case 'update': {
       // Get list ID
       const listId = this.getNodeParameter('list_id', i) as string | number;
-      // Get list item ID
-      const itemId = this.getNodeParameter('item_id', i) as string | number;
+      // Get list item ID - coerce to number to match API integer requirement
+      const itemId = Number(this.getNodeParameter('item_id', i));
       // Get updated name
       const name = this.getNodeParameter('name', i) as string;
       
@@ -236,8 +236,8 @@ export async function handleListOptionsOperation(
     case 'delete': {
       // Get list ID
       const listId = this.getNodeParameter('list_id', i) as string | number;
-      // Get list item ID
-      const itemId = this.getNodeParameter('item_id', i) as string | number;
+      // Get list item ID - coerce to number to match API integer requirement
+      const itemId = Number(this.getNodeParameter('item_id', i));
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('List Options Handler - Parameters', {

@@ -20,7 +20,7 @@ export async function handleExpirationOperation(
       responseData = await handleGetAllOperation.call(
         this,
         resourceEndpoint,
-        'expirations',
+        undefined,
         filters,
         returnAll,
         limit,

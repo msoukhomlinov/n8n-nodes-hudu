@@ -6,9 +6,9 @@ import {
   handleCreateOperation,
   handleUpdateOperation,
   handleDeleteOperation,
-  handleArchiveOperation,
 } from '../../utils/operations';
 import { handleProcedureKickoffOperation } from '../../utils/operations/procedures';
+import { huduApiRequest } from '../../utils/requestUtils';
 import type { ProceduresOperations } from './procedures.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
@@ -40,7 +40,7 @@ export async function handleProceduresOperation(
         ...additionalFields,
       };
 
-      responseData = await handleCreateOperation.call(this, resourceEndpoint, { procedure: body });
+      responseData = await handleCreateOperation.call(this, resourceEndpoint, body);
       break;
     }
 
@@ -121,64 +121,74 @@ export async function handleProceduresOperation(
       break;
     }
 
-    case 'archive': {
-      const procedureId = this.getNodeParameter('id', i) as string;
-      responseData = await handleArchiveOperation.call(this, resourceEndpoint, procedureId, true);
-      break;
-    }
-
-    case 'unarchive': {
-      const procedureId = this.getNodeParameter('id', i) as string;
-      responseData = await handleArchiveOperation.call(this, resourceEndpoint, procedureId, false);
-      break;
-    }
+    
 
     case 'createFromTemplate': {
       const templateId = this.getNodeParameter('template_id', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      // Validate company_id if provided
+      const qs: IDataObject = {};
+
+      // Validate and add company_id if provided
       if (additionalFields.company_id) {
-        additionalFields.company_id = validateCompanyId(
+        qs.company_id = validateCompanyId(
           additionalFields.company_id,
           this.getNode(),
           'Company ID'
         );
       }
 
-      const body: IDataObject = {
-        ...additionalFields,
-      };
+      // Add name if provided
+      if (additionalFields.name) {
+        qs.name = additionalFields.name as string;
+      }
 
-      responseData = await handleCreateOperation.call(
+      // Add description if provided
+      if (additionalFields.description) {
+        qs.description = additionalFields.description as string;
+      }
+
+      responseData = await huduApiRequest.call(
         this,
+        'POST',
         `${resourceEndpoint}/${templateId}/create_from_template`,
-        { procedure: body },
+        {},
+        qs,
+        'procedure',
       );
       break;
     }
 
     case 'duplicate': {
       const procedureId = this.getNodeParameter('id', i) as string;
+      const companyId = validateCompanyId(
+        this.getNodeParameter('companyId', i),
+        this.getNode(),
+        'Company ID'
+      );
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      // Validate company_id if provided
-      if (additionalFields.company_id) {
-        additionalFields.company_id = validateCompanyId(
-          additionalFields.company_id,
-          this.getNode(),
-          'Company ID'
-        );
-      }
-
-      const body: IDataObject = {
-        ...additionalFields,
+      const qs: IDataObject = {
+        company_id: companyId,
       };
 
-      responseData = await handleCreateOperation.call(
+      // Add name if provided
+      if (additionalFields.name) {
+        qs.name = additionalFields.name as string;
+      }
+
+      // Add description if provided
+      if (additionalFields.description) {
+        qs.description = additionalFields.description as string;
+      }
+
+      responseData = await huduApiRequest.call(
         this,
+        'POST',
         `${resourceEndpoint}/${procedureId}/duplicate`,
-        { procedure: body },
+        {},
+        qs,
+        'procedure',
       );
       break;
     }

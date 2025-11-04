@@ -194,7 +194,6 @@ export const relationsFields: INodeProperties[] = [
     displayName: 'Description',
     name: 'description',
     type: 'string',
-    required: true,
     default: '',
     displayOptions: {
       show: {

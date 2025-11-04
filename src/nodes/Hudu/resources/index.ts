@@ -59,3 +59,7 @@ export * from './vlans/vlans.handler';
 export * from './vlans/vlans.types';
 export * from './vlan_zones/vlan_zones.handler';
 export * from './vlan_zones/vlan_zones.types';
+export * from './exports/exports.handler';
+export * from './exports/exports.types';
+export * from './s3_exports/s3_exports.handler';
+export * from './s3_exports/s3_exports.types';

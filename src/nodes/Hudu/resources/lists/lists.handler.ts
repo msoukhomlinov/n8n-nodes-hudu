@@ -37,6 +37,25 @@ export async function handleListsOperation(
         name,
       };
       
+      // Process list_items_attributes if provided
+      const listItemsParam = this.getNodeParameter('list_items_attributes', i, {}) as IDataObject;
+      if (listItemsParam && listItemsParam.item && Array.isArray(listItemsParam.item)) {
+        const listItemsAttributes = (listItemsParam.item as IDataObject[])
+          .map((item: IDataObject) => {
+            const processedItem: IDataObject = {};
+            if (item.name && typeof item.name === 'string' && item.name.trim() !== '') {
+              processedItem.name = item.name.trim();
+            }
+            // Only include items with a name
+            return Object.keys(processedItem).length > 0 ? processedItem : null;
+          })
+          .filter((item: IDataObject | null) => item !== null);
+        
+        if (listItemsAttributes.length > 0) {
+          body.list_items_attributes = listItemsAttributes;
+        }
+      }
+      
       responseData = await handleCreateOperation.call(
         this,
         resourceEndpoint,
@@ -79,6 +98,41 @@ export async function handleListsOperation(
       const updateData: IDataObject = {
         name,
       };
+      
+      // Process list_items_attributes if provided
+      const updateFields = this.getNodeParameter('updateFields', i, {}) as IDataObject;
+      if (updateFields.list_items_attributes) {
+        const listItemsParam = updateFields.list_items_attributes as IDataObject;
+        if (listItemsParam && listItemsParam.item && Array.isArray(listItemsParam.item)) {
+          const listItemsAttributes = (listItemsParam.item as IDataObject[])
+            .map((item: IDataObject) => {
+              const processedItem: IDataObject = {};
+              
+              // Include id if provided (for updates/deletions)
+              if (item.id !== undefined && item.id !== null && item.id !== '') {
+                processedItem.id = Number(item.id);
+              }
+              
+              // Include name if provided (for new items or updates)
+              if (item.name !== undefined && item.name !== null && item.name !== '') {
+                processedItem.name = String(item.name).trim();
+              }
+              
+              // Include _destroy if true (for deletions)
+              if (item._destroy === true) {
+                processedItem._destroy = true;
+              }
+              
+              // Only include items that have at least one valid field
+              return Object.keys(processedItem).length > 0 ? processedItem : null;
+            })
+            .filter((item: IDataObject | null) => item !== null);
+          
+          if (listItemsAttributes.length > 0) {
+            updateData.list_items_attributes = listItemsAttributes;
+          }
+        }
+      }
       
       responseData = await handleUpdateOperation.call(
         this,

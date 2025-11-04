@@ -122,6 +122,13 @@ export const assetLayoutFields: INodeProperties[] = [
         description: 'Filter by the name of the Asset Layout',
       },
       {
+        displayName: 'Slug',
+        name: 'slug',
+        type: 'string',
+        default: '',
+        description: 'Filter by URL slug',
+      },
+      {
         displayName: 'Updated At',
         name: 'updated_at',
         type: 'fixedCollection',
@@ -414,6 +421,18 @@ export const assetLayoutManageFields: INodeProperties[] = [
         name: 'field',
         values: [
           {
+            displayName: 'Allow Multiple Options',
+            name: 'multiple_options',
+            type: 'boolean',
+            default: false,
+            displayOptions: {
+              show: {
+                field_type: [ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT],
+              },
+            },
+            description: 'Whether to allow selecting multiple options from the list',
+          },
+          {
             displayName: 'Field Type',
             name: 'field_type',
             type: 'options',
@@ -484,6 +503,45 @@ export const assetLayoutManageFields: INodeProperties[] = [
             type: 'string',
             default: '',
             description: 'The label of the field',
+          },
+          {
+            displayName: 'List',
+            name: 'list_id',
+            type: 'resourceLocator',
+            default: { mode: 'list', value: '' },
+            required: true,
+            displayOptions: {
+              show: {
+                field_type: [ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT],
+              },
+            },
+            modes: [
+              {
+                displayName: 'From List',
+                name: 'list',
+                type: 'list',
+                typeOptions: {
+                  searchListMethod: 'getLists',
+                  searchable: true,
+                },
+              },
+              {
+                displayName: 'By ID',
+                name: 'id',
+                type: 'string',
+                validation: [
+                  {
+                    type: 'regex',
+                    properties: {
+                      regex: '^[0-9]+$',
+                      errorMessage: 'Must be a valid numeric ID',
+                    },
+                  },
+                ],
+                placeholder: 'e.g. 123',
+              },
+            ],
+            description: 'The List to use for this ListSelect field',
           },
           {
             displayName: 'Position',

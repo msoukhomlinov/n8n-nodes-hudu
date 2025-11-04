@@ -1,5 +1,6 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { handleCreateOperation, handleDeleteOperation } from '../../utils/operations';
+import { huduApiRequest } from '../../utils/requestUtils';
 import {
   handleMagicDashGetAllOperation,
   handleMagicDashGetByIdOperation,
@@ -66,17 +67,31 @@ export async function handleMagicDashOperation(
         delete magicDashBody.image_url;
       }
 
+      // API v2.39.6 requires body to be wrapped in magic_dash_item key
+      const requestBody = { magic_dash_item: magicDashBody };
+
       responseData = await handleCreateOperation.call(
         this,
         resourceEndpoint,
-        magicDashBody,
+        requestBody,
       );
       break;
     }
 
     case 'deleteById': {
+      // Note: API v2.39.6 supports two DELETE methods:
+      // 1. DELETE /magic_dash/{id} - implemented here (delete by ID)
+      // 2. DELETE /magic_dash - not implemented (delete by title + company_name)
       const id = this.getNodeParameter('id', i) as number;
       responseData = await handleDeleteOperation.call(this, resourceEndpoint, id);
+      break;
+    }
+
+    case 'deleteByTitle': {
+      const title = this.getNodeParameter('title', i) as string;
+      const companyName = this.getNodeParameter('companyName', i) as string;
+      const body = { title, company_name: companyName } as IDataObject;
+      responseData = await huduApiRequest.call(this, 'DELETE', resourceEndpoint, body);
       break;
     }
   }

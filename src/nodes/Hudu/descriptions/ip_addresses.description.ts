@@ -541,13 +541,6 @@ export const ipAddressFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Address',
-        name: 'address',
-        type: 'string',
-        default: '',
-        description: 'The IP address',
-      },
-      {
         displayName: 'Asset ID',
         name: 'asset_id',
         type: 'number',
@@ -588,39 +581,6 @@ export const ipAddressFields: INodeProperties[] = [
         type: 'boolean',
         default: false,
         description: 'Whether to skip verification that the FQDN resolves to the address',
-      },
-      {
-        displayName: 'Status',
-        name: 'status',
-        type: 'options',
-        default: 'unassigned',
-        options: [
-          {
-            name: 'Assigned',
-            value: 'assigned',
-          },
-          {
-            name: 'Deprecated',
-            value: 'deprecated',
-          },
-          {
-            name: 'DHCP',
-            value: 'dhcp',
-          },
-          {
-            name: 'Reserved',
-            value: 'reserved',
-          },
-          {
-            name: 'SLAAC',
-            value: 'slaac',
-          },
-          {
-            name: 'Unassigned',
-            value: 'unassigned',
-          },
-        ],
-        description: 'The status of the IP address',
       },
     ],
   },

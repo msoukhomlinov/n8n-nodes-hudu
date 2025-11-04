@@ -254,6 +254,18 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 				description: 'Minimum value allowed (leave blank for no minimum)',
 			},
 			{
+				displayName: 'Multiple Options',
+				name: 'multiple_options',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						field_type: ['ListSelect'],
+					},
+				},
+				default: false,
+				description: 'Whether to allow multiple selections for ListSelect fields',
+			},
+			{
 				displayName: 'Options',
 				name: 'options',
 				type: 'string',
@@ -417,6 +429,18 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 				type: 'number',
 				default: undefined,
 				description: 'Minimum value allowed (leave blank for no minimum)',
+			},
+			{
+				displayName: 'Multiple Options',
+				name: 'multiple_options',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						field_type: ['ListSelect'],
+					},
+				},
+				default: false,
+				description: 'Whether to allow multiple selections for ListSelect fields',
 			},
 			{
 				displayName: 'Options',
