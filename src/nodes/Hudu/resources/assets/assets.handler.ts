@@ -338,13 +338,12 @@ export async function handleAssetsOperation(
       debugLog('[OPERATION_MOVE_LAYOUT] Processing move asset layout operation');
       const assetId = this.getNodeParameter('assetId', i) as string;
       const newLayoutId = this.getNodeParameter('target_asset_layout_id', i) as number;
-      const preserveFields = this.getNodeParameter('preserve_fields', i, false) as boolean;
+      const { companyId } = await getCompanyIdForAsset(this, assetId, i);
       const body: IDataObject = {
         asset_layout_id: newLayoutId,
-        preserve_fields: preserveFields,
       };
-      debugLog('[API_REQUEST] Moving asset layout with body', { assetId, body });
-      responseData = await huduApiRequest.call(this, 'POST', `${assetsResourceEndpoint}/${assetId}/move_to_layout`, body);
+      debugLog('[API_REQUEST] Moving asset layout with body', { assetId, companyId, body });
+      responseData = await huduApiRequest.call(this, 'PUT', `/companies/${companyId}/assets/${assetId}/move_layout`, body);
       debugLog('[API_RESPONSE] Move asset layout response', responseData);
       break;
     }

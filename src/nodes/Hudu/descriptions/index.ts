@@ -28,3 +28,5 @@ export * from './users.description';
 export * from './websites.description';
 export * from './vlans.description';
 export * from './vlan_zones.description';
+export * from './exports.description';
+export * from './s3_exports.description';

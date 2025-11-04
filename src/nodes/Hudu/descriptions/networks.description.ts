@@ -470,18 +470,21 @@ export const networksFields: INodeProperties[] = [
     description: 'The network address (e.g., CIDR notation)',
   },
   {
-    displayName: 'Network Type',
-    name: 'network_type',
-    type: 'number',
+    displayName: 'Company Name or ID',
+    name: 'company_id',
+    type: 'options',
     required: true,
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+    },
     displayOptions: {
       show: {
         resource: ['networks'],
         operation: ['create'],
       },
     },
-    default: 0,
-    description: 'The type of network',
+    default: '',
+    description: 'The company to associate with the network. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',
@@ -518,19 +521,6 @@ export const networksFields: INodeProperties[] = [
         description: 'Whether the network will be archived. Set to true to archive, false to keep active.',
       },
       {
-        displayName: 'Company Name or ID',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
-        default: '',
-        description: 'The company to associate with the network. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-      },
-      {
         displayName: 'Description',
         name: 'description',
         type: 'string',
@@ -538,8 +528,8 @@ export const networksFields: INodeProperties[] = [
         description: 'A brief description of the network',
       },
       {
-        displayName: 'Is Discovery',
-        name: 'is_discovery',
+        displayName: 'Is Radar',
+        name: 'is_radar',
         type: 'boolean',
         default: false,
         description: 'Whether the network was discovered automatically',
@@ -693,8 +683,8 @@ export const networksFields: INodeProperties[] = [
         description: 'A brief description of the network',
       },
       {
-        displayName: 'Is Discovery',
-        name: 'is_discovery',
+        displayName: 'Is Radar',
+        name: 'is_radar',
         type: 'boolean',
         default: false,
         description: 'Whether the network was discovered automatically',

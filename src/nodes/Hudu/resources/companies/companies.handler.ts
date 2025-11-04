@@ -150,8 +150,9 @@ export async function handleCompaniesOperation(
 
     case 'jump': {
       const integrationSlug = this.getNodeParameter('integrationSlug', i) as string;
-      const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-      responseData = await handleCompanyJumpOperation.call(this, integrationSlug, additionalFields);
+      // API v2.39.6 only documents integration_slug parameter for /companies/jump
+      // Handler supports optional undocumented parameters but UI aligns with API docs
+      responseData = await handleCompanyJumpOperation.call(this, integrationSlug, {});
       break;
     }
   }

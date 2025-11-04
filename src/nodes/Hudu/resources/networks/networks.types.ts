@@ -16,7 +16,7 @@ export interface INetwork extends IDataObject {
   ancestry?: string; // Ancestry path for hierarchical network structure
   settings?: IDataObject; // Settings for the network
   sync_identifier?: string; // External identifier for synchronisation purposes
-  is_discovery?: boolean; // Indicates if the network was discovered automatically
+  is_radar?: boolean; // Indicates if the network was discovered automatically
   status_list_item_id?: number; // The status list item ID for this network
   role_list_item_id?: number; // The role list item ID for this network
   vlan_id?: number; // The VLAN ID associated with this network

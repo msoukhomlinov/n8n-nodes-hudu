@@ -117,23 +117,6 @@ export async function handleArticlesOperation(
         ...filters,
       };
 
-      if (filters.created_at) {
-        const createdAtFilter = filters.created_at as IDataObject;
-        if (createdAtFilter.range) {
-          const rangeObj = createdAtFilter.range as IDataObject;
-          filters.created_at = processDateRange({
-            range: {
-              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
-              exact: rangeObj.exact as string,
-              start: rangeObj.start as string,
-              end: rangeObj.end as string,
-              preset: rangeObj.preset as DateRangePreset,
-            },
-          });
-          qs.created_at = filters.created_at;
-        }
-      }
-
       if (filters.updated_at) {
         const updatedAtFilter = filters.updated_at as IDataObject;
         if (updatedAtFilter.range) {

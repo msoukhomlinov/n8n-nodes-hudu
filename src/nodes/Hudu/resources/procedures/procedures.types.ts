@@ -30,8 +30,6 @@ export type ProceduresOperations =
   | 'get'
   | 'getAll'
   | 'update'
-  | 'archive'
-  | 'unarchive'
   | 'createFromTemplate'
   | 'duplicate'
   | 'kickoff';

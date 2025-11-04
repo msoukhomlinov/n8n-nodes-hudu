@@ -26,6 +26,12 @@ export const magicDashOperations: INodeProperties[] = [
         action: 'Delete item',
       },
       {
+        name: 'Delete by Title',
+        value: 'deleteByTitle',
+        description: 'Delete item by title and company name',
+        action: 'Delete item by title',
+      },
+      {
         name: 'Get',
         value: 'get',
         description: 'Get item',
@@ -248,6 +254,38 @@ export const magicDashFields: INodeProperties[] = [
     default: 0,
     required: true,
     description: 'The ID of the Magic Dash item to delete',
+  },
+
+  // ----------------------------------
+  //         deleteByTitle
+  // ----------------------------------
+  {
+    displayName: 'Title',
+    name: 'title',
+    type: 'string',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['deleteByTitle'],
+      },
+    },
+    default: '',
+    description: 'The title of the Magic Dash item to delete',
+  },
+  {
+    displayName: 'Company Name',
+    name: 'companyName',
+    type: 'string',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['deleteByTitle'],
+      },
+    },
+    default: '',
+    description: 'The company name for the Magic Dash item to delete',
   },
 
   // ----------------------------------

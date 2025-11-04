@@ -93,7 +93,7 @@ export const activityLogsFields: INodeProperties[] = [
         displayName: 'Resource ID',
         name: 'resource_id',
         type: 'number',
-        default: 0,
+        default: undefined,
         description: 'Filter by resource ID (must be used together with Resource Type)',
       },
       {

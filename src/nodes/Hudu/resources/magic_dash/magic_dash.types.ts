@@ -15,4 +15,9 @@ export interface IMagicDash extends IDataObject {
 
 export type IMagicDashResponse = IMagicDash[];
 
-export type MagicDashOperation = 'getAll' | 'get' | 'createOrUpdate' | 'deleteById';
+export type MagicDashOperation =
+  | 'getAll'
+  | 'get'
+  | 'createOrUpdate'
+  | 'deleteById'
+  | 'deleteByTitle';

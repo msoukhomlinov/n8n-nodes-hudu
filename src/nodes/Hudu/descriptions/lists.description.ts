@@ -81,6 +81,40 @@ export const listsFields: INodeProperties[] = [
     default: '',
     description: 'The name of the list',
   },
+  // List items for create
+  {
+    displayName: 'List Items',
+    name: 'list_items_attributes',
+    type: 'fixedCollection',
+    typeOptions: {
+      multipleValues: true,
+    },
+    placeholder: 'Add List Item',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['lists'],
+        operation: ['create'],
+      },
+    },
+    description: 'List items to create with the list',
+    options: [
+      {
+        name: 'item',
+        displayName: 'Item',
+        values: [
+          {
+            displayName: 'Name',
+            name: 'name',
+            type: 'string',
+            required: true,
+            default: '',
+            description: 'The name of the list item',
+          },
+        ],
+      },
+    ],
+  },
   // Name for update
   {
     displayName: 'Name',
@@ -95,6 +129,53 @@ export const listsFields: INodeProperties[] = [
     },
     default: '',
     description: 'The new name of the list',
+  },
+  // List items for update
+  {
+    displayName: 'List Items',
+    name: 'updateFields.list_items_attributes',
+    type: 'fixedCollection',
+    typeOptions: {
+      multipleValues: true,
+    },
+    placeholder: 'Add List Item',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['lists'],
+        operation: ['update'],
+      },
+    },
+    description: 'List items to add, update, or remove. Use ID for existing items, name only for new items, and _destroy: true with ID to remove items.',
+    options: [
+      {
+        name: 'item',
+        displayName: 'Item',
+        values: [
+          {
+            displayName: 'ID',
+            name: 'id',
+            type: 'number',
+            default: undefined,
+            description: 'ID of existing list item (required for updates and deletions)',
+          },
+          {
+            displayName: 'Name',
+            name: 'name',
+            type: 'string',
+            default: '',
+            description: 'The name of the list item (required for new items, optional for updates)',
+          },
+          {
+            displayName: 'Destroy',
+            name: '_destroy',
+            type: 'boolean',
+            default: false,
+            description: 'Whether to remove this item from the list',
+          },
+        ],
+      },
+    ],
   },
   // Filters for getAll
   {

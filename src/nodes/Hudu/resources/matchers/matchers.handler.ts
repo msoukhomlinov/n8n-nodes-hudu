@@ -46,7 +46,7 @@ export async function handleMatcherOperation(
         );
       }
       if (updateFields.sync_id !== undefined) {
-        matcherUpdate.sync_id = updateFields.sync_id;
+        matcherUpdate.sync_id = String(updateFields.sync_id);
       }
       if (updateFields.identifier !== undefined) {
         matcherUpdate.identifier = updateFields.identifier;

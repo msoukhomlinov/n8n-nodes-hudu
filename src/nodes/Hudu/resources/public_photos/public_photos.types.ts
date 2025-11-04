@@ -1,7 +1,8 @@
 import type { IDataObject } from 'n8n-workflow';
 
 export interface IPublicPhoto extends IDataObject {
-  id: number; // The ID of the public photo
+  id: string; // Slug ID of the public photo (API v2.39.6)
+  numeric_id: number; // Numeric ID for backward compatibility
   url: string; // The URL of the public photo
   record_type: string; // The type of record the public photo is associated with (e.g., Article)
   record_id: number; // The ID of the record the public photo is associated with

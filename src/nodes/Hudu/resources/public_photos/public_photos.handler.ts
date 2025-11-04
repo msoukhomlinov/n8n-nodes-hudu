@@ -111,7 +111,7 @@ export async function handlePublicPhotoOperation(
         ) as IPublicPhoto[];
 
         if (Array.isArray(batch) && batch.length > 0) {
-          foundPhoto = batch.find(photo => photo.id === photoId);
+          foundPhoto = batch.find(photo => (photo as IPublicPhoto).numeric_id === photoId);
           // If found, break early
           if (foundPhoto) {
             break;

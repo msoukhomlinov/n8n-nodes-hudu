@@ -23,14 +23,8 @@ export const cardsOperations: INodeProperties[] = [
       {
         name: 'Jump',
         value: 'jump',
-        description: 'Jump to a card by integration ID',
-        action: 'Jump to a card by integration ID',
-      },
-      {
-        name: 'Jump By Identifier',
-        value: 'jumpByIdentifier',
-        description: 'Jump to a card by integration identifier',
-        action: 'Jump to a card by integration identifier',
+        description: 'Jump to a card by integration ID or identifier',
+        action: 'Jump to a card by integration ID or identifier',
       },
     ],
     default: 'lookup',
@@ -108,48 +102,16 @@ export const cardsFields: INodeProperties[] = [
     },
   },
   {
-    displayName: 'Integration ID',
-    name: 'integration_id',
-    type: 'string',
-    required: true,
-    default: '',
-    description: 'The integration ID to use',
-    displayOptions: {
-      show: {
-        resource: ['cards'],
-        operation: ['jump'],
-      },
-    },
-  },
-  {
     displayName: 'Integration Type',
     name: 'integration_type',
     type: 'string',
     required: true,
     default: '',
-    description: 'The integration type to use',
+    description: 'Type of card. Contact support@usehudu.com for a list of types for specific integrations.',
     displayOptions: {
       show: {
         resource: ['cards'],
         operation: ['jump'],
-      },
-    },
-  },
-  {
-    displayName: 'Integration Slug',
-    name: 'integration_slug',
-    type: 'options',
-    required: true,
-    default: '',
-    description: 'The integration type to use (e.g. autotask, cw_manage)',
-    options: INTEGRATION_SLUGS.map((slug) => ({
-      name: formatTitleCase(slug),
-      value: slug,
-    })),
-    displayOptions: {
-      show: {
-        resource: ['cards'],
-        operation: ['jumpByIdentifier'],
       },
     },
   },
@@ -171,7 +133,8 @@ export const cardsFields: INodeProperties[] = [
         name: 'integration_id',
         type: 'string',
         default: '',
-        description: 'ID of the entity in the external integration',
+        description:
+          'ID of the entity in the external integration. Must be present unless Integration Identifier is set.',
       },
       {
         displayName: 'Integration Identifier',
@@ -179,7 +142,7 @@ export const cardsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description:
-          'Identifier of the entity in the external integration (if integration_id is not set)',
+          'Identifier of the entity in the external integration (used if Integration ID is not set). At least one of Integration ID or Integration Identifier must be provided.',
       },
     ],
   },

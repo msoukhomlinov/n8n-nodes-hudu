@@ -23,9 +23,3 @@ export interface ICardsJumpParams {
   integration_type: string;
 }
 
-export interface ICardsLookupParams {
-  integration_id?: string;
-  integration_identifier?: string;
-  integration_slug: (typeof INTEGRATION_SLUGS)[number];
-  integration_type: string;
-}

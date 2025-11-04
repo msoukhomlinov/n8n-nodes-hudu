@@ -4,7 +4,7 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.38.0. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.39.6. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
@@ -40,8 +40,9 @@ To use this node, you need to:
 ## Supported Resources & Operations
 
 ### Activity Logs
-- Get all activity logs with filtering support
-- Filter by user, action, and date range
+- Get all activity logs with comprehensive filtering support
+- Filter by user (ID or email), action, resource (ID and type), and date range
+- Delete activity logs by datetime with optional unassigned logs filter
 
 ### API Info
 - Get API information and version details
@@ -70,8 +71,8 @@ To use this node, you need to:
 - Filter by company and resource types
 
 ### Cards
-- Lookup cards by integration
-- Jump to card functionality
+- Lookup cards by integration (supports integration ID or identifier)
+- Jump to card by integration ID or identifier
 - Filter by integration type and slug
 
 ### Companies
@@ -96,6 +97,7 @@ To use this node, you need to:
 ### Lists
 - Create, update, retrieve, and delete lists
 - Use this resource to manage the lists themselves
+- Create list items when creating a list, or add/update/remove items when updating a list
 - Filter lists by name or query
 
 ### List Options
@@ -105,6 +107,7 @@ To use this node, you need to:
 ### Magic Dash
 - Create, update, get, and delete Magic Dash items
 - List all items with filtering by company and title
+- Delete by ID or by title + company name
 
 ### Matchers
 - Configure and manage integration matchers
@@ -122,6 +125,13 @@ To use this node, you need to:
 - Security modes: all users or specific groups (`allowed_groups` when `security = specific`)
 - Filter by name, company, search
 - Pick allowed groups with an option loader
+
+### Exports
+- Initiate company exports with format options: PDF, CSV, or S3
+- Optional inclusions: websites, passwords, and specific asset layouts
+
+### S3 Exports
+- Initiate S3 exports (uses credentials configured in Hudu account settings)
 
 ### Procedures
 - Create and manage procedures
@@ -154,6 +164,7 @@ To use this node, you need to:
 
 ### Uploads
 - Manage file uploads
+- Operations: Create (multipart upload), Get, Get Many, Delete
 
 ### Websites
 - Manage website records

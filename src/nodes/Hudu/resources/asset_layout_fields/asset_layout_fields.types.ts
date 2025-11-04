@@ -9,11 +9,13 @@ export interface IAssetLayoutFieldEntity extends IDataObject {
 	hint: string;
 	min?: number;
 	max?: number;
-	linkable_id?: number;
+	linkable_id: number;
 	expiration: boolean;
 	options: string;
 	position: number;
 	is_destroyed: boolean;
+	list_id?: number;
+	multiple_options?: boolean;
 }
 
 export interface IAssetLayoutFieldResponse extends IDataObject {

@@ -65,7 +65,7 @@ export const listOptionsFields: INodeProperties[] = [
   {
     displayName: 'List Item ID',
     name: 'item_id',
-    type: 'string',
+    type: 'number',
     required: true,
     displayOptions: {
       show: {
@@ -73,7 +73,7 @@ export const listOptionsFields: INodeProperties[] = [
         operation: ['update', 'delete'],
       },
     },
-    default: '',
+    default: undefined,
     description: 'The ID of the list item',
   },
   

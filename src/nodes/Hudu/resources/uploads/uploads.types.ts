@@ -17,4 +17,4 @@ export interface IUploadResponse extends IDataObject {
   upload: IUpload;
 }
 
-export type UploadOperation = 'getAll' | 'get' | 'delete';
+export type UploadOperation = 'getAll' | 'get' | 'create' | 'delete';
