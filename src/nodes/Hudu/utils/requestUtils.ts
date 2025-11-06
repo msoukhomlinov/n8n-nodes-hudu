@@ -434,10 +434,15 @@ export async function handleListing<T extends IDataObject>(
   let hasMore = true;
   let page = 1;
 
-  // Optimise page size if we have a specific limit less than default page size
-  const pageSize = !returnAll && limit > 0 && limit < HUDU_API_CONSTANTS.PAGE_SIZE 
-    ? limit 
-    : HUDU_API_CONSTANTS.PAGE_SIZE;
+  // When post-processing filters are present, always use maximum page size to minimize API calls
+  // since filtering happens client-side and we may need to fetch more items to meet the limit
+  // Otherwise, optimise page size if we have a specific limit less than default page size
+  const hasPostProcessFilters = !!(postProcessFilters && filterMapping);
+  const pageSize = hasPostProcessFilters
+    ? HUDU_API_CONSTANTS.PAGE_SIZE
+    : !returnAll && limit > 0 && limit < HUDU_API_CONSTANTS.PAGE_SIZE 
+      ? limit 
+      : HUDU_API_CONSTANTS.PAGE_SIZE;
 
   //debugLog('[handleListing] Start', { endpoint, resourceName, returnAll, limit, pageSize });
 

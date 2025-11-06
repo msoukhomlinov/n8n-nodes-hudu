@@ -8,6 +8,9 @@ import {
   handleArchiveOperation,
 } from '../../utils/operations';
 import type { ArticlesOperation } from './articles.types';
+import type { FilterMapping } from '../../utils/types';
+import type { IArticlePostProcessFilters } from './articles.types';
+import { articleFilterMapping } from './articles.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
 import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
@@ -108,20 +111,33 @@ export async function handleArticlesOperation(
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
 
+      // Extract post-processing filters and API filters separately
+      const postProcessFilters: IArticlePostProcessFilters = {};
+      const apiFilters: IDataObject = {};
+
+      // Copy only API filters (excluding folder_id which is post-processed)
+      for (const [key, value] of Object.entries(filters)) {
+        if (key === 'folder_id') {
+          postProcessFilters.folder_id = value as number;
+        } else {
+          apiFilters[key] = value;
+        }
+      }
+
       // Validate company_id if provided in filters
-      if (filters.company_id) {
-        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+      if (apiFilters.company_id) {
+        apiFilters.company_id = validateCompanyId(apiFilters.company_id, this.getNode(), 'Company ID');
       }
 
       const qs: IDataObject = {
-        ...filters,
+        ...apiFilters,
       };
 
-      if (filters.updated_at) {
-        const updatedAtFilter = filters.updated_at as IDataObject;
+      if (apiFilters.updated_at) {
+        const updatedAtFilter = apiFilters.updated_at as IDataObject;
         if (updatedAtFilter.range) {
           const rangeObj = updatedAtFilter.range as IDataObject;
-          filters.updated_at = processDateRange({
+          apiFilters.updated_at = processDateRange({
             range: {
               mode: rangeObj.mode as 'exact' | 'range' | 'preset',
               exact: rangeObj.exact as string,
@@ -130,7 +146,7 @@ export async function handleArticlesOperation(
               preset: rangeObj.preset as DateRangePreset,
             },
           });
-          qs.updated_at = filters.updated_at;
+          qs.updated_at = apiFilters.updated_at;
         }
       }
 
@@ -141,6 +157,8 @@ export async function handleArticlesOperation(
         qs,
         returnAll,
         limit,
+        postProcessFilters as IDataObject,
+        articleFilterMapping as FilterMapping,
       );
 
       // Process markdown content if requested
