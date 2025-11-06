@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.5.1] - 2025-11-06
+
+### Fixed
+- **Articles**: Fixed `folder_id` filter incorrectly being sent as API query parameter. The Hudu API doesn't support `folder_id` as a query parameter for GET /articles, so filtering is now correctly applied client-side as a post-processing filter, matching the pattern used in Folders resource. This ensures only articles matching the specified `folder_id` are returned.
+
 ## [1.5.0] - 2025-11-04
 
 ### Added
