@@ -208,19 +208,48 @@ export const companiesFields: INodeProperties[] = [
   // ----------------------------------
   //         companies:get
   // ----------------------------------
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['companies'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric company ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use company URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the company by numeric ID or slug identifier',
+  },
+
+  // Company ID field for operations that need it
   {
     displayName: 'Company ID',
-    name: 'id',
-    type: 'number',
+    name: 'companyId',
+    type: 'string',
     required: true,
-    default: 0,
     displayOptions: {
       show: {
         resource: ['companies'],
         operation: ['get', 'delete', 'update', 'archive', 'unarchive'],
       },
     },
-    description: 'The ID of the company',
+    default: '',
+    description: 'The unique ID or slug of the company',
   },
 
   // ----------------------------------

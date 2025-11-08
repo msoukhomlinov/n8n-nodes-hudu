@@ -15,8 +15,42 @@ export async function handlePasswordFoldersOperation(
 
   switch (operation) {
     case 'get': {
-      const folderId = this.getNodeParameter('id', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, folderId, 'password_folder');
+      const folderId = this.getNodeParameter('folderId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const passwordFolders = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'password_folders',
+          { slug: folderId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (passwordFolders.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Password folder with slug "${folderId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (passwordFolders.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple password folders found with slug "${folderId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = passwordFolders[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        responseData = await handleGetOperation.call(this, resourceEndpoint, folderId, 'password_folder');
+      }
       break;
     }
 

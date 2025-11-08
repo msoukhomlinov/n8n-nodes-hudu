@@ -30,10 +30,11 @@ export const groupsOperations: INodeProperties[] = [
 ];
 
 export const groupsFields: INodeProperties[] = [
+  // Identifier Type toggle for get operation
   {
-    displayName: 'Group ID',
-    name: 'id',
-    type: 'number',
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
     required: true,
     displayOptions: {
       show: {
@@ -41,8 +42,34 @@ export const groupsFields: INodeProperties[] = [
         operation: ['get'],
       },
     },
-    default: 0,
-    description: 'The ID of the group to retrieve',
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric group ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use group URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the group by numeric ID or slug identifier',
+  },
+  {
+    displayName: 'Group ID',
+    name: 'groupId',
+    type: 'string',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['groups'],
+        operation: ['get'],
+      },
+    },
+    default: '',
+    description: 'The unique ID or slug of the group',
   },
   {
     displayName: 'Return All',

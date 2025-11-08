@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import {
   handleCreateOperation,
   handleGetOperation,
@@ -88,14 +89,47 @@ export async function handleArticlesOperation(
 
     case 'get': {
       const articleId = this.getNodeParameter('articleId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
 
-      responseData = await handleGetOperation.call(
-        this,
-        resourceEndpoint,
-        articleId,
-        'article',
-      );
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const articles = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'articles',
+          { slug: articleId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (articles.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Article with slug "${articleId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (articles.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple articles found with slug "${articleId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = articles[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        responseData = await handleGetOperation.call(
+          this,
+          resourceEndpoint,
+          articleId,
+          'article',
+        );
+      }
 
       // Process markdown content if requested
       if (includeMarkdownContent && responseData && typeof responseData === 'object') {

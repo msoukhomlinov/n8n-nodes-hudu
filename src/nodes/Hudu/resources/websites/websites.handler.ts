@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange, validateCompanyId } from '../../utils/index';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import {
@@ -89,13 +90,46 @@ export async function handleWebsitesOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as number;
+      const websiteId = this.getNodeParameter('websiteId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites get parameters', { id });
+        debugLog('[ResourceParams] Websites get parameters', { websiteId, identifierType });
       }
-      
-      return await handleGetOperation.call(this, resourceEndpoint, id, 'website');
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const websites = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'websites',
+          { slug: websiteId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (websites.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Website with slug "${websiteId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (websites.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple websites found with slug "${websiteId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        return websites[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        return await handleGetOperation.call(this, resourceEndpoint, websiteId, 'website');
+      }
     }
 
     case 'create': {
@@ -131,11 +165,11 @@ export async function handleWebsitesOperation(
     }
 
     case 'update': {
-      const id = this.getNodeParameter('id', i) as number;
+      const websiteId = this.getNodeParameter('websiteId', i) as string;
       const updateFields = this.getNodeParameter('websiteUpdateFields', i) as IDataObject;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites update parameters', { id, updateFields });
+        debugLog('[ResourceParams] Websites update parameters', { websiteId, updateFields });
       }
       
       const body = {
@@ -148,17 +182,17 @@ export async function handleWebsitesOperation(
         debugLog('[ResourceTransform] Websites update transformed body', { body });
       }
       
-      return await handleUpdateOperation.call(this, resourceEndpoint, id, body);
+      return await handleUpdateOperation.call(this, resourceEndpoint, websiteId, body);
     }
 
     case 'delete': {
-      const id = this.getNodeParameter('id', i) as number;
+      const websiteId = this.getNodeParameter('websiteId', i) as string;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] Websites delete parameters', { id });
+        debugLog('[ResourceParams] Websites delete parameters', { websiteId });
       }
       
-      return await handleDeleteOperation.call(this, resourceEndpoint, id);
+      return await handleDeleteOperation.call(this, resourceEndpoint, websiteId);
     }
   }
 

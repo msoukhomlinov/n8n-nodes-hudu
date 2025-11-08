@@ -43,11 +43,39 @@ export const assetLayoutOperations: INodeProperties[] = [
 ];
 
 export const assetLayoutFields: INodeProperties[] = [
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['asset_layouts'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric asset layout ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use asset layout URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the asset layout by numeric ID or slug identifier',
+  },
+
   // ID field for single operations
   {
     displayName: 'Asset Layout ID',
     name: 'id',
-    type: 'number',
+    type: 'string',
     required: true,
     displayOptions: {
       show: {
@@ -55,8 +83,8 @@ export const assetLayoutFields: INodeProperties[] = [
         operation: ['get', 'update'],
       },
     },
-    default: 0,
-    description: 'ID of the Asset Layout to operate on',
+    default: '',
+    description: 'The unique ID or slug of the asset layout',
   },
 
   // ----------------------------------

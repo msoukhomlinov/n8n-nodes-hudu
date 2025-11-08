@@ -94,10 +94,39 @@ export const assetsFields: INodeProperties[] = [
   // ----------------------------------
   //         assets:single operations (get/archive/unarchive/delete/update/moveLayout)
   // ----------------------------------
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric asset ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use asset URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the asset by numeric ID or slug identifier',
+  },
+
+  // Asset ID field for operations that need it
   {
     displayName: 'Asset ID',
     name: 'assetId',
-    type: 'number',
+    type: 'string',
     required: true,
     displayOptions: {
       show: {
@@ -105,8 +134,8 @@ export const assetsFields: INodeProperties[] = [
         operation: ['get', 'archive', 'unarchive', 'delete', 'update', 'moveLayout'],
       },
     },
-    default: 0,
-    description: 'The ID of the asset to operate on',
+    default: '',
+    description: 'The unique ID or slug of the asset to operate on',
   },
   {
     displayName: 'Company Name or ID',

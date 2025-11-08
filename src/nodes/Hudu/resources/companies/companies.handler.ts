@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange, validateCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
@@ -46,7 +47,7 @@ export async function handleCompaniesOperation(
 
     case 'delete': {
       const companyId = validateCompanyId(
-        this.getNodeParameter('id', i),
+        this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
       );
@@ -55,12 +56,47 @@ export async function handleCompaniesOperation(
     }
 
     case 'get': {
-      const companyId = validateCompanyId(
-        this.getNodeParameter('id', i),
-        this.getNode(),
-        'Company ID'
-      );
-      responseData = await handleGetOperation.call(this, resourceEndpoint, companyId.toString(), 'company');
+      const companyId = this.getNodeParameter('companyId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const companies = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'companies',
+          { slug: companyId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (companies.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Company with slug "${companyId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (companies.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple companies found with slug "${companyId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = companies[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        const validatedCompanyId = validateCompanyId(
+          companyId,
+          this.getNode(),
+          'Company ID'
+        );
+        responseData = await handleGetOperation.call(this, resourceEndpoint, validatedCompanyId.toString(), 'company');
+      }
       break;
     }
 
@@ -106,7 +142,7 @@ export async function handleCompaniesOperation(
 
     case 'update': {
       const companyId = validateCompanyId(
-        this.getNodeParameter('id', i),
+        this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
       );
@@ -130,7 +166,7 @@ export async function handleCompaniesOperation(
 
     case 'archive': {
       const companyId = validateCompanyId(
-        this.getNodeParameter('id', i),
+        this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
       );
@@ -140,7 +176,7 @@ export async function handleCompaniesOperation(
 
     case 'unarchive': {
       const companyId = validateCompanyId(
-        this.getNodeParameter('id', i),
+        this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
       );

@@ -610,10 +610,37 @@ export const networksFields: INodeProperties[] = [
   // ----------------------------------
   //         get/delete
   // ----------------------------------
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['networks'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric network ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use network URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the network by numeric ID or slug identifier',
+  },
   {
     displayName: 'Network ID',
     name: 'networkId',
-    type: 'number',
+    type: 'string',
     required: true,
     displayOptions: {
       show: {
@@ -621,8 +648,8 @@ export const networksFields: INodeProperties[] = [
         operation: ['get', 'delete', 'update'],
       },
     },
-    default: 0,
-    description: 'The ID of the network',
+    default: '',
+    description: 'The unique ID or slug of the network',
   },
 
   // ----------------------------------

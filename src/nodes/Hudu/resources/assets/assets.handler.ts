@@ -150,22 +150,70 @@ export async function handleAssetsOperation(
     case 'get': {
       debugLog('[OPERATION_GET] Processing get asset operation');
       const assetId = this.getNodeParameter('assetId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       
-      debugLog('[API_REQUEST] Getting asset', { assetId });
-      
-      const rawResponse = await huduApiRequest.call(this, 'GET', '/assets', {}, { id: assetId });
+      debugLog('[API_REQUEST] Getting asset', { assetId, identifierType });
 
-      if (!rawResponse || typeof rawResponse !== 'object' || !Array.isArray((rawResponse as IDataObject).assets)) {
-        throw new NodeOperationError(this.getNode(), `Unexpected API response format when fetching asset ID '${assetId}'`, { itemIndex: i });
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const assets = await handleGetAllOperation.call(
+          this,
+          assetsResourceEndpoint,
+          'assets',
+          { slug: assetId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (assets.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Asset with slug "${assetId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (assets.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple assets found with slug "${assetId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = assets[0];
+      } else {
+        // Assets API only supports query parameters, not path parameters
+        // Use getAll with id filter for ID-based retrieval
+        const assets = await handleGetAllOperation.call(
+          this,
+          assetsResourceEndpoint,
+          'assets',
+          { id: assetId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (assets.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Asset with ID "${assetId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (assets.length > 1) {
+          // Should not happen if IDs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple assets found with ID "${assetId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = assets[0];
       }
-
-      const assetsArray = (rawResponse as IDataObject).assets as IDataObject[];
-      if (!assetsArray.length) {
-        throw new NodeOperationError(this.getNode(), `No asset found with ID '${assetId}'`, { itemIndex: i });
-      }
-
-      const assetData = assetsArray[0];
-      responseData = assetData;
       
       debugLog('[API_RESPONSE] Get asset response', responseData);
       break;

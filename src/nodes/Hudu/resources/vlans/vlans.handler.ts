@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange, validateCompanyId } from '../../utils/index';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import {
@@ -127,13 +128,46 @@ export async function handleVlansOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as number;
+      const vlanId = this.getNodeParameter('id', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] VLAN get parameters', { id });
+        debugLog('[ResourceParams] VLAN get parameters', { vlanId, identifierType });
       }
-      
-      return await handleGetOperation.call(this, resourceEndpoint, id, 'vlan');
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const vlans = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'vlans',
+          { slug: vlanId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (vlans.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `VLAN with slug "${vlanId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (vlans.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple VLANs found with slug "${vlanId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        return vlans[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        return await handleGetOperation.call(this, resourceEndpoint, vlanId, 'vlan');
+      }
     }
 
     case 'create': {

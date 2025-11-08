@@ -67,6 +67,34 @@ export const articlesOperations: INodeProperties[] = [
 ];
 
 export const articlesFields: INodeProperties[] = [
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric article ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use article URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the article by numeric ID or slug identifier',
+  },
+
   // Article ID field for operations that need it
   {
     displayName: 'Article ID',
@@ -80,7 +108,7 @@ export const articlesFields: INodeProperties[] = [
       },
     },
     default: '',
-    description: 'The unique ID of the article',
+    description: 'The unique ID or slug of the article',
   },
 
   // Include Markdown Content option for get operation

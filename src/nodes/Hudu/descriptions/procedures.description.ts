@@ -236,10 +236,39 @@ export const proceduresFields: INodeProperties[] = [
   },
 
   // Get, Delete, Update
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['procedures'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric procedure ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use procedure URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the procedure by numeric ID or slug identifier',
+  },
+
+  // Procedure ID field for operations that need it
   {
     displayName: 'Procedure ID',
-    name: 'id',
-    type: 'number',
+    name: 'procedureId',
+    type: 'string',
     required: true,
     displayOptions: {
       show: {
@@ -247,8 +276,8 @@ export const proceduresFields: INodeProperties[] = [
         operation: ['get', 'delete', 'update'],
       },
     },
-    default: 0,
-    description: 'The ID of the procedure',
+    default: '',
+    description: 'The unique ID or slug of the procedure',
   },
 
   // Create

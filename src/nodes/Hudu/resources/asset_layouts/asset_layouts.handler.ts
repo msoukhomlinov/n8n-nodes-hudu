@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange } from '../../utils/index';
 import {
   handleGetAllOperation,
@@ -71,10 +72,42 @@ export async function handleAssetLayoutOperation(
     case 'get': {
       debugLog('[OPERATION_GET] Processing get asset layout operation');
       const id = this.getNodeParameter('id', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
 
-      debugLog('[API_REQUEST] Getting asset layout', { id });
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const assetLayouts = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'asset_layouts',
+          { slug: id },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
 
-      responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'asset_layout');
+        if (assetLayouts.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Asset layout with slug "${id}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (assetLayouts.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple asset layouts found with slug "${id}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = assetLayouts[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        debugLog('[API_REQUEST] Getting asset layout', { id });
+        responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'asset_layout');
+      }
 
       debugLog('[API_RESPONSE] Get asset layout response', responseData);
       break;
@@ -118,7 +151,7 @@ export async function handleAssetLayoutOperation(
 
     case 'update': {
       debugLog('[OPERATION_UPDATE] Processing update asset layout operation');
-      const id = this.getNodeParameter('id', i) as number;
+      const id = this.getNodeParameter('id', i) as string;
       const assetLayoutUpdateFields = this.getNodeParameter('assetLayoutUpdateFields', i) as IDataObject;
 
       debugLog('[RESOURCE_PARAMS] Update asset layout parameters', { id, assetLayoutUpdateFields });

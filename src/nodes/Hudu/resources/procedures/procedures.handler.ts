@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange, validateCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
@@ -45,8 +46,42 @@ export async function handleProceduresOperation(
     }
 
     case 'get': {
-      const procedureId = this.getNodeParameter('id', i) as string;
-      responseData = await handleGetOperation.call(this, resourceEndpoint, procedureId, 'procedure');
+      const procedureId = this.getNodeParameter('procedureId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const procedures = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'procedures',
+          { slug: procedureId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (procedures.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Procedure with slug "${procedureId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (procedures.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple procedures found with slug "${procedureId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        responseData = procedures[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        responseData = await handleGetOperation.call(this, resourceEndpoint, procedureId, 'procedure');
+      }
       break;
     }
 
@@ -97,7 +132,7 @@ export async function handleProceduresOperation(
     }
 
     case 'update': {
-      const procedureId = this.getNodeParameter('id', i) as string;
+      const procedureId = this.getNodeParameter('procedureId', i) as string;
       const updateFields = this.getNodeParameter('procedureUpdateFields', i) as IDataObject;
 
       // Validate company_id if provided
@@ -116,7 +151,7 @@ export async function handleProceduresOperation(
     }
 
     case 'delete': {
-      const procedureId = this.getNodeParameter('id', i) as string;
+      const procedureId = this.getNodeParameter('procedureId', i) as string;
       responseData = await handleDeleteOperation.call(this, resourceEndpoint, procedureId);
       break;
     }

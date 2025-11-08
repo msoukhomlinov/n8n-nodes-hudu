@@ -36,6 +36,7 @@ To use this node, you need to:
 - Central request sanitisation (omits empty optionals to prevent API 500s)
 - Resource-specific update collections across all resources
 - Optional article markdown conversion (HTML to Markdown) for Articles get/get many
+- Flexible identifier support: Get operations support both numeric IDs and slugs via Identifier Type toggle (Articles, Asset Layouts, Asset Passwords, Assets, Companies, Groups, Networks, Password Folders, Procedures, Users, VLAN Zones, VLANs, Websites)
 
 ## Supported Resources & Operations
 
@@ -49,24 +50,28 @@ To use this node, you need to:
 
 ### Articles
 - Create, update, archive, unarchive, delete, and retrieve articles
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - List all articles with comprehensive filtering (company, draft, sharing, folder, name, fuzzy search, updated date range)
 - Get article version history
 - Include Markdown Content toggle to return `markdown_content` alongside original HTML
 
 ### Asset
 - **Manage core asset lifecycle & properties**: Create, retrieve, update core details, archive, unarchive, move layout, and delete assets
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Link assets to companies
 - Get single asset details, including all its field values
 - List all assets with enhanced filtering (e.g., by company, update date, archived status)
 
 ### Asset Layouts
 - Create and manage asset layout templates
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Get layout fields and configurations
 - List all layouts with filtering support
 - **Advanced custom field support:** Add hints, min/max, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties
 
 ### Asset Passwords
 - Create and manage asset-related passwords
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Link passwords to assets and companies
 - Filter by company and resource types
 
@@ -77,6 +82,7 @@ To use this node, you need to:
 
 ### Companies
 - Create, update, delete, and retrieve companies
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - List all companies with filtering support
 - Jump to company by integration
 
@@ -116,12 +122,14 @@ To use this node, you need to:
 
 ### Networks
 - Create and manage network information
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Link to companies
 - Filter by company and attributes
 - Pick related VLANs with an option loader
 
 ### Password Folders
 - Create, update, delete, and retrieve password folders
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Security modes: all users or specific groups (`allowed_groups` when `security = specific`)
 - Filter by name, company, search
 - Pick allowed groups with an option loader
@@ -135,6 +143,7 @@ To use this node, you need to:
 
 ### Procedures
 - Create and manage procedures
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Create from templates
 - Duplicate existing procedures
 - Manage procedure tasks
@@ -147,19 +156,23 @@ To use this node, you need to:
 
 ### Groups
 - Retrieve groups and retrieve a group by ID
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Filters: name, default, search; supports pagination
 
 ### Users
 - Get user information
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - List all users
 - Filter by role and status
 
 ### VLANs
 - Full CRUD support for VLANs, including filtering by company, name, and VLAN ID
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Pick VLAN Zone and Status List via option loaders
 
 ### VLAN Zones
 - Full CRUD support for VLAN Zones, including filtering by company, name, archive status, and date ranges
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Option loader available for selecting zones where referenced
 
 ### Uploads
@@ -168,6 +181,7 @@ To use this node, you need to:
 
 ### Websites
 - Manage website records
+- Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Link to companies
 - Filter by company and status
 - **All fields supported, including new email security fields:** `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`, and more
