@@ -64,10 +64,45 @@ export async function handleAssetPasswordOperation(
 
       case 'get': {
         const id = this.getNodeParameter('id', i) as string;
+        const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
+        
         if (!id) {
           throw new NodeOperationError(this.getNode(), 'Password ID is required');
         }
-        responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'asset_password');
+
+        if (identifierType === 'slug') {
+          // Use getAll with slug filter for slug-based retrieval
+          const assetPasswords = await handleGetAllOperation.call(
+            this,
+            resourceEndpoint,
+            'asset_passwords',
+            { slug: id },
+            false, // returnAll
+            1,     // limit to 1 for efficiency
+          ) as IDataObject[];
+
+          if (assetPasswords.length === 0) {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Asset password with slug "${id}" not found`,
+              { itemIndex: i },
+            );
+          }
+
+          if (assetPasswords.length > 1) {
+            // Should not happen if slugs are unique, but handle gracefully
+            throw new NodeOperationError(
+              this.getNode(),
+              `Multiple asset passwords found with slug "${id}" (expected unique)`,
+              { itemIndex: i },
+            );
+          }
+
+          responseData = assetPasswords[0];
+        } else {
+          // Use existing handleGetOperation for ID-based retrieval
+          responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'asset_password');
+        }
         break;
       }
 

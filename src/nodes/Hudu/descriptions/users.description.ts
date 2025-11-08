@@ -62,11 +62,11 @@ export const userFields: INodeProperties[] = [
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
   },
-  // ID field for Get operation
+  // Identifier Type toggle for get operation
   {
-    displayName: 'User ID',
-    name: 'id',
-    type: 'number',
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
     required: true,
     displayOptions: {
       show: {
@@ -74,8 +74,35 @@ export const userFields: INodeProperties[] = [
         operation: ['get'],
       },
     },
-    default: 0,
-    description: 'ID of the user to retrieve',
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric user ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use user URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the user by numeric ID or slug identifier',
+  },
+  // ID field for Get operation
+  {
+    displayName: 'User ID',
+    name: 'userId',
+    type: 'string',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['users'],
+        operation: ['get'],
+      },
+    },
+    default: '',
+    description: 'The unique ID or slug of the user',
   },
   // Filters for GetAll operation
   {

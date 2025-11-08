@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.6.0] - 2025-11-09
+
+### Added
+
+### Improved
+- **Articles**, **Asset Layouts**, **Asset Passwords**, **Assets**, **Companies**, **Groups**, **Networks**, **Password Folders**, **Procedures**, **Users**, **VLAN zones**, **VLANs**, **Websites**: Get operation supports numeric ID or slug selection via Identifier Type toggle
+
+
 ## [1.5.0] - 2025-11-04
 
 ### Added

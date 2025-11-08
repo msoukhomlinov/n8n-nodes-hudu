@@ -143,7 +143,49 @@ export const vlansFields: INodeProperties[] = [
       },
     ],
   },
-  // get, update, delete
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['vlans'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric VLAN ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use VLAN URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the VLAN by numeric ID or slug identifier',
+  },
+  // get operation
+  {
+    displayName: 'VLAN ID',
+    name: 'id',
+    type: 'string',
+    displayOptions: {
+      show: {
+        resource: ['vlans'],
+        operation: ['get'],
+      },
+    },
+    default: '',
+    required: true,
+    description: 'The unique ID or slug of the VLAN',
+  },
+  // update, delete
   {
     displayName: 'VLAN ID',
     name: 'id',
@@ -151,7 +193,7 @@ export const vlansFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['vlans'],
-        operation: ['get', 'update', 'delete'],
+        operation: ['update', 'delete'],
       },
     },
     default: 0,

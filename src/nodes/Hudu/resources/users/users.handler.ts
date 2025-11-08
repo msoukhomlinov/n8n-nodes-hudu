@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { handleGetOperation, handleGetAllOperation } from '../../utils/operations';
 import type { UserOperation } from './users.types';
@@ -27,8 +28,42 @@ export async function handleUserOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as number;
-      return await handleGetOperation.call(this, resourceEndpoint, id, 'user');
+      const userId = this.getNodeParameter('userId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const users = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'users',
+          { slug: userId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (users.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `User with slug "${userId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (users.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple users found with slug "${userId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        return users[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        return await handleGetOperation.call(this, resourceEndpoint, userId, 'user');
+      }
     }
   }
 

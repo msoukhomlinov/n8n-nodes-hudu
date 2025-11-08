@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
 import {
   handleGetAllOperation,
@@ -57,7 +58,41 @@ export async function handleNetworksOperation(
 
     case 'get': {
       const networkId = this.getNodeParameter('networkId', i) as string;
-      return await handleGetOperation.call(this, resourceEndpoint, networkId, 'network');
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
+
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const networks = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'networks',
+          { slug: networkId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (networks.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Network with slug "${networkId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (networks.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple networks found with slug "${networkId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        return networks[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        return await handleGetOperation.call(this, resourceEndpoint, networkId, 'network');
+      }
     }
 
     case 'getAll': {
