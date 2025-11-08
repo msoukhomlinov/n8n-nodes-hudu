@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { processDateRange, validateCompanyId } from '../../utils/index';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import {
@@ -125,13 +126,46 @@ export async function handleVlanZonesOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as number;
+      const vlanZoneId = this.getNodeParameter('vlanZoneId', i) as string;
+      const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
 
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
-        debugLog('[ResourceParams] VLAN Zone get parameters', { id });
+        debugLog('[ResourceParams] VLAN Zone get parameters', { vlanZoneId, identifierType });
       }
 
-      return await handleGetOperation.call(this, resourceEndpoint, id, 'vlan_zone');
+      if (identifierType === 'slug') {
+        // Use getAll with slug filter for slug-based retrieval
+        const vlanZones = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'vlan_zones',
+          { slug: vlanZoneId },
+          false, // returnAll
+          1,     // limit to 1 for efficiency
+        ) as IDataObject[];
+
+        if (vlanZones.length === 0) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `VLAN zone with slug "${vlanZoneId}" not found`,
+            { itemIndex: i },
+          );
+        }
+
+        if (vlanZones.length > 1) {
+          // Should not happen if slugs are unique, but handle gracefully
+          throw new NodeOperationError(
+            this.getNode(),
+            `Multiple VLAN zones found with slug "${vlanZoneId}" (expected unique)`,
+            { itemIndex: i },
+          );
+        }
+
+        return vlanZones[0];
+      } else {
+        // Use existing handleGetOperation for ID-based retrieval
+        return await handleGetOperation.call(this, resourceEndpoint, vlanZoneId, 'vlan_zone');
+      }
     }
 
     case 'create': {

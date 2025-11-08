@@ -135,7 +135,49 @@ export const vlanZonesFields: INodeProperties[] = [
       },
     ],
   },
-  // get, update, delete
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['vlan_zones'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric VLAN zone ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use VLAN zone URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the VLAN zone by numeric ID or slug identifier',
+  },
+  // get operation
+  {
+    displayName: 'VLAN Zone ID',
+    name: 'vlanZoneId',
+    type: 'string',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['vlan_zones'],
+        operation: ['get'],
+      },
+    },
+    default: '',
+    description: 'The unique ID or slug of the VLAN zone',
+  },
+  // update, delete
   {
     displayName: 'VLAN Zone ID',
     name: 'id',
@@ -143,7 +185,7 @@ export const vlanZonesFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['vlan_zones'],
-        operation: ['get', 'update', 'delete'],
+        operation: ['update', 'delete'],
       },
     },
     default: 0,

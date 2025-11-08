@@ -48,10 +48,11 @@ export const passwordFoldersOperations: INodeProperties[] = [
 ];
 
 export const passwordFoldersFields: INodeProperties[] = [
+  // Identifier Type toggle for get operation
   {
-    displayName: 'Password Folder ID',
-    name: 'id',
-    type: 'number',
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
     required: true,
     displayOptions: {
       show: {
@@ -59,8 +60,34 @@ export const passwordFoldersFields: INodeProperties[] = [
         operation: ['get'],
       },
     },
-    default: 0,
-    description: 'The ID of the password folder to retrieve',
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric password folder ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use password folder URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the password folder by numeric ID or slug identifier',
+  },
+  {
+    displayName: 'Password Folder ID',
+    name: 'folderId',
+    type: 'string',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['password_folders'],
+        operation: ['get'],
+      },
+    },
+    default: '',
+    description: 'The unique ID or slug of the password folder',
   },
   {
     displayName: 'Return All',

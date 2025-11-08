@@ -61,11 +61,39 @@ export const assetPasswordOperations: INodeProperties[] = [
 ];
 
 export const assetPasswordFields: INodeProperties[] = [
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['asset_passwords'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric asset password ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use asset password URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the asset password by numeric ID or slug identifier',
+  },
+
   // ID field for single operations
   {
     displayName: 'Asset Password ID',
     name: 'id',
-    type: 'number',
+    type: 'string',
     required: true,
     displayOptions: {
       show: {
@@ -73,8 +101,8 @@ export const assetPasswordFields: INodeProperties[] = [
         operation: ['get', 'update', 'delete', 'archive', 'unarchive'],
       },
     },
-    default: 0,
-    description: 'ID of the requested password',
+    default: '',
+    description: 'The unique ID or slug of the asset password',
   },
 
   // Required fields for Create operation

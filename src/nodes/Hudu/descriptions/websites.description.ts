@@ -434,19 +434,48 @@ export const websitesFields: INodeProperties[] = [
   // ----------------------------------
   //         websites:get
   // ----------------------------------
+  // Identifier Type toggle for get operation
+  {
+    displayName: 'Identifier Type',
+    name: 'identifierType',
+    type: 'options',
+    required: true,
+    displayOptions: {
+      show: {
+        resource: ['websites'],
+        operation: ['get'],
+      },
+    },
+    options: [
+      {
+        name: 'ID',
+        value: 'id',
+        description: 'Use numeric website ID',
+      },
+      {
+        name: 'Slug',
+        value: 'slug',
+        description: 'Use website URL slug',
+      },
+    ],
+    default: 'id',
+    description: 'Whether to retrieve the website by numeric ID or slug identifier',
+  },
+
+  // Website ID field for operations that need it
   {
     displayName: 'Website ID',
-    name: 'id',
-    type: 'number',
+    name: 'websiteId',
+    type: 'string',
     displayOptions: {
       show: {
         resource: ['websites'],
         operation: ['get', 'update', 'delete'],
       },
     },
-    default: 0,
+    default: '',
     required: true,
-    description: 'ID of the website',
+    description: 'The unique ID or slug of the website',
   },
 
   // ----------------------------------
