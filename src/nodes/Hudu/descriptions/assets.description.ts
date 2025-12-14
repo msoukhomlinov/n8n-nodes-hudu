@@ -157,26 +157,6 @@ export const assetsFields: INodeProperties[] = [
     default: '',
     description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
-  {
-    displayName: 'Company Name or ID',
-    name: 'company_id',
-    type: 'options',
-    typeOptions: {
-      loadOptionsMethod: 'getCompanies',
-      loadOptionsParameters: {
-        includeBlank: true,
-      },
-    },
-    displayOptions: {
-      show: {
-        resource: ['assets'],
-        operation: ['getAll'],
-      },
-    },
-    default: '',
-    description: 'Optionally filter assets by a parent company. If not provided, assets will be fetched from all companies, and more filtering options will be available. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-  },
-
   // ----------------------------------
   //         assets:create
   // ----------------------------------
