@@ -222,11 +222,19 @@ export async function handleAssetsOperation(
     case 'getAll': {
       debugLog('[OPERATION_GET_ALL] Processing get all assets operation');
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-      const companyId = this.getNodeParameter('company_id', i) as string;
-      const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-      debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, companyId });
+      // Backward compatibility: migrate top-level company_id to filters if not already set
+      let filters = this.getNodeParameter('filters', i, {}) as IDataObject;
+      const topLevelCompanyId = this.getNodeParameter('company_id', i, '') as string;
+
+      if (topLevelCompanyId && !filters.company_id) {
+        // Migrate top-level company_id to filters for backward compatibility
+        filters = { ...filters, company_id: topLevelCompanyId };
+        debugLog('[MIGRATION] Migrated top-level company_id to filters', { companyId: topLevelCompanyId });
+      }
+
+      debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit });
 
       const endpoint = '/assets';
 
@@ -241,11 +249,6 @@ export async function handleAssetsOperation(
       const qs: IDataObject = {
         ...mappedFilters,
       };
-
-      // Add company_id to query string if specified at top level
-      if (companyId) {
-        qs.company_id = companyId;
-      }
 
       if (filters.updated_at) {
         const dateFilterValue = processDateRange(filters.updated_at as IDateRange);

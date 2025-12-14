@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Assets**: Fixed Get Many operation to always use `/assets` endpoint with `company_id` as query parameter, ensuring all filters remain available regardless of company selection. Previously, selecting a company switched to `/companies/{company_id}/assets` which only supports limited filters, causing unsupported filters to be incorrectly displayed when using expressions.
 
+### Breaking Changes
+- **Assets**: Removed top-level "Company Name or ID" field from Get Many operation. Company filtering is now only available through the Filters collection. Existing workflows using the top-level `company_id` field will automatically migrate to use the filter field - no manual action required, but workflows should be reviewed and updated to use the Filters collection going forward.
+
 
 ## [1.6.0] - 2025-11-09
 
