@@ -228,7 +228,7 @@ export async function handleAssetsOperation(
 
       debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit, companyId });
 
-      const endpoint = companyId ? `/companies/${companyId}/assets` : '/assets';
+      const endpoint = '/assets';
 
       const mappedFilters: IDataObject = { ...filters };
 
@@ -241,6 +241,11 @@ export async function handleAssetsOperation(
       const qs: IDataObject = {
         ...mappedFilters,
       };
+
+      // Add company_id to query string if specified at top level
+      if (companyId) {
+        qs.company_id = companyId;
+      }
 
       if (filters.updated_at) {
         const dateFilterValue = processDateRange(filters.updated_at as IDateRange);

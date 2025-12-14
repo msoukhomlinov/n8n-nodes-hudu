@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.1] - 2025-11-14
+
+### Fixed
+- **Assets**: Fixed Get Many operation to always use `/assets` endpoint with `company_id` as query parameter, ensuring all filters remain available regardless of company selection. Previously, selecting a company switched to `/companies/{company_id}/assets` which only supports limited filters, causing unsupported filters to be incorrectly displayed when using expressions.
+
 
 ## [1.6.0] - 2025-11-09
 

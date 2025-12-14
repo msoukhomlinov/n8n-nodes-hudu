@@ -305,11 +305,6 @@ export const assetsFields: INodeProperties[] = [
         },
         default: '',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'Company Name or ID',
@@ -320,11 +315,6 @@ export const assetsFields: INodeProperties[] = [
         },
         default: '',
         description: 'Filter assets by the parent company\'s ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'ID',
@@ -332,11 +322,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'number',
         default: 0,
         description: 'Filter assets by their ID',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'Name',
@@ -344,11 +329,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets by name',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'Primary Serial',
@@ -356,11 +336,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets by their primary serial number',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'Search',
@@ -368,11 +343,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets using a search query',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'Slug',
@@ -380,11 +350,6 @@ export const assetsFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Filter assets by their URL slug',
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
-        },
       },
       {
         displayName: 'Updated At',
@@ -394,11 +359,6 @@ export const assetsFields: INodeProperties[] = [
         default: {},
         typeOptions: {
           multipleValues: false,
-        },
-        displayOptions: {
-          show: {
-            '/company_id': [''],
-          },
         },
         options: [
           {
