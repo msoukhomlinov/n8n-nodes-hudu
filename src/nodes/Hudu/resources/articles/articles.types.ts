@@ -16,6 +16,10 @@ export interface IArticles extends IDataObject {
   created_at?: string; // The date and time when the article was created
   updated_at?: string; // The date and time when the article was last updated
   public_photos?: string[]; // A list of public photos
+  // Node-level enrichment fields (not part of raw Hudu API response)
+  folder_id_label?: string; // Resolved folder name for folder_id
+  folder_description?: string; // Resolved folder description for folder_id
+  folder_path?: string; // Resolved folder path using folder getPath logic
 }
 
 export interface IArticlesResponse extends IDataObject {
