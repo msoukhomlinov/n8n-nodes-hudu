@@ -17,6 +17,7 @@ export interface IArticles extends IDataObject {
   updated_at?: string; // The date and time when the article was last updated
   public_photos?: string[]; // A list of public photos
   // Node-level enrichment fields (not part of raw Hudu API response)
+  company_id_label?: string; // Resolved company name for company_id
   folder_id_label?: string; // Resolved folder name for folder_id
   folder_description?: string; // Resolved folder description for folder_id
   folder_path?: string; // Resolved folder path using folder getPath logic

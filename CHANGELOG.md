@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.3] - 2025-12-23
+
+### Added
+- **Articles**: Added optional company enrichment for Get and Get Many operations. When enabled via \"Include Company Details\", resolves `company_id` to `company_id_label` using the Companies resource with per-company caching for efficient lookups.
+
+### Improved
+- **Articles**: Enriched Article outputs (including folder and company enrichment fields) now have keys emitted in alphabetical order, providing a more consistent and predictable JSON structure in n8n.
+
+
 ## [1.6.2] - 2025-12-23
 
 ### Added

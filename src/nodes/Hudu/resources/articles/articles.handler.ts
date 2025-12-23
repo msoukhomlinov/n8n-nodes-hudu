@@ -20,6 +20,17 @@ import { buildFolderPath } from '../../utils/folderUtils';
 import type { IFolder } from '../folders/folders.types';
 import type { ICompany } from '../companies/companies.types';
 
+function sortArticleKeys(article: IDataObject): IDataObject {
+  const sorted: IDataObject = {};
+  const keys = Object.keys(article).sort((a, b) => a.localeCompare(b));
+
+  for (const key of keys) {
+    sorted[key] = article[key];
+  }
+
+  return sorted;
+}
+
 export async function handleArticlesOperation(
   this: IExecuteFunctions,
   operation: ArticlesOperation,
@@ -95,6 +106,7 @@ export async function handleArticlesOperation(
       const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
       const includeFolderDetails = this.getNodeParameter('includeFolderDetails', i, false) as boolean;
+      const includeCompanyDetails = this.getNodeParameter('includeCompanyDetails', i, false) as boolean;
       const prependCompanyToFolderPath = this.getNodeParameter(
         'prependCompanyToFolderPath',
         i,
@@ -144,6 +156,29 @@ export async function handleArticlesOperation(
 
       if (responseData && typeof responseData === 'object') {
         const article = responseData as IDataObject;
+        let companyForEnrichment: ICompany | undefined;
+
+        if ((includeCompanyDetails || prependCompanyToFolderPath) && article.company_id) {
+          try {
+            const company = (await handleGetOperation.call(
+              this,
+              '/companies',
+              article.company_id as number,
+              'company',
+            )) as ICompany;
+
+            if (company && company.name) {
+              companyForEnrichment = company;
+            }
+          } catch {
+            // If company lookup fails, skip company-based enrichment
+          }
+        }
+
+        // Enrich with company label if requested
+        if (includeCompanyDetails && companyForEnrichment) {
+          article.company_id_label = companyForEnrichment.name;
+        }
 
         // Enrich with folder details if requested and folder_id is present
         if (includeFolderDetails && article.folder_id) {
@@ -174,21 +209,8 @@ export async function handleArticlesOperation(
             if (prependCompanyToFolderPath) {
               let companyLabel = 'Central KB';
 
-              if (article.company_id) {
-                try {
-                  const company = (await handleGetOperation.call(
-                    this,
-                    '/companies',
-                    article.company_id as number,
-                    'company',
-                  )) as ICompany;
-
-                  if (company && company.name) {
-                    companyLabel = company.name;
-                  }
-                } catch {
-                  // If company lookup fails, fall back to default label
-                }
+              if (companyForEnrichment && companyForEnrichment.name) {
+                companyLabel = companyForEnrichment.name;
               }
 
               const companySeparator =
@@ -203,11 +225,13 @@ export async function handleArticlesOperation(
           }
         }
 
+        const sortedArticle = sortArticleKeys(article);
+
         // Process markdown content if requested
         if (includeMarkdownContent) {
-          responseData = processArticleContent(article, true);
+          responseData = processArticleContent(sortedArticle, true);
         } else {
-          responseData = article;
+          responseData = sortedArticle;
         }
       }
 
@@ -220,6 +244,7 @@ export async function handleArticlesOperation(
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
       const includeFolderDetails = this.getNodeParameter('includeFolderDetails', i, false) as boolean;
+      const includeCompanyDetails = this.getNodeParameter('includeCompanyDetails', i, false) as boolean;
       const prependCompanyToFolderPath = this.getNodeParameter(
         'prependCompanyToFolderPath',
         i,
@@ -282,7 +307,7 @@ export async function handleArticlesOperation(
         let articles = responseData as IDataObject[];
 
         // Enrich with folder details if requested
-        if (includeFolderDetails) {
+        if (includeFolderDetails || includeCompanyDetails || prependCompanyToFolderPath) {
           const folderCache = new Map<
             number,
             { name: string; description?: string; path: string }
@@ -292,10 +317,10 @@ export async function handleArticlesOperation(
           const uniqueFolderIds = new Set<number>();
           const uniqueCompanyIds = new Set<number>();
           for (const item of articles) {
-            if (item.folder_id) {
+            if (includeFolderDetails && item.folder_id) {
               uniqueFolderIds.add(Number(item.folder_id));
             }
-            if (prependCompanyToFolderPath && item.company_id) {
+            if ((includeCompanyDetails || prependCompanyToFolderPath) && item.company_id) {
               uniqueCompanyIds.add(Number(item.company_id));
             }
           }
@@ -328,7 +353,7 @@ export async function handleArticlesOperation(
             }
           }
 
-          if (prependCompanyToFolderPath) {
+          if (includeCompanyDetails || prependCompanyToFolderPath) {
             for (const companyId of uniqueCompanyIds) {
               try {
                 const company = (await handleGetOperation.call(
@@ -348,6 +373,13 @@ export async function handleArticlesOperation(
           }
 
           articles = articles.map((item) => {
+            if (includeCompanyDetails && item.company_id) {
+              const cachedName = companyCache.get(Number(item.company_id));
+              if (cachedName) {
+                item.company_id_label = cachedName;
+              }
+            }
+
             if (item.folder_id) {
               const cacheEntry = folderCache.get(Number(item.folder_id));
               if (cacheEntry) {
@@ -383,11 +415,13 @@ export async function handleArticlesOperation(
           });
         }
 
+        const sortedArticles = articles.map((item) => sortArticleKeys(item));
+
         // Process markdown content if requested
         if (includeMarkdownContent) {
-          responseData = processArticlesContent(articles, true);
+          responseData = processArticlesContent(sortedArticles, true);
         } else {
-          responseData = articles;
+          responseData = sortedArticles;
         }
       }
 
