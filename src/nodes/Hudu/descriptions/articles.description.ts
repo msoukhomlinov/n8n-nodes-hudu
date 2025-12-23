@@ -126,6 +126,20 @@ export const articlesFields: INodeProperties[] = [
     description: 'Whether to include the article content converted to markdown format. Useful for AI tooling and text processing workflows.',
   },
   {
+    displayName: 'Include Company Details',
+    name: 'includeCompanyDetails',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to include company name for the article by resolving company_id to company_id_label (performs additional company lookups)',
+  },
+  {
     displayName: 'Include Folder Details',
     name: 'includeFolderDetails',
     type: 'boolean',
@@ -510,6 +524,20 @@ export const articlesFields: INodeProperties[] = [
     },
     default: false,
     description: 'Whether to include article content converted to markdown format for each article. Useful for AI tooling and text processing workflows.',
+  },
+  {
+    displayName: 'Include Company Details',
+    name: 'includeCompanyDetails',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to include company name for each article by resolving company_id to company_id_label (performs additional company lookups)',
   },
   {
     displayName: 'Include Folder Details',
