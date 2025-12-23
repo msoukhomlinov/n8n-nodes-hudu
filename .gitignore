@@ -68,3 +68,4 @@ tmp/
 .cursor-prompts/
 .cursorrules
 .cursorignore
+.cursor/

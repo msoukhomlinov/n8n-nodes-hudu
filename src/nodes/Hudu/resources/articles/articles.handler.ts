@@ -16,6 +16,9 @@ import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
 import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { processArticleContent, processArticlesContent } from '../../utils/markdownUtils';
+import { buildFolderPath } from '../../utils/folderUtils';
+import type { IFolder } from '../folders/folders.types';
+import type { ICompany } from '../companies/companies.types';
 
 export async function handleArticlesOperation(
   this: IExecuteFunctions,
@@ -91,6 +94,14 @@ export async function handleArticlesOperation(
       const articleId = this.getNodeParameter('articleId', i) as string;
       const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+      const includeFolderDetails = this.getNodeParameter('includeFolderDetails', i, false) as boolean;
+      const prependCompanyToFolderPath = this.getNodeParameter(
+        'prependCompanyToFolderPath',
+        i,
+        false,
+      ) as boolean;
+      const separatorOption = this.getNodeParameter('separator', i, '/') as string;
+      const customSeparator = this.getNodeParameter('customSeparator', i, '') as string;
 
       if (identifierType === 'slug') {
         // Use getAll with slug filter for slug-based retrieval
@@ -131,9 +142,73 @@ export async function handleArticlesOperation(
         );
       }
 
-      // Process markdown content if requested
-      if (includeMarkdownContent && responseData && typeof responseData === 'object') {
-        responseData = processArticleContent(responseData, true);
+      if (responseData && typeof responseData === 'object') {
+        const article = responseData as IDataObject;
+
+        // Enrich with folder details if requested and folder_id is present
+        if (includeFolderDetails && article.folder_id) {
+          const folderId = article.folder_id as number;
+
+          const folder = (await handleGetOperation.call(
+            this,
+            '/folders',
+            folderId,
+            'folder',
+          )) as IFolder;
+
+          if (folder && typeof folder.id === 'number') {
+            article.folder_id_label = folder.name;
+            if (folder.description !== undefined) {
+              article.folder_description = folder.description;
+            }
+
+            const { path } = await buildFolderPath(
+              this,
+              folderId.toString(),
+              separatorOption,
+              customSeparator,
+            );
+
+            let folderPath = path;
+
+            if (prependCompanyToFolderPath) {
+              let companyLabel = 'Central KB';
+
+              if (article.company_id) {
+                try {
+                  const company = (await handleGetOperation.call(
+                    this,
+                    '/companies',
+                    article.company_id as number,
+                    'company',
+                  )) as ICompany;
+
+                  if (company && company.name) {
+                    companyLabel = company.name;
+                  }
+                } catch {
+                  // If company lookup fails, fall back to default label
+                }
+              }
+
+              const companySeparator =
+                separatorOption === 'custom'
+                  ? (customSeparator || '/')
+                  : separatorOption || '/';
+
+              folderPath = `${companyLabel}${companySeparator}${folderPath}`;
+            }
+
+            article.folder_path = folderPath;
+          }
+        }
+
+        // Process markdown content if requested
+        if (includeMarkdownContent) {
+          responseData = processArticleContent(article, true);
+        } else {
+          responseData = article;
+        }
       }
 
       break;
@@ -144,6 +219,14 @@ export async function handleArticlesOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+      const includeFolderDetails = this.getNodeParameter('includeFolderDetails', i, false) as boolean;
+      const prependCompanyToFolderPath = this.getNodeParameter(
+        'prependCompanyToFolderPath',
+        i,
+        false,
+      ) as boolean;
+      const separatorOption = this.getNodeParameter('separator', i, '/') as string;
+      const customSeparator = this.getNodeParameter('customSeparator', i, '') as string;
 
       // Extract post-processing filters and API filters separately
       const postProcessFilters: IArticlePostProcessFilters = {};
@@ -195,9 +278,117 @@ export async function handleArticlesOperation(
         articleFilterMapping as FilterMapping,
       );
 
-      // Process markdown content if requested
-      if (includeMarkdownContent && responseData && Array.isArray(responseData)) {
-        responseData = processArticlesContent(responseData, true);
+      if (responseData && Array.isArray(responseData)) {
+        let articles = responseData as IDataObject[];
+
+        // Enrich with folder details if requested
+        if (includeFolderDetails) {
+          const folderCache = new Map<
+            number,
+            { name: string; description?: string; path: string }
+          >();
+          const companyCache = new Map<number, string>();
+
+          const uniqueFolderIds = new Set<number>();
+          const uniqueCompanyIds = new Set<number>();
+          for (const item of articles) {
+            if (item.folder_id) {
+              uniqueFolderIds.add(Number(item.folder_id));
+            }
+            if (prependCompanyToFolderPath && item.company_id) {
+              uniqueCompanyIds.add(Number(item.company_id));
+            }
+          }
+
+          for (const folderId of uniqueFolderIds) {
+            try {
+              const folder = (await handleGetOperation.call(
+                this,
+                '/folders',
+                folderId,
+                'folder',
+              )) as IFolder;
+
+              if (folder && typeof folder.id === 'number') {
+                const { path } = await buildFolderPath(
+                  this,
+                  folderId.toString(),
+                  separatorOption,
+                  customSeparator,
+                );
+
+                folderCache.set(folderId, {
+                  name: folder.name,
+                  description: folder.description,
+                  path,
+                });
+              }
+            } catch {
+              // If a folder lookup fails, skip enrichment for that folder_id
+            }
+          }
+
+          if (prependCompanyToFolderPath) {
+            for (const companyId of uniqueCompanyIds) {
+              try {
+                const company = (await handleGetOperation.call(
+                  this,
+                  '/companies',
+                  companyId,
+                  'company',
+                )) as ICompany;
+
+                if (company && company.name) {
+                  companyCache.set(companyId, company.name);
+                }
+              } catch {
+                // If a company lookup fails, skip enrichment for that company_id
+              }
+            }
+          }
+
+          articles = articles.map((item) => {
+            if (item.folder_id) {
+              const cacheEntry = folderCache.get(Number(item.folder_id));
+              if (cacheEntry) {
+                item.folder_id_label = cacheEntry.name;
+                if (cacheEntry.description !== undefined) {
+                  item.folder_description = cacheEntry.description;
+                }
+
+                let folderPath = cacheEntry.path;
+
+                if (prependCompanyToFolderPath) {
+                  let companyLabel = 'Central KB';
+
+                  if (item.company_id) {
+                    const cachedName = companyCache.get(Number(item.company_id));
+                    if (cachedName) {
+                      companyLabel = cachedName;
+                    }
+                  }
+
+                  const companySeparator =
+                    separatorOption === 'custom'
+                      ? (customSeparator || '/')
+                      : separatorOption || '/';
+
+                  folderPath = `${companyLabel}${companySeparator}${folderPath}`;
+                }
+
+                item.folder_path = folderPath;
+              }
+            }
+            return item;
+          });
+        }
+
+        // Process markdown content if requested
+        if (includeMarkdownContent) {
+          responseData = processArticlesContent(articles, true);
+        } else {
+          responseData = articles;
+        }
       }
 
       break;

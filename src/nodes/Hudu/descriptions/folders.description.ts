@@ -321,4 +321,64 @@ export const folderFields: INodeProperties[] = [
     required: true,
     description: 'The ID of the folder to get the path for',
   },
+  {
+    displayName: 'Prepend Company to Folder Path',
+    name: 'prependCompanyToFolderPath',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['folders'],
+        operation: ['getPath'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to prepend the company name (or Central KB for global folders) to the path value',
+  },
+  {
+    displayName: 'Separator',
+    name: 'separator',
+    type: 'options',
+    displayOptions: {
+      show: {
+        resource: ['folders'],
+        operation: ['getPath'],
+      },
+    },
+    options: [
+      {
+        name: 'Forward Slash (/)',
+        value: '/',
+      },
+      {
+        name: 'Backslash (\\)',
+        value: '\\',
+      },
+      {
+        name: 'Greater Than ( > )',
+        value: ' > ',
+      },
+      {
+        name: 'Custom',
+        value: 'custom',
+      },
+    ],
+    default: '/',
+    description: 'Choose how to separate folder names in the path string',
+  },
+  {
+    displayName: 'Custom Separator',
+    name: 'customSeparator',
+    type: 'string',
+    displayOptions: {
+      show: {
+        resource: ['folders'],
+        operation: ['getPath'],
+        separator: ['custom'],
+      },
+    },
+    default: '',
+    placeholder: '/',
+    description: 'Custom string to use between folder names when building the path',
+  },
 ];

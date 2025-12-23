@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.2] - 2025-12-23
+
+### Added
+- **Articles**: Added optional folder enrichment for Get and Get Many operations. When enabled via "Include Folder Details", adds `folder_id_label` (folder name), `folder_description` (folder description), and `folder_path` (full hierarchical path) to article outputs. Supports the same separator options as Folders Get Path (`/`, `\`, ` > `, or custom).
+- **Articles**: Added "Prepend Company to Folder Path" option (when Include Folder Details is enabled) to prepend company name or "Central KB" for global articles to the `folder_path` value, providing full context from company → folders → article.
+- **Folders**: Added "Prepend Company to Folder Path" option to Get Path operation to prepend company name or "Central KB" for global folders to the path output, providing full context from company → folders.
+
+### Fixed
+- **Folders**: Fixed Get Path operation error `Cannot read properties of undefined (reading 'parent_folder_id')` caused by incorrect response unwrapping. The operation now correctly traverses parent folders via `parent_folder_id` until the root folder.
+
+### Improved
+- **Folders**: Added separator options to Get Path operation — choose from `/` (Unix-style), `\` (Windows-style), ` > ` (breadcrumb-style), or a custom separator for flexible path formatting.
+- **Folders**: Simplified Get Path output to return only `path` (string) instead of `{ path, folders }` for cleaner downstream consumption.
+
 ## [1.6.1] - 2025-11-14
 
 ### Fixed

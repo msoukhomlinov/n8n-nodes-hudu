@@ -125,6 +125,83 @@ export const articlesFields: INodeProperties[] = [
     default: false,
     description: 'Whether to include the article content converted to markdown format. Useful for AI tooling and text processing workflows.',
   },
+  {
+    displayName: 'Include Folder Details',
+    name: 'includeFolderDetails',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to include folder name, description, and full path for the article. This performs additional folder lookups.',
+  },
+  {
+    displayName: 'Prepend Company to Folder Path',
+    name: 'prependCompanyToFolderPath',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+        includeFolderDetails: [true],
+      },
+    },
+    default: false,
+    description:
+      'Whether to prepend the company name (or Central KB for global articles) to the folder_path value',
+  },
+  {
+    displayName: 'Separator',
+    name: 'separator',
+    type: 'options',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+        includeFolderDetails: [true],
+      },
+    },
+    options: [
+      {
+        name: 'Forward Slash (/)',
+        value: '/',
+      },
+      {
+        name: 'Backslash (\\)',
+        value: '\\',
+      },
+      {
+        name: 'Greater Than ( > )',
+        value: ' > ',
+      },
+      {
+        name: 'Custom',
+        value: 'custom',
+      },
+    ],
+    default: '/',
+    description: 'Choose how to separate folder names in the folder_path string',
+  },
+  {
+    displayName: 'Custom Separator',
+    name: 'customSeparator',
+    type: 'string',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+        separator: ['custom'],
+        includeFolderDetails: [true],
+      },
+    },
+    default: '',
+    placeholder: '/',
+    description: 'Custom string to use between folder names when building the folder_path value',
+  },
 
   // Optional filters for getVersionHistory operation
   {
@@ -433,6 +510,83 @@ export const articlesFields: INodeProperties[] = [
     },
     default: false,
     description: 'Whether to include article content converted to markdown format for each article. Useful for AI tooling and text processing workflows.',
+  },
+  {
+    displayName: 'Include Folder Details',
+    name: 'includeFolderDetails',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to include folder name, description, and full path for each article. This performs additional folder lookups.',
+  },
+  {
+    displayName: 'Prepend Company to Folder Path',
+    name: 'prependCompanyToFolderPath',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+        includeFolderDetails: [true],
+      },
+    },
+    default: false,
+    description:
+      'Whether to prepend the company name (or Central KB for global articles) to each folder_path value',
+  },
+  {
+    displayName: 'Separator',
+    name: 'separator',
+    type: 'options',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+        includeFolderDetails: [true],
+      },
+    },
+    options: [
+      {
+        name: 'Forward Slash (/)',
+        value: '/',
+      },
+      {
+        name: 'Backslash (\\)',
+        value: '\\',
+      },
+      {
+        name: 'Greater Than ( > )',
+        value: ' > ',
+      },
+      {
+        name: 'Custom',
+        value: 'custom',
+      },
+    ],
+    default: '/',
+    description: 'Choose how to separate folder names in the folder_path string',
+  },
+  {
+    displayName: 'Custom Separator',
+    name: 'customSeparator',
+    type: 'string',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+        separator: ['custom'],
+        includeFolderDetails: [true],
+      },
+    },
+    default: '',
+    placeholder: '/',
+    description: 'Custom string to use between folder names when building the folder_path value',
   },
 
   // Additional Fields for Create and Update operations

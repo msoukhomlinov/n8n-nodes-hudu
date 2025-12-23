@@ -7,9 +7,11 @@ import {
   handleDeleteOperation,
 } from '../../utils/operations';
 import type { FilterMapping } from '../../utils/types';
-import type { FolderOperation, IFolderPostProcessFilters, IFolder, IFolderPathResponse } from './folders.types';
+import type { FolderOperation, IFolderPostProcessFilters, IFolderPathResponse, IFolder } from './folders.types';
 import { folderFilterMapping } from './folders.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { buildFolderPath } from '../../utils/folderUtils';
+import type { ICompany } from '../companies/companies.types';
 
 export async function handleFolderOperation(
   this: IExecuteFunctions,
@@ -104,23 +106,64 @@ export async function handleFolderOperation(
 
     case 'getPath': {
       const folderId = this.getNodeParameter('folderId', i) as string;
-      const folders: IFolder[] = [];
-      let currentFolderId: string | null = folderId;
-      
-      // Recursively get all folders in the path
-      while (currentFolderId) {
-        const folderData = await handleGetOperation.call(this, resourceEndpoint, currentFolderId, 'folder') as IDataObject;
-        const folder = folderData.folder as IFolder;
-        folders.unshift(folder); // Add to start of array to maintain correct order
-        currentFolderId = folder.parent_folder_id ? folder.parent_folder_id.toString() : null;
+
+      // Separator options
+      const separatorOption = this.getNodeParameter('separator', i, '/') as string;
+      const customSeparator = this.getNodeParameter('customSeparator', i, '') as string;
+      const prependCompanyToFolderPath = this.getNodeParameter(
+        'prependCompanyToFolderPath',
+        i,
+        false,
+      ) as boolean;
+
+      const { path } = await buildFolderPath(
+        this,
+        folderId,
+        separatorOption,
+        customSeparator,
+      );
+
+      let finalPath = path;
+
+      if (prependCompanyToFolderPath) {
+        let companyLabel = 'Central KB';
+
+        try {
+          const folder = (await handleGetOperation.call(
+            this,
+            resourceEndpoint,
+            folderId,
+            'folder',
+          )) as IFolder;
+
+          if (folder && folder.company_id) {
+            try {
+              const company = (await handleGetOperation.call(
+                this,
+                '/companies',
+                folder.company_id,
+                'company',
+              )) as ICompany;
+
+              if (company && company.name) {
+                companyLabel = company.name;
+              }
+            } catch {
+              // If company lookup fails, fall back to default label
+            }
+          }
+        } catch {
+          // If folder lookup fails, keep default label and base path
+        }
+
+        const companySeparator =
+          separatorOption === 'custom' ? (customSeparator || '/') : separatorOption || '/';
+
+        finalPath = `${companyLabel}${companySeparator}${path}`;
       }
 
-      // Build the path string
-      const path = folders.map(folder => folder.name).join(' / ');
-
       responseData = {
-        path,
-        folders,
+        path: finalPath,
       } as IFolderPathResponse;
       break;
     }
