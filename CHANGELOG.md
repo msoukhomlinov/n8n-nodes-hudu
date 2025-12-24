@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.4] - 2025-12-24
+
+### Improved
+- **Activity Logs**: Enhanced Get Many operation to support multi-select Action Message filter. When multiple actions are selected, separate API queries are made for each action and the results are merged client-side with automatic deduplication. Note: The Hudu API doesn't support multi-select filtering natively, so multiple queries are executed and merged.
+- **Activity Logs**: Added field selection to Get Many operation. Users can now choose which fields to return via multi-select. If no fields are selected, all fields are returned by default.
+- **Activity Logs**: Resource Type filter can now be used independently (without Resource ID). When used alone, pages are fetched incrementally and filtered client-side. When used with Resource ID, efficient API-level filtering is applied.
+
 ## [1.6.3] - 2025-12-23
 
 ### Added

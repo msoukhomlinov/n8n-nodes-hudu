@@ -194,6 +194,37 @@ export const RESOURCE_TYPES = [
   'Website',
 ] as const;
 
+/**
+ * Activity log response fields (alphabetically sorted by display name)
+ */
+export const ACTIVITY_LOG_FIELDS = [
+  { name: 'Action', value: 'action' },
+  { name: 'Agent String', value: 'agent_string' },
+  { name: 'App Type', value: 'app_type' },
+  { name: 'Company Name', value: 'company_name' },
+  { name: 'Created At', value: 'created_at' },
+  { name: 'Details', value: 'details' },
+  { name: 'Device', value: 'device' },
+  { name: 'Formatted Datetime', value: 'formatted_datetime' },
+  { name: 'ID', value: 'id' },
+  { name: 'IP Address', value: 'ip_address' },
+  { name: 'Original Record Name', value: 'original_record_name' },
+  { name: 'OS', value: 'os' },
+  { name: 'Record Company URL', value: 'record_company_url' },
+  { name: 'Record ID', value: 'record_id' },
+  { name: 'Record Name', value: 'record_name' },
+  { name: 'Record Type', value: 'record_type' },
+  { name: 'Record URL', value: 'record_url' },
+  { name: 'Record User URL', value: 'record_user_url' },
+  { name: 'Token', value: 'token' },
+  { name: 'URL', value: 'url' },
+  { name: 'User Email', value: 'user_email' },
+  { name: 'User ID', value: 'user_id' },
+  { name: 'User Initials', value: 'user_initials' },
+  { name: 'User Name', value: 'user_name' },
+  { name: 'User Short Name', value: 'user_short_name' },
+] as const;
+
 // General date format constants
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const TIME_FORMAT = 'HH:mm:ss';
