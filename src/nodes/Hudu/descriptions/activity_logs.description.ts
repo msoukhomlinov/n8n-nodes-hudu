@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS, ACTIVITY_LOG_ACTIONS, RESOURCE_TYPES } from '../utils/constants';
+import { HUDU_API_CONSTANTS, ACTIVITY_LOG_ACTIONS, ACTIVITY_LOG_FIELDS, RESOURCE_TYPES } from '../utils/constants';
 import { formatTitleCase } from '../utils/formatters';
 
 export const activityLogsOperations: INodeProperties[] = [
@@ -81,20 +81,31 @@ export const activityLogsFields: INodeProperties[] = [
       {
         displayName: 'Action Message',
         name: 'action_message',
-        type: 'options',
+        type: 'multiOptions',
         options: ACTIVITY_LOG_ACTIONS.map((action) => ({
           name: formatTitleCase(action),
           value: action,
         })),
-        default: '',
-        description: 'Filter by exact action message match',
+        default: [],
+        description: 'Filter by action message(s). When multiple actions are selected, separate queries are made for each action and the results are merged client-side.',
+      },
+      {
+        displayName: 'Fields to Return',
+        name: 'fields',
+        type: 'multiOptions',
+        options: ACTIVITY_LOG_FIELDS.map((field) => ({
+          name: field.name,
+          value: field.value,
+        })),
+        default: [],
+        description: 'Select which fields to return. If none selected, all fields are returned.',
       },
       {
         displayName: 'Resource ID',
         name: 'resource_id',
         type: 'number',
         default: undefined,
-        description: 'Filter by resource ID (must be used together with Resource Type)',
+        description: 'Filter by resource ID. When used with Resource Type, enables efficient API-level filtering.',
       },
       {
         displayName: 'Resource Type',
@@ -105,7 +116,7 @@ export const activityLogsFields: INodeProperties[] = [
           value: type,
         })),
         default: '',
-        description: 'Filter by resource type (must be used together with Resource ID)',
+        description: 'Filter by resource type. When used alone, pages are fetched incrementally and filtered client-side. For efficient API-level filtering, also provide Resource ID.',
       },
       {
         displayName: 'Start Date',
