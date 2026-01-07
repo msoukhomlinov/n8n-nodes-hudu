@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.5] - 2025-12-24
+
+### Fixed
+- **Activity Logs**: Added adaptive throttling to multi-action queries to prevent rate limiting (429 errors). Adds 100ms delay between sequential action queries and pagination requests; delay increases to 500ms if a rate limit is encountered.
+
 ## [1.6.4] - 2025-12-24
 
 ### Improved

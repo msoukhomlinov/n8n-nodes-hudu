@@ -99,7 +99,7 @@ function calculateBackoffDelay(retryCount: number, retryAfter?: number): number 
 /**
  * Sleep for specified milliseconds
  */
-function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
