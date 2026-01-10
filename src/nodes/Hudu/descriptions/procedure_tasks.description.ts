@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { createWrapResultsField } from './resources';
 
 export const procedureTasksOperations: INodeProperties[] = [
   {
@@ -81,6 +82,7 @@ export const procedureTasksFields: INodeProperties[] = [
     default: 50,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('procedure_tasks'),
   {
     displayName: 'Filters',
     name: 'filters',

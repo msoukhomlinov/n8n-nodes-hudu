@@ -403,6 +403,17 @@ export class Hudu implements INodeType {
 						throw new NodeOperationError(this.getNode(), `The resource "${resource}" is not known!`);
 				}
 
+				// Handle wrapResults option for getAll operations
+				if (operation === 'getAll' && Array.isArray(responseData)) {
+					const wrapResults = this.getNodeParameter('wrapResults', i, false) as boolean;
+					if (wrapResults) {
+						responseData = {
+							items: responseData,
+							count: responseData.length,
+						};
+					}
+				}
+
 				const executionData = this.helpers.returnJsonArray(responseData).map((item) => ({
 					...item,
 					pairedItem: { item: i },

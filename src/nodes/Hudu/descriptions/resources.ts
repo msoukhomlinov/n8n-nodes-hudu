@@ -130,4 +130,24 @@ export const resourceProperty: INodeProperties = {
   noDataExpression: true,
   options: resourceOptions,
   default: 'companies',
-}; 
+};
+
+/**
+ * Shared field definition for "Wrap Results" option in getAll operations
+ * This prevents downstream nodes from executing once per result item
+ */
+export function createWrapResultsField(resourceName: string): INodeProperties {
+  return {
+    displayName: 'Wrap Results in Single Item',
+    name: 'wrapResults',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: [resourceName],
+        operation: ['getAll'],
+      },
+    },
+    default: false,
+    description: 'When enabled, returns all results as a single item with an "items" array and "count" field. Useful to prevent downstream nodes from executing once per result item, which can cause rate limiting issues.',
+  };
+} 

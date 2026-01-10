@@ -1,6 +1,7 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, ACTIVITY_LOG_ACTIONS, ACTIVITY_LOG_FIELDS, RESOURCE_TYPES } from '../utils/constants';
 import { formatTitleCase } from '../utils/formatters';
+import { createWrapResultsField } from './resources';
 
 export const activityLogsOperations: INodeProperties[] = [
   {
@@ -64,6 +65,7 @@ export const activityLogsFields: INodeProperties[] = [
       },
     },
   },
+  createWrapResultsField('activity_logs'),
   {
     displayName: 'Filters',
     name: 'additionalFields',

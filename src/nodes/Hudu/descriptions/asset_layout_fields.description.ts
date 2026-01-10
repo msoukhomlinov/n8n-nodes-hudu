@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { ASSET_LAYOUT_FIELD_TYPES, ASSET_LAYOUT_FIELD_LABELS } from '../utils/constants';
+import { createWrapResultsField } from './resources';
 
 export const assetLayoutFieldOperations: INodeProperties[] = [
 	{
@@ -67,6 +68,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 		},
 		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 	},
+	createWrapResultsField('asset_layout_fields'),
 
 	// Field ID for get, update, and delete operations
 	{

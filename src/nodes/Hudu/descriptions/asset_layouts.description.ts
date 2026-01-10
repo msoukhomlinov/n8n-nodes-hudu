@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, ASSET_LAYOUT_FIELD_TYPES, ASSET_LAYOUT_FIELD_LABELS } from '../utils/constants';
+import { createWrapResultsField } from './resources';
 
 export const assetLayoutOperations: INodeProperties[] = [
   {
@@ -120,6 +121,7 @@ export const assetLayoutFields: INodeProperties[] = [
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('asset_layouts'),
 
   // Filters for GetAll operation
   {

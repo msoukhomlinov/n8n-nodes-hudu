@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { RESOURCE_TYPES } from '../utils/constants';
+import { createWrapResultsField } from './resources';
 
 // Convert RESOURCE_TYPES to options array
 const resourceTypeOptions = RESOURCE_TYPES.map((type) => ({
@@ -76,6 +77,7 @@ export const relationsFields: INodeProperties[] = [
     default: 50,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('relations'),
   {
     displayName: 'Filters',
     name: 'filters',
