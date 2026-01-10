@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.7] - 2026-01-10
+
+### Added
+- **All Resources**: Added "Wrap Results in Single Item" option to all Get Many operations. When enabled, returns all results as a single item with an "items" array and "count" field instead of multiple separate items. This prevents downstream nodes from executing once per result item, which can cause rate limiting issues when processing large result sets. For example, if "Get Many Companies" returns 150 companies, enabling this option will output 1 item containing `{ items: [...], count: 150 }` instead of 150 separate items, preventing the next node from executing 150 times.
+
 ## [1.6.6] - 2026-01-10
 
 ### Fixed
