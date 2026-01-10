@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.6] - 2026-01-10
+
+### Fixed
+- **Rate Limiting**: Added proactive throttling to all paginated list operations to prevent 429 (rate limit) errors. The `handleListing` function now adds a 200ms delay between pagination requests, ensuring we stay under the Hudu API limit of 300 requests per minute (5 requests/second). If a 429 error is encountered, the delay increases exponentially (1s, 2s, 4s, 8s...) up to a maximum of 10 seconds. This fix applies to all resources using `getAll` operations, including Companies, Assets, Articles, and others.
+- **Assets**: Optimised Get Many endpoint selection for better efficiency. When a company filter is specified without other complex filters (name, slug, search, etc.), the node now uses the more targeted `/companies/{company_id}/assets` endpoint instead of `/assets` with company_id as a query parameter. This reduces API load and helps prevent rate limiting. When other filters are required, the `/assets` endpoint is still used to ensure all filter capabilities remain available.
+
 ## [1.6.5] - 2025-12-24
 
 ### Fixed

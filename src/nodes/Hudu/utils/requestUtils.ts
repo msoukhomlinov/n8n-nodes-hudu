@@ -19,7 +19,7 @@ import type {
   JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS, RESOURCES_WITH_PAGE_SIZE } from './constants';
+import { HUDU_API_CONSTANTS, RATE_LIMIT_CONFIG, RESOURCES_WITH_PAGE_SIZE } from './constants';
 import type { FilterMapping } from './types';
 import { applyPostFilters } from './filterUtils';
 import { DEBUG_CONFIG, debugLog } from './debugConfig';
@@ -57,13 +57,6 @@ export function sanitizeRequestPayload<T extends IDataObject>(body: T): T {
   return cleaned as T;
 }
 
-// Rate limiting constants
-const RATE_LIMIT_CONFIG = {
-  MAX_RETRIES: 3,
-  BASE_DELAY_MS: 1000, // Start with 1 second delay
-  MAX_DELAY_MS: 10000, // Maximum delay of 10 seconds
-  JITTER_MS: 500, // Add up to 500ms of random jitter
-} as const;
 
 // HTTP Status Code Messages
 const HTTP_STATUS_MESSAGES = {
@@ -453,8 +446,17 @@ export async function handleListing<T extends IDataObject>(
     RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any) ||
     (resourcePath.startsWith('companies/') && resourcePath.endsWith('/assets'));
 
+  // Rate limiting: track delay and consecutive rate limit errors
+  let currentDelay: number = RATE_LIMIT_CONFIG.DELAY_MS;
+  let consecutiveRateLimits = 0;
+
   // Keep fetching until we have enough filtered results or no more data
   while (hasMore) {
+    // Add delay between pagination requests (skip first page)
+    if (page > 1) {
+      await sleep(currentDelay);
+    }
+
     // Only include pagination parameters if the resource supports them
     const queryParams = { ...query };
     
@@ -463,54 +465,76 @@ export async function handleListing<T extends IDataObject>(
       queryParams.page_size = pageSize;
     }
     
-    const response = await huduApiRequest.call(this, method, endpoint, body, queryParams, resourceName);
-    const batchResults = parseHuduResponse(response, resourceName);
+    try {
+      const response = await huduApiRequest.call(this, method, endpoint, body, queryParams, resourceName);
+      const batchResults = parseHuduResponse(response, resourceName);
 
-    //debugLog('[handleListing] Page fetched', { 
-    //  endpoint, 
-    //  resourceName, 
-    //  page, 
-    //  supportsPagination,
-    //  batchCount: batchResults.length, 
-    //  cumulativeCount: results.length + batchResults.length 
-    //});
+      // Reset consecutive rate limit counter on success
+      consecutiveRateLimits = 0;
 
-    if (batchResults.length === 0) {
-      hasMore = false;
-      continue;
-    }
+      //debugLog('[handleListing] Page fetched', { 
+      //  endpoint, 
+      //  resourceName, 
+      //  page, 
+      //  supportsPagination,
+      //  batchCount: batchResults.length, 
+      //  cumulativeCount: results.length + batchResults.length 
+      //});
 
-    results.push(...batchResults);
-
-    // Apply filters to all results we have so far
-    if (postProcessFilters && filterMapping) {
-      filteredResults = applyPostFilters(
-        results,
-        postProcessFilters,
-        filterMapping as Record<string, (item: IDataObject, value: unknown) => boolean>,
-      );
-    } else {
-      filteredResults = results;
-    }
-
-    // If resource doesn't support pagination, we get all data in one request
-    if (!supportsPagination) {
-      hasMore = false;
-    } else {
-      // Determine if we should continue fetching for resources with pagination
-      if (!returnAll) {
-        if (filteredResults.length >= limit) {
-          hasMore = false;
-        } else {
-          // Continue if there might be more results
-          hasMore = batchResults.length === pageSize;
-        }
-      } else {
-        // If returning all, continue if there might be more results
-        hasMore = batchResults.length === pageSize;
+      if (batchResults.length === 0) {
+        hasMore = false;
+        continue;
       }
 
-      page++;
+      results.push(...batchResults);
+
+      // Apply filters to all results we have so far
+      if (postProcessFilters && filterMapping) {
+        filteredResults = applyPostFilters(
+          results,
+          postProcessFilters,
+          filterMapping as Record<string, (item: IDataObject, value: unknown) => boolean>,
+        );
+      } else {
+        filteredResults = results;
+      }
+
+      // If resource doesn't support pagination, we get all data in one request
+      if (!supportsPagination) {
+        hasMore = false;
+      } else {
+        // Determine if we should continue fetching for resources with pagination
+        if (!returnAll) {
+          if (filteredResults.length >= limit) {
+            hasMore = false;
+          } else {
+            // Continue if there might be more results
+            hasMore = batchResults.length === pageSize;
+          }
+        } else {
+          // If returning all, continue if there might be more results
+          hasMore = batchResults.length === pageSize;
+        }
+
+        page++;
+      }
+    } catch (error) {
+      // If rate limited, apply exponential backoff for remaining requests
+      const err = error as IDataObject;
+      const context = err.context as IDataObject | undefined;
+      const responseContext = context?.response as IDataObject | undefined;
+      const statusCode = err.statusCode ?? responseContext?.statusCode;
+
+      if (statusCode === 429) {
+        consecutiveRateLimits++;
+        // Exponential backoff: 1s, 2s, 4s, 8s... capped at MAX_DELAY_MS
+        currentDelay = Math.min(
+          RATE_LIMIT_CONFIG.BACKOFF_DELAY_MS * (2 ** (consecutiveRateLimits - 1)),
+          RATE_LIMIT_CONFIG.MAX_DELAY_MS
+        );
+      }
+      // Re-throw error to let existing retry logic in executeHuduRequest handle it
+      throw error;
     }
   }
 
