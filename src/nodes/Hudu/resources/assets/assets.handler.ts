@@ -236,33 +236,50 @@ export async function handleAssetsOperation(
 
       debugLog('[RESOURCE_PARAMS] Get all assets parameters', { returnAll, filters, limit });
 
-      const endpoint = '/assets';
-
       const mappedFilters: IDataObject = { ...filters };
 
       if (mappedFilters.hasOwnProperty('archived')) {
         mappedFilters.archived = String(mappedFilters.archived).toLowerCase() === 'true';
       }
 
-      debugLog('[RESOURCE_PROCESSING] Processed filters', mappedFilters);
-
-      const qs: IDataObject = {
-        ...mappedFilters,
-      };
-
+      // Process updated_at filter
       if (filters.updated_at) {
         const dateFilterValue = processDateRange(filters.updated_at as IDateRange);
         if (dateFilterValue) {
-          qs.updated_at = dateFilterValue;
+          mappedFilters.updated_at = dateFilterValue;
+        } else if (typeof filters.updated_at === 'string') {
+          mappedFilters.updated_at = filters.updated_at;
         } else {
-          if (typeof filters.updated_at === 'string') {
-             qs.updated_at = filters.updated_at;
-          } else {
-            delete qs.updated_at;
-          }
+          delete mappedFilters.updated_at;
         }
       }
-      
+
+      // Determine which endpoint to use based on filters
+      // /companies/{company_id}/assets only supports: page, archived, page_size
+      // /assets supports: company_id, id, name, primary_serial, asset_layout_id, slug, search, updated_at, archived, page, page_size
+      const companyId = mappedFilters.company_id;
+      const filtersRequiringAssetsEndpoint = ['id', 'name', 'primary_serial', 'asset_layout_id', 'slug', 'search', 'updated_at'];
+      const hasFiltersRequiringAssetsEndpoint = filtersRequiringAssetsEndpoint.some(key => 
+        mappedFilters.hasOwnProperty(key) && mappedFilters[key] !== undefined && mappedFilters[key] !== ''
+      );
+
+      let endpoint: string;
+      let qs: IDataObject;
+
+      if (companyId && !hasFiltersRequiringAssetsEndpoint) {
+        // Use company-specific endpoint for better efficiency (reduces API load)
+        endpoint = `/companies/${companyId}/assets`;
+        // Remove company_id from query params as it's now in the path
+        qs = { ...mappedFilters };
+        delete qs.company_id;
+        debugLog('[RESOURCE_PROCESSING] Using company-specific endpoint', { endpoint, qs });
+      } else {
+        // Use generic /assets endpoint when no company or when other filters are needed
+        endpoint = '/assets';
+        qs = { ...mappedFilters };
+        debugLog('[RESOURCE_PROCESSING] Using generic assets endpoint', { endpoint, qs });
+      }
+
       responseData = await handleGetAllOperation.call(
         this,
         endpoint,

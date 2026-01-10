@@ -5,6 +5,21 @@ export const HUDU_API_CONSTANTS = {
 } as const;
 
 /**
+ * Rate limiting configuration to prevent 429 errors
+ * Hudu API rate limit: 300 requests per minute (5 requests per second)
+ */
+export const RATE_LIMIT_CONFIG = {
+  // Pagination throttling
+  DELAY_MS: 200,           // 200ms between pagination requests (5 req/sec max)
+  BACKOFF_DELAY_MS: 1000,  // 1s base delay after encountering 429
+  // Retry logic for 429 errors
+  MAX_RETRIES: 10,          // Maximum retry attempts for rate limit errors
+  BASE_DELAY_MS: 1000,     // Base delay for exponential backoff
+  MAX_DELAY_MS: 10000,     // 10s maximum delay cap for exponential backoff
+  JITTER_MS: 500,          // Random jitter to prevent thundering herd
+} as const;
+
+/**
  * Comprehensive list of field types available in Hudu asset layouts
  */
 export const ASSET_LAYOUT_FIELD_TYPES = {
