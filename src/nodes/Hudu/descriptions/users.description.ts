@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS } from '../utils/constants';
+import { createWrapResultsField } from './resources';
 
 export const userOperations: INodeProperties[] = [
   {
@@ -62,6 +63,7 @@ export const userFields: INodeProperties[] = [
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('users'),
   // Identifier Type toggle for get operation
   {
     displayName: 'Identifier Type',

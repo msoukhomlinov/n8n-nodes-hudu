@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { createWrapResultsField } from './resources';
 
 export const ipAddressOperations: INodeProperties[] = [
   {
@@ -51,6 +52,7 @@ export const ipAddressFields: INodeProperties[] = [
   // ----------------------------------
   //         ipAddresses:getAll
   // ----------------------------------
+  createWrapResultsField('ipAddresses'),
   {
     displayName: 'Filters',
     name: 'filters',

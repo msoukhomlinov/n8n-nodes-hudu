@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { createWrapResultsField } from './resources';
 
 export const vlansOperations: INodeProperties[] = [
   {
@@ -79,6 +80,7 @@ export const vlansFields: INodeProperties[] = [
     default: 50,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('vlans'),
   {
     displayName: 'Filters',
     name: 'filters',

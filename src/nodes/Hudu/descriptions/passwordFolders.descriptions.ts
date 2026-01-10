@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { createWrapResultsField } from './resources';
 
 export const passwordFoldersOperations: INodeProperties[] = [
   {
@@ -119,6 +120,7 @@ export const passwordFoldersFields: INodeProperties[] = [
     default: 50,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('password_folders'),
   {
     displayName: 'Filters',
     name: 'filters',

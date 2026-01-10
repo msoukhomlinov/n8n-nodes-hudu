@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, RESOURCE_TYPES } from '../utils/constants';
+import { createWrapResultsField } from './resources';
 
 export const assetPasswordOperations: INodeProperties[] = [
   {
@@ -399,6 +400,7 @@ export const assetPasswordFields: INodeProperties[] = [
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('asset_passwords'),
 
   // Filters for GetAll operation
   {

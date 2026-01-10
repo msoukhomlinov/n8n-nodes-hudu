@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { createWrapResultsField } from './resources';
 
 export const rackStorageItemOperations: INodeProperties[] = [
   {
@@ -51,6 +52,7 @@ export const rackStorageItemFields: INodeProperties[] = [
   // ----------------------------------
   //         rack_storage_items:getAll
   // ----------------------------------
+  createWrapResultsField('rack_storage_items'),
   {
     displayName: 'Filters',
     name: 'filters',

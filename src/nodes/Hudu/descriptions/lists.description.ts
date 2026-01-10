@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { createWrapResultsField } from './resources';
 
 export const listsOperations: INodeProperties[] = [
   {
@@ -240,4 +241,5 @@ export const listsFields: INodeProperties[] = [
     default: 50,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('lists'),
 ]; 

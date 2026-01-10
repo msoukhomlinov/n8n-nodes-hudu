@@ -1,6 +1,7 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, INTEGRATION_SLUGS } from '../utils/constants';
 import { formatTitleCase } from '../utils/formatters';
+import { createWrapResultsField } from './resources';
 
 export const companiesOperations: INodeProperties[] = [
   {
@@ -285,6 +286,7 @@ export const companiesFields: INodeProperties[] = [
     default: HUDU_API_CONSTANTS.PAGE_SIZE,
     description: 'Max number of results to return',
   },
+  createWrapResultsField('companies'),
   {
     displayName: 'Filters',
     name: 'filters',
