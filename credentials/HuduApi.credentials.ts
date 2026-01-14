@@ -32,7 +32,7 @@ export class HuduApi implements ICredentialType {
       name: 'enableDebug',
       type: 'boolean',
       default: false,
-      description: 'Enable comprehensive debug logging for all operations. When enabled, all debug categories will be logged regardless of individual settings.',
+      description: 'Whether to enable comprehensive debug logging for all operations. When enabled, debugs logs will appear in console.',
     },
   ];
 

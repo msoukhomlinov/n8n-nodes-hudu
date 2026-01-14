@@ -5,7 +5,7 @@
 
 import type { ICredentialDataDecryptedObject } from 'n8n-workflow';
 
-export const DEBUG_CONFIG = {
+const DEBUG_DEFAULTS = {
   // API Communication
   API_REQUEST: false,     // Debug API request details
   API_RESPONSE: false,    // Debug API response details
@@ -45,8 +45,9 @@ export const DEBUG_CONFIG = {
   DIAGNOSTIC_LOGGING: false,
 } as const;
 
-// Module-level variable to track if debug is enabled from credentials
-let debugEnabledFromCredentials = false;
+export const DEBUG_CONFIG: Record<keyof typeof DEBUG_DEFAULTS, boolean> = {
+  ...DEBUG_DEFAULTS,
+};
 
 // Mapping for various debug message formats to standardized uppercase config keys
 const DEBUG_CATEGORY_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
@@ -165,7 +166,10 @@ function extractDebugCategory(message: string): keyof typeof DEBUG_CONFIG | unde
  * @param credentials Decrypted credentials object
  */
 export function initializeDebugConfig(credentials: ICredentialDataDecryptedObject): void {
-  debugEnabledFromCredentials = credentials?.enableDebug === true;
+  const enabled = credentials?.enableDebug === true;
+  for (const key of Object.keys(DEBUG_CONFIG) as Array<keyof typeof DEBUG_CONFIG>) {
+    DEBUG_CONFIG[key] = enabled ? true : DEBUG_DEFAULTS[key];
+  }
 }
 
 /**
@@ -175,17 +179,15 @@ export function debugLog(message: string, data?: unknown): void {
   // Extract the debug category from the message
   const category = extractDebugCategory(message);
   
-  // Check if debug is enabled either from credentials (global override) or from specific category
-  const shouldLog = debugEnabledFromCredentials || (category && DEBUG_CONFIG[category]);
-  
-  // Only log if enabled
-  if (shouldLog) {
-    // Redact sensitive data if present
-    const safeData = data ? redactSensitiveData(data) : undefined;
-    
-    // Use the category name if available, otherwise use a generic label
-    const categoryLabel = category || 'DEBUG';
-    console.log(`[Hudu][${categoryLabel}] ${message}`, safeData);
+  // Only log if the category exists and is enabled in DEBUG_CONFIG
+  if (category && DEBUG_CONFIG[category]) {
+    if (data !== undefined) {
+      // Use debugStringify for fully expanded, readable output
+      const formattedData = debugStringify(data);
+      console.log(`[Hudu][${category}] ${message}\n${formattedData}`);
+    } else {
+      console.log(`[Hudu][${category}] ${message}`);
+    }
   }
   // No else branch - if category doesn't exist or is disabled, don't log anything
 }
