@@ -22,6 +22,7 @@ To use this node, you need to:
 3. Configure the node with:
    - Base URL (e.g., https://your-hudu-instance.com)
    - API Key
+   - Enable Debug Logging (optional): When enabled, all debug categories are logged for comprehensive troubleshooting. Off by default.
 
 ## Features
 
@@ -32,7 +33,7 @@ To use this node, you need to:
 - Dynamic loading of related resources (companies, users, assets, layouts, networks, groups, VLANs, VLAN Zones)
 - Date range filtering with preset options
 - Automatic type conversion and validation
-- Debug logging for troubleshooting
+- Debug logging for troubleshooting (enable via credentials toggle for comprehensive debug output)
 - Central request sanitisation (omits empty optionals to prevent API 500s)
 - Resource-specific update collections across all resources
 - Optional article markdown conversion (HTML to Markdown) for Articles get/get many

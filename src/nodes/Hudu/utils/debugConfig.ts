@@ -3,6 +3,8 @@
  * Controls various debug output levels throughout the node
  */
 
+import type { ICredentialDataDecryptedObject } from 'n8n-workflow';
+
 export const DEBUG_CONFIG = {
   // API Communication
   API_REQUEST: false,     // Debug API request details
@@ -42,6 +44,9 @@ export const DEBUG_CONFIG = {
   // Diagnostic flags
   DIAGNOSTIC_LOGGING: false,
 } as const;
+
+// Module-level variable to track if debug is enabled from credentials
+let debugEnabledFromCredentials = false;
 
 // Mapping for various debug message formats to standardized uppercase config keys
 const DEBUG_CATEGORY_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
@@ -156,19 +161,31 @@ function extractDebugCategory(message: string): keyof typeof DEBUG_CONFIG | unde
 }
 
 /**
+ * Initialize debug configuration from credentials
+ * @param credentials Decrypted credentials object
+ */
+export function initializeDebugConfig(credentials: ICredentialDataDecryptedObject): void {
+  debugEnabledFromCredentials = credentials?.enableDebug === true;
+}
+
+/**
  * Debug logging utility
  */
 export function debugLog(message: string, data?: unknown): void {
   // Extract the debug category from the message
   const category = extractDebugCategory(message);
   
-  // Only log if the category exists and is enabled in DEBUG_CONFIG
-  if (category && DEBUG_CONFIG[category]) {
+  // Check if debug is enabled either from credentials (global override) or from specific category
+  const shouldLog = debugEnabledFromCredentials || (category && DEBUG_CONFIG[category]);
+  
+  // Only log if enabled
+  if (shouldLog) {
     // Redact sensitive data if present
     const safeData = data ? redactSensitiveData(data) : undefined;
     
-    // Use the original category name without formatting
-    console.log(`[Hudu][${category}] ${message}`, safeData);
+    // Use the category name if available, otherwise use a generic label
+    const categoryLabel = category || 'DEBUG';
+    console.log(`[Hudu][${categoryLabel}] ${message}`, safeData);
   }
   // No else branch - if category doesn't exist or is disabled, don't log anything
 }

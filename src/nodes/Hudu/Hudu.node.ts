@@ -9,7 +9,7 @@ import {
 	INodePropertyOptions,
 	NodeOperationError,
 } from 'n8n-workflow';
-import { DEBUG_CONFIG, debugLog } from './utils/debugConfig';
+import { DEBUG_CONFIG, debugLog, initializeDebugConfig } from './utils/debugConfig';
 
 // Import all descriptions
 import * as descriptions from './descriptions';
@@ -21,6 +21,16 @@ import * as resources from './resources';
 // Import all option loaders centrally
 import * as optionLoaders from './optionLoaders';
 import { mapAssetLayoutFieldsForResource } from './optionLoaders/asset_layouts/getAssetLayoutFields';
+
+type LoadOptionsHandler = (this: ILoadOptionsFunctions, ...args: unknown[]) => Promise<INodePropertyOptions[]>;
+
+const withDebugConfig = (loader: LoadOptionsHandler): LoadOptionsHandler => {
+  return async function (this: ILoadOptionsFunctions, ...args: unknown[]): Promise<INodePropertyOptions[]> {
+    const credentials = await this.getCredentials('huduApi');
+    initializeDebugConfig(credentials);
+    return loader.apply(this, args);
+  };
+};
 
 export class Hudu implements INodeType {
 	description: INodeTypeDescription = {
@@ -127,15 +137,15 @@ export class Hudu implements INodeType {
 
 	methods = {
 		loadOptions: {
-			getUsers: optionLoaders.getUsers,
-			getCompanies: optionLoaders.getCompanies,
-			getAssetLayouts: optionLoaders.getAssetLayouts,
-			getAssetLayoutFields: optionLoaders.getAssetLayoutFields,
-			getAssetLayoutFieldValues: optionLoaders.getAssetLayoutFieldValues,
-			getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
-			getLists: optionLoaders.getLists,
-			getGroups: (optionLoaders as any).getGroups,
-			getVlanZones: (optionLoaders as any).getVlanZones,
+			getUsers: withDebugConfig(optionLoaders.getUsers),
+			getCompanies: withDebugConfig(optionLoaders.getCompanies),
+			getAssetLayouts: withDebugConfig(optionLoaders.getAssetLayouts),
+			getAssetLayoutFields: withDebugConfig(optionLoaders.getAssetLayoutFields),
+			getAssetLayoutFieldValues: withDebugConfig(optionLoaders.getAssetLayoutFieldValues),
+			getCustomFieldsLayoutFields: withDebugConfig(optionLoaders.getCustomFieldsLayoutFields),
+			getLists: withDebugConfig(optionLoaders.getLists),
+			getGroups: withDebugConfig((optionLoaders as any).getGroups as LoadOptionsHandler),
+			getVlanZones: withDebugConfig((optionLoaders as any).getVlanZones as LoadOptionsHandler),
 			async getStandardAssetFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				return [
 					{ name: 'Name', value: 'name' },
@@ -164,6 +174,10 @@ export class Hudu implements INodeType {
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		// Initialize debug configuration from credentials
+		const credentials = await this.getCredentials('huduApi');
+		initializeDebugConfig(credentials);
+
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 

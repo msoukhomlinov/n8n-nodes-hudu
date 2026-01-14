@@ -27,6 +27,13 @@ export class HuduApi implements ICredentialType {
       default: '',
       required: true,
     },
+    {
+      displayName: 'Enable Debug Logging',
+      name: 'enableDebug',
+      type: 'boolean',
+      default: false,
+      description: 'Enable comprehensive debug logging for all operations. When enabled, all debug categories will be logged regardless of individual settings.',
+    },
   ];
 
   authenticate: IAuthenticateGeneric = {
