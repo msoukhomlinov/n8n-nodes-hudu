@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.8] - 2026-01-15
+- **Credentials**: Added "Enable Debug Logging" toggle to Hudu API credentials. When enabled, all debug categories are logged regardless of individual settings, providing comprehensive debugging output for troubleshooting. The toggle is off by default and can be enabled per credential instance.
+
+
 ## [1.6.7] - 2026-01-10
 
 ### Added
