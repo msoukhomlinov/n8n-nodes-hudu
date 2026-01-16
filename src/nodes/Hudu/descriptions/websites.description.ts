@@ -484,7 +484,7 @@ export const websitesFields: INodeProperties[] = [
   //         websites:create
   // ----------------------------------
   {
-    displayName: 'Name',
+    displayName: 'Website URL',
     name: 'name',
     type: 'string',
     displayOptions: {
@@ -495,7 +495,8 @@ export const websitesFields: INodeProperties[] = [
     },
     default: '',
     required: true,
-    description: 'The URL of the website',
+    placeholder: 'https://example.com',
+    description: 'The URL of the website to monitor (must be a valid HTTP or HTTPS URL)',
   },
   {
     displayName: 'Company Name or ID',
@@ -698,13 +699,6 @@ export const websitesFields: INodeProperties[] = [
         default: '',
         description: 'The URL slug for the website',
       },
-      {
-        displayName: 'URL',
-        name: 'url',
-        type: 'string',
-        default: '',
-        description: 'The URL path of the website within the application',
-      },
     ],
   },
 
@@ -858,11 +852,12 @@ export const websitesFields: INodeProperties[] = [
         description: 'The monitoring status of the website (e.g., \'up\', \'down\')',
       },
       {
-        displayName: 'Name',
+        displayName: 'Website URL',
         name: 'name',
         type: 'string',
         default: '',
-        description: 'The URL of the website',
+        placeholder: 'https://example.com',
+        description: 'The URL of the website to monitor (must be a valid HTTP or HTTPS URL)',
       },
       {
         displayName: 'Notes',
@@ -898,13 +893,6 @@ export const websitesFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'The URL slug for the website',
-      },
-      {
-        displayName: 'URL',
-        name: 'url',
-        type: 'string',
-        default: '',
-        description: 'The URL path of the website within the application',
       },
     ],
   },

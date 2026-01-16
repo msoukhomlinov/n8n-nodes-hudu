@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.4] - 2026-01-16
+
+### Fixed
+- **Websites**: Fixed "Name must be a valid HTTP or HTTPS URL" error by clarifying that the name field requires a URL. Renamed field to "Website URL", added placeholder, and included client-side validation with clear error messaging.
+
 ## [1.7.3] - 2026-01-16
 
 ### Fixed
