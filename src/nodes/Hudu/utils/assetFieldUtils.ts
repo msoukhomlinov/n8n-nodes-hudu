@@ -1,4 +1,3 @@
-import { DateTime } from 'luxon';
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import type { IAssetLayoutFieldEntity } from '../resources/asset_layout_fields/asset_layout_fields.types';
 import { getCompanyIdForAsset } from './operations/getCompanyIdForAsset';
@@ -281,39 +280,37 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
       throw new Error(`Invalid value for CheckBox field: ${value}. Expected true/false, yes/no, or 1/0.`);
 
     case ASSET_LAYOUT_FIELD_TYPES.DATE:
-      // Hudu expects dates in YYYY-MM-DD format. We use Luxon for robust parsing.
+      // Hudu expects dates in YYYY-MM-DD format. We use native Date for robust parsing.
       // This handles ISO strings from n8n's date picker without timezone shifts.
+      
+      // If already in YYYY-MM-DD format, return as-is
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value;
+      }
+
+      // Try parsing as ISO datetime string - extract date part before 'T' to preserve original date
+      if (typeof value === 'string' && value.includes('T')) {
+        const datePart = value.split('T')[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+          debugLog('[RESOURCE_TRANSFORM] Extracted date from ISO string', { original: value, converted: datePart });
+          return datePart;
+        }
+      }
+
+      // Try parsing with native Date
       try {
-        const dt = DateTime.fromISO(value);
-        if (dt.isValid) {
-          const dateString = dt.toFormat('yyyy-MM-dd');
-          debugLog('[RESOURCE_TRANSFORM] Converted ISO string to yyyy-MM-dd', { original: value, converted: dateString });
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          // Use local time to match previous Luxon behaviour
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
+          debugLog('[RESOURCE_TRANSFORM] Converted to yyyy-MM-dd using native Date', { original: value, converted: dateString });
           return dateString;
         }
       } catch (e) {
-        // Ignore parsing errors and try other formats
-      }
-      
-      // Fallback for other common date formats
-      try {
-        const dt = DateTime.fromFormat(value, 'yyyy-MM-dd');
-        if (dt.isValid) {
-          return value; // Already in correct format
-        }
-      } catch(e) {
-        // Fallback for other common date formats
-      }
-
-      // Final attempt with forgiving parsing for other formats like 'DD/MM/YYYY' etc.
-      try {
-        const dt = DateTime.fromJSDate(new Date(value));
-        if (dt.isValid) {
-            const dateString = dt.toFormat('yyyy-MM-dd');
-            debugLog('[RESOURCE_TRANSFORM] Converted JS Date to yyyy-MM-dd (fallback)', { original: value, converted: dateString });
-            return dateString;
-        }
-      } catch (e) {
-        // Let it fall through to the error
+        // Fall through to error
       }
       
       throw new Error(`Invalid value for Date field: '${value}'. Expected a valid date string (e.g., YYYY-MM-DD or a full ISO timestamp).`);

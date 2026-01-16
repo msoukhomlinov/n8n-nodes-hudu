@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] - 2026-01-16
+
+### Changed
+- Enhanced HTML to Markdown converter with improved date handling and parsing
+
+### Removed
+- Removed `luxon` dependency (replaced with native JavaScript Date API) to pass n8n Creator Portal validation
+
 ## [1.7.1] - 2026-01-16
 
 ### Changed

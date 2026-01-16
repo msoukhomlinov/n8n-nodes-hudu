@@ -23,6 +23,7 @@
  * - Subscript/superscript
  * - Task lists/checkboxes
  * - Figure/figcaption
+ * - Details/summary (collapsible sections)
  */
 
 /**
@@ -466,8 +467,11 @@ function convertTableToMarkdown(tableHtml: string): string {
 
       // Process cell content (recursively convert HTML, but keep it inline)
       const processedContent = convertHtmlToMarkdown(cellContent)
-        .replace(/\n+/g, ' ')  // Replace newlines with spaces
-        .replace(/\|/g, '\\|') // Escape pipes in content
+        .replace(/\r/g, '')           // Remove carriage returns first
+        .replace(/\n{2,}/g, ' ')      // Collapse multiple newlines to space
+        .replace(/\n/g, ' ')          // Single newlines to space
+        .replace(/\s{2,}/g, ' ')      // Collapse multiple spaces
+        .replace(/\|/g, '\\|')        // Escape pipes in content
         .trim();
 
       cells.push(processedContent);
@@ -552,6 +556,9 @@ export function convertHtmlToMarkdown(htmlContent: string): string {
   try {
     let markdown = htmlContent;
 
+    // Normalize line endings (handle \r\n and \r)
+    markdown = markdown.replace(/\r\n?/g, '\n');
+
     // Remove script, style, and comment tags completely
     markdown = markdown.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
     markdown = markdown.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
@@ -561,6 +568,20 @@ export function convertHtmlToMarkdown(htmlContent: string): string {
     // Convert tables FIRST (before other processing messes with structure)
     markdown = markdown.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match) => {
       return convertTableToMarkdown(match);
+    });
+
+    // Convert details/summary blocks (GFM supports HTML details natively)
+    markdown = markdown.replace(/<details[^>]*>([\s\S]*?)<\/details>/gi, (match, content) => {
+      const summaryMatch = content.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i);
+      const summaryText = summaryMatch ? convertHtmlToMarkdown(summaryMatch[1]).trim() : '';
+      const bodyContent = content.replace(/<summary[^>]*>[\s\S]*?<\/summary>/i, '');
+      const body = convertHtmlToMarkdown(bodyContent.trim());
+
+      if (!summaryText && !body) return '';
+      if (!summaryText) return body;
+      if (!body) return `<details><summary>${summaryText}</summary></details>`;
+
+      return `<details><summary>${summaryText}</summary>\n\n${body}\n\n</details>`;
     });
 
     // Convert figure with figcaption
@@ -773,9 +794,9 @@ export function convertHtmlToMarkdown(htmlContent: string): string {
       });
     }
 
-    // Remove any remaining HTML tags (only match valid-looking tags, not things like <3)
+    // Remove any remaining HTML tags EXCEPT details/summary (GFM renders these natively)
     // Valid HTML tags start with a letter or /, not a number or symbol
-    markdown = markdown.replace(/<\/?[a-zA-Z][^>]*>/g, '');
+    markdown = markdown.replace(/<\/?(?!details>|summary>)[a-zA-Z][^>]*>/g, '');
 
     // Decode any remaining HTML entities
     markdown = decodeEntities(markdown);
