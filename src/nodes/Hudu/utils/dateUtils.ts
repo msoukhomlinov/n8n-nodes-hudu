@@ -9,7 +9,6 @@
  * - Date format conversion (ISO datetime to date-only YYYY-MM-DD)
  */
 
-import { DateTime } from 'luxon';
 import { DEBUG_CONFIG, debugLog } from './debugConfig';
 
 export type DateRangePreset =
@@ -206,9 +205,65 @@ export function processDateRange(dateRange: IDateRange): string | undefined {
 }
 
 /**
+ * Parse a date value from various formats
+ * @param value - Date value (can be ISO datetime string, date string, Date object, or number)
+ * @returns Date object or null if parsing fails
+ */
+function parseDate(value: unknown): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  // If already a Date object, return it
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value;
+  }
+
+  // If it's a number (timestamp), create Date from it
+  if (typeof value === 'number') {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // If it's a string, try parsing it
+  if (typeof value === 'string') {
+    // If already in YYYY-MM-DD format, parse it directly to avoid timezone issues
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const parts = value.split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+      const day = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // Try parsing as ISO string or other formats
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Format a Date object to YYYY-MM-DD format using local time
+ * @param date - Date object to format
+ * @returns Date string in YYYY-MM-DD format
+ */
+function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Convert dateTime value to date-only format (YYYY-MM-DD) as required by Hudu API
  * This function is lenient and handles various input formats including ISO datetime strings
  * from n8n's dateTime picker. Returns undefined for empty/invalid values (suitable for optional fields).
+ * Preserves the date portion for ISO datetime strings to avoid shifts.
  * 
  * @param value - Date value (can be ISO datetime string, date string, or empty)
  * @returns Date string in YYYY-MM-DD format, undefined if empty/invalid, or original value if parsing fails
@@ -223,24 +278,19 @@ export function convertToDateOnlyFormat(value: any): string | undefined {
     return value;
   }
 
-  // Try parsing as ISO datetime string
-  try {
-    const dt = DateTime.fromISO(value);
-    if (dt.isValid) {
-      return dt.toFormat('yyyy-MM-dd');
+  // Try parsing the date
+  const date = parseDate(value);
+  if (date) {
+    // For ISO strings, extract the date part from the original string if possible
+    if (typeof value === 'string' && value.includes('T')) {
+      // ISO datetime string - extract date part before 'T' to preserve original date
+      const datePart = value.split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
     }
-  } catch (e) {
-    // Fall through to other parsing attempts
-  }
-
-  // Try parsing as Date object
-  try {
-    const dt = DateTime.fromJSDate(new Date(value));
-    if (dt.isValid) {
-      return dt.toFormat('yyyy-MM-dd');
-    }
-  } catch (e) {
-    // Fall through
+    // Fallback to local date formatting
+    return formatDateToYYYYMMDD(date);
   }
 
   // If all parsing fails, return original value (will be validated by API)
