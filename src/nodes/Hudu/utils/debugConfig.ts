@@ -190,7 +190,7 @@ export function debugLog(message: string, data?: unknown): void {
     // DEVELOPMENT ONLY: Uncomment the line below to enable console debug
     // IMPORTANT: Comment out before publishing for n8n verification!
     // ====================================================================
-    console.log(formattedMessage, logData !== undefined ? debugStringify(logData) : '');
+    // console.log(formattedMessage, logData !== undefined ? debugStringify(logData) : '');
 
     // Suppress unused variable warnings when console.log is commented out
     void formattedMessage;
