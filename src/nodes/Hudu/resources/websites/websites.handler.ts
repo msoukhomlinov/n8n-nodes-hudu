@@ -141,6 +141,18 @@ export async function handleWebsitesOperation(
       const name = this.getNodeParameter('name', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
       
+      // Validate that name is a valid HTTP/HTTPS URL
+      if (!name.match(/^https?:\/\/.+/i)) {
+        throw new NodeOperationError(
+          this.getNode(),
+          'Website URL must be a valid HTTP or HTTPS URL (e.g., https://example.com)',
+          {
+            itemIndex: i,
+            description: `The provided value "${name}" is not a valid URL. The website name field must start with http:// or https://`,
+          }
+        );
+      }
+      
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('[ResourceParams] Websites create parameters', { 
           companyId, 
@@ -167,6 +179,20 @@ export async function handleWebsitesOperation(
     case 'update': {
       const websiteId = this.getNodeParameter('websiteId', i) as string;
       const updateFields = this.getNodeParameter('websiteUpdateFields', i) as IDataObject;
+      
+      // Validate that name is a valid HTTP/HTTPS URL if provided
+      if (updateFields.name && typeof updateFields.name === 'string') {
+        if (!updateFields.name.match(/^https?:\/\/.+/i)) {
+          throw new NodeOperationError(
+            this.getNode(),
+            'Website URL must be a valid HTTP or HTTPS URL (e.g., https://example.com)',
+            {
+              itemIndex: i,
+              description: `The provided value "${updateFields.name}" is not a valid URL. The website name field must start with http:// or https://`,
+            }
+          );
+        }
+      }
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('[ResourceParams] Websites update parameters', { websiteId, updateFields });

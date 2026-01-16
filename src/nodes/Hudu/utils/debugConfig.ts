@@ -18,7 +18,7 @@
 
 const DEBUG_DEFAULTS = {
   // API Communication
-  API_REQUEST: true,     // Debug API request details
+  API_REQUEST: false,     // Debug API request details
   API_RESPONSE: false,    // Debug API response details
   API_ERROR: false,       // Debug API error handling and parsing
 
@@ -34,7 +34,7 @@ const DEBUG_DEFAULTS = {
   RESOURCE_PROCESSING: false,  // Debug resource handler processing
   RESOURCE_PARAMS: false,      // Debug parameter extraction in handlers
   RESOURCE_TRANSFORM: false,   // Debug data transformations in handlers
-  RESOURCE_MAPPING: false,    // Debug resource mapping
+  RESOURCE_MAPPING: false,     // Debug resource mapping
 
   // Node Execution
   NODE_INPUT: false,    // Debug input items to node
@@ -43,7 +43,7 @@ const DEBUG_DEFAULTS = {
   // Utility Functions
   UTIL_DATE_PROCESSING: false,  // Debug date range processing
   UTIL_FILTERS: false,          // Debug filter processing
-  UTIL_TYPE_CONVERSION: false,   // Debug type conversions
+  UTIL_TYPE_CONVERSION: false,  // Debug type conversions
 
   // Asset Related
   ASSET_OPTIONS: false,        // Debug asset options loading and processing
