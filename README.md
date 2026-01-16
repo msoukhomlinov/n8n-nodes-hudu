@@ -4,7 +4,7 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.39.6. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.40.1. Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
@@ -36,7 +36,7 @@ To use this node, you need to:
 - Debug logging for troubleshooting (enable via credentials toggle for comprehensive debug output)
 - Central request sanitisation (omits empty optionals to prevent API 500s)
 - Resource-specific update collections across all resources
-- Optional article markdown conversion (HTML to Markdown) for Articles get/get many
+- Optional article markdown conversion (HTML to Markdown) for Articles get/get many (uses internal regex-based converter)
 - Flexible identifier support: Get operations support both numeric IDs and slugs via Identifier Type toggle (Articles, Asset Layouts, Asset Passwords, Assets, Companies, Groups, Networks, Password Folders, Procedures, Users, VLAN Zones, VLANs, Websites)
 
 ## Supported Resources & Operations

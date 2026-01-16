@@ -1,13 +1,24 @@
 /**
  * Debug configuration for Hudu node
  * Controls various debug output levels throughout the node
+ *
+ * FOR DEVELOPMENT DEBUGGING:
+ * 1. Set the desired categories to `true` in DEBUG_DEFAULTS below
+ * 2. Uncomment the console.log line in debugLog() function
+ * 3. Rebuild the node: npm run build
+ * 4. Restart n8n
+ *
+ * IMPORTANT: Before publishing, ensure:
+ * - All DEBUG_DEFAULTS are set to `false`
+ * - The console.log line is commented out
+ * - Run `npm run build` and verify no console.* in dist/
  */
 
-import type { ICredentialDataDecryptedObject } from 'n8n-workflow';
+// No runtime dependencies
 
 const DEBUG_DEFAULTS = {
   // API Communication
-  API_REQUEST: false,     // Debug API request details
+  API_REQUEST: true,     // Debug API request details
   API_RESPONSE: false,    // Debug API response details
   API_ERROR: false,       // Debug API error handling and parsing
 
@@ -55,19 +66,19 @@ const DEBUG_CATEGORY_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
   'RESOURCE_MAPPING': 'RESOURCE_MAPPING',
   'ResourceMapping': 'RESOURCE_MAPPING',
   'Resource_Mapping': 'RESOURCE_MAPPING',
-  
+
   // Option loading variations
   'OPTION_LOADING': 'OPTION_LOADING',
   'OptionLoading': 'OPTION_LOADING',
-  
+
   // Asset options variations
   'ASSET_OPTIONS': 'ASSET_OPTIONS',
   'AssetOptions': 'ASSET_OPTIONS',
-  
+
   // Field type mapping variations
   'FIELD_TYPE_MAPPING': 'FIELD_TYPE_MAPPING',
   'FieldTypeMapping': 'FIELD_TYPE_MAPPING',
-  
+
   // Additional mappings for other categories
   'API_REQUEST': 'API_REQUEST',
   'API_RESPONSE': 'API_RESPONSE',
@@ -112,8 +123,7 @@ const MESSAGE_PREFIX_MAP: Record<string, keyof typeof DEBUG_CONFIG> = {
   'List Options Handler': 'RESOURCE_PROCESSING',
   'Articles Handler': 'RESOURCE_PROCESSING',
   'Articles Version History': 'RESOURCE_PROCESSING',
-  'Node Execution': 'NODE_INPUT',  // We'll refine this later in the extractDebugCategory function
-  // Additional patterns found
+  'Node Execution': 'NODE_INPUT',
   'VLAN Zone operation': 'RESOURCE_PROCESSING',
   'VLAN operation': 'RESOURCE_PROCESSING',
   'Websites resource': 'RESOURCE_PROCESSING',
@@ -143,53 +153,49 @@ function extractDebugCategory(message: string): keyof typeof DEBUG_CONFIG | unde
   const categoryMatch = message.match(/\[([A-Za-z0-9_]+)\]/);
   if (categoryMatch && categoryMatch[1]) {
     const category = categoryMatch[1];
-    // Look up the standardized category in our map
     return DEBUG_CATEGORY_MAP[category];
   }
-  
+
   // If no bracket category, try to match based on message prefix
   for (const [prefix, category] of Object.entries(MESSAGE_PREFIX_MAP)) {
     if (message.startsWith(prefix)) {
-      // Special case for Node Execution
       if (prefix === 'Node Execution' && message.includes('Output')) {
         return 'NODE_OUTPUT';
       }
       return category;
     }
   }
-  
+
   return undefined;
 }
 
 /**
- * Initialize debug configuration from credentials
- * @param credentials Decrypted credentials object
- */
-export function initializeDebugConfig(credentials: ICredentialDataDecryptedObject): void {
-  const enabled = credentials?.enableDebug === true;
-  for (const key of Object.keys(DEBUG_CONFIG) as Array<keyof typeof DEBUG_CONFIG>) {
-    DEBUG_CONFIG[key] = enabled ? true : DEBUG_DEFAULTS[key];
-  }
-}
-
-/**
  * Debug logging utility
+ *
+ * FOR DEVELOPMENT: Uncomment the console.log line below to enable debug output.
+ * IMPORTANT: Comment it out before publishing to pass n8n verification.
+ *
+ * @param message Debug message to log
+ * @param data Optional data to log
  */
 export function debugLog(message: string, data?: unknown): void {
-  // Extract the debug category from the message
   const category = extractDebugCategory(message);
-  
-  // Only log if the category exists and is enabled in DEBUG_CONFIG
+
   if (category && DEBUG_CONFIG[category]) {
-    if (data !== undefined) {
-      // Use debugStringify for fully expanded, readable output
-      const formattedData = debugStringify(data);
-      console.log(`[Hudu][${category}] ${message}\n${formattedData}`);
-    } else {
-      console.log(`[Hudu][${category}] ${message}`);
-    }
+    // Format message and data for logging
+    const formattedMessage = `[Hudu][${category}] ${message}`;
+    const logData = data !== undefined ? redactSensitiveData(data) : undefined;
+
+    // ====================================================================
+    // DEVELOPMENT ONLY: Uncomment the line below to enable console debug
+    // IMPORTANT: Comment out before publishing for n8n verification!
+    // ====================================================================
+    console.log(formattedMessage, logData !== undefined ? debugStringify(logData) : '');
+
+    // Suppress unused variable warnings when console.log is commented out
+    void formattedMessage;
+    void logData;
   }
-  // No else branch - if category doesn't exist or is disabled, don't log anything
 }
 
 /**
@@ -210,23 +216,22 @@ export function redactSensitiveData(obj: unknown): unknown {
   }
 
   const sensitiveKeys = ['x-api-key', 'apiKey', 'api_key', 'password', 'token', 'secret', 'authorization'];
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => redactSensitiveData(item));
   }
 
   if (isRecord(obj)) {
     const redactedObj: Record<string, unknown> = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
-      // Case-insensitive check for sensitive keys
       if (sensitiveKeys.some(sensitiveKey => key.toLowerCase() === sensitiveKey.toLowerCase())) {
         redactedObj[key] = '[REDACTED]';
       } else {
         redactedObj[key] = typeof value === 'object' ? redactSensitiveData(value) : value;
       }
     }
-    
+
     return redactedObj;
   }
 
@@ -237,11 +242,9 @@ export function redactSensitiveData(obj: unknown): unknown {
  * Debug utility function for better object logging
  */
 export function debugStringify(obj: unknown, space = 2): string {
-  // Redact sensitive data before stringifying
   const redactedObj = redactSensitiveData(obj);
 
   return JSON.stringify(redactedObj, (key, value) => {
-    // Handle special cases like functions, undefined, etc.
     if (typeof value === 'function') {
       return '[Function]';
     }
@@ -260,4 +263,4 @@ export function debugStringify(obj: unknown, space = 2): string {
     }
     return value;
   }, space);
-} 
+}

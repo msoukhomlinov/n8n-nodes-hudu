@@ -2,13 +2,7 @@ import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { handleGetAllOperation } from '../../utils/operations';
 import type { ActivityLogsOperation } from './activity_logs.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { huduApiRequest, sleep } from '../../utils/requestUtils';
-
-// Adaptive throttling constants to prevent rate limiting
-const THROTTLE_CONFIG = {
-  BASE_DELAY_MS: 50,         // 100ms between sequential requests
-  RATE_LIMITED_DELAY_MS: 500, // 500ms after encountering a 429
-} as const;
+import { huduApiRequest } from '../../utils/requestUtils';
 
 /**
  * Filter fields from a result object based on selected fields
@@ -41,7 +35,7 @@ function applyFieldFiltering(results: IDataObject[], fields: string[] | undefine
 /**
  * Fetch activity logs with client-side resource_type filtering
  * Uses incremental pagination to avoid fetching all logs unnecessarily
- * Includes adaptive delay between requests to prevent rate limiting
+ * Uses incremental pagination to avoid fetching all logs unnecessarily
  */
 async function fetchWithResourceTypeFilter(
   context: IExecuteFunctions,
@@ -50,18 +44,12 @@ async function fetchWithResourceTypeFilter(
   resourceType: string,
   returnAll: boolean,
   limit: number,
-  delayMs: number = THROTTLE_CONFIG.BASE_DELAY_MS,
 ): Promise<IDataObject[]> {
   const matchingResults: IDataObject[] = [];
   let page = 1;
   let hasMorePages = true;
 
   while (hasMorePages) {
-    // Add delay between pagination requests (skip first page)
-    if (page > 1) {
-      await sleep(delayMs);
-    }
-
     const qs = { ...filters, page, page_size: HUDU_API_CONSTANTS.PAGE_SIZE };
     const response = await huduApiRequest.call(context, 'GET', endpoint, {}, qs);
     const items = Array.isArray(response) 
@@ -135,17 +123,10 @@ export async function handleActivityLogsOperation(
       // Handle multi-action selection: query each action separately and merge results
       if (Array.isArray(actionMessages) && actionMessages.length > 1) {
         const allResults: IDataObject[] = [];
-        let currentDelay: number = THROTTLE_CONFIG.BASE_DELAY_MS;
-
-        // Query each action separately with adaptive throttling
+        // Query each action separately
         for (let actionIndex = 0; actionIndex < actionMessages.length; actionIndex++) {
           const action = actionMessages[actionIndex];
           const actionFilters = { ...cleanedFilters, action_message: action };
-
-          // Add delay between requests to prevent rate limiting (skip first request)
-          if (actionIndex > 0) {
-            await sleep(currentDelay);
-          }
 
           try {
             if (needsClientSideResourceTypeFilter) {
@@ -157,7 +138,6 @@ export async function handleActivityLogsOperation(
                 resourceType!,
                 returnAll,
                 limit,
-                currentDelay,
               );
               allResults.push(...actionResults);
             } else {
@@ -173,10 +153,6 @@ export async function handleActivityLogsOperation(
               allResults.push(...(Array.isArray(actionResults) ? actionResults : [actionResults]));
             }
           } catch (error) {
-            // If we hit a rate limit, increase delay for remaining requests
-            if ((error as { statusCode?: number }).statusCode === 429) {
-              currentDelay = THROTTLE_CONFIG.RATE_LIMITED_DELAY_MS;
-            }
             throw error; // Re-throw to let existing retry logic handle it
           }
         }
