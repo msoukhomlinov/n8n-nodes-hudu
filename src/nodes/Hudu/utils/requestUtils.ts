@@ -90,13 +90,6 @@ function calculateBackoffDelay(retryCount: number, retryAfter?: number): number 
 }
 
 /**
- * Sleep for specified milliseconds
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
  * Convert IDataObject to JsonObject safely
  */
 export function toJsonObject(obj: IDataObject): JsonObject {
@@ -248,8 +241,7 @@ export async function executeHuduRequest(
           });
         }
 
-        // Wait before retrying
-        await sleep(delayMs);
+        // No delay allowed under restricted globals policy
         retryCount++;
         continue;
       }
@@ -446,17 +438,8 @@ export async function handleListing<T extends IDataObject>(
     RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any) ||
     (resourcePath.startsWith('companies/') && resourcePath.endsWith('/assets'));
 
-  // Rate limiting: track delay and consecutive rate limit errors
-  let currentDelay: number = RATE_LIMIT_CONFIG.DELAY_MS;
-  let consecutiveRateLimits = 0;
-
   // Keep fetching until we have enough filtered results or no more data
   while (hasMore) {
-    // Add delay between pagination requests (skip first page)
-    if (page > 1) {
-      await sleep(currentDelay);
-    }
-
     // Only include pagination parameters if the resource supports them
     const queryParams = { ...query };
     
@@ -468,9 +451,6 @@ export async function handleListing<T extends IDataObject>(
     try {
       const response = await huduApiRequest.call(this, method, endpoint, body, queryParams, resourceName);
       const batchResults = parseHuduResponse(response, resourceName);
-
-      // Reset consecutive rate limit counter on success
-      consecutiveRateLimits = 0;
 
       //debugLog('[handleListing] Page fetched', { 
       //  endpoint, 
@@ -519,20 +499,6 @@ export async function handleListing<T extends IDataObject>(
         page++;
       }
     } catch (error) {
-      // If rate limited, apply exponential backoff for remaining requests
-      const err = error as IDataObject;
-      const context = err.context as IDataObject | undefined;
-      const responseContext = context?.response as IDataObject | undefined;
-      const statusCode = err.statusCode ?? responseContext?.statusCode;
-
-      if (statusCode === 429) {
-        consecutiveRateLimits++;
-        // Exponential backoff: 1s, 2s, 4s, 8s... capped at MAX_DELAY_MS
-        currentDelay = Math.min(
-          RATE_LIMIT_CONFIG.BACKOFF_DELAY_MS * (2 ** (consecutiveRateLimits - 1)),
-          RATE_LIMIT_CONFIG.MAX_DELAY_MS
-        );
-      }
       // Re-throw error to let existing retry logic in executeHuduRequest handle it
       throw error;
     }

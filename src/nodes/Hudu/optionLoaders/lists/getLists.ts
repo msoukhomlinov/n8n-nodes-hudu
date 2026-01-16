@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, IDataObject, INodePropertyOptions } from 'n8n-workflow';
 import { handleListing } from '../../utils';
+import { debugLog } from '../../utils/debugConfig';
 
 interface IList extends IDataObject {
   id: number;
@@ -28,11 +29,11 @@ export async function getLists(this: ILoadOptionsFunctions): Promise<INodeProper
     )) as IList[];
 
     if (!Array.isArray(lists)) {
-      console.log('getLists returned non-array:', lists);
+      debugLog('[OPTION_LOADING] getLists returned non-array:', lists);
       return [];
     }
 
-    console.log(`getLists found ${lists.length} lists`);
+    debugLog(`[OPTION_LOADING] getLists found ${lists.length} lists`);
     
     const mappedLists = lists
       .map((list) => {
@@ -46,11 +47,11 @@ export async function getLists(this: ILoadOptionsFunctions): Promise<INodeProper
       .sort((a, b) => a.name.localeCompare(b.name));
 
     // Log the first few mapped lists
-    console.log('First few mapped lists:', mappedLists.slice(0, 3));
+    debugLog('[OPTION_LOADING] First few mapped lists:', mappedLists.slice(0, 3));
     
     return mappedLists as INodePropertyOptions[];
   } catch (error) {
-    console.error('Error in getLists:', error);
+    debugLog('[OPTION_LOADING] Error in getLists:', error);
     return [];
   }
 } 

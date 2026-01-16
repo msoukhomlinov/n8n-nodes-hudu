@@ -1,6 +1,47 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-01-16
+
+### Changed
+- **Articles - Markdown Conversion**: Replaced external `turndown` dependency with comprehensive internal HTML-to-Markdown converter. This change enables n8n community node verification while maintaining full feature parity for the "Include Markdown Content" feature.
+- **n8n Cloud Compliance**: Refactored to comply with n8n community node scanner requirements:
+  - **Debug Logging**: Removed all `console.log` statements. Debug output is now opt-in via a commented console.log line that developers can enable locally. See DEBUG.md for instructions.
+  - **Rate Limiting**: Removed `setTimeout` and delay functions to comply with restricted globals policy. Rate limiting now relies entirely on existing retry handling for 429 responses.
+
+### Added (Internal Converter Features)
+The new internal converter is extensively tested and supports:
+- **Tables** - Full GFM (GitHub Flavored Markdown) table support with alignment (left, center, right)
+- **Nested Lists** - Proper handling of deeply nested ordered and unordered lists
+- **Task Lists** - Checkbox conversion (`- [ ]` unchecked, `- [x]` checked)
+- **Code Blocks** - Language extraction from `class="language-xxx"` attributes
+- **Extended HTML Entities** - 100+ named entities plus numeric entities (`&#123;`, `&#x7B;`)
+- **Nested Formatting** - Preserves formatting like `**bold**` inside links
+- **Subscript/Superscript** - Converts `<sub>` and `<sup>` to `~text~` and `^text^`
+- **Definition Lists** - Converts `<dl>/<dt>/<dd>` to term/definition format
+- **Figures** - Extracts images from `<figure>` with `<figcaption>` support
+- **Abbreviations** - Converts `<abbr title="...">` with title expansion
+- **Highlight/Mark** - Converts `<mark>` to `==highlighted==`
+- **Semantic Elements** - Handles `<article>`, `<section>`, `<aside>`, etc.
+
+### ⚠️ Breaking Change - Action Required
+- **Markdown Conversion Quality**: The internal converter uses regex-based parsing instead of DOM parsing. While it handles well-structured HTML (like Hudu CMS content) reliably, the output may differ slightly from previous versions for:
+  - Deeply nested HTML structures (5+ levels of mixed elements)
+  - Malformed or unusual HTML markup
+  - Complex edge cases with unusual tag combinations
+  
+  **Users relying on the "Include Markdown Content" feature should:**
+  1. Test their workflows after upgrading
+  2. Verify that converted markdown meets their requirements
+  3. Report any significant conversion issues via GitHub issues
+  
+  The HTML content is still returned unchanged - only the `markdown_content` field may differ.
+
+### Removed
+- Removed `turndown` dependency (replaced with internal converter)
+- Removed `@types/turndown` dev dependency
+- Removed "Enable Debug Logging" credential toggle (debug is now controlled only via local code changes)
+
 ## [1.6.8] - 2026-01-15
 - **Credentials**: Added "Enable Debug Logging" toggle to Hudu API credentials. When enabled, all debug categories are logged regardless of individual settings, providing comprehensive debugging output for troubleshooting. The toggle is off by default and can be enabled per credential instance.
 
