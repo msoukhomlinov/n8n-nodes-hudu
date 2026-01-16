@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.7.0] - 2026-01-16
+## [1.7.1] - 2026-01-16
 
 ### Changed
 - **Articles - Markdown Conversion**: Replaced external `turndown` dependency with comprehensive internal HTML-to-Markdown converter. This change enables n8n community node verification while maintaining full feature parity for the "Include Markdown Content" feature.
