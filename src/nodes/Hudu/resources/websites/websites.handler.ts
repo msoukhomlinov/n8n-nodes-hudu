@@ -134,7 +134,7 @@ export async function handleWebsitesOperation(
 
     case 'create': {
       const companyId = validateCompanyId(
-        this.getNodeParameter('companyId', i),
+        this.getNodeParameter('company_id', i),
         this.getNode(),
         'Company ID'
       );

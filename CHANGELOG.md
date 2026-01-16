@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.3] - 2026-01-16
+
+### Fixed
+- **Websites**: Fixed "Could not get parameter" error in Create operation caused by parameter name mismatch. The handler was trying to retrieve `companyId` but the parameter is actually named `company_id`, matching the description file and other resources.
+
 ## [1.7.2] - 2026-01-16
 
 ### Changed
