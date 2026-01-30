@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.5] - 2026-01-31
+
+### Fixed
+- **Magic Dash**: Fixed 500 error on Create or Update by removing incorrect `magic_dash_item` wrapper from request body
+
 ## [1.7.4] - 2026-01-16
 
 ### Fixed

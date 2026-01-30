@@ -67,13 +67,10 @@ export async function handleMagicDashOperation(
         delete magicDashBody.image_url;
       }
 
-      // API v2.39.6 requires body to be wrapped in magic_dash_item key
-      const requestBody = { magic_dash_item: magicDashBody };
-
       responseData = await handleCreateOperation.call(
         this,
         resourceEndpoint,
-        requestBody,
+        magicDashBody,
       );
       break;
     }
