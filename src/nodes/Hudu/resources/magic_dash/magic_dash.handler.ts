@@ -1,5 +1,5 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
-import { handleCreateOperation, handleDeleteOperation } from '../../utils/operations';
+import { handleCreateOperation, handleDeleteOperation, handleGetOperation } from '../../utils/operations';
 import { huduApiRequest } from '../../utils/requestUtils';
 import {
   handleMagicDashGetAllOperation,
@@ -7,6 +7,40 @@ import {
 } from '../../utils/operations/magic_dash';
 import type { MagicDashOperation } from './magic_dash.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+
+/**
+ * Resolve company ID to company name
+ * If value is already a string (company name), return it directly
+ * If value is a number (company ID), fetch the company and return its name
+ */
+async function resolveCompanyName(
+  context: IExecuteFunctions,
+  value: string | number,
+): Promise<string> {
+  // If empty or already a non-numeric string, return as-is
+  if (!value) return '';
+  
+  const numericValue = typeof value === 'number' ? value : Number(value);
+  
+  // If not a valid number, assume it's a company name string
+  if (isNaN(numericValue)) {
+    return String(value);
+  }
+  
+  // Fetch company by ID to get the name
+  const company = await handleGetOperation.call(
+    context,
+    '/companies',
+    String(numericValue),
+    'company',
+  ) as IDataObject;
+  
+  if (!company || !company.name) {
+    throw new Error(`Company with ID ${numericValue} not found`);
+  }
+  
+  return company.name as string;
+}
 
 export async function handleMagicDashOperation(
   this: IExecuteFunctions,
@@ -33,9 +67,12 @@ export async function handleMagicDashOperation(
     case 'createOrUpdate': {
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
       const message = this.getNodeParameter('message', i) as string;
-      const companyName = this.getNodeParameter('companyName', i) as string;
+      const companyValue = this.getNodeParameter('companyName', i) as string | number;
       const title = this.getNodeParameter('title', i) as string;
       const content = this.getNodeParameter('content', i) as string;
+
+      // Resolve company ID to name (API requires company_name string)
+      const companyName = await resolveCompanyName(this, companyValue);
 
       // Build the request body
       const magicDashBody: IDataObject = {
@@ -86,7 +123,8 @@ export async function handleMagicDashOperation(
 
     case 'deleteByTitle': {
       const title = this.getNodeParameter('title', i) as string;
-      const companyName = this.getNodeParameter('companyName', i) as string;
+      const companyValue = this.getNodeParameter('companyName', i) as string | number;
+      const companyName = await resolveCompanyName(this, companyValue);
       const body = { title, company_name: companyName } as IDataObject;
       responseData = await huduApiRequest.call(this, 'DELETE', resourceEndpoint, body);
       break;

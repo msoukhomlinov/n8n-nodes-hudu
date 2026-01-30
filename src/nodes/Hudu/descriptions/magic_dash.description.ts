@@ -138,9 +138,12 @@ export const magicDashFields: INodeProperties[] = [
     description: 'The primary content to be displayed on the Magic Dash Item',
   },
   {
-    displayName: 'Company Name',
+    displayName: 'Company Name or ID',
     name: 'companyName',
-    type: 'string',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+    },
     required: true,
     displayOptions: {
       show: {
@@ -149,7 +152,7 @@ export const magicDashFields: INodeProperties[] = [
       },
     },
     default: '',
-    description: 'The company name attribute used to match an existing company',
+    description: 'Select a company or enter an ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Title',
@@ -196,19 +199,6 @@ export const magicDashFields: INodeProperties[] = [
       },
     },
     options: [
-      {
-        displayName: 'Company Name or ID',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
-        default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-      },
       {
         displayName: 'Content Link',
         name: 'content_link',
@@ -276,9 +266,12 @@ export const magicDashFields: INodeProperties[] = [
     description: 'The title of the Magic Dash item to delete',
   },
   {
-    displayName: 'Company Name',
+    displayName: 'Company Name or ID',
     name: 'companyName',
-    type: 'string',
+    type: 'options',
+    typeOptions: {
+      loadOptionsMethod: 'getCompanies',
+    },
     required: true,
     displayOptions: {
       show: {
@@ -287,7 +280,7 @@ export const magicDashFields: INodeProperties[] = [
       },
     },
     default: '',
-    description: 'The company name for the Magic Dash item to delete',
+    description: 'Select a company or enter an ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
 
   // ----------------------------------
