@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.6] - 2026-01-31
+
+### Improved
+- **Magic Dash**: Company field now uses picker dropdown; resolves ID to name for API compatibility
+
+### Fixed
+- **Magic Dash**: Removed invalid `company_id` from Additional Fields (API only accepts `company_name`)
+
 ## [1.7.5] - 2026-01-31
 
 ### Fixed
