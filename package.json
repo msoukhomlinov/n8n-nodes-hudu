@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-hudu",
-  "version": "1.7.7",
+  "version": "1.7.8",
   "description": "This n8n custom node facilitates integration with Hudu's API.",
   "keywords": [
     "n8n-community-node-package",
@@ -36,6 +36,10 @@
   "files": [
     "dist"
   ],
+  "dependencies": {},
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
