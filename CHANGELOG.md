@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.8] - 2026-02-07
+### Changed
+- Added `peerDependencies` and `dependencies` to package.json for n8n Creator Portal compliance.
+
 ## [1.7.7] - 2026-02-07
 ### Changed
 - Switched Hudu debug logging to use n8n's built-in logger instead of commented-out console statements.
