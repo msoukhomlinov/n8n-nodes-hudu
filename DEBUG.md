@@ -1,137 +1,92 @@
 # Debugging n8n-nodes-hudu
 
-This document outlines how to use the debugging capabilities in the n8n-nodes-hudu integration.
+This document describes how to use the built-in debugging in the Hudu node. Debug output uses n8n's Logger API and only appears when n8n is run with debug-level logging enabled.
 
-## Quick Start - Enable Debug Logging (Development Only)
+## Quick Start
 
-Debug logging requires manual code changes due to n8n Cloud verification requirements (console.log is not permitted in verified nodes).
+1. **Enable categories**  
+   Edit `src/nodes/Hudu/utils/debugConfig.ts` and set the desired categories to `true` in `DEBUG_DEFAULTS`.
 
-### Step 1: Enable Debug Categories
+2. **Rebuild**  
+   Run `npm run build`.
 
-1. Edit `src/nodes/Hudu/utils/debugConfig.ts`
-2. Set specific categories to `true` in `DEBUG_DEFAULTS`
+3. **Run n8n with debug logging**  
+   Start n8n with `N8N_LOG_LEVEL=debug` (environment variable or CLI). Debug messages from the Hudu node will appear in n8n's log output.
 
-### Step 2: Enable Console Output
+## How It Works
 
-1. Edit `src/nodes/Hudu/utils/debugConfig.ts`
-2. Find the `debugLog` function (around line 180)
-3. Uncomment the `console.log` line:
-
-```typescript
-// BEFORE (production - no output):
-// console.log(formattedMessage, logData !== undefined ? debugStringify(logData) : '');
-
-// AFTER (development - debug output enabled):
-console.log(formattedMessage, logData !== undefined ? debugStringify(logData) : '');
-```
-
-### Step 3: Rebuild and Restart
-
-```bash
-npm run build
-# Restart n8n
-```
-
-### Step 4: Before Publishing
-
-**IMPORTANT:** Before publishing or submitting for verification:
-
-1. Comment out the `console.log` line in `debugConfig.ts`
-2. Set all `DEBUG_DEFAULTS` values to `false`
-3. Rebuild: `npm run build`
-4. Verify no console statements: `grep -r "console\." dist/`
+- At the start of each execution, the node calls `initDebugLogger(this.logger)` so that all `debugLog()` calls use n8n's built-in Logger.
+- n8n only emits debug-level messages when `N8N_LOG_LEVEL=debug` is set (by the operator); the node code does not read environment variables.
+- Which messages are emitted is controlled by the category flags in `DEBUG_DEFAULTS`. Only categories set to `true` produce output.
+- Sensitive fields (e.g. API keys, passwords) are redacted before anything is passed to the logger via `redactSensitiveData`.
 
 ## Debug Categories
 
-The following debug categories are available:
-
 ### API Communication
-- `API_REQUEST`: Debug API request details
-- `API_RESPONSE`: Debug API response details
-- `API_ERROR`: Debug API error handling and parsing
+- `API_REQUEST`: API request details
+- `API_RESPONSE`: API response details
+- `API_ERROR`: API error handling and parsing
 
 ### Core Operations
-- `OPERATION_CREATE`: Debug create operations
-- `OPERATION_UPDATE`: Debug update operations
-- `OPERATION_DELETE`: Debug delete operations
-- `OPERATION_GET`: Debug get operations
-- `OPERATION_GET_ALL`: Debug getAll operations
-- `OPERATION_ARCHIVE`: Debug archive operations
+- `OPERATION_CREATE`, `OPERATION_UPDATE`, `OPERATION_DELETE`, `OPERATION_GET`, `OPERATION_GET_ALL`, `OPERATION_ARCHIVE`
 
 ### Resource Handlers
-- `RESOURCE_PROCESSING`: Debug resource handler processing
-- `RESOURCE_PARAMS`: Debug parameter extraction in handlers
-- `RESOURCE_TRANSFORM`: Debug data transformations in handlers
+- `RESOURCE_PROCESSING`: Resource handler processing
+- `RESOURCE_PARAMS`: Parameter extraction in handlers
+- `RESOURCE_TRANSFORM`: Data transformations in handlers
+- `RESOURCE_MAPPING`: Resource mapping
 
 ### Node Execution
-- `NODE_INPUT`: Debug input items to node
-- `NODE_OUTPUT`: Debug output from node
+- `NODE_INPUT`: Input items to the node
+- `NODE_OUTPUT`: Output from the node
 
 ### Utility Functions
-- `UTIL_DATE_PROCESSING`: Debug date range processing
-- `UTIL_FILTERS`: Debug filter processing
-- `UTIL_TYPE_CONVERSION`: Debug type conversions
+- `UTIL_DATE_PROCESSING`: Date range processing
+- `UTIL_FILTERS`: Filter processing
+- `UTIL_TYPE_CONVERSION`: Type conversions
+
+### Asset Related
+- `ASSET_OPTIONS`: Asset options loading and processing
+- `FIELD_TYPE_MAPPING`: Field type mapping
+- `OPTION_LOADING`: Option loading
+
+### Diagnostic
+- `DIAGNOSTIC_LOGGING`: General diagnostic logging
 
 ## What Gets Logged
 
-When debugging is enabled, the output includes:
+When a category is enabled and n8n is at debug level, you get:
 
-1. API Communication
-   - Request URLs, headers (with sensitive data redacted), bodies, and query parameters
-   - Response status codes, bodies, and headers
+1. **API** – Request URLs, headers (redacted), bodies, query params; response status, bodies, headers.
+2. **Operations** – Parameters and data for create/update/delete/get/archive; resource processing and transformations.
+3. **Node execution** – Input items and output data for the node.
+4. **Utilities** – Date range handling, filter processing, type conversions.
 
-2. Operation Details
-   - Parameters and data for create, update, delete, get, and archive operations
-   - Resource processing steps and transformations
+## Before Publishing
 
-3. Node Execution Details
-   - Input data received by the node
-   - Output data produced by the node
+1. Set all `DEBUG_DEFAULTS` values to `false` in `debugConfig.ts`.
+2. Run `npm run build`.
 
-4. Utility Processing
-   - Date range processing details
-   - Filter processing information
-   - Type conversion operations
+No other steps are required. The code does not use `console.log` or environment variables; it uses only n8n's Logger API.
 
-## Best Practices
+## Sensitive Data
 
-1. **Production Use**
-   - Never publish with console.log uncommented
-   - Always verify with `grep -r "console\." dist/` before publishing
-
-2. **Sensitive Information**
-   - API keys and sensitive data are automatically redacted via the `redactSensitiveData` function
-   - Always verify logs are clean before sharing
-
-3. **Performance Impact**
-   - Enable only necessary debug categories
-   - Be aware that extensive debugging may impact performance
-
-4. **Debug Message Format**
-   - All debug messages should use standardized category format: `[CATEGORY_NAME]`
-   - Always use UPPERCASE_WITH_UNDERSCORES format in square brackets
-   - Examples:
-     - `[RESOURCE_MAPPING]` (not `[ResourceMapping]`)
-     - `[API_REQUEST]` (not `[ApiRequest]`)
-     - `[OPTION_LOADING]` (not `[OptionLoading]`)
+The `redactSensitiveData` function redacts known sensitive keys (e.g. `apiKey`, `password`, `token`, `secret`, `authorization`) before any data is passed to the logger. Always review logs before sharing.
 
 ## n8n Verification Compliance
 
-This node is designed to pass n8n Cloud verification. The debug system:
+The debug system is designed for verified community nodes:
 
-- **Does NOT use `console.log`** in production builds
-- **Does NOT use `setTimeout`** or other restricted globals
-- **Does NOT write to files** or use environment variables for config
-- Uses n8n's standard error handling (`NodeApiError`, `NodeOperationError`)
-
-The commented `console.log` approach allows developers to debug locally while maintaining verification compliance.
+- Uses n8n's Logger API (`IExecuteFunctions.logger.debug`) only; no `console.log`.
+- Does not access environment variables or the file system.
+- Does not use restricted globals (e.g. `setTimeout`).
+- Uses n8n's standard error types (`NodeApiError`, `NodeOperationError`).
 
 ## Support
 
-If you encounter issues:
-1. Enable relevant debug categories
-2. Uncomment the console.log line
-3. Rebuild and reproduce the issue
-4. Collect logs from your terminal/container
-5. Create an issue on GitHub with the logs (ensure sensitive data is removed)
-6. **Remember to comment out console.log before committing!**
+If you need to capture debug output for a bug report:
+
+1. Enable the relevant categories in `DEBUG_DEFAULTS`.
+2. Rebuild and run n8n with `N8N_LOG_LEVEL=debug`.
+3. Reproduce the issue and collect logs from n8n's log output.
+4. Open an issue with the logs after ensuring no sensitive data remains.

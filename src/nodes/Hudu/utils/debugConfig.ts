@@ -4,17 +4,29 @@
  *
  * FOR DEVELOPMENT DEBUGGING:
  * 1. Set the desired categories to `true` in DEBUG_DEFAULTS below
- * 2. Uncomment the console.log line in debugLog() function
- * 3. Rebuild the node: npm run build
- * 4. Restart n8n
+ * 2. Rebuild the node: npm run build
+ * 3. Run n8n with N8N_LOG_LEVEL=debug (e.g. env var or CLI)
+ * Debug output is sent via n8n's built-in Logger (injected at execution start).
  *
- * IMPORTANT: Before publishing, ensure:
- * - All DEBUG_DEFAULTS are set to `false`
- * - The console.log line is commented out
- * - Run `npm run build` and verify no console.* in dist/
+ * BEFORE PUBLISHING: Set all DEBUG_DEFAULTS to `false` and rebuild.
  */
 
 // No runtime dependencies
+
+/** Minimal logger interface for debug output (compatible with n8n IExecuteFunctions.logger) */
+export interface DebugLogger {
+  debug(message: string, metadata?: Record<string, unknown>): void;
+}
+
+let _logger: DebugLogger | null = null;
+
+/**
+ * Initialise the debug logger. Called from Hudu.node.ts at the start of execute()
+ * so that debugLog() can use n8n's logger. Must not be called from outside the node.
+ */
+export function initDebugLogger(logger: DebugLogger): void {
+  _logger = logger;
+}
 
 const DEBUG_DEFAULTS = {
   // API Communication
@@ -170,31 +182,25 @@ function extractDebugCategory(message: string): keyof typeof DEBUG_CONFIG | unde
 }
 
 /**
- * Debug logging utility
- *
- * FOR DEVELOPMENT: Uncomment the console.log line below to enable debug output.
- * IMPORTANT: Comment it out before publishing to pass n8n verification.
+ * Debug logging utility. Output is sent via the logger injected by initDebugLogger()
+ * (n8n's IExecuteFunctions.logger). Only logs when the category is enabled in DEBUG_CONFIG
+ * and when n8n is run with N8N_LOG_LEVEL=debug.
  *
  * @param message Debug message to log
- * @param data Optional data to log
+ * @param data Optional data to log (redacted before output)
  */
 export function debugLog(message: string, data?: unknown): void {
-  const category = extractDebugCategory(message);
+  if (!_logger) return;
 
+  const category = extractDebugCategory(message);
   if (category && DEBUG_CONFIG[category]) {
-    // Format message and data for logging
     const formattedMessage = `[Hudu][${category}] ${message}`;
     const logData = data !== undefined ? redactSensitiveData(data) : undefined;
-
-    // ====================================================================
-    // DEVELOPMENT ONLY: Uncomment the line below to enable console debug
-    // IMPORTANT: Comment out before publishing for n8n verification!
-    // ====================================================================
-    // console.log(formattedMessage, logData !== undefined ? debugStringify(logData) : '');
-
-    // Suppress unused variable warnings when console.log is commented out
-    void formattedMessage;
-    void logData;
+    _logger.debug(
+      logData !== undefined
+        ? `${formattedMessage} ${debugStringify(logData)}`
+        : formattedMessage,
+    );
   }
 }
 

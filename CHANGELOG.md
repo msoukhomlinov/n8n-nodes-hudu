@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.7] - 2026-02-07
+### Changed
+- Switched Hudu debug logging to use n8n's built-in logger instead of commented-out console statements.
+
 ## [1.7.6] - 2026-01-31
 
 ### Improved
