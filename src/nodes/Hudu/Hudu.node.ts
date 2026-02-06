@@ -9,7 +9,7 @@ import {
 	INodePropertyOptions,
 	NodeOperationError,
 } from 'n8n-workflow';
-import { DEBUG_CONFIG, debugLog } from './utils/debugConfig';
+import { DEBUG_CONFIG, debugLog, initDebugLogger } from './utils/debugConfig';
 
 // Import all descriptions
 import * as descriptions from './descriptions';
@@ -166,6 +166,7 @@ export class Hudu implements INodeType {
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		initDebugLogger(this.logger);
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
