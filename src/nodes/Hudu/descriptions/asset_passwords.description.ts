@@ -201,7 +201,7 @@ export const assetPasswordFields: INodeProperties[] = [
         displayName: 'Password Folder ID',
         name: 'password_folder_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'ID of the folder in which the password is stored',
       },
       {
@@ -218,7 +218,7 @@ export const assetPasswordFields: INodeProperties[] = [
         displayName: 'Passwordable ID',
         name: 'passwordable_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: "ID of the related object (e.g., 'Website') for the password",
       },
       {
@@ -321,7 +321,7 @@ export const assetPasswordFields: INodeProperties[] = [
         displayName: 'Password Folder ID',
         name: 'password_folder_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'ID of the folder in which the password is stored',
       },
       {
@@ -338,7 +338,7 @@ export const assetPasswordFields: INodeProperties[] = [
         displayName: 'Passwordable ID',
         name: 'passwordable_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: "ID of the related object (e.g., 'Website') for the password",
       },
       {

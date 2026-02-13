@@ -132,7 +132,7 @@ export const matchersFields: INodeProperties[] = [
         displayName: 'Sync ID',
         name: 'sync_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description:
           "Filter by the ID of the record in the integration (used if the integration's ID is an integer)",
       },

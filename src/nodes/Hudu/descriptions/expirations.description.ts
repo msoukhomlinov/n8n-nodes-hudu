@@ -121,7 +121,7 @@ export const expirationsFields: INodeProperties[] = [
         displayName: 'Resource ID',
         name: 'resource_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter logs by resource ID; must be coupled with resource type',
       },
       {

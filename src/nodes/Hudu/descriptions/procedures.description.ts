@@ -133,7 +133,7 @@ export const proceduresFields: INodeProperties[] = [
         displayName: 'Company Template',
         name: 'company_template',
         type: 'number',
-        default: '',
+        default: 0,
         description: 'Filter for company-specific templates',
       },
       {
@@ -154,7 +154,7 @@ export const proceduresFields: INodeProperties[] = [
         displayName: 'Parent Procedure ID',
         name: 'parent_procedure_id',
         type: 'number',
-        default: '',
+        default: 0,
         description: 'Filter for child procedures of a specific parent procedure',
       },
       {
@@ -553,7 +553,7 @@ export const proceduresFields: INodeProperties[] = [
         displayName: 'Asset ID',
         name: 'asset_id',
         type: 'number',
-        default: '',
+        default: 0,
         description: 'The ID of the asset to attach the process to',
       },
       {

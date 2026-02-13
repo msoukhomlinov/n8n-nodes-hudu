@@ -245,14 +245,14 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 				displayName: 'Maximum Value',
 				name: 'max',
 				type: 'number',
-				default: undefined,
+				default: 0,
 				description: 'Maximum value allowed (leave blank for no maximum)',
 			},
 			{
 				displayName: 'Minimum Value',
 				name: 'min',
 				type: 'number',
-				default: undefined,
+				default: 0,
 				description: 'Minimum value allowed (leave blank for no minimum)',
 			},
 			{
@@ -422,14 +422,14 @@ export const assetLayoutFieldFields: INodeProperties[] = [
 				displayName: 'Maximum Value',
 				name: 'max',
 				type: 'number',
-				default: undefined,
+				default: 0,
 				description: 'Maximum value allowed (leave blank for no maximum)',
 			},
 			{
 				displayName: 'Minimum Value',
 				name: 'min',
 				type: 'number',
-				default: undefined,
+				default: 0,
 				description: 'Minimum value allowed (leave blank for no minimum)',
 			},
 			{

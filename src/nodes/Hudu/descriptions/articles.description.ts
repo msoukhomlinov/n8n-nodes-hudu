@@ -476,7 +476,7 @@ export const articlesFields: INodeProperties[] = [
         operation: ['create'],
       },
     },
-    default: undefined,
+    default: 0,
     description: 'Used to associate article with a folder',
   },
 
@@ -667,7 +667,7 @@ export const articlesFields: INodeProperties[] = [
         displayName: 'Folder ID',
         name: 'folder_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Used to associate article with a folder',
       },
       {
@@ -726,7 +726,7 @@ export const articlesFields: INodeProperties[] = [
         displayName: 'Folder ID',
         name: 'folder_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by folder ID (Filtering applied client-side, may impact performance)',
       },
       {

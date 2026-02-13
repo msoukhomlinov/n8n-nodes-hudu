@@ -70,7 +70,7 @@ export const rackStorageItemFields: INodeProperties[] = [
         displayName: 'Asset ID',
         name: 'asset_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by Asset ID',
       },
       {
@@ -85,14 +85,14 @@ export const rackStorageItemFields: INodeProperties[] = [
         displayName: 'End Unit',
         name: 'end_unit',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by End Unit',
       },
       {
         displayName: 'Rack Storage Role ID',
         name: 'rack_storage_role_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by Rack Storage Role ID',
       },
       {
@@ -106,14 +106,14 @@ export const rackStorageItemFields: INodeProperties[] = [
         displayName: 'Start Unit',
         name: 'start_unit',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by Start Unit',
       },
       {
         displayName: 'Status',
         name: 'status',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by Status',
       },
       {

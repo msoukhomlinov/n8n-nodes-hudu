@@ -100,7 +100,7 @@ export const procedureTasksFields: INodeProperties[] = [
         displayName: 'Procedure ID',
         name: 'procedure_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by the procedure ID',
       },
       {
@@ -147,7 +147,7 @@ export const procedureTasksFields: INodeProperties[] = [
     displayName: 'Procedure ID',
     name: 'procedure_id',
     type: 'number',
-    default: undefined,
+    default: 0,
     displayOptions: {
       show: {
         resource: ['procedure_tasks'],
@@ -202,7 +202,7 @@ export const procedureTasksFields: INodeProperties[] = [
         displayName: 'Position',
         name: 'position',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The position of the task in the procedure',
       },
       {
@@ -341,7 +341,7 @@ export const procedureTasksFields: INodeProperties[] = [
         displayName: 'Position',
         name: 'position',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The position of the task in the procedure',
       },
       {
@@ -377,7 +377,7 @@ export const procedureTasksFields: INodeProperties[] = [
         displayName: 'Procedure ID',
         name: 'procedure_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The ID of the procedure this task belongs to',
       },
       {
