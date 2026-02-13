@@ -44,6 +44,7 @@ export interface IArticlePostProcessFilters extends IDataObject {
 // Define how each filter should be applied
 export const articleFilterMapping: FilterMapping<IArticlePostProcessFilters> = {
   folder_id: (item: IDataObject, value: unknown) => {
+    if (value === undefined || value === 0 || value === '') return true;
     return Number(item.folder_id) === Number(value);
   },
 };

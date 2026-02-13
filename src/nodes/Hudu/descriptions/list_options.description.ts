@@ -73,7 +73,7 @@ export const listOptionsFields: INodeProperties[] = [
         operation: ['update', 'delete'],
       },
     },
-    default: undefined,
+    default: 0,
     description: 'The ID of the list item',
   },
   

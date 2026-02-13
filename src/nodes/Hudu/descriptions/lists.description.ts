@@ -157,7 +157,7 @@ export const listsFields: INodeProperties[] = [
             displayName: 'ID',
             name: 'id',
             type: 'number',
-            default: undefined,
+            default: 0,
             description: 'ID of existing list item (required for updates and deletions)',
           },
           {

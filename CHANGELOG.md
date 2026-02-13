@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2026-02-13
+
+### Fixed
+- **All resources**: Fix number fields in Add Filter/Add Field collections that could not be added in the UI due to `default: undefined` or `default: ''`. Changed to `default: 0` across articles, rack storage items, procedure tasks, networks, matchers, lists, expirations, asset passwords, asset layout fields, activity logs, list options, and procedures. Post-process filters (articles folder_id) treat 0 as "no filter".
+
 ## [1.7.9] - 2026-02-13
 
 ### Fixed

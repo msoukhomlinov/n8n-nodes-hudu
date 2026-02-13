@@ -214,7 +214,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Location ID',
         name: 'location_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by location ID',
       },
       {
@@ -228,7 +228,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Network Type',
         name: 'network_type',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'Filter by network type',
       },
       {
@@ -540,7 +540,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Location ID',
         name: 'location_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The ID of the location associated with this network',
       },
       {
@@ -554,7 +554,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Network Type',
         name: 'network_type',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The type of network',
       },
       {
@@ -568,7 +568,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Role List Item ID',
         name: 'role_list_item_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The role list item ID for this network',
       },
       {
@@ -589,7 +589,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Status List Item ID',
         name: 'status_list_item_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The status list item ID for this network',
       },
       {
@@ -722,7 +722,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Location ID',
         name: 'location_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The ID of the location associated with this network',
       },
       {
@@ -736,7 +736,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Network Type',
         name: 'network_type',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The type of network',
       },
       {
@@ -750,7 +750,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Role List Item ID',
         name: 'role_list_item_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The role list item ID for this network',
       },
       {
@@ -771,7 +771,7 @@ export const networksFields: INodeProperties[] = [
         displayName: 'Status List Item ID',
         name: 'status_list_item_id',
         type: 'number',
-        default: undefined,
+        default: 0,
         description: 'The status list item ID for this network',
       },
       {
