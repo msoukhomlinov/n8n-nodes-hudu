@@ -24,7 +24,10 @@ export interface IFolderPostProcessFilters {
 
 // Define how each filter should be applied
 export const folderFilterMapping: FilterMapping<IFolderPostProcessFilters> = {
-  parent_folder_id: (item: IDataObject, value: unknown) => item.parent_folder_id === value,
+  parent_folder_id: (item: IDataObject, value: unknown) => {
+    if (value === undefined || value === 0 || value === '') return true;
+    return item.parent_folder_id === value;
+  },
   childFolder: (item: IDataObject, value: unknown) => {
     if (value === 'yes') return item.parent_folder_id !== null;
     if (value === 'no') return item.parent_folder_id === null;
