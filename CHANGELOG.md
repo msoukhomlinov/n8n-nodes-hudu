@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.9] - 2026-02-13
+
+### Fixed
+- **Folders**: Fix folders getMany Parent Folder ID filter so it can be added and used reliably in the UI
+
 ## [1.7.8] - 2026-02-07
 ### Changed
 - Added `peerDependencies` and `dependencies` to package.json for n8n Creator Portal compliance.
