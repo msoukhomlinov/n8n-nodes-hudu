@@ -82,21 +82,36 @@ import {
 // ---------------------------------------------------------------------------
 // Build a toolkit class that the n8n AI Agent recognises.
 //
-// The agent checks `toolOrToolkit instanceof Toolkit` (from @langchain/classic/agents)
-// to decide whether to call .getTools() and flatten the tools array. We MUST
-// extend the EXACT same Toolkit constructor that the host process loaded, so the
-// instanceof check passes. Community nodes share n8n-core's require context
-// (VM createContext({ require })), so require('@langchain/classic/agents') here
-// resolves via n8n's module cache — the same object the agent already holds.
+// The agent checks `toolOrToolkit instanceof <ToolkitBase>` to decide whether
+// to call .getTools() and flatten the tools array. We MUST extend the EXACT
+// same constructor that the host process uses for this check, so instanceof passes.
 //
-// This mirrors the pattern used by n8n's own MCP Client Tool node:
-//   class McpToolkit extends Toolkit { constructor(tools) { super(); this.tools = tools; } }
+// n8n version compatibility:
+//   - n8n >= 2.9  exports StructuredToolkit from n8n-core — use that.
+//   - Older n8n   uses Toolkit from @langchain/classic/agents — fall back to that.
+//
+// Community nodes share n8n-core's require VM context, so require() here
+// resolves from n8n's module cache and returns the same cached class the agent holds.
 // ---------------------------------------------------------------------------
-const { Toolkit: LangChainToolkitBase } = require('@langchain/classic/agents') as {
-    Toolkit: new (...args: any[]) => { tools?: DynamicStructuredTool[]; getTools?(): DynamicStructuredTool[] };
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let LangChainToolkitBase: new (...args: any[]) => { tools?: DynamicStructuredTool[]; getTools?(): DynamicStructuredTool[] };
+try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    const nCore = require('n8n-core') as Record<string, unknown>;
+    const StructuredToolkit = nCore['StructuredToolkit'];
+    if (typeof StructuredToolkit !== 'function') throw new Error('StructuredToolkit not found in n8n-core');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    LangChainToolkitBase = StructuredToolkit as any;
+} catch {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    ({ Toolkit: LangChainToolkitBase } = require('@langchain/classic/agents') as {
+        Toolkit: typeof LangChainToolkitBase;
+    });
+}
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 class HuduToolkit extends (LangChainToolkitBase as any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     declare tools: any[];
     constructor(toolList: DynamicStructuredTool[]) {
         super();
