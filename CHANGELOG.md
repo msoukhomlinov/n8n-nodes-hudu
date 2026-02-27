@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.2] - 2026-02-27
+
+### Fixed
+- **Websites (AI Tools)**: Fixed create/update failing with VALIDATION_ERROR. The `name` field for websites is a monitored URL and must include the protocol — e.g. `https://example.com`, not a display name. The schema description now makes this explicit so the LLM sends the correct value. Also added the missing `paused` field to the create schema.
+
+## [1.9.1] - 2026-02-27
+
+### Fixed
+- **AI Tools — Toolkit compatibility (n8n 2.9+)**: Fixed "multiple tools with the same name: 'undefined'" error when deploying to n8n 2.9.2+. n8n 2.9 moved from `@langchain/classic/agents` Toolkit to `StructuredToolkit` from `n8n-core` for its toolkit `instanceof` check — causing the toolkit to be treated as an unnamed tool when deployed. The node now probes `n8n-core` for `StructuredToolkit` at startup and falls back to `@langchain/classic/agents` for older n8n versions, so both versions work correctly.
+- **AI Tools — LLM tool selection**: Three fixes to reduce wasted round-trips when an agent looks up a record by name and then updates it:
+  - `get` operation tools are now named `hudu_{resource}_getById` (was `hudu_{resource}_get`) so the LLM unambiguously understands the tool requires a numeric ID.
+  - `formatMissingIdError` and `ENTITY_NOT_FOUND` error `nextAction` messages now explicitly name the `search` parameter so the LLM calls `getAll` with `search` immediately rather than falling back to `name`.
+  - In every `getAll` schema that has both `name` and `search`, `search` is now listed first in the JSON schema properties so the LLM reaches for it before `name` (companies, articles, assets, websites, asset_passwords, groups).
+
 ## [1.9.0] - 2026-02-27
 
 ### Fixed
@@ -9,10 +23,6 @@ All notable changes to this project will be documented in this file.
 - **Groups (AI Tools)**: Added missing `search` filter to `getAll` schema. The Hudu API supports `search` for partial group name matching; it was exposed in the standard node but absent from the AI schema.
 - **Users (AI Tools)**: Replaced incorrect `name` filter (not a real Hudu API param) with `search`, `first_name`, and `last_name` — matching the actual Hudu users API query parameters.
 - **AI Tools (search-supporting resources)**: The `getAll` tool description now instructs the LLM to always use `search` first (partial matching across multiple fields) and only fall back to specific fields if `search` returns no results. Applies to all resources that expose a `search` parameter (companies, articles, assets, websites, asset_passwords, groups, users).
-- **AI Tools — LLM tool selection**: Three fixes to eliminate wasted round-trips when an agent looks up a record by name and then updates it:
-  - `get` operation tools are now named `hudu_{resource}_getById` (was `hudu_{resource}_get`) so the LLM unambiguously understands the tool requires a numeric ID.
-  - `formatMissingIdError` and `ENTITY_NOT_FOUND` error `nextAction` messages now explicitly name the `search` parameter so the LLM calls `getAll` with `search` immediately rather than falling back to `name`.
-  - In every `getAll` schema that has both `name` and `search`, `search` is now listed first in the JSON schema properties so the LLM picks it before `name` when filling parameters (companies, articles, assets, websites, asset_passwords, groups).
 - **Rack Storages**: Fixed `getAll` returning a wrapped object `[{ rack_storages: [...] }]` instead of a flat list of records. An empty string was passed as the response key, causing `parseHuduResponse` to skip unwrapping.
 
 ### Added

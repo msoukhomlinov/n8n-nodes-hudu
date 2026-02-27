@@ -297,11 +297,12 @@ export function getAssetsCreateSchema() {
 
 export function getWebsitesCreateSchema() {
     return z.object({
-        name: nameSchema.describe('Website name'),
+        name: z.string().min(1).describe('Full URL of the website including protocol — MUST start with https:// or http:// (e.g. https://example.com). This is NOT a display name; it is the URL Hudu will monitor.'),
         company_id: companyIdSchema,
         notes: z.string().optional().describe('Notes'),
         keyword: z.string().optional().describe('Keyword to monitor on the page'),
         monitor_type: z.number().int().optional().describe('Monitor type'),
+        paused: z.boolean().optional().describe('Whether to pause monitoring'),
         disable_dns: z.boolean().optional().describe('Whether to disable DNS checks'),
         disable_ssl: z.boolean().optional().describe('Whether to disable SSL checks'),
         disable_whois: z.boolean().optional().describe('Whether to disable WHOIS checks'),
@@ -460,7 +461,7 @@ export function getAssetsUpdateSchema() {
 export function getWebsitesUpdateSchema() {
     return z.object({
         id: idSchema,
-        name: z.string().optional().describe('Website name'),
+        name: z.string().optional().describe('Full URL of the website including protocol — MUST start with https:// or http:// if provided (e.g. https://example.com)'),
         notes: z.string().optional().describe('Notes'),
         paused: z.boolean().optional().describe('Whether monitoring is paused'),
         keyword: z.string().optional().describe('Keyword to monitor on the page'),

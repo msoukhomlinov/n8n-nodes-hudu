@@ -198,7 +198,7 @@ The `Hudu AI Tools` node connects to n8n's **AI Agent** and exposes Hudu operati
 3. Select a **Resource** and the **Operations** to expose
 4. Optionally enable **Allow Write Operations** to permit create / update / delete / archive
 
-The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`, `hudu_assets_create`) and can call them autonomously based on the user's request.
+The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`, `hudu_assets_create`) and can call them autonomously based on the user's request. The `get` operation is exposed as `getById` (e.g. `hudu_companies_getById`) so the LLM clearly understands a numeric ID is required.
 
 ### Supported resources
 
@@ -229,6 +229,8 @@ The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`
 - **Error handling**: all errors are returned as structured JSON with an `error`, `errorType`, and `nextAction` field so the LLM can self-correct without crashing the workflow
 - **Assets**: require `company_id` for create/update/delete/archive because Hudu's API routes asset mutations through the company endpoint
 - **Matchers**: `getAll` requires an `integration_id` parameter
+- **Websites**: the `name` field is the monitored URL and must include the protocol — e.g. `https://example.com`, not a display name
+- **n8n version compatibility**: works with n8n 2.9+ (ToolsAgent V3) and all earlier n8n versions
 
 ## Resources
 
