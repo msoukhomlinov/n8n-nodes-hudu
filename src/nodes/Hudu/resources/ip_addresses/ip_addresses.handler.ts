@@ -93,7 +93,7 @@ export async function handleIpAddressesOperation(
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as string;
-      return await handleGetOperation.call(this, resourceEndpoint, id);
+      return await handleGetOperation.call(this, resourceEndpoint, id, 'ip_address');
     }
 
     case 'create': {
