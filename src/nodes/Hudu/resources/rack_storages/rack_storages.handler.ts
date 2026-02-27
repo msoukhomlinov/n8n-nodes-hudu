@@ -69,7 +69,7 @@ export async function handleRackStorageOperation(
       return await handleGetAllOperation.call(
         this,
         resourceEndpoint,
-        '',
+        'rack_storages',
         qs,
         returnAll,
         limit,

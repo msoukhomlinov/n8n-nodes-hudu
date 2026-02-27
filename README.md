@@ -37,6 +37,7 @@ To use this node, you need to:
 - Resource-specific update collections across all resources
 - Optional article markdown conversion (HTML to Markdown) for Articles get/get many (uses internal regex-based converter)
 - Flexible identifier support: Get operations support both numeric IDs and slugs via Identifier Type toggle (Articles, Asset Layouts, Asset Passwords, Assets, Companies, Groups, Networks, Password Folders, Procedures, Users, VLAN Zones, VLANs, Websites)
+- **AI Agent support**: `Hudu AI Tools` node exposes Hudu operations as structured LangChain tools for use with n8n AI Agent workflows (compatible with Anthropic Claude, OpenAI, and other providers)
 
 ## Supported Resources & Operations
 
@@ -185,6 +186,49 @@ To use this node, you need to:
 - Link to companies
 - Filter by company and status
 - **All fields supported, including new email security fields:** `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`, and more
+
+## Hudu AI Tools Node
+
+The `Hudu AI Tools` node connects to n8n's **AI Agent** and exposes Hudu operations as individual structured tools that an LLM can invoke directly.
+
+### How it works
+
+1. Add a **Hudu AI Tools** node to your workflow
+2. Connect it to an **AI Agent** node via the Tools connector
+3. Select a **Resource** and the **Operations** to expose
+4. Optionally enable **Allow Write Operations** to permit create / update / delete / archive
+
+The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`, `hudu_assets_create`) and can call them autonomously based on the user's request.
+
+### Supported resources
+
+| Resource | Operations |
+|---|---|
+| Activity Logs | getAll |
+| Articles | get, getAll, create, update, delete, archive, unarchive |
+| Asset Layouts | get, getAll |
+| Asset Passwords | get, getAll, create, update, delete, archive, unarchive |
+| Assets | get, getAll, create, update, delete, archive, unarchive |
+| Companies | get, getAll, create, update, delete, archive, unarchive |
+| Expirations | get, getAll, create, update, delete |
+| Folders | get, getAll, create, update, delete |
+| Groups | get, getAll |
+| IP Addresses | get, getAll, create, update, delete |
+| Matchers | getAll |
+| Networks | get, getAll, create, update, delete, archive, unarchive |
+| Procedures | get, getAll, create, update, delete, archive, unarchive |
+| Relations | getAll, create, delete |
+| Users | get, getAll |
+| VLANs | get, getAll, create, update, delete |
+| VLAN Zones | get, getAll, create, update, delete |
+| Websites | get, getAll, create, update, delete, archive, unarchive |
+
+### Notes
+
+- **Read-only by default**: write operations (create, update, delete, archive, unarchive) are hidden until `Allow Write Operations` is enabled
+- **Error handling**: all errors are returned as structured JSON with an `error`, `errorType`, and `nextAction` field so the LLM can self-correct without crashing the workflow
+- **Assets**: require `company_id` for create/update/delete/archive because Hudu's API routes asset mutations through the company endpoint
+- **Matchers**: `getAll` requires an `integration_id` parameter
 
 ## Resources
 

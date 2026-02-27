@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-hudu",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "This n8n custom node facilitates integration with Hudu's API.",
   "keywords": [
     "n8n-community-node-package",
@@ -46,13 +46,16 @@
       "dist/credentials/HuduApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/Hudu/Hudu.node.js"
+      "dist/nodes/Hudu/Hudu.node.js",
+      "dist/nodes/Hudu/HuduAiTools.node.js"
     ]
   },
   "engines": {
     "n8n": ">=1.69.2"
   },
   "devDependencies": {
+    "@langchain/core": "^0.3.43",
+    "zod": "^3.23.0",
     "@types/express": "^4.17.6",
     "@types/node": "^20.17.50",
     "@types/request-promise-native": "~1.0.15",
