@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.9.2] - 2026-02-27
+## [1.9.0] - 2026-02-27
 
 ### Fixed
 - **Matchers (AI Tools)**: Fixed `getAll` sending `integration_id` as a URL path segment (`/matchers/{id}`) instead of a query parameter. The AI tools node now matches the standard node behaviour: `GET /matchers?integration_id={id}`.
@@ -13,13 +13,7 @@ All notable changes to this project will be documented in this file.
   - `get` operation tools are now named `hudu_{resource}_getById` (was `hudu_{resource}_get`) so the LLM unambiguously understands the tool requires a numeric ID.
   - `formatMissingIdError` and `ENTITY_NOT_FOUND` error `nextAction` messages now explicitly name the `search` parameter so the LLM calls `getAll` with `search` immediately rather than falling back to `name`.
   - In every `getAll` schema that has both `name` and `search`, `search` is now listed first in the JSON schema properties so the LLM picks it before `name` when filling parameters (companies, articles, assets, websites, asset_passwords, groups).
-
-## [1.9.1] - 2026-02-27
-
-### Fixed
 - **Rack Storages**: Fixed `getAll` returning a wrapped object `[{ rack_storages: [...] }]` instead of a flat list of records. An empty string was passed as the response key, causing `parseHuduResponse` to skip unwrapping.
-
-## [1.9.0] - 2026-02-26
 
 ### Added
 - **Hudu AI Tools node** (`Hudu AI Tools`): New companion node that exposes Hudu operations as individual LangChain tools for n8n AI Agent workflows.
