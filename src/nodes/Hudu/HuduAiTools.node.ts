@@ -334,13 +334,13 @@ export class HuduAiTools implements INodeType {
 
                 case 'delete':
                     schema = config.requiresCompanyEndpoint ? getDeleteWithCompanySchema() : getDeleteSchema();
-                    description = buildDeleteDescription(resourceLabel);
+                    description = buildDeleteDescription(resourceLabel, resource);
                     break;
 
                 case 'archive':
                 case 'unarchive':
                     schema = config.requiresCompanyEndpoint ? getArchiveWithCompanySchema() : getArchiveSchema();
-                    description = buildArchiveDescription(resourceLabel, operation);
+                    description = buildArchiveDescription(resourceLabel, operation, resource);
                     break;
 
                 default:

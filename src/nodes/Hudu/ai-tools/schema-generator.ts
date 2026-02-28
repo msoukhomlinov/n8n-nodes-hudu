@@ -4,15 +4,15 @@ import { z } from 'zod';
 // Common base schemas
 // ---------------------------------------------------------------------------
 
-const idSchema = z.number().int().positive().describe('Numeric record ID');
-const optionalIdSchema = z.number().int().positive().optional().describe('Numeric record ID');
-const limitSchema = z.number().int().min(1).max(100).optional().default(25).describe('Maximum records to return (default 25, max 100)');
-const companyIdSchema = z.number().int().positive().describe('Numeric company ID');
-const optionalCompanyIdSchema = z.number().int().positive().optional().describe('Filter by company ID');
+const idSchema = z.number().int().positive().describe('Numeric record ID (from a prior getAll result). Must be an integer.');
+const optionalIdSchema = z.number().int().positive().optional().describe('Numeric record ID (from a prior getAll result)');
+const limitSchema = z.number().int().min(1).max(100).optional().default(25).describe('Maximum records to return (default 25, max 100). Increase to 100 if you expect many matching records.');
+const companyIdSchema = z.number().int().positive().describe('Numeric company ID. If unknown, call hudu_companies_getAll with search to find the company and get its id.');
+const optionalCompanyIdSchema = z.number().int().positive().optional().describe('Filter by numeric company ID. If unknown, call hudu_companies_getAll with search to find it.');
 const archivedSchema = z.boolean().optional().describe('Filter by archived status (true = archived only, false = active only, omit = all)');
 const nameSchema = z.string().min(1).describe('Name');
 const optionalNameSchema = z.string().optional().describe(
-    'Exact full-name match only. Avoid unless you need a precise match — use search instead'
+    'EXACT full-name match (case-sensitive). Rarely useful — use search for partial or fuzzy name lookups instead.'
 );
 
 // ---------------------------------------------------------------------------
@@ -65,7 +65,7 @@ export function getArchiveWithCompanySchema() {
 
 export function getCompaniesGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search across name and other text fields — prefer this over name'),
+        search: z.string().optional().describe('Partial text match across company name, city, phone, website, and other fields. ALWAYS use this first for any name or text lookup.'),
         name: optionalNameSchema,
         slug: z.string().optional().describe('Filter by URL slug'),
         id_in_integration: z.string().optional().describe('Filter by integration ID'),
@@ -80,7 +80,7 @@ export function getCompaniesGetAllSchema() {
 
 export function getArticlesGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search across name and other fields — prefer this over name'),
+        search: z.string().optional().describe('Partial text match across article title and content. ALWAYS use this first for any title or text lookup.'),
         name: optionalNameSchema,
         company_id: optionalCompanyIdSchema,
         slug: z.string().optional().describe('Filter by URL slug'),
@@ -93,10 +93,10 @@ export function getArticlesGetAllSchema() {
 
 export function getAssetsGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search across name and other fields — prefer this over name'),
+        search: z.string().optional().describe('Partial text match across asset name, serial number, model, and manufacturer. ALWAYS use this first for any name or text lookup.'),
         name: optionalNameSchema,
         company_id: optionalCompanyIdSchema,
-        asset_layout_id: z.number().int().positive().optional().describe('Filter by asset layout ID'),
+        asset_layout_id: z.number().int().positive().optional().describe('Filter by asset layout ID (asset type/category). Call hudu_asset_layouts_getAll to find available layouts.'),
         primary_serial: z.string().optional().describe('Filter by primary serial number'),
         slug: z.string().optional().describe('Filter by URL slug'),
         archived: archivedSchema,
@@ -106,7 +106,7 @@ export function getAssetsGetAllSchema() {
 
 export function getWebsitesGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search across name and other fields — prefer this over name'),
+        search: z.string().optional().describe('Partial text match across website URL and other fields. ALWAYS use this first for any URL or text lookup.'),
         name: optionalNameSchema,
         company_id: optionalCompanyIdSchema,
         slug: z.string().optional().describe('Filter by URL slug'),
@@ -117,7 +117,7 @@ export function getWebsitesGetAllSchema() {
 
 export function getUsersGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search by first name, last name, or other text — prefer this for name lookups'),
+        search: z.string().optional().describe('Partial text match across first name, last name, email, and other user fields. ALWAYS use this first for any name or email lookup.'),
         first_name: z.string().optional().describe('Filter by exact first name'),
         last_name: z.string().optional().describe('Filter by exact last name'),
         email: z.string().email().optional().describe('Filter by email address'),
@@ -127,7 +127,7 @@ export function getUsersGetAllSchema() {
 
 export function getAssetPasswordsGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search across name and other fields — prefer this over name'),
+        search: z.string().optional().describe('Partial text match across password entry name and other fields. ALWAYS use this first for any name or text lookup.'),
         name: optionalNameSchema,
         company_id: optionalCompanyIdSchema,
         slug: z.string().optional().describe('Filter by URL slug'),
@@ -150,9 +150,9 @@ export function getActivityLogsGetAllSchema() {
     return z.object({
         user_id: z.number().int().positive().optional().describe('Filter by user ID'),
         user_email: z.string().optional().describe('Filter by user email'),
-        resource_id: z.number().int().positive().optional().describe('Filter by resource ID (use with resource_type)'),
-        resource_type: z.string().optional().describe('Filter by resource type: Article, Asset, AssetPassword, Company, etc. (use with resource_id)'),
-        action_message: z.string().optional().describe('Filter by action performed'),
+        resource_id: z.number().int().positive().optional().describe('Filter by resource numeric ID (use together with resource_type)'),
+        resource_type: z.string().optional().describe('Filter by resource type (use with resource_id). Valid values: Article, Asset, AssetPassword, Company, Folder, IpAddress, Network, Procedure, User, Website'),
+        action_message: z.string().optional().describe('Filter by specific action performed (e.g. "created", "updated", "deleted")'),
         start_date: z.string().optional().describe('Filter logs from this date (ISO 8601, e.g. 2024-01-01)'),
         end_date: z.string().optional().describe('Filter logs until this date (ISO 8601, e.g. 2024-12-31)'),
         limit: limitSchema,
@@ -201,10 +201,10 @@ export function getAssetLayoutsGetAllSchema() {
 export function getRelationsGetAllSchema() {
     return z.object({
         id: optionalIdSchema.describe('Filter by relation ID'),
-        froable_id: z.number().int().positive().optional().describe('From-record ID'),
-        froable_type: z.string().optional().describe('From-record type'),
-        toable_id: z.number().int().positive().optional().describe('To-record ID'),
-        toable_type: z.string().optional().describe('To-record type'),
+        froable_id: z.number().int().positive().optional().describe('Filter by source record numeric ID'),
+        froable_type: z.string().optional().describe('Filter by source record type. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
+        toable_id: z.number().int().positive().optional().describe('Filter by target record numeric ID'),
+        toable_type: z.string().optional().describe('Filter by target record type. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
         limit: limitSchema,
     });
 }
@@ -219,7 +219,7 @@ export function getExpirationsGetAllSchema() {
 
 export function getGroupsGetAllSchema() {
     return z.object({
-        search: z.string().optional().describe('Search across group names — prefer this over name'),
+        search: z.string().optional().describe('Partial text match across group name and other fields. ALWAYS use this first for any name or text lookup.'),
         name: optionalNameSchema,
         limit: limitSchema,
     });
@@ -285,7 +285,7 @@ export function getArticlesCreateSchema() {
 export function getAssetsCreateSchema() {
     return z.object({
         company_id: companyIdSchema,
-        asset_layout_id: z.number().int().positive().describe('Asset layout ID that defines the fields for this asset'),
+        asset_layout_id: z.number().int().positive().describe('Asset layout ID that defines the type and custom fields of this asset. If unknown, call hudu_asset_layouts_getAll to find available layouts and their IDs.'),
         name: nameSchema.describe('Asset name'),
         primary_serial: z.string().optional().describe('Primary serial number'),
         primary_mail: z.string().optional().describe('Primary email address'),
@@ -378,10 +378,10 @@ export function getIpAddressesCreateSchema() {
 
 export function getRelationsCreateSchema() {
     return z.object({
-        froable_id: z.number().int().positive().describe('ID of the from-record'),
-        froable_type: z.string().describe('Type of the from-record (e.g. Asset, Company, Article)'),
-        toable_id: z.number().int().positive().describe('ID of the to-record'),
-        toable_type: z.string().describe('Type of the to-record (e.g. Asset, Company, Article)'),
+        froable_id: z.number().int().positive().describe('Numeric ID of the source record'),
+        froable_type: z.string().describe('Type of the source record. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
+        toable_id: z.number().int().positive().describe('Numeric ID of the target record'),
+        toable_type: z.string().describe('Type of the target record. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
         is_inverse: z.boolean().optional().describe('Whether this is an inverse relation'),
         description: z.string().optional().describe('Relation description'),
     });

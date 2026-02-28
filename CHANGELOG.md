@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.3] - 2026-02-28
+
+### Improved
+- **AI Tools — Tool descriptions (all resources)**: Comprehensive improvements to tool descriptions and schema field descriptions to improve first-time tool selection accuracy and correct parameter supply by the LLM:
+  - `getById` descriptions now explicitly state "ONLY call when you already have a numeric ID" and name the exact `getAll` tool to call first, with instruction to extract `'id'` from results.
+  - `getAll` descriptions now state "Results contain a numeric 'id' field — capture this for subsequent getById, update, delete, or archive calls", and use "ALWAYS use 'search' first" wording.
+  - `update` descriptions now include an explicit prerequisite: "If you only have a name or text, call `hudu_{resource}_getAll` with 'search' first to get the 'id'".
+  - `delete` descriptions now mention `archive` as a safer alternative and include a prerequisite to confirm the correct ID first.
+  - `archive` descriptions now explain the distinction from `delete` ("data is preserved, restorable via unarchive") and include a prerequisite.
+  - `create` descriptions now include a foreign key hint: for any required `*_id` fields, instructs the LLM to call the relevant resource's `getAll` to find the numeric ID first.
+- **AI Tools — Schema field descriptions (all resources)**: More precise field-level guidance:
+  - All `search` fields now state exactly which fields they match across and include "ALWAYS use this first for any name or text lookup".
+  - All `name` filter fields now read "EXACT full-name match (case-sensitive). Rarely useful — use search instead."
+  - `id` fields now include "(from a prior getAll result)" to clarify the source.
+  - `company_id` fields now include "If unknown, call hudu_companies_getAll with search to find it."
+  - `asset_layout_id` in assets create now includes "If unknown, call hudu_asset_layouts_getAll to find available layouts."
+  - `limit` now includes "Increase to 100 if you expect many matching records."
+  - Relations `froable_type`/`toable_type` now list all valid type values explicitly.
+  - Activity logs `resource_type` now lists all valid type values explicitly.
+
 ## [1.9.2] - 2026-02-27
 
 ### Fixed
