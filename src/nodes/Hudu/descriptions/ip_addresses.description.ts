@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { createWrapResultsField } from './resources';
+import { IP_ADDRESS_STATUS_OPTIONS } from '../utils/constants';
 
 export const ipAddressOperations: INodeProperties[] = [
   {
@@ -252,32 +253,7 @@ export const ipAddressFields: INodeProperties[] = [
         name: 'status',
         type: 'options',
         default: 'unassigned',
-        options: [
-          {
-            name: 'Assigned',
-            value: 'assigned',
-          },
-          {
-            name: 'Deprecated',
-            value: 'deprecated',
-          },
-          {
-            name: 'DHCP',
-            value: 'dhcp',
-          },
-          {
-            name: 'Reserved',
-            value: 'reserved',
-          },
-          {
-            name: 'SLAAC',
-            value: 'slaac',
-          },
-          {
-            name: 'Unassigned',
-            value: 'unassigned',
-          },
-        ],
+        options: [...IP_ADDRESS_STATUS_OPTIONS],
         description: 'Filter by IP address status',
       },
       {
@@ -475,32 +451,7 @@ export const ipAddressFields: INodeProperties[] = [
     type: 'options',
     required: true,
     default: 'unassigned',
-    options: [
-      {
-        name: 'Assigned',
-        value: 'assigned',
-      },
-      {
-        name: 'Deprecated',
-        value: 'deprecated',
-      },
-      {
-        name: 'DHCP',
-        value: 'dhcp',
-      },
-      {
-        name: 'Reserved',
-        value: 'reserved',
-      },
-      {
-        name: 'SLAAC',
-        value: 'slaac',
-      },
-      {
-        name: 'Unassigned',
-        value: 'unassigned',
-      },
-    ],
+    options: [...IP_ADDRESS_STATUS_OPTIONS],
     displayOptions: {
       show: {
         resource: ['ipAddresses'],
@@ -689,32 +640,7 @@ export const ipAddressFields: INodeProperties[] = [
         name: 'status',
         type: 'options',
         default: 'unassigned',
-        options: [
-          {
-            name: 'Assigned',
-            value: 'assigned',
-          },
-          {
-            name: 'Deprecated',
-            value: 'deprecated',
-          },
-          {
-            name: 'DHCP',
-            value: 'dhcp',
-          },
-          {
-            name: 'Reserved',
-            value: 'reserved',
-          },
-          {
-            name: 'SLAAC',
-            value: 'slaac',
-          },
-          {
-            name: 'Unassigned',
-            value: 'unassigned',
-          },
-        ],
+        options: [...IP_ADDRESS_STATUS_OPTIONS],
         description: 'The status of the IP address',
       },
     ],

@@ -1,6 +1,28 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.4] - 2026-03-09
+
+### Improved
+- **AI Tools — No-search resource descriptions**: All five description builders (`getById`, `update`, `delete`, `archive`, `create`) now accept a `supportsSearch` flag. For the 11 resources with no `search` filter (Procedures, Activity Logs, Folders, Networks, IP Addresses, Asset Layouts, Relations, Expirations, VLANs, VLAN Zones, Matchers), descriptions say "use available filters" instead of referencing a non-existent `search` parameter.
+- **AI Tools — No-search `getAll` descriptions**: The no-search `getAll` description now explicitly states "This resource has no partial-text search — to find a record by name use the 'name' filter (EXACT full-name match, case-sensitive)" to prevent LLM confusion when search is unavailable.
+- **AI Tools — Schema: `optionalNameSchemaNoSearch`**: No-search `getAll` schemas (Procedures, Folders, Networks, Asset Layouts, VLANs, VLAN Zones) now use a dedicated `optionalNameSchemaNoSearch` description that clearly states name is the only text filter, rather than misleadingly suggesting search as an alternative.
+- **AI Tools — Schema field descriptions**: Several field descriptions improved for LLM clarity:
+  - `asset_id` in asset passwords create/update: added "If unknown, call hudu_assets_getAll with search to find it."
+  - `passwordable_type` in asset passwords create/update: full value list with descriptions (e.g. `Company (organisation/client)`).
+  - `parent_folder_id` in folders create/update: added lookup guidance.
+  - `location_id` in networks create/update: added "Check your Hudu settings or existing networks for valid location IDs."
+  - `integration_id` in matchers getAll: changed from required to optional; added "Check your Hudu integrations settings for the numeric integration ID."
+  - `status` in IP Addresses (getAll/create/update): documents all six states with meanings (unassigned, assigned, reserved, deprecated, dhcp, slaac).
+  - `resource_type` in Activity Logs: each value explained (e.g. `Asset (hardware/device record)`).
+  - `fromable_type` / `toable_type` in Relations (getAll/create): each record type described.
+  - `resource_type` in Expirations (getAll): all resource types listed with descriptions.
+- **Bug: froable_type → fromable_type**: Relations schema used wrong field names (`froable_type`/`froable_id`); corrected to `fromable_type`/`fromable_id` matching the Hudu API and main node handler. Also fixed in `NUMERIC_FIELDS` coercion set in `tool-executor.ts` and required-fields list in `HuduAiTools.node.ts`.
+- **Bug: RESOURCE_TYPES incomplete**: `Folder`, `Vlan`, and `VlanZone` were missing from `RESOURCE_TYPES` despite being valid Hudu resource types (confirmed via Swagger `flagable_type` enum). All three added with descriptions in `RESOURCE_TYPE_DESCRIPTIONS`. Affects relation `fromable_type`/`toable_type`, asset password `passwordable_type`, activity log `resource_type`, and expiration `resource_type` — in both the main node UI dropdowns and AI tool schemas.
+- **AI Tools — Centralized enum definitions**: IP address status values/descriptions now defined once in `constants.ts` (`IP_ADDRESS_STATUSES`, `IP_ADDRESS_STATUS_OPTIONS`, `IP_ADDRESS_STATUS_DESCRIPTIONS`) and referenced by all three schemas (getAll/create/update) and the main description file. Resource-type fields (`resource_type`, `*able_type`) now use `RESOURCE_TYPES` from constants consistently across activity logs, expirations, relations, and asset passwords.
+- **AI Tools — Metadata stripping**: Added `root` (n8n canvas root node UUID) to `N8N_METADATA_FIELDS` to prevent it contaminating API requests.
+- **AI Tools — Numeric string coercion**: `tool-executor.ts` now coerces known integer fields (`id`, `limit`, `page`, all `*_id` fields) from string to number when an LLM passes `"10"` instead of `10`. Prevents `VALIDATION_ERROR` failures on strictly-typed API endpoints.
+
 ## [1.9.3] - 2026-02-28
 
 ### Improved

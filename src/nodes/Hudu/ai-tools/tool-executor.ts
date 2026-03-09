@@ -15,7 +15,9 @@ import { formatMissingIdError, formatApiError } from './error-formatter';
  * They must be stripped before forwarding params to the Hudu API.
  */
 const N8N_METADATA_FIELDS = new Set([
-    'sessionId', 'action', 'chatInput', 'tool', 'toolName', 'toolCallId',
+    'sessionId', 'action', 'chatInput',
+    'root',       // n8n canvas root node UUID — collides with some API params (e.g. organisation root filter)
+    'tool', 'toolName', 'toolCallId',
 ]);
 
 /**
@@ -44,6 +46,21 @@ export async function executeHuduAiTool(
     const params: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(rawParams)) {
         if (!N8N_METADATA_FIELDS.has(key)) params[key] = value;
+    }
+
+    // Coerce numeric strings to numbers for known integer fields
+    // (LLMs occasionally pass "10" instead of 10)
+    const NUMERIC_FIELDS = new Set([
+        'id', 'limit', 'page',
+        'company_id', 'asset_id', 'asset_layout_id', 'folder_id',
+        'network_id', 'vlan_zone_id', 'user_id', 'resource_id',
+        'parent_company_id', 'parent_folder_id', 'location_id',
+        'integration_id', 'fromable_id', 'toable_id',
+    ]);
+    for (const key of NUMERIC_FIELDS) {
+        if (key in params && typeof params[key] === 'string' && /^\d+$/.test(params[key] as string)) {
+            params[key] = parseInt(params[key] as string, 10);
+        }
     }
 
     const config = HUDU_RESOURCE_CONFIG[resource];

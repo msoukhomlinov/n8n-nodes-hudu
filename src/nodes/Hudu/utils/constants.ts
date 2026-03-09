@@ -195,6 +195,7 @@ export const RESOURCE_TYPES = [
   'AssetPassword',
   'Company',
   'Expiration',
+  'Folder',
   'Group',
   'Integrator',
   'IPAddress',
@@ -203,8 +204,63 @@ export const RESOURCE_TYPES = [
   'RackStorage',
   'User',
   'VaultPassword',
+  'Vlan',
+  'VlanZone',
   'Website',
 ] as const;
+
+/** IP address status values (single source of truth for both UI options and AI schemas). */
+export const IP_ADDRESS_STATUSES = [
+    'unassigned', 'assigned', 'reserved', 'deprecated', 'dhcp', 'slaac',
+] as const;
+export type IpAddressStatus = typeof IP_ADDRESS_STATUSES[number];
+
+/** n8n UI option objects for IP address status dropdowns (3 places → 1). */
+export const IP_ADDRESS_STATUS_OPTIONS = [
+    { name: 'Unassigned', value: 'unassigned' },
+    { name: 'Assigned',   value: 'assigned'   },
+    { name: 'Reserved',   value: 'reserved'   },
+    { name: 'Deprecated', value: 'deprecated' },
+    { name: 'DHCP',       value: 'dhcp'       },
+    { name: 'SLAAC',      value: 'slaac'      },
+] as const;
+
+/**
+ * Human-readable meanings for IP address status values — used in LLM tool descriptions.
+ * Edit here; all three AI schema functions (getAll/create/update) update automatically.
+ */
+export const IP_ADDRESS_STATUS_DESCRIPTIONS: Record<IpAddressStatus, string> = {
+    unassigned:  'not in use',
+    assigned:    'actively in use by a host/device',
+    reserved:    'held for specific use, not currently assigned',
+    deprecated:  'previously used, no longer active',
+    dhcp:        'allocated dynamically via DHCP',
+    slaac:       'assigned via IPv6 SLAAC',
+};
+
+/**
+ * Human-readable meanings for Hudu resource type names — used in LLM tool descriptions.
+ * Covers all values in RESOURCE_TYPES. Edit here; all AI schemas update automatically.
+ */
+export const RESOURCE_TYPE_DESCRIPTIONS: Record<string, string> = {
+    Article:       'knowledge base article',
+    Asset:         'hardware/device/other asset record',
+    AssetPassword: 'password entry',
+    Company:       'organisation/client',
+    Expiration:    'expiration record',
+    Folder:        'folder of articles',
+    Group:         'user group',
+    Integrator:    'integration record',
+    IPAddress:     'IP address record',
+    Network:       'network record',
+    Procedure:     'runbook/checklist',
+    RackStorage:   'rack storage record',
+    User:          'Hudu user account',
+    VaultPassword: 'vault password',
+    Vlan:          'VLAN record',
+    VlanZone:      'VLAN zone record',
+    Website:       'web login record',
+};
 
 /**
  * Activity log response fields (alphabetically sorted by display name)

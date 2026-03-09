@@ -204,7 +204,7 @@ function getRequiredFields(resource: string): string[] {
         folders: ['name'],
         networks: ['name', 'company_id', 'address'],
         ip_addresses: ['address', 'status', 'company_id'],
-        relations: ['froable_id', 'froable_type', 'toable_id', 'toable_type'],
+        relations: ['fromable_id', 'fromable_type', 'toable_id', 'toable_type'],
         expirations: ['resource_id', 'resource_type', 'expiration_date'],
         vlans: ['name', 'company_id'],
         vlan_zones: ['name', 'vlan_id_ranges'],
@@ -309,38 +309,39 @@ export class HuduAiTools implements INodeType {
             let schema: z.ZodObject<z.ZodRawShape>;
             let description: string;
 
+            const getAllSchema = getGetAllSchema(resource);
+            const supportsSearch = 'search' in getAllSchema.shape;
+
             switch (operation) {
                 case 'get':
                     schema = getGetSchema();
-                    description = buildGetDescription(resourceLabel, resource);
+                    description = buildGetDescription(resourceLabel, resource, supportsSearch);
                     break;
 
-                case 'getAll': {
-                    schema = getGetAllSchema(resource);
-                    const supportsSearch = 'search' in schema.shape;
+                case 'getAll':
+                    schema = getAllSchema;
                     description = buildGetAllDescription(resourceLabel, resource, referenceUtc, supportsSearch);
                     break;
-                }
 
                 case 'create':
                     schema = getCreateSchema(resource);
-                    description = buildCreateDescription(resourceLabel, resource, getRequiredFields(resource), referenceUtc);
+                    description = buildCreateDescription(resourceLabel, resource, getRequiredFields(resource), referenceUtc, supportsSearch);
                     break;
 
                 case 'update':
                     schema = getUpdateSchema(resource);
-                    description = buildUpdateDescription(resourceLabel, resource);
+                    description = buildUpdateDescription(resourceLabel, resource, supportsSearch);
                     break;
 
                 case 'delete':
                     schema = config.requiresCompanyEndpoint ? getDeleteWithCompanySchema() : getDeleteSchema();
-                    description = buildDeleteDescription(resourceLabel, resource);
+                    description = buildDeleteDescription(resourceLabel, resource, supportsSearch);
                     break;
 
                 case 'archive':
                 case 'unarchive':
                     schema = config.requiresCompanyEndpoint ? getArchiveWithCompanySchema() : getArchiveSchema();
-                    description = buildArchiveDescription(resourceLabel, operation, resource);
+                    description = buildArchiveDescription(resourceLabel, operation, resource, supportsSearch);
                     break;
 
                 default:

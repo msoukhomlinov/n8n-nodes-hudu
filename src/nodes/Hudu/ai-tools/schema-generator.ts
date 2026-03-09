@@ -1,8 +1,29 @@
 import { z } from 'zod';
+import {
+    IP_ADDRESS_STATUSES,
+    IP_ADDRESS_STATUS_DESCRIPTIONS,
+    RESOURCE_TYPES,
+    RESOURCE_TYPE_DESCRIPTIONS,
+} from '../utils/constants';
 
 // ---------------------------------------------------------------------------
 // Common base schemas
 // ---------------------------------------------------------------------------
+
+/** Build the "Values: x (desc), y (desc)." suffix for LLM field descriptions. */
+function buildTypeDesc(types: readonly string[], descriptions: Record<string, string>): string {
+    return 'Values: ' + types.map(t => `${t} (${descriptions[t] ?? t})`).join(', ') + '.';
+}
+
+// Shared IP address status schemas — reused across getAll / create / update
+const IP_STATUS_DESC =
+    `IP address status. ${buildTypeDesc(IP_ADDRESS_STATUSES, IP_ADDRESS_STATUS_DESCRIPTIONS)}`;
+const ipAddressStatusSchema         = z.enum(IP_ADDRESS_STATUSES).describe(IP_STATUS_DESC);
+const ipAddressStatusOptionalSchema = z.enum(IP_ADDRESS_STATUSES).optional().describe(IP_STATUS_DESC);
+
+// Shared resource-type description string — reused wherever resource_type / *able_type appears
+// Uses RESOURCE_TYPES from constants (same list the main Hudu node uses for all dropdowns)
+const RESOURCE_TYPES_DESC = buildTypeDesc(RESOURCE_TYPES, RESOURCE_TYPE_DESCRIPTIONS);
 
 const idSchema = z.number().int().positive().describe('Numeric record ID (from a prior getAll result). Must be an integer.');
 const optionalIdSchema = z.number().int().positive().optional().describe('Numeric record ID (from a prior getAll result)');
@@ -13,6 +34,11 @@ const archivedSchema = z.boolean().optional().describe('Filter by archived statu
 const nameSchema = z.string().min(1).describe('Name');
 const optionalNameSchema = z.string().optional().describe(
     'EXACT full-name match (case-sensitive). Rarely useful — use search for partial or fuzzy name lookups instead.'
+);
+
+// Use when the resource has NO search field — name IS the only text filter, warn clearly
+const optionalNameSchemaNoSearch = z.string().optional().describe(
+    'EXACT full-name match (case-sensitive) — this is the only text-based filter for this resource. Must match the record name exactly including case.'
 );
 
 // ---------------------------------------------------------------------------
@@ -138,7 +164,7 @@ export function getAssetPasswordsGetAllSchema() {
 
 export function getProceduresGetAllSchema() {
     return z.object({
-        name: optionalNameSchema,
+        name: optionalNameSchemaNoSearch,
         company_id: optionalCompanyIdSchema,
         slug: z.string().optional().describe('Filter by URL slug'),
         archived: archivedSchema,
@@ -151,7 +177,9 @@ export function getActivityLogsGetAllSchema() {
         user_id: z.number().int().positive().optional().describe('Filter by user ID'),
         user_email: z.string().optional().describe('Filter by user email'),
         resource_id: z.number().int().positive().optional().describe('Filter by resource numeric ID (use together with resource_type)'),
-        resource_type: z.string().optional().describe('Filter by resource type (use with resource_id). Valid values: Article, Asset, AssetPassword, Company, Folder, IpAddress, Network, Procedure, User, Website'),
+        resource_type: z.string().optional().describe(
+            `Filter by resource type (pair with resource_id for a specific record). ${RESOURCE_TYPES_DESC}`
+        ),
         action_message: z.string().optional().describe('Filter by specific action performed (e.g. "created", "updated", "deleted")'),
         start_date: z.string().optional().describe('Filter logs from this date (ISO 8601, e.g. 2024-01-01)'),
         end_date: z.string().optional().describe('Filter logs until this date (ISO 8601, e.g. 2024-12-31)'),
@@ -161,7 +189,7 @@ export function getActivityLogsGetAllSchema() {
 
 export function getFoldersGetAllSchema() {
     return z.object({
-        name: optionalNameSchema,
+        name: optionalNameSchemaNoSearch,
         company_id: optionalCompanyIdSchema,
         parent_folder_id: z.number().int().positive().optional().describe('Filter by parent folder ID'),
         limit: limitSchema,
@@ -170,7 +198,7 @@ export function getFoldersGetAllSchema() {
 
 export function getNetworksGetAllSchema() {
     return z.object({
-        name: optionalNameSchema,
+        name: optionalNameSchemaNoSearch,
         company_id: optionalCompanyIdSchema,
         archived: archivedSchema,
         location_id: z.number().int().positive().optional().describe('Filter by location ID'),
@@ -184,7 +212,7 @@ export function getIpAddressesGetAllSchema() {
         address: z.string().optional().describe('Filter by IP address'),
         company_id: optionalCompanyIdSchema,
         network_id: z.number().int().positive().optional().describe('Filter by network ID'),
-        status: z.enum(['unassigned', 'assigned', 'reserved', 'deprecated', 'dhcp', 'slaac']).optional().describe('Filter by IP address status'),
+        status: ipAddressStatusOptionalSchema,
         fqdn: z.string().optional().describe('Filter by FQDN (exact match)'),
         asset_id: z.number().int().positive().optional().describe('Filter by asset ID'),
         limit: limitSchema,
@@ -193,7 +221,7 @@ export function getIpAddressesGetAllSchema() {
 
 export function getAssetLayoutsGetAllSchema() {
     return z.object({
-        name: optionalNameSchema,
+        name: optionalNameSchemaNoSearch,
         limit: limitSchema,
     });
 }
@@ -201,10 +229,14 @@ export function getAssetLayoutsGetAllSchema() {
 export function getRelationsGetAllSchema() {
     return z.object({
         id: optionalIdSchema.describe('Filter by relation ID'),
-        froable_id: z.number().int().positive().optional().describe('Filter by source record numeric ID'),
-        froable_type: z.string().optional().describe('Filter by source record type. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
-        toable_id: z.number().int().positive().optional().describe('Filter by target record numeric ID'),
-        toable_type: z.string().optional().describe('Filter by target record type. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
+        fromable_id:   z.number().int().positive().optional().describe('Filter by source record numeric ID'),
+        fromable_type: z.string().optional().describe(
+            `Type of the source (from) record in this relation. ${RESOURCE_TYPES_DESC}`
+        ),
+        toable_id:     z.number().int().positive().optional().describe('Filter by target record numeric ID'),
+        toable_type:   z.string().optional().describe(
+            `Type of the target (to) record in this relation. ${RESOURCE_TYPES_DESC}`
+        ),
         limit: limitSchema,
     });
 }
@@ -212,7 +244,9 @@ export function getRelationsGetAllSchema() {
 export function getExpirationsGetAllSchema() {
     return z.object({
         company_id: optionalCompanyIdSchema,
-        resource_type: z.string().optional().describe('Filter by resource type'),
+        resource_type: z.string().optional().describe(
+            `Filter by resource type. ${RESOURCE_TYPES_DESC}`
+        ),
         limit: limitSchema,
     });
 }
@@ -227,7 +261,7 @@ export function getGroupsGetAllSchema() {
 
 export function getVlansGetAllSchema() {
     return z.object({
-        name: optionalNameSchema,
+        name: optionalNameSchemaNoSearch,
         company_id: optionalCompanyIdSchema,
         vlan_zone_id: z.number().int().positive().optional().describe('Filter by VLAN zone ID'),
         limit: limitSchema,
@@ -236,7 +270,7 @@ export function getVlansGetAllSchema() {
 
 export function getVlanZonesGetAllSchema() {
     return z.object({
-        name: optionalNameSchema,
+        name: optionalNameSchemaNoSearch,
         company_id: optionalCompanyIdSchema,
         limit: limitSchema,
     });
@@ -244,7 +278,7 @@ export function getVlanZonesGetAllSchema() {
 
 export function getMatchersGetAllSchema() {
     return z.object({
-        integration_id: z.number().int().positive().describe('Integration ID — filters matchers to a specific integration (required)'),
+        integration_id: z.number().int().positive().optional().describe('Filter matchers by integration. Check your Hudu integrations settings for the numeric integration ID.'),
         limit: limitSchema,
     });
 }
@@ -320,8 +354,10 @@ export function getAssetPasswordsCreateSchema() {
         username: z.string().optional().describe('Username'),
         url: z.string().optional().describe('Related URL'),
         description: z.string().optional().describe('Description'),
-        asset_id: z.number().int().positive().optional().describe('Asset ID to associate with'),
-        passwordable_type: z.string().optional().describe('Resource type this password belongs to'),
+        asset_id: z.number().int().positive().optional().describe('Asset ID to associate with. If unknown, call hudu_assets_getAll with search to find it.'),
+        passwordable_type: z.string().optional().describe(
+            `Type of record this password is attached to. ${RESOURCE_TYPES_DESC}`
+        ),
         passwordable_id: z.number().int().positive().optional().describe('Resource ID this password belongs to'),
         password_type: z.string().optional().describe('Password type'),
         password_folder_id: z.number().int().positive().optional().describe('Password folder ID'),
@@ -344,7 +380,7 @@ export function getFoldersCreateSchema() {
         name: nameSchema.describe('Folder name'),
         company_id: optionalCompanyIdSchema,
         description: z.string().optional().describe('Folder description'),
-        parent_folder_id: z.number().int().positive().optional().describe('Parent folder ID'),
+        parent_folder_id: z.number().int().positive().optional().describe('Parent folder ID. If unknown, call hudu_folders_getAll with the name filter to find it.'),
         icon: z.string().optional().describe('Icon name'),
     });
 }
@@ -356,7 +392,7 @@ export function getNetworksCreateSchema() {
         network_type: z.number().int().optional().describe('Network type'),
         address: z.string().describe('Network address (CIDR notation, e.g. 192.168.1.0/24)'),
         description: z.string().optional().describe('Description'),
-        location_id: z.number().int().positive().optional().describe('Location ID'),
+        location_id: z.number().int().positive().optional().describe('Location ID. Check your Hudu settings or existing networks for valid location IDs.'),
         notes: z.string().optional().describe('Notes (rich text)'),
         status_list_item_id: z.number().int().positive().optional().describe('Status list item ID'),
         role_list_item_id: z.number().int().positive().optional().describe('Role list item ID'),
@@ -367,7 +403,7 @@ export function getIpAddressesCreateSchema() {
     return z.object({
         address: z.string().describe('IP address'),
         company_id: companyIdSchema,
-        status: z.enum(['unassigned', 'assigned', 'reserved', 'deprecated', 'dhcp', 'slaac']).describe('IP address status'),
+        status: ipAddressStatusSchema,
         network_id: z.number().int().positive().optional().describe('Network ID this IP belongs to'),
         description: z.string().optional().describe('Description'),
         fqdn: z.string().optional().describe('Fully qualified domain name'),
@@ -378,10 +414,14 @@ export function getIpAddressesCreateSchema() {
 
 export function getRelationsCreateSchema() {
     return z.object({
-        froable_id: z.number().int().positive().describe('Numeric ID of the source record'),
-        froable_type: z.string().describe('Type of the source record. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
-        toable_id: z.number().int().positive().describe('Numeric ID of the target record'),
-        toable_type: z.string().describe('Type of the target record. Valid values: Asset, AssetPassword, Article, Company, Folder, IpAddress, Network, Procedure, Website'),
+        fromable_id:   z.number().int().positive().describe('Numeric ID of the source record'),
+        fromable_type: z.string().describe(
+            `Type of the source (from) record in this relation. ${RESOURCE_TYPES_DESC}`
+        ),
+        toable_id:     z.number().int().positive().describe('Numeric ID of the target record'),
+        toable_type:   z.string().describe(
+            `Type of the target (to) record in this relation. ${RESOURCE_TYPES_DESC}`
+        ),
         is_inverse: z.boolean().optional().describe('Whether this is an inverse relation'),
         description: z.string().optional().describe('Relation description'),
     });
@@ -483,7 +523,9 @@ export function getAssetPasswordsUpdateSchema() {
         username: z.string().optional().describe('Username'),
         url: z.string().optional().describe('Related URL'),
         description: z.string().optional().describe('Description'),
-        passwordable_type: z.string().optional().describe('Resource type this password belongs to'),
+        passwordable_type: z.string().optional().describe(
+            `Type of record this password is attached to. ${RESOURCE_TYPES_DESC}`
+        ),
         passwordable_id: z.number().int().positive().optional().describe('Resource ID this password belongs to'),
         password_type: z.string().optional().describe('Password type'),
         password_folder_id: z.number().int().positive().optional().describe('Password folder ID'),
@@ -508,7 +550,7 @@ export function getFoldersUpdateSchema() {
         name: z.string().optional().describe('Folder name'),
         company_id: z.number().int().positive().optional().describe('Company ID'),
         description: z.string().optional().describe('Folder description'),
-        parent_folder_id: z.number().int().positive().optional().describe('Parent folder ID'),
+        parent_folder_id: z.number().int().positive().optional().describe('Parent folder ID. If unknown, call hudu_folders_getAll with the name filter to find it.'),
         icon: z.string().optional().describe('Icon name'),
     });
 }
@@ -521,7 +563,7 @@ export function getNetworksUpdateSchema() {
         network_type: z.number().int().optional().describe('Network type'),
         address: z.string().optional().describe('Network address (CIDR)'),
         description: z.string().optional().describe('Description'),
-        location_id: z.number().int().positive().optional().describe('Location ID'),
+        location_id: z.number().int().positive().optional().describe('Location ID. Check your Hudu settings or existing networks for valid location IDs.'),
         notes: z.string().optional().describe('Notes (rich text)'),
         archived: z.boolean().optional().describe('Whether the network is archived'),
         status_list_item_id: z.number().int().positive().optional().describe('Status list item ID'),
@@ -535,7 +577,7 @@ export function getIpAddressesUpdateSchema() {
         address: z.string().optional().describe('IP address'),
         company_id: z.number().int().positive().optional().describe('Company ID'),
         network_id: z.number().int().positive().optional().describe('Network ID this IP belongs to'),
-        status: z.enum(['unassigned', 'assigned', 'reserved', 'deprecated', 'dhcp', 'slaac']).optional().describe('IP address status'),
+        status: ipAddressStatusOptionalSchema,
         description: z.string().optional().describe('Description'),
         fqdn: z.string().optional().describe('Fully qualified domain name'),
         asset_id: z.number().int().positive().optional().describe('Asset ID to associate with'),
