@@ -21,9 +21,30 @@
 
 .NOTES
     Author: Max Soukhomlinov
-    Version: 2.3.3
+    Version: 2.3.5
 
     Changelog:
+    2.3.5 - fix: Test-PrivateRepo no longer requires commits to exist. Previously it called
+            rev-parse HEAD which fails on a freshly-cloned empty private repo, blocking every
+            private sub-command (save, push, status, log) with "no commits" error. Now uses
+            rev-parse --git-dir which validates the bare repo structure without needing any
+            commits, so operations work immediately after setup on a new empty remote.
+            fix: Invoke-PrivateStatus and Invoke-PrivateLog guard the git log call and show a
+            friendly "(no commits yet)" message instead of a git error on an empty repo.
+    2.3.4 - fix: Invoke-PrivateMigration Step 5 no longer silently skips the push when
+            ls-remote fails (auth error, network issue, or unreachable remote). Previously
+            $shouldPush was gated on $LASTEXITCODE from ls-remote, so any ls-remote failure
+            caused the push to be silently skipped. Now: if local commits exist and remoteInfo
+            is empty (for any reason), the push is always attempted so the real error surfaces.
+            fix: removed 2>$null from the private push in Step 5 so authentication and network
+            errors are visible to the user instead of being swallowed silently.
+            fix: Invoke-PrivateSetup now checks if the remote has commits before attempting
+            checkout; for new empty repos the restore step is skipped gracefully instead of
+            showing a confusing "main branch may not exist" warning.
+            fix: Invoke-PrivateSetup uses Get-PrivateDefaultBranch for the checkout instead
+            of hardcoded "main", handling repos whose default branch is not "main".
+            fix: removed misleading "Run 'git-helper private push'" hint from end of
+            Invoke-PrivateSetup — Invoke-PrivateMigration already handles the push.
     2.3.3 - fix: .private-git/ added to $PRIVATE_GIT_ALWAYS_IGNORE so it is always written to
             .gitignore regardless of $PRIVATE_PATHS, preventing bare-repo internals from being
             staged by `git add .` during release.
@@ -183,17 +204,17 @@ function Get-PrivateDiskPaths {
     return $paths
 }
 
-# Returns $true if .private-git exists and has commits; prints an error otherwise.
+# Returns $true if .private-git exists and is a valid bare git repo; prints an error otherwise.
 function Test-PrivateRepo {
     $gitDir = Get-PrivateGitDir
     if (-not $gitDir -or -not (Test-Path $gitDir)) {
         Write-Error "Private repo not initialised. Run: git-helper private setup <url>"
         return $false
     }
-    # Check HEAD is valid (has at least one commit)
-    & git --git-dir="$gitDir" rev-parse HEAD 2>$null | Out-Null
+    # Verify the directory is a valid bare git repo (does NOT require commits to exist)
+    & git --git-dir="$gitDir" rev-parse --git-dir 2>$null | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Private repo exists but has no commits. Check .private-git is a valid bare repo."
+        Write-Error "Private repo directory exists but is not a valid git repo. Try deleting .private-git and re-running setup."
         return $false
     }
     return $true
@@ -613,7 +634,13 @@ function Invoke-PrivateStatus {
 
     Write-Host ""
     Write-Info "─── Recent Commits ───"
-    Invoke-PrivateGit @("log", "--oneline", "--graph", "--decorate", "-5")
+    $gitDir = Get-PrivateGitDir
+    $hasCommits = -not [string]::IsNullOrEmpty((& git --git-dir="$gitDir" rev-parse HEAD 2>$null))
+    if ($hasCommits) {
+        Invoke-PrivateGit @("log", "--oneline", "--graph", "--decorate", "-5")
+    } else {
+        Write-Subtle "  (no commits yet — use 'private save <message>' to make the first commit)"
+    }
     Write-Host ""
 }
 
@@ -743,6 +770,14 @@ function Invoke-PrivateLog {
 
     Show-CommandHeader "PRIVATE CONFIG LOG"
 
+    $gitDir = Get-PrivateGitDir
+    $hasCommits = -not [string]::IsNullOrEmpty((& git --git-dir="$gitDir" rev-parse HEAD 2>$null))
+    if (-not $hasCommits) {
+        Write-Subtle "  (no commits yet — use 'private save <message>' to make the first commit)"
+        Write-Host ""
+        return
+    }
+
     Write-Info "Last $Count commits:"
     Write-Host ""
     Invoke-PrivateGit @("log", "--oneline", "--graph", "--decorate", "-$Count")
@@ -811,18 +846,23 @@ function Invoke-PrivateMigration {
     # so rev-list "refs/remotes/origin/<branch>..HEAD" silently returns nothing.
     $branch = Get-PrivateDefaultBranch
     $localHead  = (& git --git-dir="$gitDir" rev-parse HEAD 2>$null).Trim()
-    $remoteInfo = & git --git-dir="$gitDir" ls-remote origin $branch 2>$null
-    if ([string]::IsNullOrWhiteSpace($remoteInfo)) {
-        # Remote branch doesn't exist yet — push if we have any local commits
-        $shouldPush = ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrEmpty($localHead))
+    if (-not [string]::IsNullOrEmpty($localHead)) {
+        $remoteInfo = & git --git-dir="$gitDir" ls-remote origin $branch 2>$null
+        if ([string]::IsNullOrWhiteSpace($remoteInfo)) {
+            # Remote branch doesn't exist yet, OR ls-remote failed (auth/network error).
+            # In either case attempt the push — the push itself will surface the real error.
+            $shouldPush = $true
+        } else {
+            # Remote exists — push only if local SHA differs from remote SHA
+            $remoteSha = ($remoteInfo -split '\s+')[0].Trim()
+            $shouldPush = ($localHead -ne $remoteSha)
+        }
     } else {
-        # Remote exists — push only if local SHA differs from remote SHA
-        $remoteSha = ($remoteInfo -split '\s+')[0].Trim()
-        $shouldPush = ($localHead -ne $remoteSha)
+        $shouldPush = $false  # No local commits yet; nothing to push
     }
     if ($shouldPush) {
         Write-Info "  Pushing private config to remote (origin/$branch)..."
-        & git --git-dir="$gitDir" --work-tree="$root" push --set-upstream origin $branch 2>$null
+        & git --git-dir="$gitDir" push --set-upstream origin $branch
         if ($LASTEXITCODE -eq 0) {
             Write-Success "  ✓ Private config pushed to remote."
         } else {
@@ -889,12 +929,16 @@ function Invoke-PrivateSetup {
         return
     }
 
-    Write-Info "Restoring private files to working tree..."
-    & git --git-dir="$gitDir" --work-tree="$root" checkout main -- .
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Warning "Checkout step had issues — the 'main' branch may not exist yet."
-        Write-Subtle "Try: git --git-dir=`".private-git`" --work-tree=`".`" branch -a"
+    $remoteHasCommits = & git --git-dir="$gitDir" ls-remote --heads origin 2>$null
+    if (-not [string]::IsNullOrWhiteSpace($remoteHasCommits)) {
+        Write-Info "Restoring private files to working tree..."
+        $setupBranch = Get-PrivateDefaultBranch
+        & git --git-dir="$gitDir" --work-tree="$root" checkout $setupBranch -- .
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Checkout step had issues — run 'git-helper private status' to verify."
+        }
+    } else {
+        Write-Subtle "  (New empty private repo — restore step skipped.)"
     }
 
     Write-Info "Configuring private repo (suppress untracked-file noise)..."
@@ -907,7 +951,6 @@ function Invoke-PrivateSetup {
     Write-Host ""
     Write-Info "Migrating AI/Cursor/docs config to private repo..."
     Invoke-PrivateMigration
-    Write-Info "Run 'git-helper private push' to upload the private config."
 }
 
 # Dispatcher for all "private" sub-commands
@@ -1128,7 +1171,7 @@ function Show-Help {
     if ([string]::IsNullOrEmpty($CommandName)) {
         Write-Host ""
         Write-Info "═══════════════════════════════════════════════════════════════"
-        Write-Info "  GIT HELPER v2.2 - Command Reference"
+        Write-Info "  GIT HELPER v2.3 - Command Reference"
         Write-Info "═══════════════════════════════════════════════════════════════"
         Write-Host ""
         Write-Colour "  Usage: " -Colour White -NoNewLine
@@ -1216,7 +1259,7 @@ function Show-Menu {
     $branch = Get-CurrentBranch
 
     Write-Info "═══════════════════════════════════════════════════════════════"
-    Write-Colour "  GIT HELPER v2.2                          " -Colour Cyan -NoNewLine
+    Write-Colour "  GIT HELPER v2.3" -Colour Cyan -NoNewLine
     Write-Colour "📁 " -Colour White -NoNewLine
     Write-Colour $branch -Colour Green
     Write-Info "═══════════════════════════════════════════════════════════════"
