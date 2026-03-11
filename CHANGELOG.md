@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.8] - 2026-03-11
+
+### Fixed
+- **AI Tools — dual AI Agent + MCP Trigger compatibility**: `HuduAiTools` now correctly works with both the AI Agent node and the MCP Server Trigger simultaneously when using multi-operation node instances. Previous versions (1.9.6–1.9.7) used a plain array return which satisfied MCP Trigger but not AI Agent; the earlier toolkit approach (pre-1.9.6) extended the wrong base class so `instanceof` checks always failed. Fix: adopt the runtime toolkit probe pattern (identical to `SearxngAiTools`) that detects whether n8n loaded `StructuredToolkit` from `n8n-core` (n8n ≥ 2.9) or `Toolkit` from `@langchain/classic/agents`, then extends the correct one. Both AI Agent and MCP Trigger use the same `instanceof` check in `getConnectedTools()` — this fix satisfies both.
+
+## [1.9.7] - 2026-03-11
+
+### Fixed
+- **AI Tools — Dual AI Agent + MCP Trigger compatibility**: Returning a plain `tools[]` array (1.9.6) fixed the MCP Trigger but broke the AI Agent (agent looped without invoking tools). The AI Agent requires a `getTools()` method to detect and invoke tools; the MCP Trigger requires an iterable array. Fix: `supplyData()` now returns an array with `getTools()` attached — the AI Agent calls `getTools()` to get invokable tools, while the MCP Trigger iterates the array directly.
+
+## [1.9.6] - 2026-03-11
+
+### Fixed
+- **AI Tools — MCP Trigger compatibility (Toolkit pattern)**: The `HuduAiTools` node returned tools wrapped in a `HuduToolkit` class. n8n's AI Agent handles Toolkits natively (calls `getTools()`), but the MCP Server Trigger only accepts individual `DynamicStructuredTool` instances and threw `Tool node "X" did not return a valid Tool` for all resources. Fix: `supplyData()` now returns `{ response: tools }` (a plain array of `DynamicStructuredTool` objects) instead of `{ response: toolkit }`. The `HuduToolkit` class and the toolkit compatibility probe have been removed.
+
 ## [1.9.5] - 2026-03-11
 
 ### Fixed

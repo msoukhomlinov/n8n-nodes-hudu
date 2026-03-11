@@ -78,27 +78,26 @@ import {
     getMatchersUpdateSchema,
 } from './ai-tools/schema-generator';
 
-// ---------------------------------------------------------------------------
-// Build a toolkit class that the n8n AI Agent recognises.
-//
-// The agent checks `toolOrToolkit instanceof <ToolkitBase>` to decide whether
-// to call .getTools() and flatten the tools array. We MUST extend the EXACT
-// same constructor that the host process uses for this check, so instanceof passes.
-//
-// n8n version compatibility:
-//   - n8n >= 2.9  exports StructuredToolkit from n8n-core — use that.
-//   - Older n8n   uses Toolkit from @langchain/classic/agents — fall back to that.
-//
-// Community nodes share n8n-core's require VM context, so require() here
-// resolves from n8n's module cache and returns the same cached class the agent holds.
-// ---------------------------------------------------------------------------
+const OPERATION_LABELS: Record<string, string> = {
+    get: 'Get by ID',
+    getAll: 'Get many (with filters)',
+    create: 'Create',
+    update: 'Update',
+    delete: 'Delete',
+    archive: 'Archive',
+    unarchive: 'Unarchive',
+};
+
+// Probe for the correct ToolkitBase constructor that n8n loaded.
+// We MUST extend the EXACT same constructor n8n loaded, so instanceof passes.
+// n8n >= 2.9 exports StructuredToolkit from n8n-core; older n8n uses @langchain/classic/agents.Toolkit.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let LangChainToolkitBase: new (...args: any[]) => { tools?: DynamicStructuredTool[]; getTools?(): DynamicStructuredTool[] };
 try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
     const nCore = require('n8n-core') as Record<string, unknown>;
     const StructuredToolkit = nCore['StructuredToolkit'];
-    if (typeof StructuredToolkit !== 'function') throw new Error('StructuredToolkit not found in n8n-core');
+    if (typeof StructuredToolkit !== 'function') throw new Error('not found');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     LangChainToolkitBase = StructuredToolkit as any;
 } catch {
@@ -120,16 +119,6 @@ class HuduToolkit extends (LangChainToolkitBase as any) {
         return this.tools as DynamicStructuredTool[];
     }
 }
-
-const OPERATION_LABELS: Record<string, string> = {
-    get: 'Get by ID',
-    getAll: 'Get many (with filters)',
-    create: 'Create',
-    update: 'Update',
-    delete: 'Delete',
-    archive: 'Archive',
-    unarchive: 'Unarchive',
-};
 
 function getGetAllSchema(resource: string): z.ZodObject<z.ZodRawShape> {
     switch (resource) {
@@ -370,8 +359,7 @@ export class HuduAiTools implements INodeType {
             );
         }
 
-        const toolkit = new HuduToolkit(tools);
-        return { response: toolkit };
+        return { response: new HuduToolkit(tools) };
     }
 
     /**
