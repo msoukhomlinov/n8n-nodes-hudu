@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.9] - 2026-02-27
+
+### Fixed
+- **AI Tools — Runtime class identity mismatch (n8n 2.8.4+)**: Fixed "multiple tools with the same name: 'undefined'" and silent tool discovery failures after upgrading to n8n 2.8.4+. n8n uses `instanceof` checks against its own runtime copies of `StructuredToolkit`, `DynamicStructuredTool`, and `ZodType`. Community nodes ship separate copies of `zod`, `@langchain/core`, and `n8n-core` in their own `node_modules`, so all three `instanceof` checks silently failed. The node now resolves all three dependencies from n8n's runtime module tree via `createRequire()`, ensuring class identity matches at every checkpoint.
+- **AI Tools — Strict schema restoration**: The interim fix (1.9.8) replaced real Zod schemas with a permissive `z.object({}).passthrough()` to pass discovery, but this threw away the entire parameter contract — the LLM received no field definitions. Schemas are now rebuilt into the runtime Zod class tree while preserving all field types, constraints, defaults, and descriptions. A new `toRuntimeZodSchema` converter walks the local schema tree and reconstructs it using the runtime `zod` instance.
+
+### Changed
+- **AI Tools — Runtime resolver isolation**: Extracted all runtime module resolution (`StructuredToolkit`, `DynamicStructuredTool`, `zod`) into a dedicated `ai-tools/runtime.ts` utility. If n8n changes its internal module layout again, only this single file needs updating.
+
 ## [1.9.8] - 2026-03-11
 
 ### Fixed

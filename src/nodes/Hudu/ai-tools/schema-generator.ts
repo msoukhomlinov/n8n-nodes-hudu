@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { RuntimeZod } from './runtime';
 import {
     IP_ADDRESS_STATUSES,
     IP_ADDRESS_STATUS_DESCRIPTIONS,
@@ -626,4 +627,151 @@ export function getMatchersUpdateSchema() {
         sync_id: z.number().int().positive().optional().describe('Sync ID'),
         identifier: z.string().optional().describe('Identifier string'),
     });
+}
+
+// Convert local zod schemas into the runtime zod class tree that n8n loaded.
+// This keeps strict field contracts while avoiding cross-install instanceof failures.
+function toRuntimeZodSchema(schema: any, runtimeZ: RuntimeZod): any {
+    const def = schema?._def as any;
+    const typeName = def?.typeName as string | undefined;
+    let converted: unknown;
+
+    switch (typeName) {
+        case 'ZodString': {
+            let s = runtimeZ.string();
+            for (const check of def.checks ?? []) {
+                switch (check.kind) {
+                    case 'min': s = s.min(check.value); break;
+                    case 'max': s = s.max(check.value); break;
+                    case 'email': s = s.email(); break;
+                    case 'url': s = s.url(); break;
+                    case 'uuid': s = s.uuid(); break;
+                    default: break;
+                }
+            }
+            converted = s;
+            break;
+        }
+        case 'ZodNumber': {
+            let n = runtimeZ.number();
+            for (const check of def.checks ?? []) {
+                switch (check.kind) {
+                    case 'int': n = n.int(); break;
+                    case 'min': n = check.inclusive === false ? n.gt(check.value) : n.min(check.value); break;
+                    case 'max': n = check.inclusive === false ? n.lt(check.value) : n.max(check.value); break;
+                    default: break;
+                }
+            }
+            converted = n;
+            break;
+        }
+        case 'ZodBoolean':
+            converted = runtimeZ.boolean();
+            break;
+        case 'ZodUnknown':
+            converted = runtimeZ.unknown();
+            break;
+        case 'ZodArray':
+            converted = runtimeZ.array(toRuntimeZodSchema(def.type, runtimeZ));
+            break;
+        case 'ZodEnum':
+            converted = runtimeZ.enum(def.values as [string, ...string[]]);
+            break;
+        case 'ZodRecord':
+            converted = runtimeZ.record(toRuntimeZodSchema(def.valueType, runtimeZ));
+            break;
+        case 'ZodObject': {
+            const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
+            const runtimeShape: Record<string, z.ZodTypeAny> = {};
+            for (const [key, value] of Object.entries(shape ?? {})) {
+                runtimeShape[key] = toRuntimeZodSchema(value, runtimeZ) as z.ZodTypeAny;
+            }
+            let obj: any = runtimeZ.object(runtimeShape);
+            if (def.unknownKeys === 'passthrough') obj = obj.passthrough();
+            if (def.unknownKeys === 'strict') obj = obj.strict();
+            converted = obj;
+            break;
+        }
+        case 'ZodOptional':
+            converted = toRuntimeZodSchema(def.innerType, runtimeZ).optional();
+            break;
+        case 'ZodNullable':
+            converted = toRuntimeZodSchema(def.innerType, runtimeZ).nullable();
+            break;
+        case 'ZodDefault':
+            converted = toRuntimeZodSchema(def.innerType, runtimeZ).default(def.defaultValue());
+            break;
+        case 'ZodLiteral':
+            converted = runtimeZ.literal(def.value);
+            break;
+        case 'ZodUnion':
+            converted = runtimeZ.union((def.options ?? []).map((option: unknown) => toRuntimeZodSchema(option, runtimeZ)));
+            break;
+        default:
+            converted = runtimeZ.unknown();
+            break;
+    }
+
+    const description = typeof schema?.description === 'string' ? schema.description : undefined;
+    if (description && typeof (converted as { describe?: (value: string) => unknown }).describe === 'function') {
+        return (converted as { describe: (value: string) => unknown }).describe(description);
+    }
+    return converted;
+}
+
+function withRuntimeZod<T>(schemaBuilder: () => T, runtimeZ: RuntimeZod): T {
+    return toRuntimeZodSchema(schemaBuilder(), runtimeZ) as any;
+}
+
+export function getRuntimeSchemaBuilders(runtimeZ: RuntimeZod) {
+    return {
+        getGetSchema: () => withRuntimeZod(getGetSchema, runtimeZ),
+        getDeleteSchema: () => withRuntimeZod(getDeleteSchema, runtimeZ),
+        getDeleteWithCompanySchema: () => withRuntimeZod(getDeleteWithCompanySchema, runtimeZ),
+        getArchiveSchema: () => withRuntimeZod(getArchiveSchema, runtimeZ),
+        getArchiveWithCompanySchema: () => withRuntimeZod(getArchiveWithCompanySchema, runtimeZ),
+        getCompaniesGetAllSchema: () => withRuntimeZod(getCompaniesGetAllSchema, runtimeZ),
+        getArticlesGetAllSchema: () => withRuntimeZod(getArticlesGetAllSchema, runtimeZ),
+        getAssetsGetAllSchema: () => withRuntimeZod(getAssetsGetAllSchema, runtimeZ),
+        getWebsitesGetAllSchema: () => withRuntimeZod(getWebsitesGetAllSchema, runtimeZ),
+        getUsersGetAllSchema: () => withRuntimeZod(getUsersGetAllSchema, runtimeZ),
+        getAssetPasswordsGetAllSchema: () => withRuntimeZod(getAssetPasswordsGetAllSchema, runtimeZ),
+        getProceduresGetAllSchema: () => withRuntimeZod(getProceduresGetAllSchema, runtimeZ),
+        getActivityLogsGetAllSchema: () => withRuntimeZod(getActivityLogsGetAllSchema, runtimeZ),
+        getFoldersGetAllSchema: () => withRuntimeZod(getFoldersGetAllSchema, runtimeZ),
+        getNetworksGetAllSchema: () => withRuntimeZod(getNetworksGetAllSchema, runtimeZ),
+        getIpAddressesGetAllSchema: () => withRuntimeZod(getIpAddressesGetAllSchema, runtimeZ),
+        getAssetLayoutsGetAllSchema: () => withRuntimeZod(getAssetLayoutsGetAllSchema, runtimeZ),
+        getRelationsGetAllSchema: () => withRuntimeZod(getRelationsGetAllSchema, runtimeZ),
+        getExpirationsGetAllSchema: () => withRuntimeZod(getExpirationsGetAllSchema, runtimeZ),
+        getGroupsGetAllSchema: () => withRuntimeZod(getGroupsGetAllSchema, runtimeZ),
+        getVlansGetAllSchema: () => withRuntimeZod(getVlansGetAllSchema, runtimeZ),
+        getVlanZonesGetAllSchema: () => withRuntimeZod(getVlanZonesGetAllSchema, runtimeZ),
+        getMatchersGetAllSchema: () => withRuntimeZod(getMatchersGetAllSchema, runtimeZ),
+        getCompaniesCreateSchema: () => withRuntimeZod(getCompaniesCreateSchema, runtimeZ),
+        getArticlesCreateSchema: () => withRuntimeZod(getArticlesCreateSchema, runtimeZ),
+        getAssetsCreateSchema: () => withRuntimeZod(getAssetsCreateSchema, runtimeZ),
+        getWebsitesCreateSchema: () => withRuntimeZod(getWebsitesCreateSchema, runtimeZ),
+        getAssetPasswordsCreateSchema: () => withRuntimeZod(getAssetPasswordsCreateSchema, runtimeZ),
+        getProceduresCreateSchema: () => withRuntimeZod(getProceduresCreateSchema, runtimeZ),
+        getFoldersCreateSchema: () => withRuntimeZod(getFoldersCreateSchema, runtimeZ),
+        getNetworksCreateSchema: () => withRuntimeZod(getNetworksCreateSchema, runtimeZ),
+        getIpAddressesCreateSchema: () => withRuntimeZod(getIpAddressesCreateSchema, runtimeZ),
+        getRelationsCreateSchema: () => withRuntimeZod(getRelationsCreateSchema, runtimeZ),
+        getVlansCreateSchema: () => withRuntimeZod(getVlansCreateSchema, runtimeZ),
+        getVlanZonesCreateSchema: () => withRuntimeZod(getVlanZonesCreateSchema, runtimeZ),
+        getCompaniesUpdateSchema: () => withRuntimeZod(getCompaniesUpdateSchema, runtimeZ),
+        getArticlesUpdateSchema: () => withRuntimeZod(getArticlesUpdateSchema, runtimeZ),
+        getAssetsUpdateSchema: () => withRuntimeZod(getAssetsUpdateSchema, runtimeZ),
+        getWebsitesUpdateSchema: () => withRuntimeZod(getWebsitesUpdateSchema, runtimeZ),
+        getAssetPasswordsUpdateSchema: () => withRuntimeZod(getAssetPasswordsUpdateSchema, runtimeZ),
+        getProceduresUpdateSchema: () => withRuntimeZod(getProceduresUpdateSchema, runtimeZ),
+        getFoldersUpdateSchema: () => withRuntimeZod(getFoldersUpdateSchema, runtimeZ),
+        getNetworksUpdateSchema: () => withRuntimeZod(getNetworksUpdateSchema, runtimeZ),
+        getIpAddressesUpdateSchema: () => withRuntimeZod(getIpAddressesUpdateSchema, runtimeZ),
+        getExpirationsUpdateSchema: () => withRuntimeZod(getExpirationsUpdateSchema, runtimeZ),
+        getVlansUpdateSchema: () => withRuntimeZod(getVlansUpdateSchema, runtimeZ),
+        getVlanZonesUpdateSchema: () => withRuntimeZod(getVlanZonesUpdateSchema, runtimeZ),
+        getMatchersUpdateSchema: () => withRuntimeZod(getMatchersUpdateSchema, runtimeZ),
+    };
 }

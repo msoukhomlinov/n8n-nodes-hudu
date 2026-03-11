@@ -42,6 +42,9 @@ export async function executeHuduAiTool(
     operation: string,
     rawParams: Record<string, unknown>,
 ): Promise<string> {
+    // #region agent log
+    fetch('http://127.0.0.1:7851/ingest/3a783fa6-77f5-4013-8910-bf95c680eb14',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68f8d6'},body:JSON.stringify({sessionId:'68f8d6',runId:'pre-fix',hypothesisId:'H5',location:'tool-executor.ts:executeHuduAiTool',message:'executor invoked',data:{resource,operation,rawParamKeys:Object.keys(rawParams ?? {}),rawTool:rawParams?.tool,rawToolName:rawParams?.toolName,rawOperation:rawParams?.operation,rawAction:rawParams?.action},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     // Strip n8n framework metadata injected into every DynamicStructuredTool call
     const params: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(rawParams)) {

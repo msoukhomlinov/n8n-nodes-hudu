@@ -13,7 +13,7 @@ import type {
     ISupplyDataFunctions,
     SupplyData,
 } from 'n8n-workflow';
-import { DynamicStructuredTool } from '@langchain/core/tools';
+import type { DynamicStructuredTool } from '@langchain/core/tools';
 import type { z } from 'zod';
 
 import { HUDU_RESOURCE_CONFIG, WRITE_OPERATIONS } from './ai-tools/resource-config';
@@ -28,55 +28,9 @@ import {
     buildArchiveDescription,
 } from './ai-tools/description-builders';
 import {
-    getGetSchema,
-    getDeleteSchema,
-    getDeleteWithCompanySchema,
-    getArchiveSchema,
-    getArchiveWithCompanySchema,
-    getCompaniesGetAllSchema,
-    getArticlesGetAllSchema,
-    getAssetsGetAllSchema,
-    getWebsitesGetAllSchema,
-    getUsersGetAllSchema,
-    getAssetPasswordsGetAllSchema,
-    getProceduresGetAllSchema,
-    getActivityLogsGetAllSchema,
-    getFoldersGetAllSchema,
-    getNetworksGetAllSchema,
-    getIpAddressesGetAllSchema,
-    getAssetLayoutsGetAllSchema,
-    getRelationsGetAllSchema,
-    getExpirationsGetAllSchema,
-    getGroupsGetAllSchema,
-    getVlansGetAllSchema,
-    getVlanZonesGetAllSchema,
-    getMatchersGetAllSchema,
-    getCompaniesCreateSchema,
-    getArticlesCreateSchema,
-    getAssetsCreateSchema,
-    getWebsitesCreateSchema,
-    getAssetPasswordsCreateSchema,
-    getProceduresCreateSchema,
-    getFoldersCreateSchema,
-    getNetworksCreateSchema,
-    getIpAddressesCreateSchema,
-    getRelationsCreateSchema,
-    getVlansCreateSchema,
-    getVlanZonesCreateSchema,
-    getCompaniesUpdateSchema,
-    getArticlesUpdateSchema,
-    getAssetsUpdateSchema,
-    getWebsitesUpdateSchema,
-    getAssetPasswordsUpdateSchema,
-    getProceduresUpdateSchema,
-    getFoldersUpdateSchema,
-    getNetworksUpdateSchema,
-    getIpAddressesUpdateSchema,
-    getExpirationsUpdateSchema,
-    getVlansUpdateSchema,
-    getVlanZonesUpdateSchema,
-    getMatchersUpdateSchema,
+    getRuntimeSchemaBuilders,
 } from './ai-tools/schema-generator';
+import { RuntimeDynamicStructuredTool, RuntimeToolkitBase, runtimeZod } from './ai-tools/runtime';
 
 const OPERATION_LABELS: Record<string, string> = {
     get: 'Get by ID',
@@ -88,29 +42,10 @@ const OPERATION_LABELS: Record<string, string> = {
     unarchive: 'Unarchive',
 };
 
-// Probe for the correct ToolkitBase constructor that n8n loaded.
-// We MUST extend the EXACT same constructor n8n loaded, so instanceof passes.
-// n8n >= 2.9 exports StructuredToolkit from n8n-core; older n8n uses @langchain/classic/agents.Toolkit.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let LangChainToolkitBase: new (...args: any[]) => { tools?: DynamicStructuredTool[]; getTools?(): DynamicStructuredTool[] };
-try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-    const nCore = require('n8n-core') as Record<string, unknown>;
-    const StructuredToolkit = nCore['StructuredToolkit'];
-    if (typeof StructuredToolkit !== 'function') throw new Error('not found');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    LangChainToolkitBase = StructuredToolkit as any;
-} catch {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-    ({ Toolkit: LangChainToolkitBase } = require('@langchain/classic/agents') as {
-        Toolkit: typeof LangChainToolkitBase;
-    });
-}
+const runtimeSchemas = getRuntimeSchemaBuilders(runtimeZod);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-class HuduToolkit extends (LangChainToolkitBase as any) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    declare tools: any[];
+class HuduToolkit extends RuntimeToolkitBase {
+    declare tools: DynamicStructuredTool[];
     constructor(toolList: DynamicStructuredTool[]) {
         super();
         this.tools = toolList;
@@ -122,62 +57,62 @@ class HuduToolkit extends (LangChainToolkitBase as any) {
 
 function getGetAllSchema(resource: string): z.ZodObject<z.ZodRawShape> {
     switch (resource) {
-        case 'companies': return getCompaniesGetAllSchema();
-        case 'articles': return getArticlesGetAllSchema();
-        case 'assets': return getAssetsGetAllSchema();
-        case 'websites': return getWebsitesGetAllSchema();
-        case 'users': return getUsersGetAllSchema();
-        case 'asset_passwords': return getAssetPasswordsGetAllSchema();
-        case 'procedures': return getProceduresGetAllSchema();
-        case 'activity_logs': return getActivityLogsGetAllSchema();
-        case 'folders': return getFoldersGetAllSchema();
-        case 'networks': return getNetworksGetAllSchema();
-        case 'ip_addresses': return getIpAddressesGetAllSchema();
-        case 'asset_layouts': return getAssetLayoutsGetAllSchema();
-        case 'relations': return getRelationsGetAllSchema();
-        case 'expirations': return getExpirationsGetAllSchema();
-        case 'groups': return getGroupsGetAllSchema();
-        case 'vlans': return getVlansGetAllSchema();
-        case 'vlan_zones': return getVlanZonesGetAllSchema();
-        case 'matchers': return getMatchersGetAllSchema();
-        default: return getAssetLayoutsGetAllSchema(); // fallback: name + limit
+        case 'companies': return runtimeSchemas.getCompaniesGetAllSchema();
+        case 'articles': return runtimeSchemas.getArticlesGetAllSchema();
+        case 'assets': return runtimeSchemas.getAssetsGetAllSchema();
+        case 'websites': return runtimeSchemas.getWebsitesGetAllSchema();
+        case 'users': return runtimeSchemas.getUsersGetAllSchema();
+        case 'asset_passwords': return runtimeSchemas.getAssetPasswordsGetAllSchema();
+        case 'procedures': return runtimeSchemas.getProceduresGetAllSchema();
+        case 'activity_logs': return runtimeSchemas.getActivityLogsGetAllSchema();
+        case 'folders': return runtimeSchemas.getFoldersGetAllSchema();
+        case 'networks': return runtimeSchemas.getNetworksGetAllSchema();
+        case 'ip_addresses': return runtimeSchemas.getIpAddressesGetAllSchema();
+        case 'asset_layouts': return runtimeSchemas.getAssetLayoutsGetAllSchema();
+        case 'relations': return runtimeSchemas.getRelationsGetAllSchema();
+        case 'expirations': return runtimeSchemas.getExpirationsGetAllSchema();
+        case 'groups': return runtimeSchemas.getGroupsGetAllSchema();
+        case 'vlans': return runtimeSchemas.getVlansGetAllSchema();
+        case 'vlan_zones': return runtimeSchemas.getVlanZonesGetAllSchema();
+        case 'matchers': return runtimeSchemas.getMatchersGetAllSchema();
+        default: return runtimeSchemas.getAssetLayoutsGetAllSchema(); // fallback: name + limit
     }
 }
 
 function getCreateSchema(resource: string): z.ZodObject<z.ZodRawShape> {
     switch (resource) {
-        case 'companies': return getCompaniesCreateSchema();
-        case 'articles': return getArticlesCreateSchema();
-        case 'assets': return getAssetsCreateSchema();
-        case 'websites': return getWebsitesCreateSchema();
-        case 'asset_passwords': return getAssetPasswordsCreateSchema();
-        case 'procedures': return getProceduresCreateSchema();
-        case 'folders': return getFoldersCreateSchema();
-        case 'networks': return getNetworksCreateSchema();
-        case 'ip_addresses': return getIpAddressesCreateSchema();
-        case 'relations': return getRelationsCreateSchema();
-        case 'vlans': return getVlansCreateSchema();
-        case 'vlan_zones': return getVlanZonesCreateSchema();
-        default: return getCompaniesCreateSchema();
+        case 'companies': return runtimeSchemas.getCompaniesCreateSchema();
+        case 'articles': return runtimeSchemas.getArticlesCreateSchema();
+        case 'assets': return runtimeSchemas.getAssetsCreateSchema();
+        case 'websites': return runtimeSchemas.getWebsitesCreateSchema();
+        case 'asset_passwords': return runtimeSchemas.getAssetPasswordsCreateSchema();
+        case 'procedures': return runtimeSchemas.getProceduresCreateSchema();
+        case 'folders': return runtimeSchemas.getFoldersCreateSchema();
+        case 'networks': return runtimeSchemas.getNetworksCreateSchema();
+        case 'ip_addresses': return runtimeSchemas.getIpAddressesCreateSchema();
+        case 'relations': return runtimeSchemas.getRelationsCreateSchema();
+        case 'vlans': return runtimeSchemas.getVlansCreateSchema();
+        case 'vlan_zones': return runtimeSchemas.getVlanZonesCreateSchema();
+        default: return runtimeSchemas.getCompaniesCreateSchema();
     }
 }
 
 function getUpdateSchema(resource: string): z.ZodObject<z.ZodRawShape> {
     switch (resource) {
-        case 'companies': return getCompaniesUpdateSchema();
-        case 'articles': return getArticlesUpdateSchema();
-        case 'assets': return getAssetsUpdateSchema();
-        case 'websites': return getWebsitesUpdateSchema();
-        case 'asset_passwords': return getAssetPasswordsUpdateSchema();
-        case 'procedures': return getProceduresUpdateSchema();
-        case 'folders': return getFoldersUpdateSchema();
-        case 'networks': return getNetworksUpdateSchema();
-        case 'ip_addresses': return getIpAddressesUpdateSchema();
-        case 'expirations': return getExpirationsUpdateSchema();
-        case 'vlans': return getVlansUpdateSchema();
-        case 'vlan_zones': return getVlanZonesUpdateSchema();
-        case 'matchers': return getMatchersUpdateSchema();
-        default: return getCompaniesUpdateSchema();
+        case 'companies': return runtimeSchemas.getCompaniesUpdateSchema();
+        case 'articles': return runtimeSchemas.getArticlesUpdateSchema();
+        case 'assets': return runtimeSchemas.getAssetsUpdateSchema();
+        case 'websites': return runtimeSchemas.getWebsitesUpdateSchema();
+        case 'asset_passwords': return runtimeSchemas.getAssetPasswordsUpdateSchema();
+        case 'procedures': return runtimeSchemas.getProceduresUpdateSchema();
+        case 'folders': return runtimeSchemas.getFoldersUpdateSchema();
+        case 'networks': return runtimeSchemas.getNetworksUpdateSchema();
+        case 'ip_addresses': return runtimeSchemas.getIpAddressesUpdateSchema();
+        case 'expirations': return runtimeSchemas.getExpirationsUpdateSchema();
+        case 'vlans': return runtimeSchemas.getVlansUpdateSchema();
+        case 'vlan_zones': return runtimeSchemas.getVlanZonesUpdateSchema();
+        case 'matchers': return runtimeSchemas.getMatchersUpdateSchema();
+        default: return runtimeSchemas.getCompaniesUpdateSchema();
     }
 }
 
@@ -302,7 +237,7 @@ export class HuduAiTools implements INodeType {
 
             switch (operation) {
                 case 'get':
-                    schema = getGetSchema();
+                    schema = runtimeSchemas.getGetSchema();
                     description = buildGetDescription(resourceLabel, resource, supportsSearch);
                     break;
 
@@ -322,13 +257,17 @@ export class HuduAiTools implements INodeType {
                     break;
 
                 case 'delete':
-                    schema = config.requiresCompanyEndpoint ? getDeleteWithCompanySchema() : getDeleteSchema();
+                    schema = config.requiresCompanyEndpoint
+                        ? runtimeSchemas.getDeleteWithCompanySchema()
+                        : runtimeSchemas.getDeleteSchema();
                     description = buildDeleteDescription(resourceLabel, resource, supportsSearch);
                     break;
 
                 case 'archive':
                 case 'unarchive':
-                    schema = config.requiresCompanyEndpoint ? getArchiveWithCompanySchema() : getArchiveSchema();
+                    schema = config.requiresCompanyEndpoint
+                        ? runtimeSchemas.getArchiveWithCompanySchema()
+                        : runtimeSchemas.getArchiveSchema();
                     description = buildArchiveDescription(resourceLabel, operation, resource, supportsSearch);
                     break;
 
@@ -336,7 +275,7 @@ export class HuduAiTools implements INodeType {
                     continue;
             }
 
-            const tool = new DynamicStructuredTool({
+            const tool = new RuntimeDynamicStructuredTool({
                 name: toolName,
                 description,
                 schema: schema as any,
@@ -358,8 +297,9 @@ export class HuduAiTools implements INodeType {
                 'No tools to expose. Select operations and enable "Allow Write Operations" if you need mutating operations.',
             );
         }
+        const toolkitResponse = new HuduToolkit(tools);
 
-        return { response: new HuduToolkit(tools) };
+        return { response: toolkitResponse };
     }
 
     /**
