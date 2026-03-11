@@ -18,7 +18,6 @@ import type { z } from 'zod';
 
 import { HUDU_RESOURCE_CONFIG, WRITE_OPERATIONS } from './ai-tools/resource-config';
 import type { HuduOperation } from './ai-tools/resource-config';
-import { normaliseToolInputSchema } from './ai-tools/schema-normalizer';
 import { executeHuduAiTool } from './ai-tools/tool-executor';
 import {
     buildGetDescription,
@@ -351,7 +350,7 @@ export class HuduAiTools implements INodeType {
             const tool = new DynamicStructuredTool({
                 name: toolName,
                 description,
-                schema: normaliseToolInputSchema(schema),
+                schema: schema as any,
                 func: async (params: Record<string, unknown>) => {
                     return executeHuduAiTool(
                         supplyDataContext,

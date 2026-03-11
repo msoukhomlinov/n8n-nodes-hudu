@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.5] - 2026-03-11
+
+### Fixed
+- **AI Tools — MCP Trigger compatibility**: `DynamicStructuredTool` instances were constructed with a plain JSON schema object (converted via `toJsonSchema`) instead of the required raw Zod schema. The n8n MCP Trigger failed with `Tool node "X" did not return a valid Tool` for all resources. Fix: pass raw Zod schema directly (`schema as any`), removing the `normaliseToolInputSchema` conversion step. The `schema-normalizer.ts` file has been removed.
+
 ## [1.9.4] - 2026-03-09
 
 ### Improved
