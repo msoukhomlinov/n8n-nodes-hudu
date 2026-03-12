@@ -3,10 +3,30 @@ export function dateTimeReferenceSnippet(referenceUtc: string): string {
     return `Reference: current UTC date-time when these tools were loaded is ${referenceUtc}. Use this for "today", "recent", or date-based filtering — do not assume a different date. `;
 }
 
+const REQUIRED_FIELDS_BY_RESOURCE: Record<string, string[]> = {
+    companies: ['name'],
+    articles: ['name'],
+    assets: ['company_id', 'asset_layout_id', 'name'],
+    websites: ['name', 'company_id'],
+    asset_passwords: ['name', 'company_id', 'password'],
+    procedures: ['name'],
+    folders: ['name'],
+    networks: ['name', 'company_id', 'address'],
+    ip_addresses: ['address', 'status', 'company_id'],
+    relations: ['fromable_id', 'fromable_type', 'toable_id', 'toable_type'],
+    expirations: ['resource_id', 'resource_type', 'expiration_date'],
+    vlans: ['name', 'company_id'],
+    vlan_zones: ['name', 'vlan_id_ranges'],
+};
+
+export function getRequiredFields(resource: string): string[] {
+    return REQUIRED_FIELDS_BY_RESOURCE[resource] ?? [];
+}
+
 export function buildGetDescription(label: string, resourceName: string, supportsSearch = true): string {
     const lookupHint = supportsSearch
-        ? `call hudu_${resourceName}_getAll with 'search' first, extract the 'id' from results, then call this.`
-        : `call hudu_${resourceName}_getAll with the available filters to find the record, extract the 'id' from results, then call this.`;
+        ? `call hudu_${resourceName} with operation 'getAll' and 'search' first, extract the 'id' from results, then call this.`
+        : `call hudu_${resourceName} with operation 'getAll' and the available filters to find the record, extract the 'id' from results, then call this.`;
     return (
         `Fetch a single ${label} record by its numeric ID. ` +
         `ONLY call this when you already have a numeric ID — never pass a name or text. ` +
@@ -16,7 +36,6 @@ export function buildGetDescription(label: string, resourceName: string, support
 
 export function buildGetAllDescription(
     label: string,
-    resourceName: string,
     referenceUtc?: string,
     supportsSearch?: boolean,
 ): string {
@@ -41,7 +60,7 @@ export function buildGetAllDescription(
     );
 }
 
-export function buildCreateDescription(label: string, resourceName: string, requiredFields: string[], referenceUtc?: string, supportsSearch = true): string {
+export function buildCreateDescription(label: string, requiredFields: string[], referenceUtc?: string, supportsSearch = true): string {
     const ref = referenceUtc ? dateTimeReferenceSnippet(referenceUtc) : '';
     const reqList = requiredFields.length > 0 ? `Required fields: ${requiredFields.join(', ')}. ` : '';
     const idFields = requiredFields.filter(f => f.endsWith('_id') && f !== 'id');
@@ -62,8 +81,8 @@ export function buildCreateDescription(label: string, resourceName: string, requ
 
 export function buildUpdateDescription(label: string, resourceName: string, supportsSearch = true): string {
     const lookupHint = supportsSearch
-        ? `call hudu_${resourceName}_getAll with 'search' first to get the 'id'.`
-        : `call hudu_${resourceName}_getAll with available filters to find the record and get the 'id'.`;
+        ? `call hudu_${resourceName} with operation 'getAll' and 'search' first to get the 'id'.`
+        : `call hudu_${resourceName} with operation 'getAll' and available filters to find the record and get the 'id'.`;
     return (
         `Update an existing ${label} record in Hudu by numeric ID. ` +
         `PREREQUISITE: you need the numeric ID. If you only have a name or text, ${lookupHint} ` +
@@ -74,8 +93,8 @@ export function buildUpdateDescription(label: string, resourceName: string, supp
 
 export function buildDeleteDescription(label: string, resourceName: string, supportsSearch = true): string {
     const confirmHint = supportsSearch
-        ? `call hudu_${resourceName}_getAll with 'search' if unsure.`
-        : `call hudu_${resourceName}_getAll with available filters if unsure.`;
+        ? `call hudu_${resourceName} with operation 'getAll' and 'search' if unsure.`
+        : `call hudu_${resourceName} with operation 'getAll' and available filters if unsure.`;
     return (
         `Permanently and irreversibly delete a ${label} record from Hudu by numeric ID. ` +
         `Consider using 'archive' instead — it hides the record while preserving data for later restoration. ` +
@@ -88,8 +107,8 @@ export function buildArchiveDescription(label: string, operation: 'archive' | 'u
     if (operation === 'archive') {
         const prereq = resourceName
             ? supportsSearch
-                ? `If unsure of the ID, call hudu_${resourceName}_getAll with 'search' first. `
-                : `If unsure of the ID, call hudu_${resourceName}_getAll with available filters to find the record first. `
+                ? `If unsure of the ID, call hudu_${resourceName} with operation 'getAll' and 'search' first. `
+                : `If unsure of the ID, call hudu_${resourceName} with operation 'getAll' and available filters to find the record first. `
             : '';
         return (
             `Archive a ${label} record in Hudu by numeric ID. ` +
@@ -102,4 +121,47 @@ export function buildArchiveDescription(label: string, operation: 'archive' | 'u
         `Restore a previously archived ${label} record in Hudu by numeric ID. ` +
         `The record becomes visible in active views again. Returns confirmation.`
     );
+}
+
+export function buildUnifiedDescription(
+    resourceLabel: string,
+    resource: string,
+    operations: string[],
+    referenceUtc: string,
+    supportsSearch: boolean,
+    config: { requiresCompanyEndpoint?: boolean },
+): string {
+    const enabledOps = Array.from(new Set(operations));
+    const requiredFields = getRequiredFields(resource);
+    const operationLines = enabledOps.map((operation) => {
+        switch (operation) {
+            case 'get':
+                return `- get: ${buildGetDescription(resourceLabel, resource, supportsSearch)}`;
+            case 'getAll':
+                return `- getAll: ${buildGetAllDescription(resourceLabel, undefined, supportsSearch)}`;
+            case 'create':
+                return `- create: ${buildCreateDescription(resourceLabel, requiredFields, undefined, supportsSearch)}`;
+            case 'update':
+                return `- update: ${buildUpdateDescription(resourceLabel, resource, supportsSearch)}`;
+            case 'delete':
+                return `- delete: ${buildDeleteDescription(resourceLabel, resource, supportsSearch)}`;
+            case 'archive':
+            case 'unarchive':
+                return `- ${operation}: ${buildArchiveDescription(resourceLabel, operation, resource, supportsSearch)}`;
+            default:
+                return `- ${operation}: Operation available for this resource.`;
+        }
+    });
+
+    const companyEndpointHint = config.requiresCompanyEndpoint
+        ? 'This resource can require company-scoped endpoints for write operations. Provide company_id when required.'
+        : '';
+
+    return [
+        `${dateTimeReferenceSnippet(referenceUtc)}Manage ${resourceLabel} records in Hudu.`,
+        'Pass one of the following values in the required "operation" field:',
+        ...operationLines,
+        'Prefer running getAll first to discover numeric IDs before get, update, delete, archive, or unarchive.',
+        companyEndpointHint,
+    ].filter(Boolean).join('\n');
 }

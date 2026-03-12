@@ -17,7 +17,32 @@ export function formatMissingIdError(resource: string, operation: string): Struc
         errorType: 'MISSING_ENTITY_ID',
         message: `A numeric entity ID is required for ${buildOperation(resource, operation)}.`,
         operation: buildOperation(resource, operation),
-        nextAction: `Provide a numeric 'id' parameter. If you only have a name or text, call hudu_${resource}_getAll with the 'search' parameter to find the record first.`,
+        nextAction: `Provide a numeric 'id' parameter. If you only have a name or text, call hudu_${resource} with operation 'getAll' and the 'search' parameter to find the record first.`,
+    };
+}
+
+export function formatNotFoundError(resource: string, operation: string, id: number): StructuredToolError {
+    return {
+        error: true,
+        errorType: 'ENTITY_NOT_FOUND',
+        message: `No ${resource} record found with ID ${id}.`,
+        operation: buildOperation(resource, operation),
+        nextAction: `Call hudu_${resource} with operation 'getAll' and the 'search' parameter to find the record by text, then use the numeric ID from the results.`,
+    };
+}
+
+export function formatNoResultsFound(
+    resource: string,
+    operation: string,
+    filters: Record<string, unknown>,
+): StructuredToolError {
+    return {
+        error: true,
+        errorType: 'NO_RESULTS_FOUND',
+        message: `No ${resource} records matched the provided filters.`,
+        operation: buildOperation(resource, operation),
+        nextAction: 'Broaden your search criteria, check for typos, or verify the record exists in Hudu.',
+        context: { filtersUsed: filters },
     };
 }
 
@@ -40,7 +65,7 @@ export function formatApiError(message: string, resource: string, operation: str
             errorType: 'ENTITY_NOT_FOUND',
             message,
             operation: buildOperation(resource, operation),
-            nextAction: `Use hudu_${resource}_getAll with the 'search' parameter to find the record by text, get the numeric ID from the result, then retry.`,
+            nextAction: `Call hudu_${resource} with operation 'getAll' and the 'search' parameter to find the record by text, then use the numeric ID from the results and retry.`,
         };
     }
 

@@ -8,7 +8,16 @@ import {
     handleArchiveOperation,
 } from '../utils/operations';
 import { HUDU_RESOURCE_CONFIG } from './resource-config';
-import { formatMissingIdError, formatApiError } from './error-formatter';
+import { formatMissingIdError, formatApiError, formatNotFoundError, formatNoResultsFound } from './error-formatter';
+
+const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
+const NUMERIC_FIELDS = new Set([
+    'id', 'limit', 'page',
+    'company_id', 'asset_id', 'asset_layout_id', 'folder_id',
+    'network_id', 'vlan_zone_id', 'user_id', 'resource_id',
+    'parent_company_id', 'parent_folder_id', 'location_id',
+    'integration_id', 'fromable_id', 'toable_id',
+]);
 
 /**
  * n8n framework injects these fields into every DynamicStructuredTool call.
@@ -17,7 +26,7 @@ import { formatMissingIdError, formatApiError } from './error-formatter';
 const N8N_METADATA_FIELDS = new Set([
     'sessionId', 'action', 'chatInput',
     'root',       // n8n canvas root node UUID — collides with some API params (e.g. organisation root filter)
-    'tool', 'toolName', 'toolCallId',
+    'tool', 'toolName', 'toolCallId', 'operation',
 ]);
 
 /**
@@ -25,15 +34,30 @@ const N8N_METADATA_FIELDS = new Set([
  * Also excludes 'resource' and 'operation' which are executor routing fields,
  * not API filter fields (defence-in-depth for the execute() test path).
  */
-function buildFilters(params: Record<string, unknown>, resource: string): IDataObject {
-    const excluded = new Set(['limit', 'resource', 'operation']);
+function buildFilters(params: Record<string, unknown>): IDataObject {
     const filters: IDataObject = {};
     for (const [key, value] of Object.entries(params)) {
-        if (excluded.has(key)) continue;
+        if (EXCLUDED_FILTER_FIELDS.has(key)) continue;
         if (value === undefined || value === null || value === '') continue;
         filters[key] = value as IDataObject[string];
     }
     return filters;
+}
+
+function getWriteEndpointAndFields(
+    params: Record<string, unknown>,
+    endpoint: string,
+    requiresCompanyEndpoint?: boolean,
+): { endpoint: string; fields: Record<string, unknown> } {
+    if (!requiresCompanyEndpoint) {
+        return { endpoint, fields: params };
+    }
+
+    const { company_id, ...fields } = params;
+    return {
+        endpoint: company_id ? `/companies/${company_id}/assets` : endpoint,
+        fields,
+    };
 }
 
 export async function executeHuduAiTool(
@@ -42,9 +66,6 @@ export async function executeHuduAiTool(
     operation: string,
     rawParams: Record<string, unknown>,
 ): Promise<string> {
-    // #region agent log
-    fetch('http://127.0.0.1:7851/ingest/3a783fa6-77f5-4013-8910-bf95c680eb14',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68f8d6'},body:JSON.stringify({sessionId:'68f8d6',runId:'pre-fix',hypothesisId:'H5',location:'tool-executor.ts:executeHuduAiTool',message:'executor invoked',data:{resource,operation,rawParamKeys:Object.keys(rawParams ?? {}),rawTool:rawParams?.tool,rawToolName:rawParams?.toolName,rawOperation:rawParams?.operation,rawAction:rawParams?.action},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     // Strip n8n framework metadata injected into every DynamicStructuredTool call
     const params: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(rawParams)) {
@@ -53,13 +74,6 @@ export async function executeHuduAiTool(
 
     // Coerce numeric strings to numbers for known integer fields
     // (LLMs occasionally pass "10" instead of 10)
-    const NUMERIC_FIELDS = new Set([
-        'id', 'limit', 'page',
-        'company_id', 'asset_id', 'asset_layout_id', 'folder_id',
-        'network_id', 'vlan_zone_id', 'user_id', 'resource_id',
-        'parent_company_id', 'parent_folder_id', 'location_id',
-        'integration_id', 'fromable_id', 'toable_id',
-    ]);
     for (const key of NUMERIC_FIELDS) {
         if (key in params && typeof params[key] === 'string' && /^\d+$/.test(params[key] as string)) {
             params[key] = parseInt(params[key] as string, 10);
@@ -89,13 +103,21 @@ export async function executeHuduAiTool(
                     params.id as number,
                     config.singularKey ?? undefined,
                 );
+                const isMissingData = data === null
+                    || data === undefined
+                    || (Array.isArray(data) && data.length === 0)
+                    || (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0);
+                if (isMissingData) {
+                    return JSON.stringify(formatNotFoundError(resource, operation, params.id as number));
+                }
                 return JSON.stringify({ result: data });
             }
 
             case 'getAll': {
                 const { limit = 25, ...filterParams } = params;
                 const effectiveLimit = limit as number;
-                const filters = buildFilters(filterParams, resource);
+                const filters = buildFilters(filterParams);
+                const hasFilters = Object.keys(filters).length > 0;
                 const records = await handleGetAllOperation.call(
                     context as unknown as IExecuteFunctions,
                     config.endpoint,
@@ -104,6 +126,9 @@ export async function executeHuduAiTool(
                     false,
                     effectiveLimit,
                 );
+                if (records.length === 0 && hasFilters) {
+                    return JSON.stringify(formatNoResultsFound(resource, operation, filters as Record<string, unknown>));
+                }
                 const result: Record<string, unknown> = { results: records, count: records.length };
                 if (records.length >= effectiveLimit) {
                     result.truncated = true;
@@ -116,17 +141,11 @@ export async function executeHuduAiTool(
                 // For company-endpoint resources (assets), strip company_id from body and
                 // use it for endpoint routing instead. For all other resources, company_id
                 // must remain in the body as a regular API field.
-                let createFields: Record<string, unknown>;
-                let endpoint: string;
-                if (config.requiresCompanyEndpoint) {
-                    const { company_id, ...rest } = params;
-                    createFields = rest;
-                    endpoint = company_id ? `/companies/${company_id}/assets` : config.endpoint;
-                } else {
-                    createFields = params;
-                    endpoint = config.endpoint;
-                }
-                const fields = createFields;
+                const { endpoint, fields } = getWriteEndpointAndFields(
+                    params,
+                    config.endpoint,
+                    config.requiresCompanyEndpoint,
+                );
                 const body: IDataObject = config.bodyKey
                     ? { [config.bodyKey]: fields as IDataObject }
                     : (fields as IDataObject);
@@ -156,17 +175,11 @@ export async function executeHuduAiTool(
                 // where it is used for endpoint routing. For all other resources, company_id
                 // belongs in the request body as a regular API field.
                 const { id, ...withoutId } = params;
-                let updateFields: Record<string, unknown>;
-                let baseEndpoint: string;
-                if (config.requiresCompanyEndpoint) {
-                    const { company_id, ...rest } = withoutId;
-                    updateFields = rest;
-                    baseEndpoint = company_id ? `/companies/${company_id}/assets` : config.endpoint;
-                } else {
-                    updateFields = withoutId;
-                    baseEndpoint = config.endpoint;
-                }
-                const fields = updateFields;
+                const { endpoint: baseEndpoint, fields } = getWriteEndpointAndFields(
+                    withoutId,
+                    config.endpoint,
+                    config.requiresCompanyEndpoint,
+                );
                 const body: IDataObject = config.bodyKey
                     ? { [config.bodyKey]: fields as IDataObject }
                     : (fields as IDataObject);

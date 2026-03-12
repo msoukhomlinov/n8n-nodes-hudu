@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { RuntimeZod } from './runtime';
+import type { HuduOperation } from './resource-config';
 import {
     IP_ADDRESS_STATUSES,
     IP_ADDRESS_STATUS_DESCRIPTIONS,
@@ -629,6 +630,166 @@ export function getMatchersUpdateSchema() {
     });
 }
 
+const OPERATION_LABELS: Record<HuduOperation, string> = {
+    get: 'Get by ID',
+    getAll: 'Get many',
+    create: 'Create',
+    update: 'Update',
+    delete: 'Delete',
+    archive: 'Archive',
+    unarchive: 'Unarchive',
+};
+
+const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
+    'get',
+    'getAll',
+    'create',
+    'update',
+    'delete',
+    'archive',
+    'unarchive',
+]);
+
+function isHuduOperation(operation: string): operation is HuduOperation {
+    return SUPPORTED_OPERATIONS.has(operation as HuduOperation);
+}
+
+function getGetAllSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape> {
+    switch (resource) {
+        case 'companies': return getCompaniesGetAllSchema();
+        case 'articles': return getArticlesGetAllSchema();
+        case 'assets': return getAssetsGetAllSchema();
+        case 'websites': return getWebsitesGetAllSchema();
+        case 'users': return getUsersGetAllSchema();
+        case 'asset_passwords': return getAssetPasswordsGetAllSchema();
+        case 'procedures': return getProceduresGetAllSchema();
+        case 'activity_logs': return getActivityLogsGetAllSchema();
+        case 'folders': return getFoldersGetAllSchema();
+        case 'networks': return getNetworksGetAllSchema();
+        case 'ip_addresses': return getIpAddressesGetAllSchema();
+        case 'asset_layouts': return getAssetLayoutsGetAllSchema();
+        case 'relations': return getRelationsGetAllSchema();
+        case 'expirations': return getExpirationsGetAllSchema();
+        case 'groups': return getGroupsGetAllSchema();
+        case 'vlans': return getVlansGetAllSchema();
+        case 'vlan_zones': return getVlanZonesGetAllSchema();
+        case 'matchers': return getMatchersGetAllSchema();
+        default: return getAssetLayoutsGetAllSchema();
+    }
+}
+
+function getCreateSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape> {
+    switch (resource) {
+        case 'companies': return getCompaniesCreateSchema();
+        case 'articles': return getArticlesCreateSchema();
+        case 'assets': return getAssetsCreateSchema();
+        case 'websites': return getWebsitesCreateSchema();
+        case 'asset_passwords': return getAssetPasswordsCreateSchema();
+        case 'procedures': return getProceduresCreateSchema();
+        case 'folders': return getFoldersCreateSchema();
+        case 'networks': return getNetworksCreateSchema();
+        case 'ip_addresses': return getIpAddressesCreateSchema();
+        case 'relations': return getRelationsCreateSchema();
+        case 'vlans': return getVlansCreateSchema();
+        case 'vlan_zones': return getVlanZonesCreateSchema();
+        default: return getCompaniesCreateSchema();
+    }
+}
+
+function getUpdateSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape> {
+    switch (resource) {
+        case 'companies': return getCompaniesUpdateSchema();
+        case 'articles': return getArticlesUpdateSchema();
+        case 'assets': return getAssetsUpdateSchema();
+        case 'websites': return getWebsitesUpdateSchema();
+        case 'asset_passwords': return getAssetPasswordsUpdateSchema();
+        case 'procedures': return getProceduresUpdateSchema();
+        case 'folders': return getFoldersUpdateSchema();
+        case 'networks': return getNetworksUpdateSchema();
+        case 'ip_addresses': return getIpAddressesUpdateSchema();
+        case 'expirations': return getExpirationsUpdateSchema();
+        case 'vlans': return getVlansUpdateSchema();
+        case 'vlan_zones': return getVlanZonesUpdateSchema();
+        case 'matchers': return getMatchersUpdateSchema();
+        default: return getCompaniesUpdateSchema();
+    }
+}
+
+function getSchemaForOperation(
+    resource: string,
+    operation: HuduOperation,
+    config: { requiresCompanyEndpoint?: boolean },
+): z.ZodObject<z.ZodRawShape> {
+    switch (operation) {
+        case 'get':
+            return getGetSchema();
+        case 'getAll':
+            return getGetAllSchemaForResource(resource);
+        case 'create':
+            return getCreateSchemaForResource(resource);
+        case 'update':
+            return getUpdateSchemaForResource(resource);
+        case 'delete':
+            return config.requiresCompanyEndpoint ? getDeleteWithCompanySchema() : getDeleteSchema();
+        case 'archive':
+        case 'unarchive':
+            return config.requiresCompanyEndpoint ? getArchiveWithCompanySchema() : getArchiveSchema();
+    }
+}
+
+export function buildUnifiedSchema(
+    resource: string,
+    operations: string[],
+    config: { requiresCompanyEndpoint?: boolean },
+): z.ZodObject<z.ZodRawShape> {
+    const enabledOps = Array.from(
+        new Set(operations.filter(isHuduOperation)),
+    );
+
+    if (enabledOps.length === 0) {
+        return z.object({
+            operation: z.string().describe('Operation to perform'),
+        });
+    }
+
+    const operationEnum = z
+        .enum(enabledOps as [HuduOperation, ...HuduOperation[]])
+        .describe(`Operation to perform. Allowed values: ${enabledOps.join(', ')}.`);
+
+    const fieldSources = new Map<string, z.ZodTypeAny>();
+    const fieldOps = new Map<string, Set<HuduOperation>>();
+
+    for (const operation of enabledOps) {
+        const schema = getSchemaForOperation(resource, operation, config);
+        for (const [field, fieldSchema] of Object.entries(schema.shape)) {
+            if (!fieldSources.has(field)) {
+                fieldSources.set(field, fieldSchema as z.ZodTypeAny);
+            }
+            if (!fieldOps.has(field)) {
+                fieldOps.set(field, new Set<HuduOperation>());
+            }
+            fieldOps.get(field)?.add(operation);
+        }
+    }
+
+    const mergedShape: Record<string, z.ZodTypeAny> = {
+        operation: operationEnum,
+    };
+
+    for (const [field, fieldSchema] of fieldSources.entries()) {
+        const opsForField = Array.from(fieldOps.get(field) ?? []);
+        const baseDescription = fieldSchema.description ?? '';
+        const opsDescription = `Used by operations: ${opsForField
+            .map((op) => OPERATION_LABELS[op] ?? op)
+            .join(', ')}.`;
+        const description = baseDescription ? `${baseDescription} ${opsDescription}` : opsDescription;
+        const mergedField = fieldSchema.optional().describe(description);
+        mergedShape[field] = mergedField;
+    }
+
+    return z.object(mergedShape);
+}
+
 // Convert local zod schemas into the runtime zod class tree that n8n loaded.
 // This keeps strict field contracts while avoiding cross-install instanceof failures.
 function toRuntimeZodSchema(schema: any, runtimeZ: RuntimeZod): any {
@@ -725,53 +886,10 @@ function withRuntimeZod<T>(schemaBuilder: () => T, runtimeZ: RuntimeZod): T {
 
 export function getRuntimeSchemaBuilders(runtimeZ: RuntimeZod) {
     return {
-        getGetSchema: () => withRuntimeZod(getGetSchema, runtimeZ),
-        getDeleteSchema: () => withRuntimeZod(getDeleteSchema, runtimeZ),
-        getDeleteWithCompanySchema: () => withRuntimeZod(getDeleteWithCompanySchema, runtimeZ),
-        getArchiveSchema: () => withRuntimeZod(getArchiveSchema, runtimeZ),
-        getArchiveWithCompanySchema: () => withRuntimeZod(getArchiveWithCompanySchema, runtimeZ),
-        getCompaniesGetAllSchema: () => withRuntimeZod(getCompaniesGetAllSchema, runtimeZ),
-        getArticlesGetAllSchema: () => withRuntimeZod(getArticlesGetAllSchema, runtimeZ),
-        getAssetsGetAllSchema: () => withRuntimeZod(getAssetsGetAllSchema, runtimeZ),
-        getWebsitesGetAllSchema: () => withRuntimeZod(getWebsitesGetAllSchema, runtimeZ),
-        getUsersGetAllSchema: () => withRuntimeZod(getUsersGetAllSchema, runtimeZ),
-        getAssetPasswordsGetAllSchema: () => withRuntimeZod(getAssetPasswordsGetAllSchema, runtimeZ),
-        getProceduresGetAllSchema: () => withRuntimeZod(getProceduresGetAllSchema, runtimeZ),
-        getActivityLogsGetAllSchema: () => withRuntimeZod(getActivityLogsGetAllSchema, runtimeZ),
-        getFoldersGetAllSchema: () => withRuntimeZod(getFoldersGetAllSchema, runtimeZ),
-        getNetworksGetAllSchema: () => withRuntimeZod(getNetworksGetAllSchema, runtimeZ),
-        getIpAddressesGetAllSchema: () => withRuntimeZod(getIpAddressesGetAllSchema, runtimeZ),
-        getAssetLayoutsGetAllSchema: () => withRuntimeZod(getAssetLayoutsGetAllSchema, runtimeZ),
-        getRelationsGetAllSchema: () => withRuntimeZod(getRelationsGetAllSchema, runtimeZ),
-        getExpirationsGetAllSchema: () => withRuntimeZod(getExpirationsGetAllSchema, runtimeZ),
-        getGroupsGetAllSchema: () => withRuntimeZod(getGroupsGetAllSchema, runtimeZ),
-        getVlansGetAllSchema: () => withRuntimeZod(getVlansGetAllSchema, runtimeZ),
-        getVlanZonesGetAllSchema: () => withRuntimeZod(getVlanZonesGetAllSchema, runtimeZ),
-        getMatchersGetAllSchema: () => withRuntimeZod(getMatchersGetAllSchema, runtimeZ),
-        getCompaniesCreateSchema: () => withRuntimeZod(getCompaniesCreateSchema, runtimeZ),
-        getArticlesCreateSchema: () => withRuntimeZod(getArticlesCreateSchema, runtimeZ),
-        getAssetsCreateSchema: () => withRuntimeZod(getAssetsCreateSchema, runtimeZ),
-        getWebsitesCreateSchema: () => withRuntimeZod(getWebsitesCreateSchema, runtimeZ),
-        getAssetPasswordsCreateSchema: () => withRuntimeZod(getAssetPasswordsCreateSchema, runtimeZ),
-        getProceduresCreateSchema: () => withRuntimeZod(getProceduresCreateSchema, runtimeZ),
-        getFoldersCreateSchema: () => withRuntimeZod(getFoldersCreateSchema, runtimeZ),
-        getNetworksCreateSchema: () => withRuntimeZod(getNetworksCreateSchema, runtimeZ),
-        getIpAddressesCreateSchema: () => withRuntimeZod(getIpAddressesCreateSchema, runtimeZ),
-        getRelationsCreateSchema: () => withRuntimeZod(getRelationsCreateSchema, runtimeZ),
-        getVlansCreateSchema: () => withRuntimeZod(getVlansCreateSchema, runtimeZ),
-        getVlanZonesCreateSchema: () => withRuntimeZod(getVlanZonesCreateSchema, runtimeZ),
-        getCompaniesUpdateSchema: () => withRuntimeZod(getCompaniesUpdateSchema, runtimeZ),
-        getArticlesUpdateSchema: () => withRuntimeZod(getArticlesUpdateSchema, runtimeZ),
-        getAssetsUpdateSchema: () => withRuntimeZod(getAssetsUpdateSchema, runtimeZ),
-        getWebsitesUpdateSchema: () => withRuntimeZod(getWebsitesUpdateSchema, runtimeZ),
-        getAssetPasswordsUpdateSchema: () => withRuntimeZod(getAssetPasswordsUpdateSchema, runtimeZ),
-        getProceduresUpdateSchema: () => withRuntimeZod(getProceduresUpdateSchema, runtimeZ),
-        getFoldersUpdateSchema: () => withRuntimeZod(getFoldersUpdateSchema, runtimeZ),
-        getNetworksUpdateSchema: () => withRuntimeZod(getNetworksUpdateSchema, runtimeZ),
-        getIpAddressesUpdateSchema: () => withRuntimeZod(getIpAddressesUpdateSchema, runtimeZ),
-        getExpirationsUpdateSchema: () => withRuntimeZod(getExpirationsUpdateSchema, runtimeZ),
-        getVlansUpdateSchema: () => withRuntimeZod(getVlansUpdateSchema, runtimeZ),
-        getVlanZonesUpdateSchema: () => withRuntimeZod(getVlanZonesUpdateSchema, runtimeZ),
-        getMatchersUpdateSchema: () => withRuntimeZod(getMatchersUpdateSchema, runtimeZ),
+        buildUnifiedSchema: (
+            resource: string,
+            operations: string[],
+            config: { requiresCompanyEndpoint?: boolean },
+        ) => withRuntimeZod(() => buildUnifiedSchema(resource, operations, config), runtimeZ),
     };
 }

@@ -13,24 +13,15 @@ import type {
     ISupplyDataFunctions,
     SupplyData,
 } from 'n8n-workflow';
-import type { DynamicStructuredTool } from '@langchain/core/tools';
-import type { z } from 'zod';
 
 import { HUDU_RESOURCE_CONFIG, WRITE_OPERATIONS } from './ai-tools/resource-config';
 import type { HuduOperation } from './ai-tools/resource-config';
 import { executeHuduAiTool } from './ai-tools/tool-executor';
-import {
-    buildGetDescription,
-    buildGetAllDescription,
-    buildCreateDescription,
-    buildUpdateDescription,
-    buildDeleteDescription,
-    buildArchiveDescription,
-} from './ai-tools/description-builders';
+import { buildUnifiedDescription } from './ai-tools/description-builders';
 import {
     getRuntimeSchemaBuilders,
 } from './ai-tools/schema-generator';
-import { RuntimeDynamicStructuredTool, RuntimeToolkitBase, runtimeZod } from './ai-tools/runtime';
+import { RuntimeDynamicStructuredTool, runtimeZod } from './ai-tools/runtime';
 
 const OPERATION_LABELS: Record<string, string> = {
     get: 'Get by ID',
@@ -44,95 +35,43 @@ const OPERATION_LABELS: Record<string, string> = {
 
 const runtimeSchemas = getRuntimeSchemaBuilders(runtimeZod);
 
-class HuduToolkit extends RuntimeToolkitBase {
-    declare tools: DynamicStructuredTool[];
-    constructor(toolList: DynamicStructuredTool[]) {
-        super();
-        this.tools = toolList;
+const EXECUTE_METADATA_FIELDS = new Set([
+    'resource',
+    'operation',
+    'tool',
+    'toolName',
+    'toolCallId',
+    'sessionId',
+    'action',
+    'chatInput',
+]);
+
+function getDefaultOperation(operations: string[]): string {
+    if (operations.includes('getAll')) {
+        return 'getAll';
     }
-    getTools(): DynamicStructuredTool[] {
-        return this.tools as DynamicStructuredTool[];
+    if (operations.includes('get')) {
+        return 'get';
+    }
+    return operations[0] ?? '';
+}
+
+function parseToolResult(resultJson: string): IDataObject {
+    try {
+        return JSON.parse(resultJson) as IDataObject;
+    } catch {
+        return { error: resultJson };
     }
 }
 
-function getGetAllSchema(resource: string): z.ZodObject<z.ZodRawShape> {
-    switch (resource) {
-        case 'companies': return runtimeSchemas.getCompaniesGetAllSchema();
-        case 'articles': return runtimeSchemas.getArticlesGetAllSchema();
-        case 'assets': return runtimeSchemas.getAssetsGetAllSchema();
-        case 'websites': return runtimeSchemas.getWebsitesGetAllSchema();
-        case 'users': return runtimeSchemas.getUsersGetAllSchema();
-        case 'asset_passwords': return runtimeSchemas.getAssetPasswordsGetAllSchema();
-        case 'procedures': return runtimeSchemas.getProceduresGetAllSchema();
-        case 'activity_logs': return runtimeSchemas.getActivityLogsGetAllSchema();
-        case 'folders': return runtimeSchemas.getFoldersGetAllSchema();
-        case 'networks': return runtimeSchemas.getNetworksGetAllSchema();
-        case 'ip_addresses': return runtimeSchemas.getIpAddressesGetAllSchema();
-        case 'asset_layouts': return runtimeSchemas.getAssetLayoutsGetAllSchema();
-        case 'relations': return runtimeSchemas.getRelationsGetAllSchema();
-        case 'expirations': return runtimeSchemas.getExpirationsGetAllSchema();
-        case 'groups': return runtimeSchemas.getGroupsGetAllSchema();
-        case 'vlans': return runtimeSchemas.getVlansGetAllSchema();
-        case 'vlan_zones': return runtimeSchemas.getVlanZonesGetAllSchema();
-        case 'matchers': return runtimeSchemas.getMatchersGetAllSchema();
-        default: return runtimeSchemas.getAssetLayoutsGetAllSchema(); // fallback: name + limit
+function stripExecuteMetadata(params: Record<string, unknown>): Record<string, unknown> {
+    const cleanedParams: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(params)) {
+        if (!EXECUTE_METADATA_FIELDS.has(key)) {
+            cleanedParams[key] = value;
+        }
     }
-}
-
-function getCreateSchema(resource: string): z.ZodObject<z.ZodRawShape> {
-    switch (resource) {
-        case 'companies': return runtimeSchemas.getCompaniesCreateSchema();
-        case 'articles': return runtimeSchemas.getArticlesCreateSchema();
-        case 'assets': return runtimeSchemas.getAssetsCreateSchema();
-        case 'websites': return runtimeSchemas.getWebsitesCreateSchema();
-        case 'asset_passwords': return runtimeSchemas.getAssetPasswordsCreateSchema();
-        case 'procedures': return runtimeSchemas.getProceduresCreateSchema();
-        case 'folders': return runtimeSchemas.getFoldersCreateSchema();
-        case 'networks': return runtimeSchemas.getNetworksCreateSchema();
-        case 'ip_addresses': return runtimeSchemas.getIpAddressesCreateSchema();
-        case 'relations': return runtimeSchemas.getRelationsCreateSchema();
-        case 'vlans': return runtimeSchemas.getVlansCreateSchema();
-        case 'vlan_zones': return runtimeSchemas.getVlanZonesCreateSchema();
-        default: return runtimeSchemas.getCompaniesCreateSchema();
-    }
-}
-
-function getUpdateSchema(resource: string): z.ZodObject<z.ZodRawShape> {
-    switch (resource) {
-        case 'companies': return runtimeSchemas.getCompaniesUpdateSchema();
-        case 'articles': return runtimeSchemas.getArticlesUpdateSchema();
-        case 'assets': return runtimeSchemas.getAssetsUpdateSchema();
-        case 'websites': return runtimeSchemas.getWebsitesUpdateSchema();
-        case 'asset_passwords': return runtimeSchemas.getAssetPasswordsUpdateSchema();
-        case 'procedures': return runtimeSchemas.getProceduresUpdateSchema();
-        case 'folders': return runtimeSchemas.getFoldersUpdateSchema();
-        case 'networks': return runtimeSchemas.getNetworksUpdateSchema();
-        case 'ip_addresses': return runtimeSchemas.getIpAddressesUpdateSchema();
-        case 'expirations': return runtimeSchemas.getExpirationsUpdateSchema();
-        case 'vlans': return runtimeSchemas.getVlansUpdateSchema();
-        case 'vlan_zones': return runtimeSchemas.getVlanZonesUpdateSchema();
-        case 'matchers': return runtimeSchemas.getMatchersUpdateSchema();
-        default: return runtimeSchemas.getCompaniesUpdateSchema();
-    }
-}
-
-function getRequiredFields(resource: string): string[] {
-    const required: Record<string, string[]> = {
-        companies: ['name'],
-        articles: ['name'],
-        assets: ['company_id', 'asset_layout_id', 'name'],
-        websites: ['name', 'company_id'],
-        asset_passwords: ['name', 'company_id', 'password'],
-        procedures: ['name'],
-        folders: ['name'],
-        networks: ['name', 'company_id', 'address'],
-        ip_addresses: ['address', 'status', 'company_id'],
-        relations: ['fromable_id', 'fromable_type', 'toable_id', 'toable_type'],
-        expirations: ['resource_id', 'resource_type', 'expiration_date'],
-        vlans: ['name', 'company_id'],
-        vlan_zones: ['name', 'vlan_id_ranges'],
-    };
-    return required[resource] ?? [];
+    return cleanedParams;
 }
 
 // ---------------------------------------------------------------------------
@@ -211,95 +150,58 @@ export class HuduAiTools implements INodeType {
         }
 
         const resourceLabel = config.label;
-        const tools: DynamicStructuredTool[] = [];
-        const supplyDataContext = this;
-
-        const referenceUtc = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-
-        for (const operation of operations) {
-            const typedOp = operation as HuduOperation;
-
+        const enabledOperations = operations.filter((op) => {
+            const typedOp = op as HuduOperation;
             if (WRITE_OPERATIONS.includes(typedOp) && !allowWriteOperations) {
-                continue;
+                return false;
             }
+            return config.ops.includes(typedOp);
+        });
 
-            if (!config.ops.includes(typedOp)) {
-                continue;
-            }
-
-            const toolSuffix = operation === 'get' ? 'getById' : operation;
-            const toolName = `hudu_${resource}_${toolSuffix}`;
-            let schema: z.ZodObject<z.ZodRawShape>;
-            let description: string;
-
-            const getAllSchema = getGetAllSchema(resource);
-            const supportsSearch = 'search' in getAllSchema.shape;
-
-            switch (operation) {
-                case 'get':
-                    schema = runtimeSchemas.getGetSchema();
-                    description = buildGetDescription(resourceLabel, resource, supportsSearch);
-                    break;
-
-                case 'getAll':
-                    schema = getAllSchema;
-                    description = buildGetAllDescription(resourceLabel, resource, referenceUtc, supportsSearch);
-                    break;
-
-                case 'create':
-                    schema = getCreateSchema(resource);
-                    description = buildCreateDescription(resourceLabel, resource, getRequiredFields(resource), referenceUtc, supportsSearch);
-                    break;
-
-                case 'update':
-                    schema = getUpdateSchema(resource);
-                    description = buildUpdateDescription(resourceLabel, resource, supportsSearch);
-                    break;
-
-                case 'delete':
-                    schema = config.requiresCompanyEndpoint
-                        ? runtimeSchemas.getDeleteWithCompanySchema()
-                        : runtimeSchemas.getDeleteSchema();
-                    description = buildDeleteDescription(resourceLabel, resource, supportsSearch);
-                    break;
-
-                case 'archive':
-                case 'unarchive':
-                    schema = config.requiresCompanyEndpoint
-                        ? runtimeSchemas.getArchiveWithCompanySchema()
-                        : runtimeSchemas.getArchiveSchema();
-                    description = buildArchiveDescription(resourceLabel, operation, resource, supportsSearch);
-                    break;
-
-                default:
-                    continue;
-            }
-
-            const tool = new RuntimeDynamicStructuredTool({
-                name: toolName,
-                description,
-                schema: schema as any,
-                func: async (params: Record<string, unknown>) => {
-                    return executeHuduAiTool(
-                        supplyDataContext,
-                        resource,
-                        operation,
-                        params,
-                    );
-                },
-            });
-            tools.push(tool as any);
-        }
-
-        if (tools.length === 0) {
+        if (enabledOperations.length === 0) {
             throw new NodeOperationError(
                 this.getNode(),
                 'No tools to expose. Select operations and enable "Allow Write Operations" if you need mutating operations.',
             );
         }
-        const toolkitResponse = new HuduToolkit(tools);
 
-        return { response: toolkitResponse };
+        const getAllSchema = runtimeSchemas.buildUnifiedSchema(resource, ['getAll'], config);
+        const supportsSearch = 'search' in getAllSchema.shape;
+        const referenceUtc = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+        const unifiedSchema = runtimeSchemas.buildUnifiedSchema(resource, enabledOperations, config);
+        const unifiedDescription = buildUnifiedDescription(
+            resourceLabel,
+            resource,
+            enabledOperations,
+            referenceUtc,
+            supportsSearch,
+            config,
+        );
+
+        const unifiedTool = new RuntimeDynamicStructuredTool({
+            name: `hudu_${resource}`,
+            description: unifiedDescription,
+            schema: unifiedSchema as any,
+            func: async (params: Record<string, unknown>) => {
+                const operationFromArgs = params.operation;
+                const operation = typeof operationFromArgs === 'string'
+                    ? (operationFromArgs as HuduOperation)
+                    : undefined;
+                if (!operation || !enabledOperations.includes(operation)) {
+                    return JSON.stringify({
+                        error: true,
+                        errorType: 'INVALID_OPERATION',
+                        message: 'Missing or unsupported operation for this tool call.',
+                        providedOperation: operationFromArgs ?? null,
+                        allowedOperations: enabledOperations,
+                    });
+                }
+                const { operation: _operation, ...operationParams } = params;
+                return executeHuduAiTool(this, resource, operation, operationParams);
+            },
+        });
+
+        return { response: unifiedTool };
     }
 
     /**
@@ -343,33 +245,15 @@ export class HuduAiTools implements INodeType {
             if (!item) continue;
 
             const requestedOp = item.json.operation as string | undefined;
-            // When an AI agent calls execute() (e.g. via Test Step), the tool name is passed
-            // in item.json.tool (e.g. "hudu_companies_update"). Extract the operation suffix
-            // so the correct operation is used rather than defaulting to getAll.
-            const toolNameOp = (() => {
-                const toolField = item.json.tool as string | undefined;
-                if (!toolField) return undefined;
-                // Tool name format: "hudu_{resource}_{operation}" — take the last segment.
-                // "getById" is the display suffix for the "get" operation.
-                const parts = toolField.split('_');
-                const raw = parts[parts.length - 1];
-                const candidate = raw === 'getById' ? 'get' : raw;
-                return (candidate && effectiveOps.includes(candidate)) ? candidate : undefined;
-            })();
-            // Prefer getAll over get as default when no operation is specified —
-            // avoids routing to 'get' (which requires an id) when both are configured.
-            const defaultOp = effectiveOps.includes('getAll') ? 'getAll'
-                : effectiveOps.includes('get') ? 'get'
-                : effectiveOps[0] ?? '';
+            // Prefer getAll over get as default when no operation is specified.
+            const defaultOp = getDefaultOperation(effectiveOps);
             const effectiveOp = (requestedOp && effectiveOps.includes(requestedOp))
                 ? requestedOp
-                : (toolNameOp ?? defaultOp);
+                : defaultOp;
 
             try {
                 // Exclude routing/metadata fields — passed as separate arguments, not API params.
-                const { resource: _r, operation: _o, tool: _t, toolName: _tn, toolCallId: _tc,
-                    sessionId: _s, action: _a, chatInput: _ci, ...inputFields } = item.json as Record<string, unknown>;
-                const params: Record<string, unknown> = { ...inputFields };
+                const params = stripExecuteMetadata(item.json as Record<string, unknown>);
 
                 const resultJson = await executeHuduAiTool(
                     this as unknown as ISupplyDataFunctions,
@@ -378,12 +262,7 @@ export class HuduAiTools implements INodeType {
                     params,
                 );
 
-                let parsed: IDataObject;
-                try {
-                    parsed = JSON.parse(resultJson);
-                } catch {
-                    parsed = { error: resultJson };
-                }
+                const parsed = parseToolResult(resultJson);
 
                 response.push({
                     json: parsed,
