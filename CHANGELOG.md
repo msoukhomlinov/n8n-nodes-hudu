@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.11] - 2026-03-13
+
+### Fixed
+- **Public Photos — update uses wrong content type**: The `update` operation was sending `record_type` and `record_id` wrapped in a `{ public_photo: ... }` JSON body. The Hudu API expects `multipart/form-data` with direct fields (matching the `create` operation). Fixed to send as multipart form-data.
+
 ## [1.9.10] - 2026-03-12
 
 ### Changed

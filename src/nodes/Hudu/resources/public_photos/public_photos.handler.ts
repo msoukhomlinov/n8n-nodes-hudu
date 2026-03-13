@@ -134,16 +134,17 @@ export async function handlePublicPhotoOperation(
 
     case 'update': {
       const id = this.getNodeParameter('id', i) as number;
-      const formData = {
+      const formData: IDataObject = {
         record_type: this.getNodeParameter('record_type', i) as string,
         record_id: this.getNodeParameter('record_id', i) as number,
       };
+      (formData as any)._isMultipart = true;
 
       responseData = await huduApiRequest.call(
         this,
         'PUT' as IHttpRequestMethods,
         `/public_photos/${id}`,
-        { public_photo: formData },
+        formData,
       );
       break;
     }

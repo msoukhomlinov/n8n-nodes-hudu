@@ -69,3 +69,6 @@ tmp/
 .cursorrules
 .cursorignore
 .cursor/
+
+# Claude local settings (may contain API keys in allow rules)
+.claude/settings.local.json
