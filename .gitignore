@@ -75,3 +75,4 @@ tmp/
 
 # Private git config
 .privategit/
+.private-git/
