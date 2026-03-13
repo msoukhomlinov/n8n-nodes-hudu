@@ -70,5 +70,8 @@ tmp/
 .cursorignore
 .cursor/
 
-# Claude local settings (may contain API keys in allow rules)
-.claude/settings.local.json
+# Claude local settings (managed in private repo)
+.claude/
+
+# Private git config
+.privategit/
