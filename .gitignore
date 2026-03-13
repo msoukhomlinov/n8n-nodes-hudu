@@ -55,24 +55,12 @@ tmp/
 .temp/
 *.tmp
 
-# Cursor specific (since you're using Cursor IDE)
-.cursorcache
-.cursorconfig
-.cursorignore
-.cursor/
-.cursor-rules/
-.cursor-search-cache
-.cursor-settings.json
-.cursor-keybindings.json
-.cursor-snippets/
-.cursor-prompts/
-.cursorrules
-.cursorignore
-.cursor/
-
-# Claude local settings (managed in private repo)
+# Private config — managed in n8n-nodes-hudu-private via git-helper.ps1
+# Matches $PRIVATE_PATHS = @(".claude", ".cursor*", "docs", "CLAUDE.md", "AGENT.md", ".agent*")
 .claude/
-
-# Private git config
-.privategit/
+.cursor*
+docs/
+CLAUDE.md
+AGENT.md
+.agent*
 .private-git/
