@@ -238,6 +238,18 @@ The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`
 - [Hudu API Documentation](https://your-hudu-instance.com/api-docs)
 - [GitHub Repository](https://github.com/msoukhomlinov/n8n-nodes-hudu)
 
+## Development
+
+```bash
+npm run build          # Compile TypeScript (n8n-node build)
+npm run dev            # Hot-reload development server (n8n-node dev)
+npm run build:watch    # TypeScript watch mode (tsc --watch)
+npm run lint           # Lint with n8n-node lint
+npm run lint:fix       # Lint and auto-fix
+npm run format         # Format with Prettier
+npm run release        # Publish via n8n-node release
+```
+
 ## Contributing
 
 Contributions are welcome! If you'd like to contribute to this project:

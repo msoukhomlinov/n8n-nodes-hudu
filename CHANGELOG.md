@@ -1,6 +1,48 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] - 2026-03-16
+
+### Changed
+- Migrated build system from Gulp to @n8n/node-cli
+- Moved source from `src/nodes/` to `nodes/` (n8n standard layout)
+- Updated ESLint to v9 flat config, Prettier to v3
+- Added `n8n.strict: true` for cloud verification readiness
+
+### Added
+- `HuduAiTools.node.json` codex file
+- `credentials/hudu.svg` icon for credential type
+- `n8n-node dev` hot-reload support
+- `n8n-node release` publishing workflow
+
+### Improved
+- **AI Tools — envelope standard**: All tool responses now use a unified envelope with `schemaVersion: "1"`, `success`, `operation`, and `resource` fields. Replaces flat `StructuredToolError` interface with `wrapSuccess()`/`wrapError()` factories and typed `SuccessEnvelope`/`ErrorEnvelope` interfaces
+- **AI Tools — runtime anchor resolution**: `runtime.ts` now uses an `ANCHOR_CANDIDATES` loop with fail-fast diagnostics instead of a silent fallback to bundled packages
+- **AI Tools — three-layer write safety**: `func()` and `execute()` now return structured `WRITE_OPERATION_BLOCKED` errors via `wrapError()` instead of inline objects
+- **AI Tools — getAll response key**: Renamed `results` to `items` in getAll success envelopes for consistency with the envelope standard
+- **AI Tools — archive confirmation**: Archive/unarchive responses now include `archived: true/false` confirmation field (matching delete's `deleted: true`)
+
+### Fixed
+- **AI Tools — `root` field leakage in execute() path**: Added missing `root` to `EXECUTE_METADATA_FIELDS` in the node file — previously the n8n canvas UUID could leak into API parameters on the Test Step path
+- **Exports / S3 Exports**: Added missing `execute()` routing — selecting these resources previously threw "resource not known"
+- **Procedures — kickoff**: Fixed `type: 'number'` field with invalid `default: ''` that could prevent node loading
+- **Procedures — create**: Removed duplicate `company_id` top-level field whose value was silently ignored by the handler
+- **Procedures — date filters**: Fixed `/mode` absolute path in `displayOptions` preventing sub-fields from showing/hiding
+- **Websites — created_at filter**: Added missing `displayOptions` and `multipleValues: false` so date sub-fields toggle by mode
+- **Articles — getAll filters**: Fixed incorrect `displayName` and `description` on the filters collection
+- **Asset Layouts option loader**: Fixed wrong `parameters.includeBlank` parameter path — blank option now appears correctly
+- **Main node — continueOnFail**: Added `error instanceof Error` type guard preventing `TypeError` on non-Error throws
+- **Credential**: Updated `documentationUrl` to point to Hudu REST API docs
+- **AI Tools — old tool name format**: Replaced 9 `hudu_X_getAll`/`hudu_X_get` references with unified `hudu_X with operation getAll` format
+- **AI Tools — error guidance for no-search resources**: Error formatters now accept `supportsSearch` flag; 11 no-search resources no longer reference a nonexistent `search` parameter
+- **AI Tools — relations getAll**: Filters now correctly use client-side post-processing with `relationFilterMapping` instead of being silently dropped as query params
+- **AI Tools — NUMERIC_FIELDS**: Added 6 missing `*_id` fields (`passwordable_id`, `password_folder_id`, `potential_company_id`, `status_list_item_id`, `role_list_item_id`, `vlan_id`)
+- **AI Tools — assets custom_fields**: Updated schema description to specify `asset_layout_field_id` format required by the API
+
+### Removed
+- Gulp build pipeline (`gulpfile.js`)
+- Root `index.ts` (not needed with n8n-cli)
+
 ## [1.9.11] - 2026-03-13
 
 ### Fixed

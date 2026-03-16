@@ -8,6 +8,8 @@ import type {
 export class HuduApi implements ICredentialType {
   name = 'huduApi';
   displayName = 'Hudu API';
+  documentationUrl = 'https://support.hudu.com/hc/en-us/articles/23389700237339-REST-API';
+  icon = 'file:hudu.svg' as const;
   properties: INodeProperties[] = [
     {
       displayName: 'Base URL',

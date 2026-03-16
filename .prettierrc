@@ -3,6 +3,9 @@
   "trailingComma": "all",
   "bracketSpacing": true,
   "tabWidth": 2,
+  "useTabs": false,
   "semi": true,
-  "arrowParens": "always"
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "printWidth": 100
 }
