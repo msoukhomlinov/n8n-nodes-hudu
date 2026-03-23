@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.10.1] - 2026-03-23
+
+### Fixed
+- **Assets — create with AssetTag linked fields**: Fixed asset creation so linked `AssetTag` values are persisted correctly when creating assets. Previously these fields could appear present in responses but show empty in Hudu UI (e.g., linked fields such as primary location or job role).
+
 ## [1.10.0] - 2026-03-16
 
 ### Changed
