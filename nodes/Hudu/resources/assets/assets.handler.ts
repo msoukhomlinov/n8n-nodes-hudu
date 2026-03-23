@@ -23,6 +23,14 @@ import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layou
 import { isStandardField } from '../../utils/fieldTypeUtils';
 import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
 
+function toSnakeCaseFieldLabel(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 export async function handleAssetsOperation(
   this: IExecuteFunctions,
   operation: AssetsOperations,
@@ -91,12 +99,17 @@ export async function handleAssetsOperation(
             i
           );
           const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
-          const fieldObject = { 
-            asset_layout_field_id: Number(fieldId), 
-            value: transformedValue 
+          const fieldLabelKey = toSnakeCaseFieldLabel(fieldDef.label);
+          const fieldObject: IDataObject = {
+            [fieldLabelKey]: transformedValue,
           };
           customFields.push(fieldObject);
-          debugLog('[RESOURCE_PROCESSING] Mapped field', { fieldId, fieldLabel: fieldDef.label, field: fieldObject });
+          debugLog('[RESOURCE_PROCESSING] Mapped field', {
+            fieldId,
+            fieldLabel: fieldDef.label,
+            fieldLabelKey,
+            field: fieldObject,
+          });
         }
       }
 
@@ -105,7 +118,7 @@ export async function handleAssetsOperation(
       }
       
       if (customFields.length > 0) {
-        body.fields = customFields;
+        body.custom_fields = customFields;
       }
 
       debugLog('[API_REQUEST] Creating asset with body', body);
@@ -344,9 +357,9 @@ export async function handleAssetsOperation(
                 i
               );
               const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
-              const fieldObject = { 
-                asset_layout_field_id: Number(fieldId), 
-                value: transformedValue 
+              const fieldLabelKey = toSnakeCaseFieldLabel(fieldDef.label);
+              const fieldObject: IDataObject = {
+                [fieldLabelKey]: transformedValue,
               };
               customUpdateFields.push(fieldObject);
             } catch (error) {
@@ -356,7 +369,7 @@ export async function handleAssetsOperation(
         }
         
         if (customUpdateFields.length > 0) {
-          updatePayload.fields = customUpdateFields;
+          updatePayload.custom_fields = customUpdateFields;
         }
 
         // Always include name and asset_layout_id, but don't overwrite name if it was provided
