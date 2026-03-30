@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.11.0] - 2026-03-29
+
+### Fixed
+- **Exports / S3 Exports unreachable in UI**: Wired both resources into the resource dropdown and node properties — previously implemented but never selectable
+- **Silent try/catch in articles handler**: Replaced empty `catch {}` blocks around optional `getNodeParameter` calls with default-value pattern to surface parameter name typos
+- **HTTP auth pattern**: Switched from manual `getCredentials()` + `helpers.request()` to `helpers.httpRequestWithAuthentication('huduApi', ...)`, letting n8n handle API key injection via the credential's `authenticate` property
+
+### Removed
+- Dead `requestDefaults` block in `Hudu.node.ts` (unused by programmatic `execute()` nodes)
+- Commented-out `debugLog` calls in `requestUtils.ts` pagination logic
+
+### Changed
+- Replaced `inputs: ['main'] as any` / `outputs: ['main'] as any` with `NodeConnectionTypes.Main` for type safety
+
 ## [1.10.0] - 2026-03-16
 
 ### Changed

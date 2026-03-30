@@ -7,10 +7,7 @@
     "/activity_logs": {
       "get": {
         "tags": ["Activity Logs"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "produces": ["application/json"],
         "operationId": "get_activity_logs",
         "summary": "Retrieve a list of activity logs",
@@ -104,10 +101,7 @@
     "/api_info": {
       "get": {
         "tags": ["API Info"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "get_api_info",
         "summary": "Retrieve API information",
         "description": "This endpoint returns the version and date of your Hudu instance in JSON format:\n  \n{\n  \"version\": \"x.x\",\n  \"date\": \"2021-11-03\"\n}",
@@ -1065,10 +1059,7 @@
     "/asset_passwords/{id}/unarchive": {
       "put": {
         "tags": ["Asset Passwords"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "put_asset_passwords_id_unarchive",
         "summary": "Unarchive a Password",
         "parameters": [
@@ -1100,10 +1091,7 @@
     "/assets": {
       "get": {
         "tags": ["Assets"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "get_assets",
         "summary": "Retrieve a list of assets",
         "parameters": [
@@ -1460,10 +1448,7 @@
     "/companies/{company_id}/assets/{id}/archive": {
       "put": {
         "tags": ["Assets"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "put_companies_company_id_assets_id_archive",
         "summary": "Archive an Asset",
         "parameters": [
@@ -1493,10 +1478,7 @@
     "/companies/{company_id}/assets/{id}/unarchive": {
       "put": {
         "tags": ["Assets"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "put_companies_company_id_assets_id_unarchive",
         "summary": "Unarchive an Asset",
         "parameters": [
@@ -1575,10 +1557,7 @@
     "/cards/lookup": {
       "get": {
         "tags": ["Cards"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "get_cards_lookup",
         "summary": "Lookup cards with external integration details",
         "parameters": [
@@ -1624,10 +1603,7 @@
     "/cards/jump": {
       "get": {
         "tags": ["Cards"],
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "operationId": "get_cards_jump",
         "summary": "Jump to an asset with integration details without API key authentication, only requiring authentication at the time of jump.",
         "parameters": [
@@ -2297,12 +2273,7 @@
               "properties": {
                 "export": {
                   "type": "object",
-                  "required": [
-                    "format",
-                    "company_id",
-                    "include_passwords",
-                    "include_websites"
-                  ],
+                  "required": ["format", "company_id", "include_passwords", "include_websites"],
                   "properties": {
                     "format": {
                       "type": "string",
@@ -2383,12 +2354,7 @@
             "description": "Set to true to download the file instead of returning metadata"
           }
         ],
-        "produces": [
-          "application/json",
-          "application/pdf",
-          "text/csv",
-          "application/octet-stream"
-        ],
+        "produces": ["application/json", "application/pdf", "text/csv", "application/octet-stream"],
         "responses": {
           "200": {
             "description": "Export details retrieved successfully (when download=false) or file downloaded successfully (when download=true)",
@@ -3567,11 +3533,7 @@
                         }
                       },
                       "description": "Array of list items to create",
-                      "example": [
-                        { "name": "item1" },
-                        { "name": "item2" },
-                        { "name": "item3" }
-                      ]
+                      "example": [{ "name": "item1" }, { "name": "item2" }, { "name": "item3" }]
                     }
                   }
                 }
@@ -3848,10 +3810,7 @@
         "summary": "Delete a Magic Dash item with the specified ID",
         "description": "This endpoint allows you to delete a Magic Dash item by providing its unique ID.",
         "operationId": "deleteMagicDashItemById",
-        "consumes": [
-          "application/x-www-form-urlencoded",
-          "multipart/form-data"
-        ],
+        "consumes": ["application/x-www-form-urlencoded", "multipart/form-data"],
         "parameters": [
           {
             "name": "id",

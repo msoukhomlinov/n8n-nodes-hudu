@@ -56,40 +56,24 @@ export async function handleArticlesOperation(
       }
       body.name = name;
 
-      try {
-        const content = this.getNodeParameter('content', i) as string;
-        if (content) {
-          body.content = content;
-        }
-      } catch {
-        // Parameter not set, ignore
+      const content = this.getNodeParameter('content', i, '') as string;
+      if (content) {
+        body.content = content;
       }
 
-      try {
-        const company_id = this.getNodeParameter('company_id', i) as string;
-        if (company_id) {
-          body.company_id = Number.parseInt(company_id, 10);
-        }
-      } catch {
-        // Parameter not set, ignore
+      const company_id = this.getNodeParameter('company_id', i, '') as string;
+      if (company_id) {
+        body.company_id = Number.parseInt(company_id, 10);
       }
 
-      try {
-        const enable_sharing = this.getNodeParameter('enable_sharing', i) as boolean;
-        if (enable_sharing !== undefined) {
-          body.enable_sharing = enable_sharing;
-        }
-      } catch {
-        // Parameter not set, ignore
+      const enable_sharing = this.getNodeParameter('enable_sharing', i, false) as boolean;
+      if (enable_sharing) {
+        body.enable_sharing = enable_sharing;
       }
 
-      try {
-        const folder_id = this.getNodeParameter('folder_id', i) as number;
-        if (folder_id) {
-          body.folder_id = folder_id;
-        }
-      } catch {
-        // Parameter not set, ignore
+      const folder_id = this.getNodeParameter('folder_id', i, 0) as number;
+      if (folder_id) {
+        body.folder_id = folder_id;
       }
 
       responseData = await handleCreateOperation.call(

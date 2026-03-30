@@ -114,17 +114,15 @@ export function createHuduRequest(
   const { method, endpoint, body = {}, qs = {} } = options;
   let contentType = method === 'GET' ? 'application/x-www-form-urlencoded' : 'application/json';
 
-  if (!credentials?.apiKey || !credentials?.baseUrl) {
-    throw new Error('Missing API credentials. Please provide both the API key and base URL.');
+  if (!credentials?.baseUrl) {
+    throw new Error('Missing API credentials. Please provide the base URL.');
   }
 
   const requestOptions: IHttpRequestOptions = {
     method,
     url: `${credentials.baseUrl}${HUDU_API_CONSTANTS.BASE_API_PATH}${endpoint}`,
     qs: toJsonObject(sanitizeQueryParams(qs)),
-    headers: {
-      'x-api-key': credentials.apiKey as string,
-    },
+    headers: {},
   };
 
   // Detect multipart
@@ -163,11 +161,6 @@ export async function executeHuduRequest(
   this: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   requestOptions: IHttpRequestOptions,
 ): Promise<IDataObject | IDataObject[]> {
-  const helpers = this.helpers;
-  if (!helpers?.request) {
-    throw new Error('Request helper not available');
-  }
-
   let retryCount = 0;
 
   while (true) {
@@ -184,8 +177,8 @@ export async function executeHuduRequest(
         });
       }
 
-      // Get the raw response
-      const rawResponse = await helpers.request(requestOptions);
+      // Get the raw response — n8n injects auth headers via the authenticate property on HuduApi.credentials.ts
+      const rawResponse = await this.helpers.httpRequestWithAuthentication.call(this, 'huduApi', requestOptions);
       
       if (DEBUG_CONFIG.API_RESPONSE) {
         debugLog('[API_RESPONSE] Hudu API Response:', {
@@ -440,8 +433,6 @@ export async function handleListing<T extends IDataObject>(
       ? limit 
       : HUDU_API_CONSTANTS.PAGE_SIZE;
 
-  //debugLog('[handleListing] Start', { endpoint, resourceName, returnAll, limit, pageSize });
-
   // Check if this resource supports pagination
   const resourcePath = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   // Handle dynamic nested endpoints like companies/{id}/assets where pagination is supported
@@ -462,15 +453,6 @@ export async function handleListing<T extends IDataObject>(
     
     const response = await huduApiRequest.call(this, method, endpoint, body, queryParams, resourceName);
     const batchResults = parseHuduResponse(response, resourceName);
-
-    //debugLog('[handleListing] Page fetched', {
-    //  endpoint,
-    //  resourceName,
-    //  page,
-    //  supportsPagination,
-    //  batchCount: batchResults.length,
-    //  cumulativeCount: results.length + batchResults.length
-    //});
 
     if (batchResults.length === 0) {
       hasMore = false;

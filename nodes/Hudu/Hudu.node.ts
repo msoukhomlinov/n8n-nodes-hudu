@@ -6,6 +6,7 @@ import {
 	IDataObject,
 	ILoadOptionsFunctions,
 	INodePropertyOptions,
+	NodeConnectionTypes,
 	NodeOperationError,
 } from 'n8n-workflow';
 import { DEBUG_CONFIG, debugLog, initDebugLogger } from './utils/debugConfig';
@@ -36,10 +37,8 @@ export class Hudu implements INodeType {
 			name: 'Hudu',
 		},
 		usableAsTool: true,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		inputs: ['main'] as any,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		outputs: ['main'] as any,
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		
 		credentials: [
 			{
@@ -47,12 +46,6 @@ export class Hudu implements INodeType {
 				required: true,
 			},
 		],
-		requestDefaults: {
-			baseURL: '={{$credentials.baseUrl}}/api/v1',
-			headers: {
-				'x-api-key': '={{$credentials.apiKey}}',
-			},
-		},
 		properties: [
 			resourceProperty,
 			// Operations
@@ -66,6 +59,7 @@ export class Hudu implements INodeType {
 			...descriptions.cardsOperations,
 			...descriptions.companiesOperations,
 			...descriptions.expirationsOperations,
+			...descriptions.exportsOperations,
 			...descriptions.folderOperations,
 			...descriptions.groupsOperations,
 			...descriptions.ipAddressOperations,
@@ -81,6 +75,7 @@ export class Hudu implements INodeType {
 			...descriptions.rackStorageOperations,
 			...descriptions.rackStorageItemOperations,
 			...descriptions.relationsOperations,
+			...descriptions.s3ExportsOperations,
 			...descriptions.uploadsOperations,
 			...descriptions.userOperations,
 			...descriptions.websitesOperations,
@@ -99,6 +94,7 @@ export class Hudu implements INodeType {
 			...descriptions.cardsFields,
 			...descriptions.companiesFields,
 			...descriptions.expirationsFields,
+			...descriptions.exportsFields,
 			...descriptions.folderFields,
 			...descriptions.groupsFields,
 			...descriptions.ipAddressFields,
@@ -114,6 +110,7 @@ export class Hudu implements INodeType {
 			...descriptions.rackStorageFields,
 			...descriptions.rackStorageItemFields,
 			...descriptions.relationsFields,
+			...descriptions.s3ExportsFields,
 			...descriptions.uploadsFields,
 			...descriptions.userFields,
 			...descriptions.websitesFields,

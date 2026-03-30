@@ -42,6 +42,10 @@ export const resourceOptions = [
     value: 'expirations',
   },
   {
+    name: 'Export',
+    value: 'exports',
+  },
+  {
     name: 'Folder',
     value: 'folders',
   },
@@ -100,6 +104,10 @@ export const resourceOptions = [
   {
     name: 'Relation',
     value: 'relations',
+  },
+  {
+    name: 'S3 Export',
+    value: 's3_exports',
   },
   {
     name: 'Upload',
