@@ -1,6 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils';
+import { huduApiRequest, handleListing, handleBinaryDownload } from '../../utils';
 import {
 	handleGetOperation,
 	handleDeleteOperation,
@@ -63,79 +62,12 @@ export async function handlePhotoOperation(
 			const download = this.getNodeParameter('download', i, false) as boolean;
 
 			if (download) {
-				// The /photos/{id} endpoint returns JSON metadata (not binary data),
-				// with a `url` field pointing to the actual file location (e.g. cloud storage).
-				// We must fetch the metadata first, then download from the real file URL.
-				const metadata = await handleGetOperation.call(
+				responseData = await handleBinaryDownload.call(
 					this,
-					resourceEndpoint,
-					String(photoId),
-					'photo',
+					`${resourceEndpoint}/${photoId}`,
+					'data',
+					i,
 				);
-
-				const photoData = (Array.isArray(metadata) ? metadata[0] : metadata) as IDataObject;
-				const fileUrl = photoData?.url as string | undefined;
-
-				if (!fileUrl) {
-					throw new NodeOperationError(
-						this.getNode(),
-						`Photo ${photoId} does not have a downloadable URL. The API response did not include a 'url' field.`,
-						{ itemIndex: i },
-					);
-				}
-
-				// Download the actual file from the URL (may be cloud storage / CDN).
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const fileResponse = await this.helpers.httpRequest({
-					method: 'GET',
-					url: fileUrl,
-					encoding: 'arraybuffer',
-					returnFullResponse: true,
-					json: false,
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				}) as any;
-
-				const contentType =
-					(fileResponse.headers?.['content-type'] as string) || 'application/octet-stream';
-				const contentDisposition =
-					(fileResponse.headers?.['content-disposition'] as string) || '';
-
-				// Extract filename from Content-Disposition header, fall back to URL path, then caption
-				let fileName = 'photo';
-				const filenameMatch = contentDisposition.match(
-					/filename[^;=\n]*=\s*(?:"([^"]+)"|([^;\n]+))/i,
-				);
-				if (filenameMatch) {
-					fileName = filenameMatch[1] || filenameMatch[2] || fileName;
-				} else {
-					// Try to extract filename from the URL path
-					try {
-						const urlPath = new URL(fileUrl).pathname;
-						const urlFilename = urlPath.split('/').pop();
-						if (urlFilename && urlFilename.includes('.')) {
-							fileName = urlFilename;
-						}
-					} catch {
-						// URL parsing failed, keep default
-					}
-					// Fall back to caption if available
-					if (fileName === 'photo' && photoData.caption) {
-						fileName = photoData.caption as string;
-					}
-				}
-
-				const binaryData = await this.helpers.prepareBinaryData(
-					Buffer.from(fileResponse.body as Buffer),
-					fileName,
-					contentType,
-				);
-
-				responseData = {
-					json: photoData,
-					binary: { data: binaryData },
-					pairedItem: { item: i },
-					__isBinaryDownload: true,
-				} as unknown as IDataObject;
 			} else {
 				responseData = await handleGetOperation.call(
 					this,
