@@ -82,6 +82,10 @@ export const resourceOptions = [
     value: 'password_folders',
   },
   {
+    name: 'Photo',
+    value: 'photos',
+  },
+  {
     name: 'Procedure',
     value: 'procedures',
   },

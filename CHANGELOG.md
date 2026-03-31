@@ -1,6 +1,40 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-03-30
+
+### BREAKING CHANGES
+- **Procedures getAll**: Removed deprecated filters `company_template`, `global_template`, `parent_procedure_id`. Use `type`, `process_scope`, `parent_process_id` instead.
+- **Procedures create/update**: Removed deprecated `company_template` field.
+- **Procedure Tasks create**: Removed `assigned_users`, `due_date`, `priority`, `user_id` from create fields — the API now rejects these on process task creation with 422. Set via update on run tasks instead.
+- **Procedure Tasks update**: Removed `completed` and `user_id` fields. Task completion is now managed via the Hudu UI. `user_id` is now read-only ("who completed").
+- **Procedure Tasks type**: `completed_at` field renamed to `completed_date` in response to match API v2.41.0.
+- **Uploads getAll**: Now uses server-side pagination. Users not setting Return All will receive 25 results instead of all.
+
+### Added
+- **Photos resource**: Full CRUD for the new `/photos` endpoint — create with multipart upload, get with optional file download (fetches metadata then downloads from the photo's cloud storage URL), getAll with filters (company, photoable, folder, archived, date ranges), update metadata, delete
+- **Procedures**: New getAll filters — `type` (process/run/all), `process_scope` (global/company), `parent_process_id`, `created_at` date range, `archived`. New response fields — `run`, `parent_process_id`, `process_type`, `status`
+- **Procedure Tasks**: New create fields — `description`, `optional`, `parent_task_id`. Update fields annotated with process/run restrictions. New response fields — `has_subtasks`, `subtask_count`, `subtask_ids`, `completion_notes`, `first_assigned_user_*`, `formatted_due_date`, `url`, `user_name`
+- **Folders**: `folder_type` field (article/photo) on create and getAll filter
+- **Public Photos**: Direct GET by ID endpoint replacing inefficient page scan, `download` support, `file_name`/`file_size` response fields. Returns `NodeOperationError` when photo ID is not found
+- **Uploads**: `download` parameter on get operation, server-side pagination on getAll
+- **Binary download utility**: Shared `handleBinaryDownload()` in `requestUtils.ts` used by public photos and uploads — validates HTTP status codes (rejects non-2xx), empty response bodies, and error page content types (`text/html`, `text/xml`). Uses explicit `__isBinaryDownload` marker for reliable binary detection in `execute()` instead of duck-typing
+- **AI Tools**: Added read-only `photos` and `procedure_tasks` tools (get/getAll)
+- **AI Tools**: Updated procedures schemas with new filters (`type`, `process_scope`, `parent_process_id`, `created_at`, `archived`)
+- **AI Tools**: Updated folders schemas with `folder_type` filter and create field
+
+### Fixed
+- **Binary download passthrough**: `execute()` uses explicit `__isBinaryDownload` marker to route binary results directly to output, preventing `returnJsonArray` from stripping downloaded files
+- **Exports create**: `company_id` default value of `0` no longer leaks to API as an invalid filter — zero values are now excluded alongside null/undefined/empty
+- **Procedures update**: Removed non-writable `status` field from update operation and AI Tools schema (not accepted by API on PUT)
+- **Date range filters**: Fixed raw fixedCollection objects leaking into query params when `created_at`/`updated_at` filters added but not fully configured — now deleted from `qs` before processing
+- **Numeric ID filter defaults**: Fixed `parent_process_id`, `procedure_id`, `folder_id`, `photoable_id`, `parent_task_id` zero defaults leaking to API as invalid filter/body values — zero values now stripped in handlers
+- **AI Tools schemas**: Replaced inline enum duplication with shared constants (`PROCEDURE_TYPES`, `PROCEDURE_SCOPES`, `FOLDER_TYPES`) per CLAUDE.md single-source-of-truth guideline
+- **Photos AI Tools config**: Corrected `bodyKey` from `null` to `'photo'` to match API's `{ photo: {...} }` body wrapper
+
+### Changed
+- Targets Hudu API v2.41.0
+
 ## [1.11.0] - 2026-03-29
 
 ### Fixed

@@ -6,6 +6,7 @@ export interface IFolder extends IDataObject {
   company_id?: number;
   icon?: string;
   description?: string;
+  folder_type?: 'article' | 'photo';
   name: string;
   parent_folder_id?: number;
   created_at?: string;

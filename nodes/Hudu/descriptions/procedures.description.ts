@@ -1,5 +1,9 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import {
+  HUDU_API_CONSTANTS,
+  PROCEDURE_TYPES,
+  PROCEDURE_SCOPES,
+} from '../utils/constants';
 import { createWrapResultsField } from './resources';
 
 export const proceduresOperations: INodeProperties[] = [
@@ -115,6 +119,13 @@ export const proceduresFields: INodeProperties[] = [
     },
     options: [
       {
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to show only archived processes/runs. Default is non-archived only.',
+      },
+      {
         displayName: 'Company Name or ID',
         name: 'company_id',
         type: 'options',
@@ -128,39 +139,114 @@ export const proceduresFields: INodeProperties[] = [
         description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
-        displayName: 'Company Template',
-        name: 'company_template',
-        type: 'number',
-        default: 0,
-        description: 'Filter for company-specific templates',
-      },
-      {
-        displayName: 'Global Template',
-        name: 'global_template',
-        type: 'boolean',
-        default: false,
-        description: 'Whether this is a global template',
+        displayName: 'Created At',
+        name: 'created_at',
+        type: 'fixedCollection',
+        placeholder: 'Add Date Range',
+        default: {},
+        typeOptions: {
+          multipleValues: false,
+        },
+        options: [
+          {
+            name: 'range',
+            displayName: 'Date Range',
+            values: [
+              {
+                displayName: 'End Datetime',
+                name: 'end',
+                type: 'dateTime',
+                default: '',
+                displayOptions: {
+                  show: { mode: ['range'] },
+                },
+              },
+              {
+                displayName: 'Exact Datetime',
+                name: 'exact',
+                type: 'dateTime',
+                default: '',
+                displayOptions: {
+                  show: { mode: ['exact'] },
+                },
+              },
+              {
+                displayName: 'Mode',
+                name: 'mode',
+                type: 'options',
+                options: [
+                  { name: 'Exact', value: 'exact' },
+                  { name: 'Preset', value: 'preset' },
+                  { name: 'Range', value: 'range' },
+                ],
+                default: 'preset',
+              },
+              {
+                displayName: 'Preset',
+                name: 'preset',
+                type: 'options',
+                options: [
+                  { name: 'Last 24 Hours', value: 'last24h' },
+                  { name: 'Last 7 Days', value: 'last7d' },
+                  { name: 'Last 30 Days', value: 'last30d' },
+                ],
+                default: 'last7d',
+                displayOptions: {
+                  show: { mode: ['preset'] },
+                },
+              },
+              {
+                displayName: 'Start Datetime',
+                name: 'start',
+                type: 'dateTime',
+                default: '',
+                displayOptions: {
+                  show: { mode: ['range'] },
+                },
+              },
+            ],
+          },
+        ],
       },
       {
         displayName: 'Name',
         name: 'name',
         type: 'string',
         default: '',
-        description: 'Filter by the name of the procedure',
+        description: 'Filter by name (case-insensitive exact match)',
       },
       {
-        displayName: 'Parent Procedure ID',
-        name: 'parent_procedure_id',
+        displayName: 'Parent Process ID',
+        name: 'parent_process_id',
         type: 'number',
         default: 0,
-        description: 'Filter for child procedures of a specific parent procedure',
+        description: 'Filter runs by their parent process ID',
+      },
+      {
+        displayName: 'Process Scope',
+        name: 'process_scope',
+        type: 'options',
+        options: PROCEDURE_SCOPES.map((s) => ({ name: s.charAt(0).toUpperCase() + s.slice(1), value: s })),
+        default: '',
+        description: 'Filter processes by scope: global (all companies) or company-specific. Only applies when filtering processes.',
       },
       {
         displayName: 'Slug',
         name: 'slug',
         type: 'string',
         default: '',
-        description: 'Filter by the URL slug of the procedure',
+        description: 'Filter by the URL slug',
+      },
+      {
+        displayName: 'Type',
+        name: 'type',
+        type: 'options',
+        options: PROCEDURE_TYPES.map((t) => ({
+          name: t.charAt(0).toUpperCase() + t.slice(1),
+          value: t,
+        })),
+        default: 'all',
+        description: 'Filter by type: process (templates only), run (active instances only), or all',
       },
       {
         displayName: 'Updated At',
@@ -326,14 +412,7 @@ export const proceduresFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company to associate with the procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-      },
-      {
-        displayName: 'Company Template',
-        name: 'company_template',
-        type: 'boolean',
-        default: false,
-        description: 'Whether to set both template and remove_completion_ability to true',
+        description: 'The company for this process. Leave empty/null for a global template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },
@@ -357,7 +436,7 @@ export const proceduresFields: INodeProperties[] = [
         name: 'archived',
         type: 'boolean',
         default: false,
-        description: 'Whether the procedure should be archived',
+        description: 'Whether to archive the process. Only company processes can be archived — global templates and runs cannot.',
       },
       {
         displayName: 'Company Name or ID',
@@ -370,28 +449,21 @@ export const proceduresFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company to associate with the procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-      },
-      {
-        displayName: 'Company Template',
-        name: 'company_template',
-        type: 'boolean',
-        default: false,
-        description: 'Whether to set both template and remove_completion_ability to true',
+        description: 'The company for this process. Set to null for a global template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',
         name: 'description',
         type: 'string',
         default: '',
-        description: 'The new description for the procedure',
+        description: 'The new description for the process or run',
       },
       {
         displayName: 'Name',
         name: 'name',
         type: 'string',
         default: '',
-        description: 'The new name for the procedure',
+        description: 'The new name for the process or run',
       },
     ],
   },

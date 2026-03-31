@@ -26,18 +26,11 @@ export async function handleProcedureTasksOperation(
 
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-      // Only add non-empty additional fields
+      // Only add non-empty additional fields (skip 0 for ID fields like parent_task_id)
       for (const [key, value] of Object.entries(additionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          // Convert due_date from ISO datetime to YYYY-MM-DD format
-          if (key === 'due_date') {
-            const convertedDate = convertToDateOnlyFormat(value);
-            if (convertedDate) {
-              body[key] = convertedDate;
-            }
-          } else {
-            body[key] = value;
-          }
+          if (key === 'parent_task_id' && value === 0) continue;
+          body[key] = value;
         }
       }
 
@@ -63,6 +56,9 @@ export async function handleProcedureTasksOperation(
         ...filters,
       };
 
+      // Strip zero-value ID filters that would match no records
+      if (qs.procedure_id === 0) delete qs.procedure_id;
+
       return await handleGetAllOperation.call(
         this,
         resourceEndpoint,
@@ -77,11 +73,11 @@ export async function handleProcedureTasksOperation(
       const taskId = this.getNodeParameter('taskId', i) as string;
       const updateFields = this.getNodeParameter('procedureTaskUpdateFields', i) as IDataObject;
 
-      // Only include non-empty update fields
+      // Only include non-empty update fields (skip 0 for ID fields, convert due_date)
       const body: IDataObject = {};
       for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          // Convert due_date from ISO datetime to YYYY-MM-DD format
+          if ((key === 'parent_task_id' || key === 'procedure_id') && value === 0) continue;
           if (key === 'due_date') {
             const convertedDate = convertToDateOnlyFormat(value);
             if (convertedDate) {

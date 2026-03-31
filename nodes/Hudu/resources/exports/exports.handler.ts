@@ -27,7 +27,7 @@ export async function handleExportsOperation(
 
       const exportBody: CreateExportPayload['export'] = {};
 
-      if (companyId !== undefined && companyId !== null && companyId !== ('' as unknown)) {
+      if (companyId !== undefined && companyId !== null && companyId !== ('' as unknown) && companyId !== 0) {
         exportBody.company_id = Number(companyId);
       }
       if (format) {

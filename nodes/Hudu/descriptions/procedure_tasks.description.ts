@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { PROCEDURE_TASK_PRIORITIES } from '../utils/constants';
 import { createWrapResultsField } from './resources';
 
 export const procedureTasksOperations: INodeProperties[] = [
@@ -171,20 +172,6 @@ export const procedureTasksFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Assigned User Names or IDs',
-        name: 'assigned_users',
-        type: 'multiOptions',
-        typeOptions: {
-          loadOptionsMethod: 'getUsers',
-          loadOptionsDependencies: ['includeBlank'],
-          loadOptionsParameters: {
-            includeBlank: false,
-          },
-        },
-        default: [],
-        description: 'The users assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-      },
-      {
         displayName: 'Description',
         name: 'description',
         type: 'string',
@@ -192,57 +179,25 @@ export const procedureTasksFields: INodeProperties[] = [
         description: 'A detailed description of the task',
       },
       {
-        displayName: 'Due Date',
-        name: 'due_date',
-        type: 'dateTime',
-        default: '',
-        description: 'The due date for the task',
+        displayName: 'Optional',
+        name: 'optional',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the task is optional. Optional tasks do not need to be completed for the process to be considered complete.',
+      },
+      {
+        displayName: 'Parent Task ID',
+        name: 'parent_task_id',
+        type: 'number',
+        default: 0,
+        description: 'ID of the parent task to make this a subtask. Leave empty for top-level tasks. Subtasks cannot have their own subtasks.',
       },
       {
         displayName: 'Position',
         name: 'position',
         type: 'number',
         default: 0,
-        description: 'The position of the task in the procedure',
-      },
-      {
-        displayName: 'Priority',
-        name: 'priority',
-        type: 'options',
-        options: [
-          {
-            name: 'High',
-            value: 'high',
-          },
-          {
-            name: 'Low',
-            value: 'low',
-          },
-          {
-            name: 'Normal',
-            value: 'normal',
-          },
-          {
-            name: 'Unsure',
-            value: 'unsure',
-          },
-          {
-            name: 'Urgent',
-            value: 'urgent',
-          },
-        ],
-        default: 'normal',
-        description: 'The priority level of the task',
-      },
-      {
-        displayName: 'User Name or ID',
-        name: 'user_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getUsers',
-        },
-        default: '',
-        description: 'The user assigned to the task. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The position of the task in the process',
       },
     ],
   },
@@ -307,88 +262,67 @@ export const procedureTasksFields: INodeProperties[] = [
           },
         },
         default: [],
-        description: 'The users assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-      },
-      {
-        displayName: 'Completed',
-        name: 'completed',
-        type: 'boolean',
-        default: false,
-        description: 'Whether the task is marked as completed',
+        description: 'Users assigned to the task (run tasks only — rejected on process tasks). Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',
         name: 'description',
         type: 'string',
         default: '',
-        description: 'A detailed description of the task',
+        description: 'A detailed description of the task (process tasks only — cannot be changed on run tasks)',
       },
       {
         displayName: 'Due Date',
         name: 'due_date',
         type: 'dateTime',
         default: '',
-        description: 'The due date for the task',
+        description: 'The due date for the task (run tasks only — rejected on process tasks)',
       },
       {
         displayName: 'Name',
         name: 'name',
         type: 'string',
         default: '',
-        description: 'The name of the task',
+        description: 'The name of the task (process tasks only — cannot be changed on run tasks)',
+      },
+      {
+        displayName: 'Optional',
+        name: 'optional',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the task is optional (process tasks only — cannot be changed on run tasks)',
+      },
+      {
+        displayName: 'Parent Task ID',
+        name: 'parent_task_id',
+        type: 'number',
+        default: 0,
+        description: 'Parent task ID for subtasks. Set to null for top-level. (Process tasks only — cannot be changed on run tasks.)',
       },
       {
         displayName: 'Position',
         name: 'position',
         type: 'number',
         default: 0,
-        description: 'The position of the task in the procedure',
+        description: 'The position of the task in the process (process tasks only — cannot be changed on run tasks)',
       },
       {
         displayName: 'Priority',
         name: 'priority',
         type: 'options',
-        options: [
-          {
-            name: 'High',
-            value: 'high',
-          },
-          {
-            name: 'Low',
-            value: 'low',
-          },
-          {
-            name: 'Normal',
-            value: 'normal',
-          },
-          {
-            name: 'Unsure',
-            value: 'unsure',
-          },
-          {
-            name: 'Urgent',
-            value: 'urgent',
-          },
-        ],
+        options: PROCEDURE_TASK_PRIORITIES.map((p) => ({
+          name: p.charAt(0).toUpperCase() + p.slice(1),
+          value: p,
+        })),
         default: 'normal',
-        description: 'The priority level of the task',
+        description: 'The priority level of the task (run tasks only — rejected on process tasks)',
       },
       {
         displayName: 'Procedure ID',
         name: 'procedure_id',
         type: 'number',
         default: 0,
-        description: 'The ID of the procedure this task belongs to',
-      },
-      {
-        displayName: 'User Name or ID',
-        name: 'user_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getUsers',
-        },
-        default: '',
-        description: 'The user assigned to the task. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'Move task to a different process (process tasks only — cannot be changed on run tasks)',
       },
     ],
   },

@@ -17,6 +17,8 @@ const REQUIRED_FIELDS_BY_RESOURCE: Record<string, string[]> = {
   expirations: ['resource_id', 'resource_type', 'expiration_date'],
   vlans: ['name', 'company_id'],
   vlan_zones: ['name', 'vlan_id_ranges'],
+  photos: ['caption'],
+  procedure_tasks: ['name', 'procedure_id'],
 };
 
 export function getRequiredFields(resource: string): string[] {

@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { HUDU_API_CONSTANTS } from '../utils/constants';
+import { HUDU_API_CONSTANTS, FOLDER_TYPES } from '../utils/constants';
 import { createWrapResultsField } from './resources';
 
 export const folderOperations: INodeProperties[] = [
@@ -139,6 +139,17 @@ export const folderFields: INodeProperties[] = [
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
       },
       {
+        displayName: 'Folder Type',
+        name: 'folder_type',
+        type: 'options',
+        options: FOLDER_TYPES.map((t) => ({
+          name: t.charAt(0).toUpperCase() + t.slice(1),
+          value: t,
+        })),
+        default: '',
+        description: 'Filter by folder type: article or photo',
+      },
+      {
         displayName: 'In Company',
         name: 'in_company',
         type: 'boolean',
@@ -229,6 +240,17 @@ export const folderFields: INodeProperties[] = [
         type: 'string',
         default: '',
         description: 'Description of the folder',
+      },
+      {
+        displayName: 'Folder Type',
+        name: 'folder_type',
+        type: 'options',
+        options: FOLDER_TYPES.map((t) => ({
+          name: t.charAt(0).toUpperCase() + t.slice(1),
+          value: t,
+        })),
+        default: 'article',
+        description: 'Type of folder. Immutable after creation. Defaults to article.',
       },
       {
         displayName: 'Icon',

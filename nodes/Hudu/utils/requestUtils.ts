@@ -18,7 +18,7 @@ import type {
   ICredentialDataDecryptedObject,
   JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { HUDU_API_CONSTANTS, RATE_LIMIT_CONFIG, RESOURCES_WITH_PAGE_SIZE } from './constants';
 import type { FilterMapping } from './types';
 import { applyPostFilters } from './filterUtils';
@@ -499,4 +499,98 @@ export async function handleListing<T extends IDataObject>(
   }
 
   return filteredResults;
+}
+
+/**
+ * Download a file from a Hudu API endpoint as n8n binary data.
+ *
+ * Used by photos, public_photos, and uploads when `download=true`.
+ * The API may return the file directly or redirect (302) to cloud storage;
+ * `httpRequestWithAuthentication` follows redirects automatically.
+ *
+ * Returns an INodeExecutionData-shaped object with `binary` property.
+ * Callers must push this directly onto returnData — do NOT pass through
+ * `returnJsonArray` which strips the binary key.
+ */
+export async function handleBinaryDownload(
+  this: IExecuteFunctions,
+  endpoint: string,
+  binaryPropertyName: string,
+  itemIndex: number,
+): Promise<IDataObject> {
+  const credentials = await this.getCredentials('huduApi');
+  if (!credentials?.baseUrl) {
+    throw new Error('Missing API credentials. Please provide the base URL.');
+  }
+
+  const url = `${credentials.baseUrl}${HUDU_API_CONSTANTS.BASE_API_PATH}${endpoint}`;
+
+  // encoding: 'arraybuffer' returns a Buffer; returnFullResponse gives us headers.
+  const response = await this.helpers.httpRequestWithAuthentication.call(
+    this,
+    'huduApi',
+    {
+      method: 'GET',
+      url,
+      qs: { download: true },
+      encoding: 'arraybuffer',
+      returnFullResponse: true,
+      json: false,
+    },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) as any;
+
+  // --- HTTP status code validation ---
+  const statusCode = response.statusCode as number | undefined;
+  if (statusCode !== undefined && (statusCode < 200 || statusCode >= 300)) {
+    throw new NodeOperationError(
+      this.getNode(),
+      `Binary download failed with HTTP status ${statusCode} for endpoint: ${endpoint}`,
+    );
+  }
+
+  // --- Empty body validation ---
+  if (
+    response.body === null ||
+    response.body === undefined ||
+    (Buffer.isBuffer(response.body) && response.body.length === 0)
+  ) {
+    throw new NodeOperationError(
+      this.getNode(),
+      `Binary download returned an empty body for endpoint: ${endpoint}. The file may have been deleted.`,
+    );
+  }
+
+  const contentType =
+    (response.headers?.['content-type'] as string) || 'application/octet-stream';
+
+  // --- Error page detection ---
+  if (contentType.includes('text/html') || contentType.includes('text/xml')) {
+    throw new NodeOperationError(
+      this.getNode(),
+      `Binary download returned an error page (${contentType}) instead of binary data for endpoint: ${endpoint}. This may indicate an expired or invalid download URL.`,
+    );
+  }
+
+  const contentDisposition = (response.headers?.['content-disposition'] as string) || '';
+
+  // Extract filename from Content-Disposition header if present
+  let fileName = 'download';
+  const filenameMatch = contentDisposition.match(/filename[^;=\n]*=\s*(?:"([^"]+)"|([^;\n]+))/i);
+  if (filenameMatch) {
+    fileName = filenameMatch[1] || filenameMatch[2] || fileName;
+  }
+
+  const binaryData = await this.helpers.prepareBinaryData(
+    Buffer.from(response.body as Buffer),
+    fileName,
+    contentType,
+  );
+
+  return {
+    json: {} as IDataObject,
+    binary: { [binaryPropertyName]: binaryData },
+    pairedItem: { item: itemIndex },
+    __isBinaryDownload: true,
+  };
 }

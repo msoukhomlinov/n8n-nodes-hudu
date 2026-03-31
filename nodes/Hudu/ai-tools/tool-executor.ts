@@ -25,6 +25,7 @@ const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 const NO_SEARCH_RESOURCES = new Set([
   'procedures', 'activity_logs', 'folders', 'networks', 'ip_addresses',
   'asset_layouts', 'relations', 'expirations', 'vlans', 'vlan_zones', 'matchers',
+  'photos', 'procedure_tasks',
 ]);
 const NUMERIC_FIELDS = new Set([
   'id',
@@ -50,6 +51,10 @@ const NUMERIC_FIELDS = new Set([
   'status_list_item_id',
   'role_list_item_id',
   'vlan_id',
+  'parent_process_id',
+  'photoable_id',
+  'parent_task_id',
+  'procedure_id',
 ]);
 
 /**

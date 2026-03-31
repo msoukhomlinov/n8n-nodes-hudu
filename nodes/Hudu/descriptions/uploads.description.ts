@@ -156,4 +156,17 @@ export const uploadsFields: INodeProperties[] = [
     required: true,
     description: 'ID of the upload',
   },
+  {
+    displayName: 'Download',
+    name: 'download',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['uploads'],
+        operation: ['get'],
+      },
+    },
+    default: false,
+    description: 'Whether to download the file instead of returning JSON metadata',
+  },
 ];

@@ -103,11 +103,21 @@ export async function handleProceduresOperation(
         ...filters,
       };
 
-      if (filters.updated_at) {
-        const updatedAtFilter = filters.updated_at as IDataObject;
-        if (updatedAtFilter.range) {
-          const rangeObj = updatedAtFilter.range as IDataObject;
-          filters.updated_at = processDateRange({
+      // Strip zero-value ID filters that would match no records
+      if (qs.parent_process_id === 0) delete qs.parent_process_id;
+
+      // Coerce archived boolean → string for the API
+      if (filters.archived !== undefined) {
+        qs.archived = filters.archived ? 'true' : 'false';
+      }
+
+      // Process created_at date range filter (remove raw fixedCollection from qs first)
+      delete qs.created_at;
+      if (filters.created_at) {
+        const createdAtFilter = filters.created_at as IDataObject;
+        if (createdAtFilter.range) {
+          const rangeObj = createdAtFilter.range as IDataObject;
+          qs.created_at = processDateRange({
             range: {
               mode: rangeObj.mode as 'exact' | 'range' | 'preset',
               exact: rangeObj.exact as string,
@@ -116,7 +126,24 @@ export async function handleProceduresOperation(
               preset: rangeObj.preset as DateRangePreset,
             },
           });
-          qs.updated_at = filters.updated_at;
+        }
+      }
+
+      // Process updated_at date range filter (remove raw fixedCollection from qs first)
+      delete qs.updated_at;
+      if (filters.updated_at) {
+        const updatedAtFilter = filters.updated_at as IDataObject;
+        if (updatedAtFilter.range) {
+          const rangeObj = updatedAtFilter.range as IDataObject;
+          qs.updated_at = processDateRange({
+            range: {
+              mode: rangeObj.mode as 'exact' | 'range' | 'preset',
+              exact: rangeObj.exact as string,
+              start: rangeObj.start as string,
+              end: rangeObj.end as string,
+              preset: rangeObj.preset as DateRangePreset,
+            },
+          });
         }
       }
 

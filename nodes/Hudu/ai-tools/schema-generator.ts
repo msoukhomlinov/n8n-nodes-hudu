@@ -6,6 +6,9 @@ import {
   IP_ADDRESS_STATUS_DESCRIPTIONS,
   RESOURCE_TYPES,
   RESOURCE_TYPE_DESCRIPTIONS,
+  PROCEDURE_TYPES,
+  PROCEDURE_SCOPES,
+  FOLDER_TYPES,
 } from '../utils/constants';
 
 // ---------------------------------------------------------------------------
@@ -248,7 +251,28 @@ export function getProceduresGetAllSchema() {
     name: optionalNameSchemaNoSearch,
     company_id: optionalCompanyIdSchema,
     slug: z.string().optional().describe('Filter by URL slug'),
-    archived: archivedSchema,
+    type: z
+      .enum(PROCEDURE_TYPES)
+      .optional()
+      .describe('Filter by type: process (templates), run (active instances), or all (default)'),
+    process_scope: z
+      .enum(PROCEDURE_SCOPES)
+      .optional()
+      .describe('Filter processes by scope'),
+    parent_process_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Filter runs by parent process ID'),
+    created_at: z
+      .string()
+      .optional()
+      .describe('Filter by creation date (YYYY-MM-DD or start,end range)'),
+    archived: z
+      .boolean()
+      .optional()
+      .describe('true = only archived, false = only non-archived (default)'),
     limit: limitSchema,
   });
 }
@@ -290,6 +314,10 @@ export function getFoldersGetAllSchema() {
     name: optionalNameSchemaNoSearch,
     company_id: optionalCompanyIdSchema,
     parent_folder_id: z.number().int().positive().optional().describe('Filter by parent folder ID'),
+    folder_type: z
+      .enum(FOLDER_TYPES)
+      .optional()
+      .describe('Filter by folder type'),
     limit: limitSchema,
   });
 }
@@ -402,6 +430,44 @@ export function getMatchersGetAllSchema() {
       .describe(
         'Filter matchers by integration. Check your Hudu integrations settings for the numeric integration ID.',
       ),
+    limit: limitSchema,
+  });
+}
+
+export function getPhotosGetAllSchema() {
+  return z.object({
+    company_id: optionalCompanyIdSchema,
+    photoable_type: z
+      .string()
+      .optional()
+      .describe(`Filter by parent record type. ${RESOURCE_TYPES_DESC}`),
+    photoable_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Filter by parent record ID (use together with photoable_type)'),
+    folder_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Filter by photo folder ID'),
+    archived: archivedSchema,
+    limit: limitSchema,
+  });
+}
+
+export function getProcedureTasksGetAllSchema() {
+  return z.object({
+    procedure_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Filter by process/run ID. If unknown, call hudu_procedures with operation getAll to find it.'),
+    name: optionalNameSchemaNoSearch,
+    company_id: optionalCompanyIdSchema,
     limit: limitSchema,
   });
 }
@@ -523,7 +589,14 @@ export function getAssetPasswordsCreateSchema() {
 export function getProceduresCreateSchema() {
   return z.object({
     name: nameSchema.describe('Procedure name'),
-    company_id: optionalCompanyIdSchema,
+    company_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        'Company ID to scope this procedure to. Omit or null = global template. If unknown, call hudu_companies with operation getAll with search to find it.',
+      ),
     description: z.string().optional().describe('Procedure description'),
   });
 }
@@ -541,6 +614,10 @@ export function getFoldersCreateSchema() {
       .describe(
         'Parent folder ID. If unknown, call hudu_folders with operation getAll with the name filter to find it.',
       ),
+    folder_type: z
+      .enum(FOLDER_TYPES)
+      .optional()
+      .describe('Type of folder (immutable after creation, defaults to article)'),
     icon: z.string().optional().describe('Icon name'),
   });
 }
@@ -895,6 +972,10 @@ function getGetAllSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getVlanZonesGetAllSchema();
     case 'matchers':
       return getMatchersGetAllSchema();
+    case 'photos':
+      return getPhotosGetAllSchema();
+    case 'procedure_tasks':
+      return getProcedureTasksGetAllSchema();
     default:
       return getAssetLayoutsGetAllSchema();
   }

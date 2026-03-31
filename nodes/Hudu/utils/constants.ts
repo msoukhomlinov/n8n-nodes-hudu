@@ -116,8 +116,10 @@ export const RESOURCES_WITH_PAGE_SIZE = [
   'password_folders',
   'groups',
   'procedures',
+  'photos',
   'public_photos',
   'relations',
+  'uploads',
   'users',
   'websites',
 ] as const;
@@ -200,6 +202,7 @@ export const RESOURCE_TYPES = [
   'Integrator',
   'IPAddress',
   'Network',
+  'Photo',
   'Procedure',
   'RackStorage',
   'User',
@@ -253,6 +256,7 @@ export const RESOURCE_TYPE_DESCRIPTIONS: Record<string, string> = {
     Integrator:    'integration record',
     IPAddress:     'IP address record',
     Network:       'network record',
+    Photo:         'photo record',
     Procedure:     'runbook/checklist',
     RackStorage:   'rack storage record',
     User:          'Hudu user account',
@@ -292,6 +296,26 @@ export const ACTIVITY_LOG_FIELDS = [
   { name: 'User Name', value: 'user_name' },
   { name: 'User Short Name', value: 'user_short_name' },
 ] as const;
+
+/** Procedure (process/run) status values. */
+export const PROCEDURE_STATUSES = ['Not Started', 'In Progress', 'Completed', 'Cancelled'] as const;
+export type ProcedureStatus = typeof PROCEDURE_STATUSES[number];
+
+/** Procedure type filter values for getAll. */
+export const PROCEDURE_TYPES = ['process', 'run', 'all'] as const;
+export type ProcedureType = typeof PROCEDURE_TYPES[number];
+
+/** Procedure scope values. */
+export const PROCEDURE_SCOPES = ['global', 'company'] as const;
+export type ProcedureScope = typeof PROCEDURE_SCOPES[number];
+
+/** Folder type values. */
+export const FOLDER_TYPES = ['article', 'photo'] as const;
+export type FolderType = typeof FOLDER_TYPES[number];
+
+/** Procedure task priority levels. */
+export const PROCEDURE_TASK_PRIORITIES = ['unsure', 'low', 'normal', 'high', 'urgent'] as const;
+export type ProcedureTaskPriority = typeof PROCEDURE_TASK_PRIORITIES[number];
 
 // General date format constants
 export const DATE_FORMAT = 'YYYY-MM-DD';

@@ -3,10 +3,10 @@ import type {
   IDataObject,
   IHttpRequestMethods,
 } from 'n8n-workflow';
-import { huduApiRequest, handleListing } from '../../utils';
+import { NodeOperationError } from 'n8n-workflow';
+import { huduApiRequest, handleListing, handleBinaryDownload } from '../../utils';
 import type { PublicPhotoOperation, IPublicPhoto } from './public_photos.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { NodeOperationError } from 'n8n-workflow';
 
 export async function handlePublicPhotoOperation(
   this: IExecuteFunctions,
@@ -89,47 +89,32 @@ export async function handlePublicPhotoOperation(
 
     case 'get': {
       const photoId = this.getNodeParameter('id', i) as number;
-      if (photoId === undefined || photoId === null) {
-        throw new NodeOperationError(this.getNode(), 'Photo ID is required for the Get operation.');
-      }
+      const download = this.getNodeParameter('download', i, false) as boolean;
 
-      // Efficiently fetch pages of public photos and search for the requested ID
-      const pageSize = HUDU_API_CONSTANTS.PAGE_SIZE;
-      let page = 1;
-      let foundPhoto: IPublicPhoto | undefined;
-      let hasMore = true;
-
-      while (hasMore && !foundPhoto) {
-        // Fetch the current page
-        const queryParams = { page, page_size: pageSize };
-        const batch = await huduApiRequest.call(
+      if (download) {
+        responseData = await handleBinaryDownload.call(
+          this,
+          `/public_photos/${photoId}`,
+          'data',
+          i,
+        );
+      } else {
+        responseData = await huduApiRequest.call(
           this,
           'GET' as IHttpRequestMethods,
-          '/public_photos',
-          {},
-          queryParams,
-          'public_photos',
-        ) as IPublicPhoto[];
-
-        if (Array.isArray(batch) && batch.length > 0) {
-          foundPhoto = batch.find(photo => (photo as IPublicPhoto).numeric_id === photoId);
-          // If found, break early
-          if (foundPhoto) {
-            break;
-          }
-          // If batch is less than pageSize, this is the last page
-          hasMore = batch.length === pageSize;
-          page++;
-        } else {
-          // No more results
-          hasMore = false;
+          `/public_photos/${photoId}`,
+        );
+        if (
+          responseData === null ||
+          responseData === undefined ||
+          (typeof responseData === 'object' && !Array.isArray(responseData) && Object.keys(responseData).length === 0)
+        ) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Public photo with ID "${photoId}" not found.`,
+          );
         }
       }
-
-      if (!foundPhoto) {
-        throw new NodeOperationError(this.getNode(), `Public photo with ID "${photoId}" not found.`);
-      }
-      responseData = foundPhoto;
       break;
     }
 

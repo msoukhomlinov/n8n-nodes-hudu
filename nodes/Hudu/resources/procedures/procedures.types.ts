@@ -1,23 +1,27 @@
 import type { IDataObject } from 'n8n-workflow';
 
 export interface IProcedure extends IDataObject {
-  id: number; // The unique identifier of the procedure
-  slug: string; // The URL-friendly unique identifier of the procedure
-  name: string; // The name of the procedure
-  description?: string; // A brief description of the procedure (can be null)
-  total: number; // The total number of tasks in the procedure
-  completed: number; // The number of completed tasks in the procedure
-  url: string; // The URL for accessing the procedure
-  object_type: string; // The type of object the procedure represents
-  company_id?: number; // The unique identifier of the company this procedure belongs to (can be null)
-  company_name?: string; // The name of the associated company (can be null)
-  completion_percentage: string; // The completion percentage of the procedure
-  created_at: string; // The date and time when the procedure was created
-  updated_at: string; // The date and time when the procedure was last updated
-  parent_procedure?: string; // The parent procedure, if any (can be null)
-  asset?: string; // The associated asset, if any (can be null)
-  share_url: string; // The URL for sharing the procedure
-  procedure_tasks_attributes?: IDataObject[]; // A list of attributes for the tasks associated with the procedure
+  id: number; // Unique identifier of the process or run
+  slug: string; // URL-friendly unique identifier
+  name: string; // Name of the process or run
+  description?: string; // Description (can be null)
+  total: number; // Total number of tasks
+  completed: number; // Number of completed tasks
+  url: string; // URL for accessing the process or run
+  object_type: string; // Always 'Process'
+  company_id?: number; // Company ID (null for global templates)
+  company_name?: string; // Associated company name (can be null)
+  completion_percentage: string; // Completion percentage
+  created_at: string; // Creation timestamp
+  updated_at: string; // Last update timestamp
+  parent_procedure?: string; // Parent process, if any (can be null)
+  parent_process_id?: number; // Parent process ID (for runs only, null for processes)
+  asset?: string; // Associated asset, if any (can be null)
+  share_url: string; // Sharing URL
+  procedure_tasks_attributes?: IDataObject[]; // Task attributes list
+  run: boolean; // true = run (active instance), false = process (template)
+  process_type?: 'global' | 'company' | null; // Scope: global or company (null for runs)
+  status?: 'Not Started' | 'In Progress' | 'Completed' | 'Cancelled'; // Current status
 }
 
 export interface IProcedureResponse extends IDataObject {

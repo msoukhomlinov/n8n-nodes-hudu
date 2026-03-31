@@ -69,6 +69,7 @@ export class Hudu implements INodeType {
 			...descriptions.matchersOperations,
 			...descriptions.networksOperations,
 			...descriptions.passwordFoldersOperations,
+			...descriptions.photosOperations,
 			...descriptions.proceduresOperations,
 			...descriptions.procedureTasksOperations,
 			...descriptions.publicPhotosOperations,
@@ -104,6 +105,7 @@ export class Hudu implements INodeType {
 			...descriptions.matchersFields,
 			...descriptions.networksFields,
 			...descriptions.passwordFoldersFields,
+			...descriptions.photosFields,
 			...descriptions.proceduresFields,
 			...descriptions.procedureTasksFields,
 			...descriptions.publicPhotosFields,
@@ -320,6 +322,13 @@ export class Hudu implements INodeType {
 							i,
 						);
 						break;
+					case 'photos':
+						responseData = await resources.handlePhotoOperation.call(
+							this,
+							operation as resources.PhotoOperation,
+							i,
+						);
+						break;
 					case 'procedures':
 						responseData = await resources.handleProceduresOperation.call(
 							this,
@@ -426,18 +435,29 @@ export class Hudu implements INodeType {
 					}
 				}
 
-				const executionData = this.helpers.returnJsonArray(responseData).map((item) => ({
-					...item,
-					pairedItem: { item: i },
-				}));
+				// Binary download results carry an explicit marker — push directly
+				// without returnJsonArray which would strip the binary data.
+				if (
+					responseData &&
+					!Array.isArray(responseData) &&
+					(responseData as IDataObject).__isBinaryDownload === true
+				) {
+					delete (responseData as IDataObject).__isBinaryDownload;
+					returnData.push(responseData as unknown as INodeExecutionData);
+				} else {
+					const executionData = this.helpers.returnJsonArray(responseData).map((item) => ({
+						...item,
+						pairedItem: { item: i },
+					}));
 
-				if (DEBUG_CONFIG.NODE_OUTPUT) {
-					debugLog(`Node Execution - Item ${i} Output`, {
-						executionData,
-					});
+					if (DEBUG_CONFIG.NODE_OUTPUT) {
+						debugLog(`Node Execution - Item ${i} Output`, {
+							executionData,
+						});
+					}
+
+					returnData.push(...executionData);
 				}
-
-				returnData.push(...executionData);
 			} catch (error) {
 				if (DEBUG_CONFIG.NODE_OUTPUT) {
 					debugLog(`Node Execution - Item ${i} Error`, {

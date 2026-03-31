@@ -61,6 +61,19 @@ export const publicPhotosFields: INodeProperties[] = [
     default: 0,
     description: 'The ID of the public photo to retrieve',
   },
+  {
+    displayName: 'Download',
+    name: 'download',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['public_photos'],
+        operation: ['get'],
+      },
+    },
+    default: false,
+    description: 'Whether to download the photo file instead of returning JSON metadata',
+  },
   // ----------------------------------
   //         public_photos:getAll
   // ----------------------------------

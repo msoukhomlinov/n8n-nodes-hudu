@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest } from '../../utils';
+import { huduApiRequest, handleListing, handleBinaryDownload } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { UploadOperation } from './uploads.types';
 
@@ -46,22 +46,37 @@ export async function handleUploadOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
-      const response = await huduApiRequest.call(this, 'GET' as IHttpRequestMethods, '/uploads');
-      responseData = Array.isArray(response) ? response : [response];
-
-      if (!returnAll && responseData.length > limit) {
-        responseData = responseData.slice(0, limit);
-      }
+      responseData = await handleListing.call(
+        this,
+        'GET' as IHttpRequestMethods,
+        '/uploads',
+        'uploads',
+        {},
+        {},
+        returnAll,
+        limit,
+      );
       break;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      responseData = await huduApiRequest.call(
-        this,
-        'GET' as IHttpRequestMethods,
-        `/uploads/${id}`,
-      );
+      const download = this.getNodeParameter('download', i, false) as boolean;
+
+      if (download) {
+        responseData = await handleBinaryDownload.call(
+          this,
+          `/uploads/${id}`,
+          'data',
+          i,
+        );
+      } else {
+        responseData = await huduApiRequest.call(
+          this,
+          'GET' as IHttpRequestMethods,
+          `/uploads/${id}`,
+        );
+      }
       break;
     }
 
