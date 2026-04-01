@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2026-04-02
+
+### Fixed
+- **AI Tools runtime.ts**: Replaced direct class export with Proxy-based deferred error pattern — anchor resolution failure no longer crashes module load, allowing the node to register in n8n even when `@langchain/core` is unavailable. Proxy target uses `function () {}` (not `{}`) to provide `[[Construct]]` per ECMAScript spec §10.5.13.
+
 ## [2.0.0] - 2026-03-30
 
 ### BREAKING CHANGES
