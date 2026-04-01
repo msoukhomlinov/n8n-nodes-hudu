@@ -181,11 +181,24 @@ export class HuduAiTools implements INodeType {
             config,
         );
 
+        // MCP tool annotations — conservative for unified tool (any write op = not readOnly)
+        const hasWriteOps = enabledOperations.some((op) => WRITE_OPERATIONS.includes(op as HuduOperation));
+        const hasDestructiveOps = enabledOperations.some((op) => op === 'delete');
+
         const unifiedTool = new RuntimeDynamicStructuredTool({
-            name: `hudu_${resource}`,
+            name: `hudu_${resource}`, // Compliant with MCP regex ^[a-zA-Z0-9_-]{1,128}$
             description: unifiedDescription,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             schema: unifiedSchema as any,
+            metadata: {
+                annotations: {
+                    title: `Hudu ${config.label}`,
+                    readOnlyHint: !hasWriteOps,
+                    destructiveHint: hasDestructiveOps,
+                    idempotentHint: !enabledOperations.includes('create'),
+                    openWorldHint: false,
+                },
+            },
             func: async (params: Record<string, unknown>) => {
                 const operationFromArgs = params.operation;
                 const operation = typeof operationFromArgs === 'string'
@@ -217,9 +230,11 @@ export class HuduAiTools implements INodeType {
     }
 
     /**
-     * execute() is required so that n8n 2.8+ does not fall through to the
-     * declarative RoutingNode test path. When an AI Agent invokes a tool, the
-     * call goes through supplyData — execute() is only called on direct "Test step".
+     * execute() handles two paths:
+     *  1. n8n 2.14+ AI Agent tool invocations — tool params arrive in item.json
+     *     with 'operation' but WITHOUT 'tool' field.
+     *  2. Editor "Test step" — neither 'operation' nor 'tool' is present;
+     *     return a stub message.
      */
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
         const resource = this.getNodeParameter('resource', 0) as string;
@@ -256,7 +271,25 @@ export class HuduAiTools implements INodeType {
             const item = items[itemIndex];
             if (!item) continue;
 
+            // Detect tool call vs editor "Test step":
+            // n8n 2.14+ sends 'operation' in item.json; older n8n sends 'tool'.
+            // If neither is present, this is a manual test step — return a stub.
             const requestedOp = item.json.operation as string | undefined;
+            const toolField = item.json.tool as string | undefined;
+            const isToolCall = !!(requestedOp || toolField);
+
+            if (!isToolCall) {
+                response.push({
+                    json: {
+                        message: `Hudu AI Tools (${config.label}) is configured and ready. ` +
+                            `Connect this node to an AI Agent to use it as a tool.`,
+                        resource,
+                        operations: effectiveOps,
+                    },
+                    pairedItem: { item: itemIndex },
+                });
+                continue;
+            }
 
             // Layer 2 write safety — execute() path
             if (requestedOp && WRITE_OPERATIONS.includes(requestedOp as HuduOperation) && !allowWriteOperations) {
@@ -271,11 +304,20 @@ export class HuduAiTools implements INodeType {
                 continue;
             }
 
-            // Prefer getAll over get as default when no operation is specified.
-            const defaultOp = getDefaultOperation(effectiveOps);
-            const effectiveOp = (requestedOp && effectiveOps.includes(requestedOp))
-                ? requestedOp
-                : defaultOp;
+            // Validate requested operation against effective ops
+            if (requestedOp && !effectiveOps.includes(requestedOp)) {
+                response.push({
+                    json: parseToolResult(JSON.stringify(wrapError(
+                        resource, requestedOp, ERROR_TYPES.INVALID_OPERATION,
+                        `Operation '${requestedOp}' is not enabled for this tool.`,
+                        `Allowed operations: ${effectiveOps.join(', ')}.`,
+                    ))),
+                    pairedItem: { item: itemIndex },
+                });
+                continue;
+            }
+
+            const effectiveOp = requestedOp ?? getDefaultOperation(effectiveOps);
 
             try {
                 // Exclude routing/metadata fields — passed as separate arguments, not API params.

@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2026-04-02
+
+### Fixed
+- **AI Tools execute()**: Proper n8n 2.14.x tool-call detection — checks `item.json.operation` (2.14+) OR `item.json.tool` (older n8n); returns informational stub on editor "Test step" instead of silently defaulting to getAll
+- **AI Tools execute()**: Invalid operations now return `INVALID_OPERATION` error instead of falling through to default op
+
+### Added
+- **AI Tools**: MCP tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) on all unified tools — conservative flags based on enabled operations
+
 ## [2.0.1] - 2026-04-02
 
 ### Fixed

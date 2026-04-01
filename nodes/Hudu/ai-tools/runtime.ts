@@ -8,6 +8,8 @@ type DynamicStructuredToolCtor = new (fields: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: any;
   func: (params: Record<string, unknown>) => Promise<string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: Record<string, any>;
 }) => DynamicStructuredTool;
 
 export type RuntimeZod = typeof ZodNamespace;
