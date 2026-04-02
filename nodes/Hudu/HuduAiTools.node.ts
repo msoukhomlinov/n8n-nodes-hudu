@@ -23,6 +23,11 @@ import {
 } from './ai-tools/schema-generator';
 import { RuntimeDynamicStructuredTool, runtimeZod } from './ai-tools/runtime';
 import { wrapError, ERROR_TYPES } from './ai-tools/error-formatter';
+import {
+    buildGetIdByNameTool,
+    buildMoveAssetTool,
+    buildCompanyAssetsByLayoutTool,
+} from './ai-tools/enrichment-executor';
 
 const OPERATION_LABELS: Record<string, string> = {
     get: 'Get by ID',
@@ -125,6 +130,27 @@ export class HuduAiTools implements INodeType {
                 default: false,
                 description: 'Whether to enable mutating tools (create, update, delete, archive, unarchive). Disabled = read-only.',
             },
+            {
+                displayName: 'Enable: Resolve Name to ID',
+                name: 'enableGetIdByName',
+                type: 'boolean',
+                default: false,
+                description: 'Whether to add the hudu_get_id_by_name enrichment tool — resolves resource names to numeric IDs across companies, assets, articles, layouts, folders, procedures, websites, and users',
+            },
+            {
+                displayName: 'Enable: Move Asset',
+                name: 'enableMoveAsset',
+                type: 'boolean',
+                default: false,
+                description: 'Whether to add the hudu_move_asset enrichment tool — moves an asset between companies by recreating it at the target and deleting the original (requires write access)',
+            },
+            {
+                displayName: 'Enable: Assets by Layout',
+                name: 'enableCompanyAssetsByLayout',
+                type: 'boolean',
+                default: false,
+                description: 'Whether to add the hudu_company_assets_by_layout enrichment tool — lists assets of a specific type for a company with custom field values labelled by field name',
+            },
         ],
     };
 
@@ -139,6 +165,9 @@ export class HuduAiTools implements INodeType {
         const resource = this.getNodeParameter('resource', itemIndex) as string;
         const operations = this.getNodeParameter('operations', itemIndex) as string[];
         const allowWriteOperations = this.getNodeParameter('allowWriteOperations', itemIndex, false) as boolean;
+        const enableGetIdByName = this.getNodeParameter('enableGetIdByName', itemIndex, false) as boolean;
+        const enableMoveAsset = this.getNodeParameter('enableMoveAsset', itemIndex, false) as boolean;
+        const enableCompanyAssetsByLayout = this.getNodeParameter('enableCompanyAssetsByLayout', itemIndex, false) as boolean;
 
         if (!resource) {
             throw new NodeOperationError(this.getNode(), 'Resource is required');
@@ -226,7 +255,14 @@ export class HuduAiTools implements INodeType {
             },
         });
 
-        return { response: unifiedTool };
+        const enrichmentTools = [];
+        if (enableGetIdByName) enrichmentTools.push(buildGetIdByNameTool(this, referenceUtc));
+        if (enableMoveAsset) enrichmentTools.push(buildMoveAssetTool(this, referenceUtc));
+        if (enableCompanyAssetsByLayout) enrichmentTools.push(buildCompanyAssetsByLayoutTool(this, referenceUtc));
+
+        return enrichmentTools.length === 0
+            ? { response: unifiedTool }
+            : { response: [unifiedTool, ...enrichmentTools] };
     }
 
     /**

@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.3] - 2026-04-02
+
+### Added
+- **AI Tools: Enrichment tools** — three composite tools that aggregate multiple API calls behind a single tool invocation, reducing LLM multi-step chaining:
+  - `hudu_get_id_by_name` — resolves a resource name to its numeric Hudu ID across 8 resource types (company, asset, article, asset_layout, folder, procedure, website, user); partial search for most, EXACT match for asset_layout/folder/procedure
+  - `hudu_move_asset` — moves an asset between companies (recreates under target company, deletes original); partial-failure-safe: if delete fails after successful create, returns `wrapSuccess` with `delete_failed + warning` rather than masking the created asset
+  - `hudu_company_assets_by_layout` — lists assets of a specific layout for a company with custom field values labelled by field name (e.g., `{"Hostname": "SRV01"}`) instead of raw `asset_layout_field_id` integers; resolves company and layout names automatically
+- **AI Tools node**: Three new boolean parameters (`enableGetIdByName`, `enableMoveAsset`, `enableCompanyAssetsByLayout`) to opt-in to each enrichment tool; `supplyData()` now returns `Tool[]` when any enrichment tools are enabled alongside the resource tool
+
 ## [2.0.2] - 2026-04-02
 
 ### Fixed
