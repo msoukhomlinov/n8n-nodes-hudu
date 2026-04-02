@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.4] - 2026-04-02
+
+### Fixed
+- **AI Tools execute()**: Strip `Prompt__*` framework keys injected by Agent Tool Node v3 (`$fromAI()`-generated fields) from `item.json` before routing to the API — prevents `INVALID_WRITE_FIELDS` errors on create/update operations when using the v3 Agent node (default since n8n ~1.116.0)
+
 ## [2.0.3] - 2026-04-02
 
 ### Added

@@ -53,6 +53,12 @@ const EXECUTE_METADATA_FIELDS = new Set([
     'root', // n8n canvas root node UUID — must strip to prevent API param leakage
 ]);
 
+/**
+ * Agent Tool Node v3 injects $fromAI()-generated keys with these prefixes (e.g. Prompt__User_Message_).
+ * Strip them from execute() path params before forwarding to the Hudu API.
+ */
+const EXECUTE_METADATA_PREFIXES = ['Prompt__'];
+
 function getDefaultOperation(operations: string[]): string {
     if (operations.includes('getAll')) {
         return 'getAll';
@@ -74,9 +80,9 @@ function parseToolResult(resultJson: string): IDataObject {
 function stripExecuteMetadata(params: Record<string, unknown>): Record<string, unknown> {
     const cleanedParams: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(params)) {
-        if (!EXECUTE_METADATA_FIELDS.has(key)) {
-            cleanedParams[key] = value;
-        }
+        if (EXECUTE_METADATA_FIELDS.has(key)) continue;
+        if (EXECUTE_METADATA_PREFIXES.some((p) => key.startsWith(p))) continue;
+        cleanedParams[key] = value;
     }
     return cleanedParams;
 }

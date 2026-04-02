@@ -73,6 +73,12 @@ const N8N_METADATA_FIELDS = new Set([
 ]);
 
 /**
+ * Agent Tool Node v3 injects $fromAI()-generated keys with these prefixes (e.g. Prompt__User_Message_).
+ * Strip them from execute() path params before forwarding to the Hudu API.
+ */
+const N8N_METADATA_PREFIXES = ['Prompt__'];
+
+/**
  * Strip non-filter params that should not be forwarded as query parameters.
  * Also excludes 'resource' and 'operation' which are executor routing fields,
  * not API filter fields (defence-in-depth for the execute() test path).
@@ -112,7 +118,9 @@ export async function executeHuduAiTool(
   // Strip n8n framework metadata injected into every DynamicStructuredTool call
   const params: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rawParams)) {
-    if (!N8N_METADATA_FIELDS.has(key)) params[key] = value;
+    if (N8N_METADATA_FIELDS.has(key)) continue;
+    if (N8N_METADATA_PREFIXES.some((p) => key.startsWith(p))) continue;
+    params[key] = value;
   }
 
   // Coerce numeric strings to numbers for known integer fields
