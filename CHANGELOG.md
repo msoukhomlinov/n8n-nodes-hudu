@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Future version — n8n Creator Portal (Cloud submission)
+
+**Planned approach:** split into two packages — **this package** as the verified, n8n Cloud–submittable build **without** the `HuduAiTools` node (main Hudu node remains, including `usableAsTool` where applicable), and a **separate package** that includes full Hudu AI Tools for self‑hosted installs only (not submitted to n8n Cloud). The items below come from Creator Portal / community package scanner review and are to be closed as part of that split and follow‑up work.
+
+### Outstanding — Cloud / scanner
+
+- **[MEDIUM] `HuduAiTools` AI tool output connection type** (`nodes/Hudu/HuduAiTools.node.ts`): The tools output uses `{ type: 'ai_tool' as NodeConnectionType }` — a string literal cast instead of the enum value. **Fix:** import the **value** `NodeConnectionTypes` from `n8n-workflow` (not only the `NodeConnectionType` type) and set `type: NodeConnectionTypes.AiTool` on the output definition.
+
+- **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
+
 ## [2.0.5] - 2026-04-10
 
 ### Changed
