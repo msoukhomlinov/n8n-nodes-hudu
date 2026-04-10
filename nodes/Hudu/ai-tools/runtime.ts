@@ -13,6 +13,7 @@ type DynamicStructuredToolCtor = new (fields: {
 }) => DynamicStructuredTool;
 
 export type RuntimeZod = typeof ZodNamespace;
+type RuntimeRequire = (moduleId: string) => unknown;
 
 /**
  * Anchor candidates — packages in n8n's dependency tree that can serve as
@@ -21,17 +22,15 @@ export type RuntimeZod = typeof ZodNamespace;
  */
 const ANCHOR_CANDIDATES = ['@langchain/classic/agents', 'langchain/agents'] as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getRuntimeRequire(): { runtimeReq: any; diagnostic: string | null } {
+function getRuntimeRequire(): { runtimeReq: RuntimeRequire | null; diagnostic: string | null } {
   const errors: string[] = [];
 
   for (const anchor of ANCHOR_CANDIDATES) {
     try {
-      // eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
       const anchorPath = require.resolve(anchor) as string;
       // eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
       const { createRequire } = require('module') as {
-        createRequire: (filename: string) => NodeRequire;
+        createRequire: (filename: string) => RuntimeRequire;
       };
       return { runtimeReq: createRequire(anchorPath), diagnostic: null };
     } catch (e) {
@@ -44,7 +43,6 @@ function getRuntimeRequire(): { runtimeReq: any; diagnostic: string | null } {
   const diagnostic =
     `[HuduAiTools] No runtime anchor found. Tried: ${ANCHOR_CANDIDATES.join(', ')}. ` +
     `Errors: ${errors.join(' | ')}`;
-  console.warn(diagnostic);
   return { runtimeReq: null, diagnostic };
 }
 
@@ -53,10 +51,10 @@ const { runtimeReq, diagnostic } = getRuntimeRequire();
 // Wrap module-level resolutions so a missing package produces a clear error at
 // execution time (via NodeOperationError in supplyData) rather than a cryptic
 // module-load crash that prevents node registration entirely.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _RuntimeDynamicStructuredTool: DynamicStructuredToolCtor | undefined;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _runtimeZod: RuntimeZod | undefined;
+let langchainLoadError: string | null = null;
+let zodLoadError: string | null = null;
 
 if (runtimeReq) {
   try {
@@ -64,13 +62,13 @@ if (runtimeReq) {
     const coreTools = runtimeReq('@langchain/core/tools') as Record<string, any>;
     _RuntimeDynamicStructuredTool = coreTools['DynamicStructuredTool'] as DynamicStructuredToolCtor;
   } catch (e) {
-    console.warn('[HuduAiTools] Failed to resolve @langchain/core/tools from runtime require:', e);
+    langchainLoadError = e instanceof Error ? e.message : String(e);
   }
 
   try {
     _runtimeZod = runtimeReq('zod') as RuntimeZod;
   } catch (e) {
-    console.warn('[HuduAiTools] Failed to resolve zod from runtime require:', e);
+    zodLoadError = e instanceof Error ? e.message : String(e);
   }
 }
 
@@ -78,7 +76,6 @@ if (runtimeReq) {
 // ECMAScript spec §10.5.13: a Proxy only has [[Construct]] if its target does.
 // Plain objects lack [[Construct]], so `new Proxy({}, ...)` throws
 // "is not a constructor" before the construct trap fires.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const RuntimeDynamicStructuredTool: DynamicStructuredToolCtor = new Proxy(
   function () {} as unknown as DynamicStructuredToolCtor,
   {
@@ -87,7 +84,8 @@ export const RuntimeDynamicStructuredTool: DynamicStructuredToolCtor = new Proxy
         throw new Error(
           'RuntimeDynamicStructuredTool: @langchain/core/tools could not be resolved from n8n\'s module tree. ' +
           'Ensure @langchain/core is installed in the n8n environment.' +
-          (diagnostic ? ` Diagnostic: ${diagnostic}` : ''),
+          (diagnostic ? ` Diagnostic: ${diagnostic}` : '') +
+          (langchainLoadError ? ` Load error: ${langchainLoadError}` : ''),
         );
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,7 +107,8 @@ export const runtimeZod: RuntimeZod = new Proxy({} as RuntimeZod, {
       throw new Error(
         `runtimeZod: zod could not be resolved from n8n's module tree (accessing .${String(prop)}). ` +
         'Ensure zod is installed in the n8n environment.' +
-        (diagnostic ? ` Diagnostic: ${diagnostic}` : ''),
+        (diagnostic ? ` Diagnostic: ${diagnostic}` : '') +
+        (zodLoadError ? ` Load error: ${zodLoadError}` : ''),
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

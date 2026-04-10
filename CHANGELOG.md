@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.5] - 2026-04-10
+
+### Changed
+- **Procedures / Hudu API 2.41.0**: Procedure **update** no longer accepts `company_id` (matches final spec); use **Create from template** or **Duplicate** to place under a company. UI copy and **Hudu AI Tools** `procedures` update schema updated (`archived` exposed; `company_id` removed).
+- **AI Tools `runtime.ts`**: Removed `console.warn` on module load; anchor and LangChain/zod resolution failures are reported only via thrown errors (including optional `Load error:` detail).
+
 ## [2.0.4] - 2026-04-02
 
 ### Fixed

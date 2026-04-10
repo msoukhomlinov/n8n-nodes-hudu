@@ -801,9 +801,19 @@ export function getAssetPasswordsUpdateSchema() {
 export function getProceduresUpdateSchema() {
   return z.object({
     id: idSchema,
-    name: z.string().optional().describe('Procedure name'),
-    description: z.string().optional().describe('Procedure description'),
-    company_id: z.number().int().positive().optional().describe('Company ID'),
+    name: z.string().optional().describe('The new name for the process or run.'),
+    description: z
+      .string()
+      .optional()
+      .describe(
+        'For processes: the process description. Runs snapshot the parent process description at kickoff; that text is not editable in the product UI — avoid relying on changing this field for runs.',
+      ),
+    archived: z
+      .boolean()
+      .optional()
+      .describe(
+        'When true, archives the company process; when false, unarchives it. Only company processes are affected — global processes and runs cannot be archived via this parameter (runs follow the parent process). To place a process under a company, use create_from_template or duplicate — company_id is not accepted on update.',
+      ),
   });
 }
 

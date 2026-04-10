@@ -432,38 +432,27 @@ export const proceduresFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'Archived',
-        name: 'archived',
-        type: 'boolean',
-        default: false,
-        description: 'Whether to archive the process. Only company processes can be archived — global templates and runs cannot.',
-      },
-      {
-        displayName: 'Company Name or ID',
-        name: 'company_id',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getCompanies',
-          loadOptionsParameters: {
-            includeBlank: true,
-          },
-        },
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
         default: '',
-        description: 'The company for this process. Set to null for a global template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The new name for the process or run',
       },
       {
         displayName: 'Description',
         name: 'description',
         type: 'string',
         default: '',
-        description: 'The new description for the process or run',
+        description:
+          'For processes: the process description. For runs: description is copied from the parent process at kickoff and is not editable in the Hudu UI — changing this via the API may have limited effect for runs.',
       },
       {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
-        default: '',
-        description: 'The new name for the process or run',
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description:
+          'Whether to archive the company process (true) or unarchive it (false). Only company processes are affected — global processes and runs cannot be archived here (runs follow the parent process).',
       },
     ],
   },

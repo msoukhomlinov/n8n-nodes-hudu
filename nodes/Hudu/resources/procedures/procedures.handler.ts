@@ -161,17 +161,9 @@ export async function handleProceduresOperation(
     case 'update': {
       const procedureId = this.getNodeParameter('procedureId', i) as string;
       const updateFields = this.getNodeParameter('procedureUpdateFields', i) as IDataObject;
-
-      // Validate company_id if provided
-      if (updateFields.company_id) {
-        updateFields.company_id = validateCompanyId(
-          updateFields.company_id,
-          this.getNode(),
-          'Company ID'
-        );
-      }
-
-      const body: IDataObject = updateFields;
+      const body: IDataObject = { ...updateFields };
+      // Hudu API 2.41.0+: company_id is not accepted on PUT /procedures/{id}
+      delete body.company_id;
 
       responseData = await handleUpdateOperation.call(this, resourceEndpoint, procedureId, body);
       break;
