@@ -112,7 +112,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "version": {
+                "version": { 
                   "type": "string",
                   "description": "The version of the Hudu instance"
                 },
@@ -171,12 +171,7 @@
             "in": "query",
             "description": "Number of results to return"
           },
-          {
-            "name": "slug",
-            "type": "string",
-            "in": "query",
-            "description": "Filter by URL slug"
-          },
+          { "name": "slug", "type": "string", "in": "query", "description": "Filter by URL slug" },
           {
             "name": "search",
             "type": "string",
@@ -196,10 +191,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "articles": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Article" }
-                }
+                "articles": { "type": "array", "items": { "$ref": "#/definitions/Article" } }
               }
             }
           },
@@ -221,10 +213,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "content": {
-                  "type": "string",
-                  "description": "Article content"
-                },
+                "content": { "type": "string", "description": "Article content" },
                 "name": { "type": "string", "description": "Article name" },
                 "enable_sharing": {
                   "type": "boolean",
@@ -302,10 +291,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "content": {
-                  "type": "string",
-                  "description": "Article content"
-                },
+                "content": { "type": "string", "description": "Article content" },
                 "name": { "type": "string", "description": "Article name" },
                 "enable_sharing": {
                   "type": "boolean",
@@ -431,12 +417,7 @@
             "in": "query",
             "description": "Get the current page of results"
           },
-          {
-            "name": "slug",
-            "type": "string",
-            "in": "query",
-            "description": "Filter by URL slug"
-          },
+          { "name": "slug", "type": "string", "in": "query", "description": "Filter by URL slug" },
           {
             "name": "active",
             "type": "boolean",
@@ -483,19 +464,10 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Name of the Asset Layout"
-                },
+                "name": { "type": "string", "description": "Name of the Asset Layout" },
                 "icon": { "type": "string", "description": "Icon class name" },
-                "color": {
-                  "type": "string",
-                  "description": "Hex code for the background color"
-                },
-                "icon_color": {
-                  "type": "string",
-                  "description": "Hex code for the icon color"
-                },
+                "color": { "type": "string", "description": "Hex code for the background color" },
+                "icon_color": { "type": "string", "description": "Hex code for the icon color" },
                 "include_passwords": {
                   "type": "boolean",
                   "description": "If true, include passwords in the Asset Layout"
@@ -570,9 +542,7 @@
             "description": "Successfully created an Asset Layout",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_layout": { "$ref": "#/definitions/Asset_Layout" }
-              }
+              "properties": { "asset_layout": { "$ref": "#/definitions/Asset_Layout" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -602,9 +572,7 @@
             "description": "Success",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_layout": { "$ref": "#/definitions/Asset_Layout" }
-              }
+              "properties": { "asset_layout": { "$ref": "#/definitions/Asset_Layout" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -634,19 +602,10 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Name of the Asset Layout"
-                },
+                "name": { "type": "string", "description": "Name of the Asset Layout" },
                 "icon": { "type": "string", "description": "Icon class name" },
-                "color": {
-                  "type": "string",
-                  "description": "Hex code for the background color"
-                },
-                "icon_color": {
-                  "type": "string",
-                  "description": "Hex code for the icon color"
-                },
+                "color": { "type": "string", "description": "Hex code for the background color" },
+                "icon_color": { "type": "string", "description": "Hex code for the icon color" },
                 "active": {
                   "type": "boolean",
                   "description": "If true, the Asset Layout is active"
@@ -680,10 +639,7 @@
                         "type": "integer",
                         "description": "ID of existing field (required for updates)"
                       },
-                      "label": {
-                        "type": "string",
-                        "description": "Label (used as name) of input"
-                      },
+                      "label": { "type": "string", "description": "Label (used as name) of input" },
                       "field_type": {
                         "type": "string",
                         "description": "Type of field (Text, RichText, ListSelect, etc.)"
@@ -696,14 +652,8 @@
                         "type": "boolean",
                         "description": "Whether to show this value in list view"
                       },
-                      "position": {
-                        "type": "integer",
-                        "description": "Position of the field"
-                      },
-                      "hint": {
-                        "type": "string",
-                        "description": "Hint shown below input"
-                      },
+                      "position": { "type": "integer", "description": "Position of the field" },
+                      "hint": { "type": "string", "description": "Hint shown below input" },
                       "min": {
                         "type": "integer",
                         "description": "Minimum value (for Number fields)"
@@ -778,9 +728,7 @@
             "description": "Success",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_layout": { "$ref": "#/definitions/Asset_Layout" }
-              }
+              "properties": { "asset_layout": { "$ref": "#/definitions/Asset_Layout" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -828,12 +776,7 @@
             "in": "query",
             "description": "Number of results to return"
           },
-          {
-            "name": "slug",
-            "type": "string",
-            "in": "query",
-            "description": "Filter by url slug"
-          },
+          { "name": "slug", "type": "string", "in": "query", "description": "Filter by url slug" },
           {
             "name": "search",
             "type": "string",
@@ -890,10 +833,7 @@
                     "username": { "type": "string" },
                     "description": { "type": "string" },
                     "password_type": { "type": "string" },
-                    "password_folder_id": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
+                    "password_folder_id": { "type": "integer", "format": "int64" }
                   }
                 }
               }
@@ -905,9 +845,7 @@
             "description": "Created",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_password": { "$ref": "#/definitions/Asset_Password" }
-              }
+              "properties": { "asset_password": { "$ref": "#/definitions/Asset_Password" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -935,9 +873,7 @@
             "description": "Success",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_password": { "$ref": "#/definitions/Asset_Password" }
-              }
+              "properties": { "asset_password": { "$ref": "#/definitions/Asset_Password" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -979,10 +915,7 @@
                     "username": { "type": "string" },
                     "description": { "type": "string" },
                     "password_type": { "type": "string" },
-                    "password_folder_id": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
+                    "password_folder_id": { "type": "integer", "format": "int64" }
                   }
                 }
               }
@@ -994,9 +927,7 @@
             "description": "Success",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_password": { "$ref": "#/definitions/Asset_Password" }
-              }
+              "properties": { "asset_password": { "$ref": "#/definitions/Asset_Password" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -1045,9 +976,7 @@
             "description": "Success",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_password": { "$ref": "#/definitions/Asset_Password" }
-              }
+              "properties": { "asset_password": { "$ref": "#/definitions/Asset_Password" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -1076,9 +1005,7 @@
             "description": "Success",
             "schema": {
               "type": "object",
-              "properties": {
-                "asset_password": { "$ref": "#/definitions/Asset_Password" }
-              }
+              "properties": { "asset_password": { "$ref": "#/definitions/Asset_Password" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -1168,19 +1095,12 @@
             "schema": {
               "type": "object",
               "properties": {
-                "assets": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Asset" }
-                }
+                "assets": { "type": "array", "items": { "$ref": "#/definitions/Asset" } }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized access, authentication required"
-          },
-          "404": {
-            "description": "The specified resource(s) could not be found"
-          }
+          "401": { "description": "Unauthorized access, authentication required" },
+          "404": { "description": "The specified resource(s) could not be found" }
         }
       }
     },
@@ -1222,10 +1142,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "assets": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Asset" }
-                }
+                "assets": { "type": "array", "items": { "$ref": "#/definitions/Asset" } }
               }
             }
           },
@@ -1280,10 +1197,7 @@
                 ]
               },
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the new asset"
-                },
+                "name": { "type": "string", "description": "The name of the new asset" },
                 "asset_layout_id": {
                   "type": "number",
                   "description": "The identifier of the asset layout associated with the new asset"
@@ -1314,10 +1228,7 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "The created asset",
-            "schema": { "$ref": "#/definitions/Asset" }
-          }
+          "201": { "description": "The created asset", "schema": { "$ref": "#/definitions/Asset" } }
         }
       }
     },
@@ -1726,10 +1637,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "companies": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Company" }
-                }
+                "companies": { "type": "array", "items": { "$ref": "#/definitions/Company" } }
               }
             }
           },
@@ -1751,18 +1659,9 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the company"
-                },
-                "nickname": {
-                  "type": "string",
-                  "description": "The nickname of the company"
-                },
-                "company_type": {
-                  "type": "string",
-                  "description": "The type of the company"
-                },
+                "name": { "type": "string", "description": "The name of the company" },
+                "nickname": { "type": "string", "description": "The nickname of the company" },
+                "company_type": { "type": "string", "description": "The type of the company" },
                 "address_line_1": {
                   "type": "string",
                   "description": "The first line of the company's address"
@@ -1787,30 +1686,15 @@
                   "type": "string",
                   "description": "The country where the company is located"
                 },
-                "phone_number": {
-                  "type": "string",
-                  "description": "The company's phone number"
-                },
-                "fax_number": {
-                  "type": "string",
-                  "description": "The company's fax number"
-                },
-                "website": {
-                  "type": "string",
-                  "description": "The company's website"
-                },
-                "id_number": {
-                  "type": "string",
-                  "description": "The company's ID number"
-                },
+                "phone_number": { "type": "string", "description": "The company's phone number" },
+                "fax_number": { "type": "string", "description": "The company's fax number" },
+                "website": { "type": "string", "description": "The company's website" },
+                "id_number": { "type": "string", "description": "The company's ID number" },
                 "parent_company_id": {
                   "type": "number",
                   "description": "The parent company's ID, if applicable"
                 },
-                "notes": {
-                  "type": "string",
-                  "description": "Additional notes about the company"
-                }
+                "notes": { "type": "string", "description": "Additional notes about the company" }
               }
             }
           }
@@ -1875,18 +1759,9 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the company"
-                },
-                "nickname": {
-                  "type": "string",
-                  "description": "The nickname of the company"
-                },
-                "company_type": {
-                  "type": "string",
-                  "description": "The type of the company"
-                },
+                "name": { "type": "string", "description": "The name of the company" },
+                "nickname": { "type": "string", "description": "The nickname of the company" },
+                "company_type": { "type": "string", "description": "The type of the company" },
                 "address_line_1": {
                   "type": "string",
                   "description": "The first line of the company's address"
@@ -1911,30 +1786,15 @@
                   "type": "string",
                   "description": "The country where the company is located"
                 },
-                "phone_number": {
-                  "type": "string",
-                  "description": "The company's phone number"
-                },
-                "fax_number": {
-                  "type": "string",
-                  "description": "The company's fax number"
-                },
-                "website": {
-                  "type": "string",
-                  "description": "The company's website"
-                },
-                "id_number": {
-                  "type": "string",
-                  "description": "The company's ID number"
-                },
+                "phone_number": { "type": "string", "description": "The company's phone number" },
+                "fax_number": { "type": "string", "description": "The company's fax number" },
+                "website": { "type": "string", "description": "The company's website" },
+                "id_number": { "type": "string", "description": "The company's ID number" },
                 "parent_company_id": {
                   "type": "number",
                   "description": "The parent company's ID, if applicable"
                 },
-                "notes": {
-                  "type": "string",
-                  "description": "Additional notes about the company"
-                }
+                "notes": { "type": "string", "description": "Additional notes about the company" }
               }
             }
           }
@@ -2047,10 +1907,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Company found",
-            "schema": { "$ref": "#/definitions/Company" }
-          },
+          "200": { "description": "Company found", "schema": { "$ref": "#/definitions/Company" } },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Company not found" }
         }
@@ -2113,10 +1970,7 @@
         "responses": {
           "200": {
             "description": "A list of expirations",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/Expiration" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Expiration" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -2394,10 +2248,7 @@
                   "type": "string",
                   "description": "URL to download the export file"
                 },
-                "file_name": {
-                  "type": "string",
-                  "description": "Original filename of the export"
-                },
+                "file_name": { "type": "string", "description": "Original filename of the export" },
                 "file_size": {
                   "type": "integer",
                   "description": "Size of the export file in bytes"
@@ -2415,13 +2266,9 @@
               }
             }
           },
-          "302": {
-            "description": "Redirect to file URL (for cloud storage, when download=true)"
-          },
+          "302": { "description": "Redirect to file URL (for cloud storage, when download=true)" },
           "401": { "description": "Unauthorized" },
-          "404": {
-            "description": "Export not found, file not available, or file has expired"
-          }
+          "404": { "description": "Export not found, file not available, or file has expired" }
         }
       }
     },
@@ -2494,10 +2341,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "flag_types": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/FlagType" }
-                }
+                "flag_types": { "type": "array", "items": { "$ref": "#/definitions/FlagType" } }
               }
             }
           },
@@ -2522,10 +2366,7 @@
                   "type": "object",
                   "required": ["name", "color"],
                   "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the flag type"
-                    },
+                    "name": { "type": "string", "description": "Name of the flag type" },
                     "color": {
                       "type": "string",
                       "enum": [
@@ -2549,9 +2390,7 @@
                   }
                 }
               },
-              "example": {
-                "flag_type": { "name": "Critical Issue", "color": "Red" }
-              }
+              "example": { "flag_type": { "name": "Critical Issue", "color": "Red" } }
             }
           }
         ],
@@ -2560,9 +2399,7 @@
             "description": "Flag type created successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "flag_type": { "$ref": "#/definitions/FlagType" }
-              }
+              "properties": { "flag_type": { "$ref": "#/definitions/FlagType" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -2589,9 +2426,7 @@
             "description": "Successful operation",
             "schema": {
               "type": "object",
-              "properties": {
-                "flag_type": { "$ref": "#/definitions/FlagType" }
-              }
+              "properties": { "flag_type": { "$ref": "#/definitions/FlagType" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -2622,10 +2457,7 @@
                 "flag_type": {
                   "type": "object",
                   "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the flag type"
-                    },
+                    "name": { "type": "string", "description": "Name of the flag type" },
                     "color": {
                       "type": "string",
                       "enum": [
@@ -2649,9 +2481,7 @@
                   }
                 }
               },
-              "example": {
-                "flag_type": { "name": "Updated Flag Type", "color": "Green" }
-              }
+              "example": { "flag_type": { "name": "Updated Flag Type", "color": "Green" } }
             }
           }
         ],
@@ -2660,9 +2490,7 @@
             "description": "Flag type updated successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "flag_type": { "$ref": "#/definitions/FlagType" }
-              }
+              "properties": { "flag_type": { "$ref": "#/definitions/FlagType" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -2752,10 +2580,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "flags": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Flag" }
-                }
+                "flags": { "type": "array", "items": { "$ref": "#/definitions/Flag" } }
               }
             }
           },
@@ -2781,10 +2606,7 @@
                   "type": "object",
                   "required": ["flag_type_id", "flagable_type", "flagable_id"],
                   "properties": {
-                    "flag_type_id": {
-                      "type": "integer",
-                      "description": "ID of the flag type"
-                    },
+                    "flag_type_id": { "type": "integer", "description": "ID of the flag type" },
                     "description": {
                       "type": "string",
                       "description": "Optional description for the flag"
@@ -2833,9 +2655,7 @@
             }
           },
           "401": { "description": "Unauthorized" },
-          "422": {
-            "description": "Validation failed or invalid flagable type/record"
-          }
+          "422": { "description": "Validation failed or invalid flagable type/record" }
         }
       }
     },
@@ -2890,14 +2710,8 @@
                 "flag": {
                   "type": "object",
                   "properties": {
-                    "flag_type_id": {
-                      "type": "integer",
-                      "description": "ID of the flag type"
-                    },
-                    "description": {
-                      "type": "string",
-                      "description": "Description for the flag"
-                    },
+                    "flag_type_id": { "type": "integer", "description": "ID of the flag type" },
+                    "description": { "type": "string", "description": "Description for the flag" },
                     "flagable_type": {
                       "type": "string",
                       "enum": [
@@ -2923,10 +2737,7 @@
                 }
               },
               "example": {
-                "flag": {
-                  "description": "Updated flag description",
-                  "flag_type_id": 2
-                }
+                "flag": { "description": "Updated flag description", "flag_type_id": 2 }
               }
             }
           }
@@ -2941,9 +2752,7 @@
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Flag not found" },
-          "422": {
-            "description": "Validation failed or invalid flagable type/record"
-          }
+          "422": { "description": "Validation failed or invalid flagable type/record" }
         }
       },
       "delete": {
@@ -3021,10 +2830,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "folders": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Folder" }
-                }
+                "folders": { "type": "array", "items": { "$ref": "#/definitions/Folder" } }
               }
             }
           },
@@ -3048,18 +2854,9 @@
                 "folder": {
                   "type": "object",
                   "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the folder"
-                    },
-                    "icon": {
-                      "type": "string",
-                      "description": "Icon for the folder"
-                    },
-                    "description": {
-                      "type": "string",
-                      "description": "Description of the folder"
-                    },
+                    "name": { "type": "string", "description": "Name of the folder" },
+                    "icon": { "type": "string", "description": "Icon for the folder" },
+                    "description": { "type": "string", "description": "Description of the folder" },
                     "parent_folder_id": {
                       "type": "integer",
                       "format": "int64",
@@ -3149,18 +2946,9 @@
                 "folder": {
                   "type": "object",
                   "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the folder"
-                    },
-                    "icon": {
-                      "type": "string",
-                      "description": "Icon for the folder"
-                    },
-                    "description": {
-                      "type": "string",
-                      "description": "Description of the folder"
-                    },
+                    "name": { "type": "string", "description": "Name of the folder" },
+                    "icon": { "type": "string", "description": "Icon for the folder" },
+                    "description": { "type": "string", "description": "Description of the folder" },
                     "parent_folder_id": {
                       "type": "integer",
                       "format": "int64",
@@ -3262,10 +3050,7 @@
         "responses": {
           "200": {
             "description": "A list of groups",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/Group" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Group" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -3368,10 +3153,7 @@
         "responses": {
           "200": {
             "description": "A list of IP addresses",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/IpAddress" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/IpAddress" } }
           },
           "401": { "description": "Unauthorized" }
         }
@@ -3507,10 +3289,7 @@
         "responses": {
           "200": {
             "description": "Successful operation",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/List" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/List" } }
           },
           "401": { "description": "Unauthorized" },
           "422": { "description": "Unprocessable Entity" }
@@ -3533,20 +3312,14 @@
                   "type": "object",
                   "required": ["name"],
                   "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the list"
-                    },
+                    "name": { "type": "string", "description": "Name of the list" },
                     "list_items_attributes": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "required": ["name"],
                         "properties": {
-                          "name": {
-                            "type": "string",
-                            "description": "Name of the list item"
-                          }
+                          "name": { "type": "string", "description": "Name of the list item" }
                         }
                       },
                       "description": "Array of list items to create",
@@ -3615,10 +3388,7 @@
                 "list": {
                   "type": "object",
                   "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the list"
-                    },
+                    "name": { "type": "string", "description": "Name of the list" },
                     "list_items_attributes": {
                       "type": "array",
                       "items": {
@@ -3628,10 +3398,7 @@
                             "type": "integer",
                             "description": "ID of the existing list item (required for updates)"
                           },
-                          "name": {
-                            "type": "string",
-                            "description": "Name of the list item"
-                          },
+                          "name": { "type": "string", "description": "Name of the list item" },
                           "_destroy": {
                             "type": "boolean",
                             "description": "Set to true to remove this item"
@@ -3693,12 +3460,7 @@
         "operationId": "get_magic_dash",
         "summary": "Retrieve a list of Magic Dash Items",
         "parameters": [
-          {
-            "name": "title",
-            "type": "string",
-            "in": "query",
-            "description": "Filter by title"
-          },
+          { "name": "title", "type": "string", "in": "query", "description": "Filter by title" },
           {
             "name": "company_id",
             "type": "integer",
@@ -3724,10 +3486,7 @@
         "responses": {
           "200": {
             "description": "A list of Magic Dash Items",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/MagicDash" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/MagicDash" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -3899,9 +3658,7 @@
             "description": "Positions updated successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "success": { "type": "boolean", "example": true }
-              }
+              "properties": { "success": { "type": "boolean", "example": true } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -3977,10 +3734,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "matchers": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Matcher" }
-                }
+                "matchers": { "type": "array", "items": { "$ref": "#/definitions/Matcher" } }
               }
             }
           },
@@ -4013,22 +3767,13 @@
             "schema": {
               "type": "object",
               "properties": {
-                "company_id": {
-                  "type": "integer",
-                  "description": "The updated company ID."
-                },
+                "company_id": { "type": "integer", "description": "The updated company ID." },
                 "potential_company_id": {
                   "type": "integer",
                   "description": "The updated potential company ID."
                 },
-                "sync_id": {
-                  "type": "string",
-                  "description": "The updated sync ID."
-                },
-                "identifier": {
-                  "type": "string",
-                  "description": "The updated identifier."
-                }
+                "sync_id": { "type": "string", "description": "The updated sync ID." },
+                "identifier": { "type": "string", "description": "The updated identifier." }
               }
             }
           }
@@ -4140,10 +3885,7 @@
         "responses": {
           "200": {
             "description": "A list of networks",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/Network" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Network" } }
           },
           "401": { "description": "Unauthorized" }
         }
@@ -4164,10 +3906,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the network."
-                },
+                "name": { "type": "string", "description": "The name of the network." },
                 "description": {
                   "type": "string",
                   "description": "A brief description of the network."
@@ -4276,10 +4015,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the network."
-                },
+                "name": { "type": "string", "description": "The name of the network." },
                 "description": {
                   "type": "string",
                   "description": "A brief description of the network."
@@ -4490,9 +4226,7 @@
             "description": "Created Password Folder",
             "schema": {
               "type": "object",
-              "properties": {
-                "password_folder": { "$ref": "#/definitions/Password_Folder" }
-              }
+              "properties": { "password_folder": { "$ref": "#/definitions/Password_Folder" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -4522,9 +4256,7 @@
             "description": "Password Folder retrieved successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "password_folder": { "$ref": "#/definitions/Password_Folder" }
-              }
+              "properties": { "password_folder": { "$ref": "#/definitions/Password_Folder" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -4584,9 +4316,7 @@
             "description": "Password Folder updated successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "password_folder": { "$ref": "#/definitions/Password_Folder" }
-              }
+              "properties": { "password_folder": { "$ref": "#/definitions/Password_Folder" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -4601,13 +4331,7 @@
         "description": "Remove a password folder from the system.",
         "produces": ["application/json"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
+          { "name": "id", "in": "path", "required": true, "type": "integer", "format": "int64" }
         ],
         "responses": {
           "204": {
@@ -4687,10 +4411,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "photos": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Photo" }
-                }
+                "photos": { "type": "array", "items": { "$ref": "#/definitions/Photo" } }
               }
             }
           },
@@ -4763,9 +4484,7 @@
             "description": "Validation failed",
             "schema": {
               "type": "object",
-              "properties": {
-                "errors": { "type": "array", "items": { "type": "string" } }
-              }
+              "properties": { "errors": { "type": "array", "items": { "type": "string" } } }
             }
           }
         }
@@ -4829,18 +4548,12 @@
                 "photo": {
                   "type": "object",
                   "properties": {
-                    "caption": {
-                      "type": "string",
-                      "description": "Caption/title of the photo"
-                    },
+                    "caption": { "type": "string", "description": "Caption/title of the photo" },
                     "folder_id": {
                       "type": "integer",
                       "description": "ID of the folder to move the photo to"
                     },
-                    "pinned": {
-                      "type": "boolean",
-                      "description": "Whether the photo is pinned"
-                    },
+                    "pinned": { "type": "boolean", "description": "Whether the photo is pinned" },
                     "archived": {
                       "type": "boolean",
                       "description": "Whether the photo is archived (soft-deleted). Set to true to archive, false to unarchive."
@@ -4883,9 +4596,7 @@
             "description": "Validation failed",
             "schema": {
               "type": "object",
-              "properties": {
-                "errors": { "type": "array", "items": { "type": "string" } }
-              }
+              "properties": { "errors": { "type": "array", "items": { "type": "string" } } }
             }
           }
         }
@@ -4905,9 +4616,7 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Photo deleted successfully (no content returned)"
-          },
+          "204": { "description": "Photo deleted successfully (no content returned)" },
           "401": {
             "description": "Unauthorized - missing or invalid API key, or API key lacks destructive action permissions"
           },
@@ -4916,9 +4625,7 @@
             "description": "Unable to delete photo",
             "schema": {
               "type": "object",
-              "properties": {
-                "errors": { "type": "array", "items": { "type": "string" } }
-              }
+              "properties": { "errors": { "type": "array", "items": { "type": "string" } } }
             }
           }
         }
@@ -5023,9 +4730,7 @@
             "description": "Task created successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure_task": { "$ref": "#/definitions/ProcedureTask" }
-              }
+              "properties": { "procedure_task": { "$ref": "#/definitions/ProcedureTask" } }
             }
           },
           "404": { "description": "Process not found" },
@@ -5057,9 +4762,7 @@
             "description": "The requested task",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure_task": { "$ref": "#/definitions/ProcedureTask" }
-              }
+              "properties": { "procedure_task": { "$ref": "#/definitions/ProcedureTask" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -5145,9 +4848,7 @@
             "description": "Task updated successfully",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure_task": { "$ref": "#/definitions/ProcedureTask" }
-              }
+              "properties": { "procedure_task": { "$ref": "#/definitions/ProcedureTask" } }
             }
           },
           "404": { "description": "Procedure Task not found" },
@@ -5174,10 +4875,7 @@
         "responses": {
           "200": {
             "description": "Task successfully deleted from process",
-            "schema": {
-              "type": "object",
-              "properties": { "message": { "type": "string" } }
-            }
+            "schema": { "type": "object", "properties": { "message": { "type": "string" } } }
           },
           "404": { "description": "Procedure Task not found" },
           "422": {
@@ -5296,10 +4994,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "procedures": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Procedure" }
-                }
+                "procedures": { "type": "array", "items": { "$ref": "#/definitions/Procedure" } }
               }
             }
           },
@@ -5388,9 +5083,7 @@
             "description": "The requested process or run",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure": { "$ref": "#/definitions/Procedure" }
-              }
+              "properties": { "procedure": { "$ref": "#/definitions/Procedure" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -5400,7 +5093,7 @@
       "put": {
         "tags": ["Procedures"],
         "summary": "Update an existing Process or Run",
-        "description": "Updates mutable fields on a **process** or **run**. `company_id` is not accepted on update—use `POST /procedures/{id}/create_from_template` or `POST /procedures/{id}/duplicate` to place a process under a company.\n\n**Processes** (`run: false`): You can update `name`, `description`, and `archived`. The `archived` flag applies only to **company** processes (not global processes or runs).\n\n**Runs** (`run: true`): Use this endpoint mainly to change the run **`name`**. The run’s description is copied from the parent process at kickoff and is not editable in the web app; `archived` is ignored for runs. Prefer sending only `name` when updating a run.",
+        "description": "Edit the name, description, and template status of an existing process or run.",
         "operationId": "updateProcedure",
         "consumes": ["application/json"],
         "produces": ["application/json"],
@@ -5419,17 +5112,25 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The new name for the process or run."
-                },
+                "name": { "type": "string", "description": "The new name for the process or run." },
                 "description": {
                   "type": "string",
-                  "description": "For **processes**: the process description. **Runs** snapshot the parent process description at kickoff; that text is not editable in the product UI—avoid relying on changing this field for runs."
+                  "description": "The new description for the process or run."
+                },
+                "company_template": {
+                  "type": "boolean",
+                  "description": "**DEPRECATED** - Legacy parameter. When true, sets both template and remove_completion_ability flags to true.",
+                  "deprecated": true
+                },
+                "company_id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "The ID of the company this process belongs to. Set to null to make this a global template.",
+                  "nullable": true
                 },
                 "archived": {
                   "type": "boolean",
-                  "description": "When true, archives the **company process**. When false, unarchives it. **Only company processes** are affected—global processes and **runs** cannot be archived via this parameter (runs follow the parent process)."
+                  "description": "When true, archives the company process by setting discarded_at. When false, unarchives by clearing discarded_at. **Only company processes can be archived** - global templates and runs cannot be archived directly (runs inherit archived status from their parent process)."
                 }
               }
             }
@@ -5440,9 +5141,7 @@
             "description": "Process or run successfully updated",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure": { "$ref": "#/definitions/Procedure" }
-              }
+              "properties": { "procedure": { "$ref": "#/definitions/Procedure" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -5469,10 +5168,7 @@
         "responses": {
           "200": {
             "description": "Process or run successfully deleted",
-            "schema": {
-              "type": "object",
-              "properties": { "message": { "type": "string" } }
-            }
+            "schema": { "type": "object", "properties": { "message": { "type": "string" } } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Process or run not found" },
@@ -5521,9 +5217,7 @@
             "description": "Process successfully created from template",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure": { "$ref": "#/definitions/Procedure" }
-              }
+              "properties": { "procedure": { "$ref": "#/definitions/Procedure" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -5573,9 +5267,7 @@
             "description": "Process successfully duplicated",
             "schema": {
               "type": "object",
-              "properties": {
-                "procedure": { "$ref": "#/definitions/Procedure" }
-              }
+              "properties": { "procedure": { "$ref": "#/definitions/Procedure" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -5621,9 +5313,7 @@
                 "properties": {
                   "procedure": {
                     "type": "object",
-                    "properties": {
-                      "asset_id": { "type": "integer", "example": 707 }
-                    }
+                    "properties": { "asset_id": { "type": "integer", "example": 707 } }
                   }
                 }
               }
@@ -5633,10 +5323,7 @@
         "responses": {
           "200": {
             "description": "Run successfully created",
-            "schema": {
-              "type": "object",
-              "properties": { "message": { "type": "string" } }
-            }
+            "schema": { "type": "object", "properties": { "message": { "type": "string" } } }
           },
           "404": { "description": "Process not found" },
           "422": { "description": "Unprocessable Entity" }
@@ -5781,14 +5468,8 @@
                   "type": "integer",
                   "description": "The ID of the record the public photo is associated with"
                 },
-                "file_name": {
-                  "type": "string",
-                  "description": "Original filename of the photo"
-                },
-                "file_size": {
-                  "type": "integer",
-                  "description": "Size of the photo file in bytes"
-                }
+                "file_name": { "type": "string", "description": "Original filename of the photo" },
+                "file_size": { "type": "integer", "description": "Size of the photo file in bytes" }
               }
             },
             "headers": {
@@ -5802,9 +5483,7 @@
               }
             }
           },
-          "302": {
-            "description": "Redirect to file URL (for cloud storage, when download=true)"
-          },
+          "302": { "description": "Redirect to file URL (for cloud storage, when download=true)" },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Photo not found or file not available" }
         }
@@ -5844,9 +5523,7 @@
             "description": "Public photo successfully updated",
             "schema": {
               "type": "object",
-              "properties": {
-                "public_photo": { "$ref": "#/definitions/PublicPhoto" }
-              }
+              "properties": { "public_photo": { "$ref": "#/definitions/PublicPhoto" } }
             }
           },
           "401": { "description": "Unauthorized" },
@@ -5885,12 +5562,7 @@
             "in": "query",
             "description": "Filter by End Unit"
           },
-          {
-            "name": "status",
-            "type": "integer",
-            "in": "query",
-            "description": "Filter by Status"
-          },
+          { "name": "status", "type": "integer", "in": "query", "description": "Filter by Status" },
           {
             "name": "side",
             "type": "string",
@@ -5913,10 +5585,7 @@
         "responses": {
           "200": {
             "description": "Successful operation",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/RackStorageItem" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/RackStorageItem" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -5935,9 +5604,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "properties": {
-                "rack_storage_item": { "$ref": "#/definitions/RackStorageItem" }
-              },
+              "properties": { "rack_storage_item": { "$ref": "#/definitions/RackStorageItem" } },
               "required": ["rack_storage_item"],
               "example": {
                 "rack_storage_item": {
@@ -6005,9 +5672,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "properties": {
-                "rack_storage_item": { "$ref": "#/definitions/RackStorageItem" }
-              },
+              "properties": { "rack_storage_item": { "$ref": "#/definitions/RackStorageItem" } },
               "required": ["rack_storage_item"],
               "example": {
                 "rack_storage_item": {
@@ -6107,10 +5772,7 @@
         "responses": {
           "200": {
             "description": "Successful operation",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/RackStorage" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/RackStorage" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -6235,10 +5897,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "relations": {
-                  "type": "array",
-                  "items": { "$ref": "#/definitions/Relation" }
-                }
+                "relations": { "type": "array", "items": { "$ref": "#/definitions/Relation" } }
               }
             }
           },
@@ -6350,10 +6009,7 @@
         "responses": {
           "200": {
             "description": "A list of uploads",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/Upload" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Upload" } }
           },
           "401": { "description": "Unauthorized" }
         }
@@ -6520,10 +6176,7 @@
         "responses": {
           "200": {
             "description": "A list of users",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/User" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/User" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -6602,10 +6255,7 @@
         "responses": {
           "200": {
             "description": "Array of zones",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/VlanZone" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/VlanZone" } }
           },
           "400": { "description": "Bad filter parameter" },
           "401": { "description": "Unauthorized" }
@@ -6627,10 +6277,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the VLAN Zone."
-                },
+                "name": { "type": "string", "description": "The name of the VLAN Zone." },
                 "description": {
                   "type": "string",
                   "description": "A brief description of the VLAN Zone."
@@ -6686,10 +6333,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Zone details",
-            "schema": { "$ref": "#/definitions/VlanZone" }
-          },
+          "200": { "description": "Zone details", "schema": { "$ref": "#/definitions/VlanZone" } },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not found" }
         }
@@ -6718,10 +6362,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the VLAN Zone."
-                },
+                "name": { "type": "string", "description": "The name of the VLAN Zone." },
                 "description": {
                   "type": "string",
                   "description": "A brief description of the VLAN Zone."
@@ -6736,9 +6377,7 @@
                   "description": "When true, the VLAN Zone will be archived. When false, the VLAN Zone will be active."
                 }
               },
-              "example": {
-                "vlan_zone": { "name": "West Coast DC", "archived": true }
-              }
+              "example": { "vlan_zone": { "name": "West Coast DC", "archived": true } }
             }
           }
         ],
@@ -6836,10 +6475,7 @@
         "responses": {
           "200": {
             "description": "Array of VLANs",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/Vlan" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Vlan" } }
           },
           "400": { "description": "Bad filter parameter" },
           "401": { "description": "Unauthorized" }
@@ -6861,10 +6497,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the VLAN."
-                },
+                "name": { "type": "string", "description": "The name of the VLAN." },
                 "vlan_id": {
                   "type": "integer",
                   "format": "int64",
@@ -6909,10 +6542,7 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created VLAN",
-            "schema": { "$ref": "#/definitions/Vlan" }
-          },
+          "201": { "description": "Created VLAN", "schema": { "$ref": "#/definitions/Vlan" } },
           "401": { "description": "Unauthorized" },
           "422": { "description": "Validation errors" }
         }
@@ -6936,10 +6566,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "VLAN details",
-            "schema": { "$ref": "#/definitions/Vlan" }
-          },
+          "200": { "description": "VLAN details", "schema": { "$ref": "#/definitions/Vlan" } },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not found" }
         }
@@ -6968,10 +6595,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The name of the VLAN."
-                },
+                "name": { "type": "string", "description": "The name of the VLAN." },
                 "vlan_id": {
                   "type": "integer",
                   "format": "int64",
@@ -7015,10 +6639,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Updated VLAN",
-            "schema": { "$ref": "#/definitions/Vlan" }
-          },
+          "200": { "description": "Updated VLAN", "schema": { "$ref": "#/definitions/Vlan" } },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not found" },
           "422": { "description": "Validation errors" }
@@ -7071,12 +6692,7 @@
             "in": "query",
             "description": "Number of results to return per page"
           },
-          {
-            "name": "slug",
-            "type": "string",
-            "in": "query",
-            "description": "Filter by URL slug"
-          },
+          { "name": "slug", "type": "string", "in": "query", "description": "Filter by URL slug" },
           {
             "name": "search",
             "type": "string",
@@ -7093,10 +6709,7 @@
         "responses": {
           "200": {
             "description": "A list of websites",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/Website" }
-            }
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Website" } }
           },
           "401": { "description": "Unauthorized" },
           "404": { "description": "Not Found" }
@@ -7124,10 +6737,7 @@
                       "type": "integer",
                       "description": "Used to associate website with company"
                     },
-                    "name": {
-                      "type": "string",
-                      "description": "The name or URL of the website"
-                    },
+                    "name": { "type": "string", "description": "The name or URL of the website" },
                     "notes": {
                       "type": "string",
                       "description": "Add additional notes to a website"
@@ -7213,10 +6823,7 @@
                       "type": "integer",
                       "description": "Used to associate website with company"
                     },
-                    "name": {
-                      "type": "string",
-                      "description": "The name or URL of the website"
-                    },
+                    "name": { "type": "string", "description": "The name or URL of the website" },
                     "notes": {
                       "type": "string",
                       "description": "Add additional notes to a website"
@@ -7283,24 +6890,15 @@
           "format": "int64",
           "description": "The unique ID of the article."
         },
-        "slug": {
-          "type": "string",
-          "description": "The url slug of the article."
-        },
+        "slug": { "type": "string", "description": "The url slug of the article." },
         "name": { "type": "string", "description": "The name of the article." },
         "draft": {
           "type": "boolean",
           "description": "A flag that signifies if the article is a draft."
         },
-        "content": {
-          "type": "string",
-          "description": "The HTML content of the article."
-        },
+        "content": { "type": "string", "description": "The HTML content of the article." },
         "url": { "type": "string", "description": "The url of the article." },
-        "object_type": {
-          "type": "string",
-          "description": "The object type is Article."
-        },
+        "object_type": { "type": "string", "description": "The object type is Article." },
         "folder_id": {
           "type": "integer",
           "format": "int64",
@@ -7310,10 +6908,7 @@
           "type": "boolean",
           "description": "A flag that signifies if the article is shareable."
         },
-        "share_url": {
-          "type": "string",
-          "description": "A url for shareable articles."
-        },
+        "share_url": { "type": "string", "description": "A url for shareable articles." },
         "company_id": {
           "type": "integer",
           "format": "int64",
@@ -7339,10 +6934,7 @@
     "Asset": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "number",
-          "description": "The unique identifier of the asset"
-        },
+        "id": { "type": "number", "description": "The unique identifier of the asset" },
         "company_id": {
           "type": "number",
           "description": "The identifier of the company to which the asset belongs"
@@ -7351,10 +6943,7 @@
           "type": "number",
           "description": "The identifier of the asset layout associated with the asset"
         },
-        "slug": {
-          "type": "string",
-          "description": "The URL slug used to identify the asset"
-        },
+        "slug": { "type": "string", "description": "The URL slug used to identify the asset" },
         "name": { "type": "string", "description": "The name of the asset" },
         "primary_serial": {
           "type": "string",
@@ -7380,10 +6969,7 @@
           "type": "string",
           "description": "The type of object the asset represents"
         },
-        "asset_type": {
-          "type": "string",
-          "description": "The category of the asset"
-        },
+        "asset_type": { "type": "string", "description": "The category of the asset" },
         "archived": {
           "type": "boolean",
           "description": "Indicates whether the asset is archived or not"
@@ -7404,18 +6990,9 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "number",
-                "description": "The identifier of the field"
-              },
-              "value": {
-                "type": "boolean",
-                "description": "The value stored in the field"
-              },
-              "label": {
-                "type": "string",
-                "description": "The label of the field"
-              },
+              "id": { "type": "number", "description": "The identifier of the field" },
+              "value": { "type": "boolean", "description": "The value stored in the field" },
+              "label": { "type": "string", "description": "The label of the field" },
               "position": {
                 "type": "number",
                 "description": "The position of the field in the asset's layout"
@@ -7452,10 +7029,7 @@
         "include_files": { "type": "boolean" },
         "created_at": { "type": "string", "format": "date-time" },
         "updated_at": { "type": "string", "format": "date-time" },
-        "fields": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/Asset_Layout_Field" }
-        }
+        "fields": { "type": "array", "items": { "$ref": "#/definitions/Asset_Layout_Field" } }
       }
     },
     "Asset_Layout_Field": {
@@ -7467,16 +7041,8 @@
         "field_type": { "type": "string" },
         "required": { "type": "boolean", "description": "Can be null." },
         "hint": { "type": "string" },
-        "min": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Can be null."
-        },
-        "max": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Can be null."
-        },
+        "min": { "type": "integer", "format": "int64", "description": "Can be null." },
+        "max": { "type": "integer", "format": "int64", "description": "Can be null." },
         "linkable_id": { "type": "integer", "format": "int64" },
         "expiration": { "type": "boolean" },
         "options": { "type": "string" },
@@ -7516,22 +7082,13 @@
           "description": "Identifier of the company to which the password belongs"
         },
         "name": { "type": "string", "description": "Name of the password" },
-        "username": {
-          "type": "string",
-          "description": "Username associated with the password"
-        },
-        "slug": {
-          "type": "string",
-          "description": "URL-friendly identifier for the password"
-        },
+        "username": { "type": "string", "description": "Username associated with the password" },
+        "slug": { "type": "string", "description": "URL-friendly identifier for the password" },
         "description": {
           "type": "string",
           "description": "Description or notes related to the password"
         },
-        "password": {
-          "type": "string",
-          "description": "The actual password string"
-        },
+        "password": { "type": "string", "description": "The actual password string" },
         "otp_secret": {
           "type": "string",
           "description": "Secret key for one-time passwords (OTP), if used"
@@ -7540,10 +7097,7 @@
           "type": "string",
           "description": "Type or category of the password. Can be null."
         },
-        "url": {
-          "type": "string",
-          "description": "URL related to the password, if applicable"
-        },
+        "url": { "type": "string", "description": "URL related to the password, if applicable" },
         "created_at": {
           "type": "string",
           "format": "date-time",
@@ -7589,14 +7143,8 @@
           "format": "int64",
           "description": "The unique identifier of the company."
         },
-        "slug": {
-          "type": "string",
-          "description": "The URL-friendly identifier of the company."
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the company."
-        },
+        "slug": { "type": "string", "description": "The URL-friendly identifier of the company." },
+        "name": { "type": "string", "description": "The full name of the company." },
         "nickname": {
           "type": "string",
           "description": "The nickname or short name of the company. Can be null."
@@ -7609,10 +7157,7 @@
           "type": "string",
           "description": "The second line of the company's address. Can be null."
         },
-        "city": {
-          "type": "string",
-          "description": "The city where the company is located."
-        },
+        "city": { "type": "string", "description": "The city where the company is located." },
         "state": {
           "type": "string",
           "description": "The state or province where the company is located."
@@ -7625,10 +7170,7 @@
           "type": "string",
           "description": "The name of the country where the company is located. Can be null."
         },
-        "phone_number": {
-          "type": "string",
-          "description": "The company's phone number."
-        },
+        "phone_number": { "type": "string", "description": "The company's phone number." },
         "company_type": {
           "type": "string",
           "description": "The type of the company. Can be null."
@@ -7642,14 +7184,8 @@
           "type": "string",
           "description": "The name of the parent company. Can be null."
         },
-        "fax_number": {
-          "type": "string",
-          "description": "The company's fax number."
-        },
-        "website": {
-          "type": "string",
-          "description": "The company's website URL."
-        },
+        "fax_number": { "type": "string", "description": "The company's fax number." },
+        "website": { "type": "string", "description": "The company's website URL." },
         "notes": {
           "type": "string",
           "description": "Additional notes or information about the company. Can be null."
@@ -7662,10 +7198,7 @@
           "type": "string",
           "description": "The type of the object, in this case, \"Company\"."
         },
-        "id_number": {
-          "type": "string",
-          "description": "A custom set identificaiton number."
-        },
+        "id_number": { "type": "string", "description": "A custom set identificaiton number." },
         "url": {
           "type": "string",
           "description": "The URL path of the company within the application."
@@ -7712,10 +7245,7 @@
           "format": "int64",
           "description": "The unique identifier of the integrator."
         },
-        "integrator_name": {
-          "type": "string",
-          "description": "The name of the integrator."
-        },
+        "integrator_name": { "type": "string", "description": "The name of the integrator." },
         "sync_id": {
           "type": "integer",
           "format": "int64",
@@ -7725,10 +7255,7 @@
           "type": "string",
           "description": "The identifier of the integration. Can be null."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the integration."
-        },
+        "name": { "type": "string", "description": "The name of the integration." },
         "potential_company_id": {
           "type": "integer",
           "format": "int64",
@@ -7748,15 +7275,8 @@
     "Expiration": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "number",
-          "description": "The unique identifier for the expiration"
-        },
-        "date": {
-          "type": "string",
-          "format": "date",
-          "description": "The expiration date"
-        },
+        "id": { "type": "number", "description": "The unique identifier for the expiration" },
+        "date": { "type": "string", "format": "date", "description": "The expiration date" },
         "expirationable_type": {
           "type": "string",
           "description": "The type of object associated with the expiration (e.g., Website)"
@@ -7818,20 +7338,13 @@
     "Flag": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The unique ID of the flag."
-        },
+        "id": { "type": "integer", "format": "int64", "description": "The unique ID of the flag." },
         "flag_type_id": {
           "type": "integer",
           "format": "int64",
           "description": "The ID of the flag type this flag belongs to."
         },
-        "description": {
-          "type": "string",
-          "description": "An optional description for the flag."
-        },
+        "description": { "type": "string", "description": "An optional description for the flag." },
         "flagable_type": {
           "type": "string",
           "description": "The type of record this flag is attached to (Asset, Website, Article, AssetPassword, Company, Procedure, RackStorage, Network, IpAddress, Vlan, VlanZone)."
@@ -7861,10 +7374,7 @@
           "format": "int64",
           "description": "The unique ID of the flag type."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the flag type."
-        },
+        "name": { "type": "string", "description": "The name of the flag type." },
         "color": {
           "type": "string",
           "enum": [
@@ -7885,10 +7395,7 @@
           ],
           "description": "The color name for the flag type. Must be one of the predefined color options."
         },
-        "slug": {
-          "type": "string",
-          "description": "The URL-friendly slug for the flag type."
-        },
+        "slug": { "type": "string", "description": "The URL-friendly slug for the flag type." },
         "created_at": {
           "type": "string",
           "format": "date-time",
@@ -7918,10 +7425,7 @@
           "type": "string",
           "description": "The icon associated with the folder. Can be null"
         },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the folder"
-        },
+        "description": { "type": "string", "description": "A brief description of the folder" },
         "name": { "type": "string", "description": "The name of the folder" },
         "parent_folder_id": {
           "type": "integer",
@@ -7955,10 +7459,7 @@
           "description": "The unique identifier of the group."
         },
         "name": { "type": "string", "description": "The name of the group." },
-        "slug": {
-          "type": "string",
-          "description": "A slug representing the group."
-        },
+        "slug": { "type": "string", "description": "A slug representing the group." },
         "url": {
           "type": "string",
           "description": "The URL to view the group in the web interface."
@@ -7997,14 +7498,8 @@
           "format": "int64",
           "description": "The unique identifier of the user."
         },
-        "first_name": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "last_name": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
+        "first_name": { "type": "string", "description": "The first name of the user." },
+        "last_name": { "type": "string", "description": "The last name of the user." },
         "email": {
           "type": "string",
           "format": "email",
@@ -8014,10 +7509,7 @@
           "type": "string",
           "description": "Security level assigned to the user."
         },
-        "slug": {
-          "type": "string",
-          "description": "A slug representing the user."
-        }
+        "slug": { "type": "string", "description": "A slug representing the user." }
       }
     },
     "Integrator_Card": {
@@ -8110,10 +7602,7 @@
           "type": "string",
           "description": "A brief description of the IP address."
         },
-        "notes": {
-          "type": "string",
-          "description": "Additional comments about the IP address."
-        },
+        "notes": { "type": "string", "description": "Additional comments about the IP address." },
         "asset_id": {
           "type": "integer",
           "format": "int64",
@@ -8138,11 +7627,7 @@
     "List": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The unique ID of the list."
-        },
+        "id": { "type": "integer", "format": "int64", "description": "The unique ID of the list." },
         "name": { "type": "string", "description": "The name of the list." },
         "created_at": {
           "type": "string",
@@ -8169,10 +7654,7 @@
           "format": "int64",
           "description": "The unique ID of the list item."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the list item."
-        }
+        "name": { "type": "string", "description": "The name of the list item." }
       }
     },
     "MagicDash": {
@@ -8183,14 +7665,8 @@
           "format": "int64",
           "description": "The unique identifier for the MagicDash item"
         },
-        "title": {
-          "type": "string",
-          "description": "The title of the MagicDash item"
-        },
-        "message": {
-          "type": "string",
-          "description": "The message content of the MagicDash item"
-        },
+        "title": { "type": "string", "description": "The title of the MagicDash item" },
+        "message": { "type": "string", "description": "The message content of the MagicDash item" },
         "shade": {
           "type": "string",
           "description": "The background shade of the MagicDash item (optional). Can Be null."
@@ -8216,10 +7692,7 @@
           "format": "int64",
           "description": "The unique identifier of the associated company"
         },
-        "company_name": {
-          "type": "string",
-          "description": "The name of the associated company"
-        },
+        "company_name": { "type": "string", "description": "The name of the associated company" },
         "position": {
           "type": "integer",
           "description": "The position/order of the Magic Dash Item"
@@ -8236,10 +7709,7 @@
         "sync_id": { "type": "integer", "example": 29683607 },
         "identifier": { "type": "string", "description": "Can be null." },
         "name": { "type": "string", "example": "Green Mile 24" },
-        "potential_company_id": {
-          "type": "integer",
-          "description": "Can be null."
-        },
+        "potential_company_id": { "type": "integer", "description": "Can be null." },
         "company_id": { "type": "integer", "description": "Can be null." },
         "company_name": { "type": "string", "description": "Can be null." }
       },
@@ -8262,10 +7732,7 @@
           "type": "integer",
           "description": "The type of network, represented as an integer."
         },
-        "slug": {
-          "type": "string",
-          "description": "A slug representing the network."
-        },
+        "slug": { "type": "string", "description": "A slug representing the network." },
         "company_id": {
           "type": "integer",
           "format": "int64",
@@ -8276,22 +7743,13 @@
           "format": "int64",
           "description": "The identifier of the location associated with this network."
         },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the network."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Additional comments about the network."
-        },
+        "description": { "type": "string", "description": "A brief description of the network." },
+        "notes": { "type": "string", "description": "Additional comments about the network." },
         "ancestry": {
           "type": "string",
           "description": "Ancestry path for hierarchical network structure."
         },
-        "settings": {
-          "type": "object",
-          "description": "Settings for the network."
-        },
+        "settings": { "type": "object", "description": "Settings for the network." },
         "sync_identifier": {
           "type": "string",
           "description": "External identifier for synchronization purposes."
@@ -8353,14 +7811,8 @@
           "type": "string",
           "description": "A brief description of the password folder"
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the password folder"
-        },
-        "slug": {
-          "type": "string",
-          "description": "A slug representing the password folder."
-        },
+        "name": { "type": "string", "description": "The name of the password folder" },
+        "slug": { "type": "string", "description": "A slug representing the password folder." },
         "security": {
           "type": "string",
           "enum": ["all_users", "specific"],
@@ -8386,10 +7838,7 @@
     "Photo": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "integer",
-          "description": "Unique identifier for the photo"
-        },
+        "id": { "type": "integer", "description": "Unique identifier for the photo" },
         "company_id": {
           "type": "integer",
           "description": "ID of the company this photo belongs to"
@@ -8406,14 +7855,8 @@
           "type": "integer",
           "description": "The ID of the record this photo is attached to"
         },
-        "caption": {
-          "type": "string",
-          "description": "Caption/title of the photo"
-        },
-        "pinned": {
-          "type": "boolean",
-          "description": "Whether the photo is pinned"
-        },
+        "caption": { "type": "string", "description": "Caption/title of the photo" },
+        "pinned": { "type": "boolean", "description": "Whether the photo is pinned" },
         "archived": {
           "type": "boolean",
           "description": "Whether the photo is archived (soft-deleted)"
@@ -8525,10 +7968,7 @@
           "description": "The current status of the process or run: 'Not Started', 'In Progress', 'Completed', or 'Cancelled'.",
           "enum": ["Not Started", "In Progress", "Completed", "Cancelled"]
         },
-        "asset": {
-          "type": "string",
-          "description": "The associated asset, if any. Can Be null."
-        },
+        "asset": { "type": "string", "description": "The associated asset, if any. Can Be null." },
         "share_url": {
           "type": "string",
           "example": "http://localhost:3000/shared_process/S549vMc8b8PmWWMESwB6qTLC",
@@ -8549,10 +7989,7 @@
           "format": "int64",
           "description": "The unique ID of the procedure task."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the procedure task."
-        },
+        "name": { "type": "string", "description": "The name of the procedure task." },
         "description": {
           "type": "string",
           "description": "The description of the task (base64 encoded)."
@@ -8583,10 +8020,7 @@
           "format": "date",
           "description": "The due date for the task."
         },
-        "formatted_due_date": {
-          "type": "string",
-          "description": "Formatted due date string."
-        },
+        "formatted_due_date": { "type": "string", "description": "Formatted due date string." },
         "user_id": {
           "type": "integer",
           "format": "int64",
@@ -8635,14 +8069,8 @@
           "type": "integer",
           "description": "The number of subtasks this task has."
         },
-        "has_subtasks": {
-          "type": "boolean",
-          "description": "Whether this task has any subtasks."
-        },
-        "url": {
-          "type": "string",
-          "description": "The URL to view this task in the application."
-        },
+        "has_subtasks": { "type": "boolean", "description": "Whether this task has any subtasks." },
+        "url": { "type": "string", "description": "The URL to view this task in the application." },
         "created_at": {
           "type": "string",
           "format": "date-time",
@@ -8681,14 +8109,8 @@
           "type": "integer",
           "description": "The ID of the record the public photo is associated with."
         },
-        "file_name": {
-          "type": "string",
-          "description": "The original filename of the photo."
-        },
-        "file_size": {
-          "type": "integer",
-          "description": "The size of the photo file in bytes."
-        }
+        "file_name": { "type": "string", "description": "The original filename of the photo." },
+        "file_size": { "type": "integer", "description": "The size of the photo file in bytes." }
       }
     },
     "RackStorage": {
@@ -8704,14 +8126,8 @@
           "format": "int64",
           "description": "The unique ID of the location of the rack storage."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the rack storage."
-        },
-        "description": {
-          "type": "string",
-          "description": "The description of the rack storage."
-        },
+        "name": { "type": "string", "description": "The name of the rack storage." },
+        "description": { "type": "string", "description": "The description of the rack storage." },
         "max_wattage": {
           "type": "integer",
           "format": "int64",
@@ -8818,18 +8234,9 @@
           "type": "string",
           "description": "The hex color of the rack storage role."
         },
-        "asset_name": {
-          "type": "string",
-          "description": "The name of the asset."
-        },
-        "asset_url": {
-          "type": "string",
-          "description": "The URL of the asset."
-        },
-        "url": {
-          "type": "string",
-          "description": "The URL of the rack storage item."
-        },
+        "asset_name": { "type": "string", "description": "The name of the asset." },
+        "asset_url": { "type": "string", "description": "The URL of the asset." },
+        "url": { "type": "string", "description": "The URL of the rack storage item." },
         "company_id": {
           "type": "integer",
           "format": "int64",
@@ -8840,10 +8247,7 @@
     "Relation": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "integer",
-          "description": "The unique identifier of the relation."
-        },
+        "id": { "type": "integer", "description": "The unique identifier of the relation." },
         "description": {
           "type": "string",
           "description": "The description of the relation (optional). Can Be null."
@@ -8852,10 +8256,7 @@
           "type": "boolean",
           "description": "Indicates whether the relation is inverse or not."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the relation."
-        },
+        "name": { "type": "string", "description": "The name of the relation." },
         "fromable_id": {
           "type": "integer",
           "description": "The ID of the origin entity involved in the relation."
@@ -8885,14 +8286,8 @@
     "Upload": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "integer",
-          "description": "Unique identifier of the upload"
-        },
-        "url": {
-          "type": "string",
-          "description": "URL where the file can be accessed"
-        },
+        "id": { "type": "integer", "description": "Unique identifier of the upload" },
+        "url": { "type": "string", "description": "URL where the file can be accessed" },
         "name": { "type": "string", "description": "Name of the file" },
         "ext": { "type": "string", "description": "File extension" },
         "mime": { "type": "string", "description": "MIME type of the file" },
@@ -8939,26 +8334,11 @@
           "type": "string",
           "description": "Security level assigned to the user."
         },
-        "first_name": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "last_name": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "phone_number": {
-          "type": "string",
-          "description": "The phone number of the user."
-        },
-        "slug": {
-          "type": "string",
-          "description": "A slug representing the user."
-        },
-        "time_zone": {
-          "type": "string",
-          "description": "The time zone of the user."
-        },
+        "first_name": { "type": "string", "description": "The first name of the user." },
+        "last_name": { "type": "string", "description": "The last name of the user." },
+        "phone_number": { "type": "string", "description": "The phone number of the user." },
+        "slug": { "type": "string", "description": "A slug representing the user." },
+        "time_zone": { "type": "string", "description": "The time zone of the user." },
         "accepted_invite": {
           "type": "boolean",
           "description": "Indicates if the user has accepted an invite."
@@ -8977,10 +8357,7 @@
           "format": "date-time",
           "description": "Timestamp of the last sign-in."
         },
-        "last_sign_in_ip": {
-          "type": "string",
-          "description": "IP address from the last sign-in."
-        },
+        "last_sign_in_ip": { "type": "string", "description": "IP address from the last sign-in." },
         "created_at": {
           "type": "string",
           "format": "date-time",
@@ -9028,26 +8405,15 @@
         },
         "name": { "type": "string", "description": "Human-readable VLAN name" },
         "slug": { "type": "string", "description": "URL-friendly identifier" },
-        "vlan_id": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Numeric VLAN (1-4094)"
-        },
-        "description": {
-          "type": "string",
-          "description": "Optional description"
-        },
+        "vlan_id": { "type": "integer", "format": "int64", "description": "Numeric VLAN (1-4094)" },
+        "description": { "type": "string", "description": "Optional description" },
         "notes": { "type": "string", "description": "Rich-text notes" },
         "company_id": {
           "type": "integer",
           "format": "int64",
           "description": "The identifier of the company that owns this VLAN."
         },
-        "vlan_zone_id": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Zone (nullable)"
-        },
+        "vlan_zone_id": { "type": "integer", "format": "int64", "description": "Zone (nullable)" },
         "status_list_item_id": {
           "type": "integer",
           "format": "int64",
@@ -9092,10 +8458,7 @@
         },
         "name": { "type": "string", "description": "Human-readable zone name" },
         "slug": { "type": "string", "description": "URL-friendly identifier" },
-        "description": {
-          "type": "string",
-          "description": "Optional description"
-        },
+        "description": { "type": "string", "description": "Optional description" },
         "vlan_id_ranges": {
           "type": "string",
           "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start \u003c= end."
@@ -9131,23 +8494,11 @@
     "Website": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "integer",
-          "description": "The unique identifier of the website"
-        },
+        "id": { "type": "integer", "description": "The unique identifier of the website" },
         "name": { "type": "string", "description": "The URL of the website" },
-        "code": {
-          "type": "integer",
-          "description": "The HTTP response code of the website"
-        },
-        "message": {
-          "type": "string",
-          "description": "A message related to the website's status"
-        },
-        "slug": {
-          "type": "string",
-          "description": "The URL slug for the website"
-        },
+        "code": { "type": "integer", "description": "The HTTP response code of the website" },
+        "message": { "type": "string", "description": "A message related to the website's status" },
+        "slug": { "type": "string", "description": "The URL slug for the website" },
         "keyword": {
           "type": "string",
           "description": "A keyword associated with the website (optional)"
@@ -9186,18 +8537,12 @@
           "type": "boolean",
           "description": "Indicates whether notifications related to the website have been sent"
         },
-        "account_id": {
-          "type": "integer",
-          "description": "The ID of the associated account"
-        },
+        "account_id": { "type": "integer", "description": "The ID of the associated account" },
         "asset_field_id": {
           "type": "integer",
           "description": "The ID of the related asset field (optional)"
         },
-        "company_id": {
-          "type": "integer",
-          "description": "The ID of the associated company"
-        },
+        "company_id": { "type": "integer", "description": "The ID of the associated company" },
         "discarded_at": {
           "type": "string",
           "format": "date-time",
@@ -9227,26 +8572,17 @@
           "type": "boolean",
           "description": "Indicates whether SPF checks are enabled for the website"
         },
-        "notes": {
-          "type": "string",
-          "description": "Additional notes related to the website"
-        },
+        "notes": { "type": "string", "description": "Additional notes related to the website" },
         "object_type": {
           "type": "string",
           "description": "The type of the object, in this case, 'Website'"
         },
-        "icon": {
-          "type": "string",
-          "description": "The FontAwesome icon related to the website"
-        },
+        "icon": { "type": "string", "description": "The FontAwesome icon related to the website" },
         "asset_type": {
           "type": "string",
           "description": "The type of the asset, in this case, 'Website'"
         },
-        "company_name": {
-          "type": "string",
-          "description": "The name of the associated company"
-        },
+        "company_name": { "type": "string", "description": "The name of the associated company" },
         "url": {
           "type": "string",
           "description": "The URL path of the website within the application"
