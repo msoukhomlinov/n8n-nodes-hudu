@@ -30,6 +30,13 @@ export function buildGetDescription(
   resourceName: string,
   supportsSearch = true,
 ): string {
+  if (resourceName === 'articles') {
+    return (
+      "Fetch a single article record by its numeric ID. " +
+      "ONLY call when you already have a numeric ID — if you only have a title, call hudu_articles with operation 'getAll' and 'name' first. " +
+      "By default the HTML content field is stripped — set include_content=true only when you need to read or quote the article body; leave false when you need only metadata."
+    );
+  }
   const lookupHint = supportsSearch
     ? `call hudu_${resourceName} with operation 'getAll' and 'search' first, extract the 'id' from results, then call this.`
     : `call hudu_${resourceName} with operation 'getAll' and the available filters to find the record, extract the 'id' from results, then call this.`;
@@ -44,8 +51,21 @@ export function buildGetAllDescription(
   label: string,
   referenceUtc?: string,
   supportsSearch?: boolean,
+  resource?: string,
 ): string {
   const ref = referenceUtc ? dateTimeReferenceSnippet(referenceUtc) : '';
+  if (resource === 'articles') {
+    return (
+      ref +
+      "Search and list articles in Hudu. " +
+      "For title-based lookup (resolving a known title to an ID) use 'name' — fuzzy-matches titles with title-overlap ranking and auto-fetches up to 100 candidates. " +
+      "For topic or content-phrase exploration use 'search' — partial text match across title AND body. " +
+      "Content is stripped from results by default (set include_content=true to include). " +
+      "Narrow with company_id, folder_id, draft, enable_sharing, or updated_at_start/end date range. " +
+      "Results contain numeric 'id' on each record — capture for get, update, delete, or archive. " +
+      "If results are unexpectedly empty, verify API key permissions."
+    );
+  }
   if (supportsSearch) {
     return (
       ref +
@@ -164,7 +184,7 @@ export function buildUnifiedDescription(
       case 'get':
         return `- get: ${buildGetDescription(resourceLabel, resource, supportsSearch)}`;
       case 'getAll':
-        return `- getAll: ${buildGetAllDescription(resourceLabel, undefined, supportsSearch)}`;
+        return `- getAll: ${buildGetAllDescription(resourceLabel, undefined, supportsSearch, resource)}`;
       case 'create':
         return `- create: ${buildCreateDescription(resourceLabel, requiredFields, undefined, supportsSearch)}`;
       case 'update':
