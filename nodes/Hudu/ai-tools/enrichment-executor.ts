@@ -23,47 +23,65 @@ interface GetIdByNameResourceConfig {
 const GET_ID_BY_NAME_CONFIG: Record<string, GetIdByNameResourceConfig> = {
     company: { endpoint: '/companies', pluralKey: 'companies', filterKey: 'search', slimFields: ['id', 'name'] },
     asset: { endpoint: '/assets', pluralKey: 'assets', filterKey: 'search', slimFields: ['id', 'name', 'company_id', 'asset_layout_id'] },
-    article: { endpoint: '/articles', pluralKey: 'articles', filterKey: 'search', slimFields: ['id', 'name', 'company_id'] },
     asset_layout: { endpoint: '/asset_layouts', pluralKey: 'asset_layouts', filterKey: 'name', slimFields: ['id', 'name'] },
+    asset_password: { endpoint: '/asset_passwords', pluralKey: 'asset_passwords', filterKey: 'search', slimFields: ['id', 'name', 'company_id', 'passwordable_type', 'passwordable_id'] },
     folder: { endpoint: '/folders', pluralKey: 'folders', filterKey: 'name', slimFields: ['id', 'name', 'company_id', 'parent_folder_id'] },
+    group: { endpoint: '/groups', pluralKey: 'groups', filterKey: 'search', slimFields: ['id', 'name'] },
+    network: { endpoint: '/networks', pluralKey: 'networks', filterKey: 'name', slimFields: ['id', 'name', 'company_id', 'address'] },
     procedure: { endpoint: '/procedures', pluralKey: 'procedures', filterKey: 'name', slimFields: ['id', 'name'] },
-    website: { endpoint: '/websites', pluralKey: 'websites', filterKey: 'search', slimFields: ['id', 'name', 'company_id'] },
     user: { endpoint: '/users', pluralKey: 'users', filterKey: 'search', slimFields: ['id', 'name', 'email'] },
+    vlan: { endpoint: '/vlans', pluralKey: 'vlans', filterKey: 'name', slimFields: ['id', 'name', 'vlan_id', 'company_id', 'vlan_zone_id'] },
+    vlan_zone: { endpoint: '/vlan_zones', pluralKey: 'vlan_zones', filterKey: 'name', slimFields: ['id', 'name', 'company_id'] },
+    website: { endpoint: '/websites', pluralKey: 'websites', filterKey: 'search', slimFields: ['id', 'name', 'company_id'] },
 };
 
-const EXACT_MATCH_RESOURCES = new Set(['asset_layout', 'folder', 'procedure']);
+const EXACT_MATCH_RESOURCES = new Set(['asset_layout', 'folder', 'network', 'procedure', 'vlan', 'vlan_zone']);
+
+// Maps HUDU_RESOURCE_CONFIG plural key → GET_ID_BY_NAME_CONFIG singular key
+const PLURAL_TO_SINGULAR: Record<string, string> = {
+    asset_layouts: 'asset_layout',
+    asset_passwords: 'asset_password',
+    assets: 'asset',
+    companies: 'company',
+    folders: 'folder',
+    groups: 'group',
+    networks: 'network',
+    procedures: 'procedure',
+    users: 'user',
+    vlan_zones: 'vlan_zone',
+    vlans: 'vlan',
+    websites: 'website',
+};
+
+export const GET_ID_BY_NAME_SUPPORTED_RESOURCES = Object.keys(PLURAL_TO_SINGULAR);
 
 export function buildGetIdByNameTool(
     context: ISupplyDataFunctions,
     referenceUtc: string,
     resource: string,
 ): InstanceType<typeof RuntimeDynamicStructuredTool> {
+    const singularKey = PLURAL_TO_SINGULAR[resource] ?? resource;
+    const config = GET_ID_BY_NAME_CONFIG[singularKey];
+    const isExact = EXACT_MATCH_RESOURCES.has(singularKey);
+
+    const nameDesc = isExact
+        ? 'Name to search for — EXACT case-sensitive match required.'
+        : 'Name or partial name to search for (fuzzy match).';
     const schema = z.object({
-        resource_type: z.enum([
-            'company', 'asset', 'article', 'asset_layout', 'folder', 'procedure', 'website', 'user',
-        ]).describe(
-            'The resource type to search. ' +
-            'Partial-match resources (company, asset, article, website, user): name is a partial/fuzzy search. ' +
-            'Exact-match resources (asset_layout, folder, procedure): name must be an EXACT case-sensitive match.',
-        ),
-        name: z.string().min(1).describe(
-            'Name or partial name to search for. ' +
-            'For asset_layout, folder, and procedure this must be an EXACT case-sensitive match.',
-        ),
+        name: z.string().min(1).describe(nameDesc),
         limit: z.number().int().min(1).max(20).optional().default(5).describe(
             'Maximum number of matching records to return (default 5, max 20).',
         ),
     });
 
+    const matchNote = isExact ? 'EXACT case-sensitive match required.' : 'Partial/fuzzy match — shorter terms return more results.';
+    const returnedFields = config?.slimFields.join(', ') ?? 'id, name';
     const description =
         `Reference: current UTC date-time when these tools were loaded is ${referenceUtc}. ` +
-        'Resolve a Hudu resource name to its numeric ID in a single call. ' +
-        'Use this before any operation that requires a numeric ID but you only have a name or partial text. ' +
-        'Supported resource types: company, asset, article, asset_layout, folder, procedure, website, user. ' +
-        'For company/asset/article/website/user: name is a partial match (search). ' +
-        'For asset_layout/folder/procedure: name must be EXACT and case-sensitive. ' +
-        'Returns up to [limit] matching records with id and key fields. ' +
-        'Prefer this over calling hudu_{resource} with getAll just to find an ID.';
+        `Resolve a ${singularKey} name to its numeric Hudu ID. ${matchNote} ` +
+        `Returns up to [limit] ${singularKey} records with fields: ${returnedFields}. ` +
+        `Use before any operation requiring a numeric ${singularKey} ID. ` +
+        `Prefer this over hudu_${resource} with getAll just to find an ID.`;
 
     return new RuntimeDynamicStructuredTool({
         name: `hudu_${resource}_get_id_by_name`,
@@ -72,7 +90,7 @@ export function buildGetIdByNameTool(
         schema: schema as any,
         metadata: {
             annotations: {
-                title: 'Hudu: Resolve Name to ID',
+                title: `Hudu: Resolve ${singularKey} name to ID`,
                 readOnlyHint: true,
                 destructiveHint: false,
                 idempotentHint: true,
@@ -81,16 +99,14 @@ export function buildGetIdByNameTool(
         },
         func: async (params: Record<string, unknown>): Promise<string> => {
             try {
-                const resourceType = params.resource_type as string;
                 const name = params.name as string;
                 const limit = (params.limit as number | undefined) ?? 5;
 
-                const config = GET_ID_BY_NAME_CONFIG[resourceType];
                 if (!config) {
                     return JSON.stringify(wrapError(
-                        'get_id_by_name', 'resolve', ERROR_TYPES.UNKNOWN_RESOURCE,
-                        `Unknown resource_type: ${resourceType}`,
-                        'Valid values: company, asset, article, asset_layout, folder, procedure, website, user.',
+                        `${resource}_get_id_by_name`, 'resolve', ERROR_TYPES.UNKNOWN_RESOURCE,
+                        `Name resolution is not supported for resource: ${resource}.`,
+                        `Supported resources: ${GET_ID_BY_NAME_SUPPORTED_RESOURCES.join(', ')}.`,
                     ));
                 }
 
@@ -104,11 +120,11 @@ export function buildGetIdByNameTool(
                 );
 
                 if (records.length === 0) {
-                    const hint = EXACT_MATCH_RESOURCES.has(resourceType)
-                        ? `No ${resourceType} found with exact name "${name}". This resource requires an EXACT case-sensitive name match.`
-                        : `No ${resourceType} found matching "${name}". Try a shorter or different search term.`;
+                    const hint = isExact
+                        ? `No ${singularKey} found with exact name "${name}". Requires an EXACT case-sensitive match.`
+                        : `No ${singularKey} found matching "${name}". Try a shorter or different search term.`;
                     return JSON.stringify(wrapError(
-                        'get_id_by_name', 'resolve', ERROR_TYPES.NO_RESULTS_FOUND,
+                        `${resource}_get_id_by_name`, 'resolve', ERROR_TYPES.NO_RESULTS_FOUND,
                         hint,
                         'Broaden your search or verify the name exists in Hudu.',
                     ));
@@ -125,13 +141,13 @@ export function buildGetIdByNameTool(
                     return slim;
                 });
 
-                return JSON.stringify(wrapSuccess('get_id_by_name', 'resolve', { items, count: items.length }));
+                return JSON.stringify(wrapSuccess(`${resource}_get_id_by_name`, 'resolve', { items, count: items.length }));
             } catch (error) {
                 const msg = error instanceof Error ? error.message : String(error);
                 return JSON.stringify(wrapError(
-                    'get_id_by_name', 'resolve', ERROR_TYPES.API_ERROR,
+                    `${resource}_get_id_by_name`, 'resolve', ERROR_TYPES.API_ERROR,
                     msg,
-                    'Verify the resource_type and name, then retry.',
+                    'Verify the name and retry.',
                 ));
             }
         },
@@ -215,7 +231,7 @@ export function buildMoveAssetTool(
                     return JSON.stringify(wrapError(
                         'move_asset', 'move', ERROR_TYPES.ENTITY_NOT_FOUND,
                         `Target company with ID ${targetCompanyId} was not found.`,
-                        "Verify the company ID using hudu_assets_get_id_by_name with resource_type='company', then retry.",
+                        "Verify the company ID using hudu_companies_get_id_by_name, then retry.",
                     ));
                 }
 
@@ -330,7 +346,7 @@ export function buildCompanyAssetsByLayoutTool(
         ),
         layout_name: z.string().min(1).optional().describe(
             "Asset layout name — EXACT case-sensitive match. Used only when layout_id is not provided. " +
-            "If unsure of the exact name, use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' first.",
+            "If unsure of the exact name, use hudu_asset_layouts_get_id_by_name first.",
         ),
         search: z.string().optional().describe(
             'Filter assets by name, serial number, or model within the result set.',
@@ -347,7 +363,7 @@ export function buildCompanyAssetsByLayoutTool(
         `Reference: current UTC date-time when these tools were loaded is ${referenceUtc}. ` +
         'List all assets of a specific type (layout) for a company, with custom field values labelled by field name. ' +
         "Accepts company name or ID, and layout name or ID. Layout name must be an EXACT case-sensitive match — " +
-        "use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' if unsure of the exact name. " +
+        "use hudu_asset_layouts_get_id_by_name if unsure of the exact name. " +
         'Returns assets with a labelled fields object (e.g., {"Hostname": "SRV01", "IP Address": "10.0.0.1"}) ' +
         'instead of raw numeric field IDs. ' +
         "This is the preferred tool for 'show me all [servers/switches/firewalls] for [company]' queries.";
@@ -381,14 +397,14 @@ export function buildCompanyAssetsByLayoutTool(
                     return JSON.stringify(wrapError(
                         'company_assets_by_layout', 'getByLayout', ERROR_TYPES.MISSING_REQUIRED_FIELD,
                         'Either company_id or company_name must be provided.',
-                        "Provide a numeric company_id or a company_name (partial match). Use hudu_assets_get_id_by_name with resource_type='company' to look up the ID.",
+                        "Provide a numeric company_id or a company_name (partial match). Use hudu_companies_get_id_by_name to look up the ID.",
                     ));
                 }
                 if (!layoutIdParam && !layoutNameParam) {
                     return JSON.stringify(wrapError(
                         'company_assets_by_layout', 'getByLayout', ERROR_TYPES.MISSING_REQUIRED_FIELD,
                         'Either layout_id or layout_name must be provided.',
-                        "Provide a numeric layout_id or an EXACT layout_name. Use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' to find the exact name.",
+                        "Provide a numeric layout_id or an EXACT layout_name. Use hudu_asset_layouts_get_id_by_name to find the exact name.",
                     ));
                 }
 
@@ -430,7 +446,7 @@ export function buildCompanyAssetsByLayoutTool(
                         return JSON.stringify(wrapError(
                             'company_assets_by_layout', 'getByLayout', ERROR_TYPES.NO_RESULTS_FOUND,
                             `No asset layout found with exact name: "${layoutNameParam}".`,
-                            "Layout name must be an EXACT case-sensitive match. Use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' to find the correct name.",
+                            "Layout name must be an EXACT case-sensitive match. Use hudu_asset_layouts_get_id_by_name to find the correct name.",
                         ));
                     }
                     const layout = layouts[0] as IDataObject;
