@@ -24,6 +24,12 @@ export interface HuduResourceConfig {
   label: string;
   /** Assets: create/update/delete/archive use /companies/{id}/assets */
   requiresCompanyEndpoint?: boolean;
+  /** When true: adds include_content schema field; strips content from get/getAll responses */
+  supportsContentField?: boolean;
+  /** Field name to strip when supportsContentField is true. Defaults to 'content'. */
+  contentField?: string;
+  /** When true: translates name param to search, bumps limit to 100, title-sorts results */
+  nameResolutionBaked?: boolean;
 }
 
 export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
@@ -44,6 +50,8 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive'],
     supportsPagination: true,
     label: 'Article',
+    supportsContentField: true,
+    nameResolutionBaked: true,
   },
   assets: {
     endpoint: '/assets',
