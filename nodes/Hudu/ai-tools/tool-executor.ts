@@ -18,6 +18,7 @@ import {
   formatNoResultsFound,
 } from './error-formatter';
 import { relationFilterMapping } from '../resources/relations/relations.types';
+import { sortByTitleMatch, stripContentField } from './result-processor';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -145,6 +146,10 @@ export async function executeHuduAiTool(
   try {
     switch (operation) {
       case 'get': {
+        // Extract include_content before any API call — never sent to API
+        const includeContent = (params.include_content as boolean) ?? false;
+        delete params.include_content;
+
         if (!params.id) {
           return JSON.stringify(formatMissingIdError(resource, operation, supportsSearch));
         }
@@ -162,10 +167,43 @@ export async function executeHuduAiTool(
         if (isMissingData) {
           return JSON.stringify(formatNotFoundError(resource, operation, params.id as number, supportsSearch));
         }
-        return JSON.stringify(wrapSuccess(resource, operation, data));
+        const result = config.supportsContentField
+          ? (stripContentField<IDataObject>([data as IDataObject], includeContent) as IDataObject[])[0]
+          : data;
+        return JSON.stringify(wrapSuccess(resource, operation, result));
       }
 
       case 'getAll': {
+        // Step 1: capture original params for error formatting (before any translation)
+        const originalParams = { ...params };
+
+        // Step 2: extract client-only fields BEFORE params destructure — never sent to API
+        const includeContent = (params.include_content as boolean) ?? false;
+        delete params.include_content;
+
+        // Step 3: date combining — no flag needed; these fields only exist on articles schema
+        const updatedAtStart = params.updated_at_start as string | undefined;
+        const updatedAtEnd = params.updated_at_end as string | undefined;
+        delete params.updated_at_start;
+        delete params.updated_at_end;
+        if (updatedAtStart !== undefined || updatedAtEnd !== undefined) {
+          params.updated_at = `${updatedAtStart ?? ''},${updatedAtEnd ?? ''}`;
+        }
+
+        // Step 4: name resolution — nameResolutionBaked resources only
+        let capturedName: string | undefined;
+        let userLimit = 25;
+        if (config.nameResolutionBaked && params.name) {
+          capturedName = params.name as string;
+          userLimit = (params.limit as number) ?? 25;
+          delete params.search;       // name wins if both provided
+          delete params.name;
+          params.search = capturedName;
+          params.limit = 100;         // wide candidate pool for re-ranking
+        }
+
+        // Step 5: existing destructure + buildFilters + API call
+        // When capturedName is set, params.limit is already 100 so effectiveLimit = 100.
         const { limit = 25, ...filterParams } = params;
         const effectiveLimit = limit as number;
         const filters = buildFilters(filterParams);
@@ -193,11 +231,38 @@ export async function executeHuduAiTool(
             effectiveLimit,
           );
         }
+
+        // Step 6: title sort — nameResolutionBaked resources only.
+        // Explicit generic + cast: sortByTitleMatch<T> returns T[], TS won't re-narrow to IDataObject[].
+        // Truncation note naturally suppressed: records.length (≤ userLimit e.g. 25) < effectiveLimit (100).
+        if (capturedName) {
+          records = sortByTitleMatch<IDataObject>(records, capturedName) as IDataObject[];
+          records = records.slice(0, userLimit);
+        }
+
+        // Step 7: content stripping — supportsContentField resources only.
+        if (config.supportsContentField) {
+          records = stripContentField<IDataObject>(records, includeContent) as IDataObject[];
+        }
+
+        // Step 8: zero-results error — build presentation filters from originalParams so
+        // the LLM sees name: "..." not the translated search: "...".
+        // hasFilters is derived from post-translation filterParams (search replaces name),
+        // which is consistent: if name was provided, search takes its place and hasFilters = true.
         if (records.length === 0 && hasFilters) {
+          const presentationFilters = buildFilters(
+            Object.fromEntries(
+              Object.entries(originalParams).filter(
+                ([k]) =>
+                  !['include_content', 'limit', 'resource', 'operation', 'updated_at_start', 'updated_at_end'].includes(k),
+              ),
+            ),
+          );
           return JSON.stringify(
-            formatNoResultsFound(resource, operation, filters as Record<string, unknown>),
+            formatNoResultsFound(resource, operation, presentationFilters as Record<string, unknown>),
           );
         }
+
         const resultPayload: Record<string, unknown> = { items: records, count: records.length };
         if (records.length >= effectiveLimit) {
           resultPayload.truncated = true;
