@@ -10,7 +10,7 @@ import { getCompanyIdForAsset } from '../utils/operations/getCompanyIdForAsset';
 import { wrapSuccess, wrapError, ERROR_TYPES } from './error-formatter';
 
 // ---------------------------------------------------------------------------
-// hudu_get_id_by_name
+// hudu_{resource}_get_id_by_name
 // ---------------------------------------------------------------------------
 
 interface GetIdByNameResourceConfig {
@@ -36,6 +36,7 @@ const EXACT_MATCH_RESOURCES = new Set(['asset_layout', 'folder', 'procedure']);
 export function buildGetIdByNameTool(
     context: ISupplyDataFunctions,
     referenceUtc: string,
+    resource: string,
 ): InstanceType<typeof RuntimeDynamicStructuredTool> {
     const schema = z.object({
         resource_type: z.enum([
@@ -65,7 +66,7 @@ export function buildGetIdByNameTool(
         'Prefer this over calling hudu_{resource} with getAll just to find an ID.';
 
     return new RuntimeDynamicStructuredTool({
-        name: 'hudu_get_id_by_name',
+        name: `hudu_${resource}_get_id_by_name`,
         description,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         schema: schema as any,
@@ -138,7 +139,7 @@ export function buildGetIdByNameTool(
 }
 
 // ---------------------------------------------------------------------------
-// hudu_move_asset
+// hudu_{resource}_move
 // ---------------------------------------------------------------------------
 
 const ASSET_COPY_FIELDS = [
@@ -158,13 +159,14 @@ function isMissingData(data: unknown): boolean {
 export function buildMoveAssetTool(
     context: ISupplyDataFunctions,
     referenceUtc: string,
+    resource: string,
 ): InstanceType<typeof RuntimeDynamicStructuredTool> {
     const schema = z.object({
         asset_id: z.number().int().positive().describe(
             'Numeric ID of the asset to move (from a prior getAll or get result).',
         ),
         target_company_id: z.number().int().positive().describe(
-            'Numeric ID of the destination company. Use hudu_get_id_by_name with resource_type=\'company\' if you only have the company name.',
+            'Numeric ID of the destination company. Use hudu_assets_get_id_by_name with resource_type=\'company\' if you only have the company name.',
         ),
         delete_original: z.boolean().optional().default(true).describe(
             'If true (default), delete the original asset after successful creation at the target company. ' +
@@ -183,7 +185,7 @@ export function buildMoveAssetTool(
         'PREREQUISITE: confirm the correct asset_id and target_company_id before calling — this operation cannot be undone automatically if delete_original=true.';
 
     return new RuntimeDynamicStructuredTool({
-        name: 'hudu_move_asset',
+        name: `hudu_${resource}_move`,
         description,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         schema: schema as any,
@@ -213,7 +215,7 @@ export function buildMoveAssetTool(
                     return JSON.stringify(wrapError(
                         'move_asset', 'move', ERROR_TYPES.ENTITY_NOT_FOUND,
                         `Target company with ID ${targetCompanyId} was not found.`,
-                        "Verify the company ID using hudu_get_id_by_name with resource_type='company', then retry.",
+                        "Verify the company ID using hudu_assets_get_id_by_name with resource_type='company', then retry.",
                     ));
                 }
 
@@ -303,7 +305,7 @@ export function buildMoveAssetTool(
 }
 
 // ---------------------------------------------------------------------------
-// hudu_company_assets_by_layout
+// hudu_assets_by_layout
 // ---------------------------------------------------------------------------
 
 const STANDARD_ASSET_OUTPUT_FIELDS = [
@@ -314,6 +316,7 @@ const STANDARD_ASSET_OUTPUT_FIELDS = [
 export function buildCompanyAssetsByLayoutTool(
     context: ISupplyDataFunctions,
     referenceUtc: string,
+    resource: string,
 ): InstanceType<typeof RuntimeDynamicStructuredTool> {
     const schema = z.object({
         company_id: z.number().int().positive().optional().describe(
@@ -327,7 +330,7 @@ export function buildCompanyAssetsByLayoutTool(
         ),
         layout_name: z.string().min(1).optional().describe(
             "Asset layout name — EXACT case-sensitive match. Used only when layout_id is not provided. " +
-            "If unsure of the exact name, use hudu_get_id_by_name with resource_type='asset_layout' first.",
+            "If unsure of the exact name, use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' first.",
         ),
         search: z.string().optional().describe(
             'Filter assets by name, serial number, or model within the result set.',
@@ -344,13 +347,13 @@ export function buildCompanyAssetsByLayoutTool(
         `Reference: current UTC date-time when these tools were loaded is ${referenceUtc}. ` +
         'List all assets of a specific type (layout) for a company, with custom field values labelled by field name. ' +
         "Accepts company name or ID, and layout name or ID. Layout name must be an EXACT case-sensitive match — " +
-        "use hudu_get_id_by_name with resource_type='asset_layout' if unsure of the exact name. " +
+        "use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' if unsure of the exact name. " +
         'Returns assets with a labelled fields object (e.g., {"Hostname": "SRV01", "IP Address": "10.0.0.1"}) ' +
         'instead of raw numeric field IDs. ' +
         "This is the preferred tool for 'show me all [servers/switches/firewalls] for [company]' queries.";
 
     return new RuntimeDynamicStructuredTool({
-        name: 'hudu_company_assets_by_layout',
+        name: `hudu_${resource}_by_layout`,
         description,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         schema: schema as any,
@@ -378,14 +381,14 @@ export function buildCompanyAssetsByLayoutTool(
                     return JSON.stringify(wrapError(
                         'company_assets_by_layout', 'getByLayout', ERROR_TYPES.MISSING_REQUIRED_FIELD,
                         'Either company_id or company_name must be provided.',
-                        "Provide a numeric company_id or a company_name (partial match). Use hudu_get_id_by_name with resource_type='company' to look up the ID.",
+                        "Provide a numeric company_id or a company_name (partial match). Use hudu_assets_get_id_by_name with resource_type='company' to look up the ID.",
                     ));
                 }
                 if (!layoutIdParam && !layoutNameParam) {
                     return JSON.stringify(wrapError(
                         'company_assets_by_layout', 'getByLayout', ERROR_TYPES.MISSING_REQUIRED_FIELD,
                         'Either layout_id or layout_name must be provided.',
-                        "Provide a numeric layout_id or an EXACT layout_name. Use hudu_get_id_by_name with resource_type='asset_layout' to find the exact name.",
+                        "Provide a numeric layout_id or an EXACT layout_name. Use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' to find the exact name.",
                     ));
                 }
 
@@ -427,7 +430,7 @@ export function buildCompanyAssetsByLayoutTool(
                         return JSON.stringify(wrapError(
                             'company_assets_by_layout', 'getByLayout', ERROR_TYPES.NO_RESULTS_FOUND,
                             `No asset layout found with exact name: "${layoutNameParam}".`,
-                            "Layout name must be an EXACT case-sensitive match. Use hudu_get_id_by_name with resource_type='asset_layout' to find the correct name.",
+                            "Layout name must be an EXACT case-sensitive match. Use hudu_asset_layouts_get_id_by_name with resource_type='asset_layout' to find the correct name.",
                         ));
                     }
                     const layout = layouts[0] as IDataObject;

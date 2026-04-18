@@ -141,21 +141,23 @@ export class HuduAiTools implements INodeType {
                 name: 'enableGetIdByName',
                 type: 'boolean',
                 default: false,
-                description: 'Whether to add the hudu_get_id_by_name enrichment tool — resolves resource names to numeric IDs across companies, assets, articles, layouts, folders, procedures, websites, and users',
+                description: 'Whether to add a hudu_{resource}_get_id_by_name enrichment tool — resolves resource names to numeric IDs across companies, assets, articles, layouts, folders, procedures, websites, and users. Tool name is unique per resource to avoid MCP name collisions.',
             },
             {
                 displayName: 'Enable: Move Asset',
                 name: 'enableMoveAsset',
                 type: 'boolean',
                 default: false,
-                description: 'Whether to add the hudu_move_asset enrichment tool — moves an asset between companies by recreating it at the target and deleting the original (requires write access)',
+                displayOptions: { show: { resource: ['assets'] } },
+                description: 'Whether to add the hudu_assets_move enrichment tool — moves an asset between companies by recreating it at the target and deleting the original (requires write access)',
             },
             {
                 displayName: 'Enable: Assets by Layout',
                 name: 'enableCompanyAssetsByLayout',
                 type: 'boolean',
                 default: false,
-                description: 'Whether to add the hudu_company_assets_by_layout enrichment tool — lists assets of a specific type for a company with custom field values labelled by field name',
+                displayOptions: { show: { resource: ['assets'] } },
+                description: 'Whether to add the hudu_{resource}_by_layout enrichment tool — lists assets of a specific type for a company with custom field values labelled by field name. Tool name is unique per resource.',
             },
         ],
     };
@@ -262,9 +264,9 @@ export class HuduAiTools implements INodeType {
         });
 
         const enrichmentTools = [];
-        if (enableGetIdByName) enrichmentTools.push(buildGetIdByNameTool(this, referenceUtc));
-        if (enableMoveAsset) enrichmentTools.push(buildMoveAssetTool(this, referenceUtc));
-        if (enableCompanyAssetsByLayout) enrichmentTools.push(buildCompanyAssetsByLayoutTool(this, referenceUtc));
+        if (enableGetIdByName) enrichmentTools.push(buildGetIdByNameTool(this, referenceUtc, resource));
+        if (enableMoveAsset) enrichmentTools.push(buildMoveAssetTool(this, referenceUtc, resource));
+        if (enableCompanyAssetsByLayout) enrichmentTools.push(buildCompanyAssetsByLayoutTool(this, referenceUtc, resource));
 
         return enrichmentTools.length === 0
             ? { response: unifiedTool }

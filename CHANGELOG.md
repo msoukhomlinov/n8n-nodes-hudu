@@ -11,6 +11,15 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.1.0] - 2026-04-18
+
+### Changed
+- **AI Tools enrichment tool names**: All enrichment tool names are now resource-scoped to prevent MCP name collisions when multiple `HuduAiTools` nodes are connected to the same agent:
+  - `hudu_get_id_by_name` → `hudu_{resource}_get_id_by_name` (e.g. `hudu_companies_get_id_by_name`)
+  - `hudu_move_asset` → `hudu_{resource}_move` (e.g. `hudu_assets_move`)
+  - `hudu_company_assets_by_layout` → `hudu_{resource}_by_layout` (e.g. `hudu_assets_by_layout`)
+- **AI Tools node UI**: `Enable: Move Asset` and `Enable: Assets by Layout` options now only appear when the `assets` resource is selected (previously shown for all resources)
+
 ## [2.0.5] - 2026-04-10
 
 ### Changed
