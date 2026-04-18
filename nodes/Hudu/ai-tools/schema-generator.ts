@@ -98,6 +98,19 @@ export function getGetSchema() {
   });
 }
 
+export function getArticlesGetSchema() {
+  return z.object({
+    id: idSchema,
+    include_content: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        "Include the full HTML content field. Default false — article bodies consume significant context. Set true only when you need to read or quote the article body.",
+      ),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Delete
 // ---------------------------------------------------------------------------
@@ -162,14 +175,38 @@ export function getArticlesGetAllSchema() {
       .string()
       .optional()
       .describe(
-        'Partial text match across article title and content. ALWAYS use this first for any title or text lookup.',
+        "Partial text match across article title and content. Use for topic or keyword exploration. For resolving a known article title to an ID, prefer 'name' (title-biased ranking).",
       ),
-    name: optionalNameSchema,
+    name: z
+      .string()
+      .optional()
+      .describe(
+        "Article title to fuzzy-resolve to an ID. Sends your text as a search, fetches up to 100 candidates, and ranks results by how many title words match. Use this when you know the article title. Prefer over 'search' for title-based lookups.",
+      ),
     company_id: optionalCompanyIdSchema,
     slug: z.string().optional().describe('Filter by URL slug'),
     draft: z.boolean().optional().describe('Filter by draft status'),
     folder_id: z.number().int().positive().optional().describe('Filter by folder ID'),
-    archived: archivedSchema,
+    enable_sharing: z.boolean().optional().describe('Filter to publicly shareable articles only.'),
+    updated_at_start: z
+      .string()
+      .optional()
+      .describe(
+        "ISO 8601 UTC datetime lower bound for updated_at filter, e.g. '2024-03-01T00:00:00Z'. Combine with updated_at_end for a range; omit for no lower bound. Use the reference UTC at the top of this description for relative dates.",
+      ),
+    updated_at_end: z
+      .string()
+      .optional()
+      .describe(
+        "ISO 8601 UTC datetime upper bound for updated_at filter, e.g. '2024-03-07T23:59:59Z'. Omit to mean up to now.",
+      ),
+    include_content: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        "Include the full HTML content field in each result. Default false — article bodies are large HTML that fills context quickly. Set true only when you need to read or quote the article body; otherwise leave false and call get with include_content=true for a specific article.",
+      ),
     limit: limitSchema,
   });
 }
@@ -1062,7 +1099,7 @@ function getSchemaForOperation(
 ): z.ZodObject<z.ZodRawShape> {
   switch (operation) {
     case 'get':
-      return getGetSchema();
+      return resource === 'articles' ? getArticlesGetSchema() : getGetSchema();
     case 'getAll':
       return getGetAllSchemaForResource(resource);
     case 'create':
