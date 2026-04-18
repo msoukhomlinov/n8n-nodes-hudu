@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.3] - 2026-04-19
+
+### Added
+- `hudu_articles` (`getAll`): new `enable_sharing` filter — restricts results to publicly shareable articles
+- `hudu_articles` (`getAll`): new `updated_at_start` / `updated_at_end` filters — ISO 8601 UTC range filter for last-modified date
+- `hudu_articles` (`getAll`, `get`): new `include_content` flag — opt-in to include full HTML content field (default false; article bodies average ~9k chars each)
+- `result-processor.ts`: new pure utility module — `sortByTitleMatch` (word-overlap title ranking) and `stripContentField` (opt-in content stripping); designed for reuse by other resources
+
+### Changed
+- `hudu_articles` (`getAll`) `name` param: semantics changed from exact-match to fuzzy title resolution — sends value as `search`, fetches up to 100 candidates, re-ranks by title word overlap, returns top `limit` results
+- `hudu_articles` (`getAll`) `search` description updated: clarifies it is for topic/content exploration, and that `name` is preferred for title-based ID resolution
+- `hudu_articles` (`get`, `getAll`): `content` field excluded from responses by default — add `include_content: true` to any workflow that needs article bodies
+- `HuduResourceConfig`: three new optional flags (`supportsContentField`, `contentField`, `nameResolutionBaked`) — foundational for applying these patterns to other resources
+
+### Removed
+- `hudu_articles` (`getAll`): `archived` filter removed — this parameter was silently ignored by the Hudu API (not a supported query param on `GET /articles`); schema validation will now reject it
+- `hudu_articles_get_id_by_name` enrichment tool: removed — name-to-ID resolution is now baked into `hudu_articles` with `operation: 'getAll'` and `name` param; users who had "Resolve Name to ID" enabled for articles will no longer see this tool registered (degrades silently via existing guard)
+
+### Breaking Changes
+| Change | Severity | Migration |
+|--------|----------|-----------|
+| `name` param semantics: exact → fuzzy title lookup | HIGH | Agents using `name` for exact match now get ranked fuzzy results — intended behaviour |
+| `content` excluded from `getAll`/`get` by default | HIGH | Add `include_content: true` to any workflow that reads article bodies |
+| `archived` filter removed from `getAll` | MEDIUM | Was silently ignored — no functional regression, but schema validation now rejects it |
+| `hudu_articles_get_id_by_name` tool removed | MEDIUM | Use `hudu_articles` with `operation: 'getAll'` and `name` instead |
+
 ## Future version — n8n Creator Portal (Cloud submission)
 
 **Planned approach:** split into two packages — **this package** as the verified, n8n Cloud–submittable build **without** the `HuduAiTools` node (main Hudu node remains, including `usableAsTool` where applicable), and a **separate package** that includes full Hudu AI Tools for self‑hosted installs only (not submitted to n8n Cloud). The items below come from Creator Portal / community package scanner review and are to be closed as part of that split and follow‑up work.
@@ -11,14 +37,16 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
-## [2.1.0] - 2026-04-18
+## [2.1.2] - 2026-04-18
 
 ### Changed
 - **AI Tools enrichment tool names**: All enrichment tool names are now resource-scoped to prevent MCP name collisions when multiple `HuduAiTools` nodes are connected to the same agent:
   - `hudu_get_id_by_name` → `hudu_{resource}_get_id_by_name` (e.g. `hudu_companies_get_id_by_name`)
   - `hudu_move_asset` → `hudu_{resource}_move` (e.g. `hudu_assets_move`)
   - `hudu_company_assets_by_layout` → `hudu_{resource}_by_layout` (e.g. `hudu_assets_by_layout`)
-- **AI Tools node UI**: `Enable: Move Asset` and `Enable: Assets by Layout` options now only appear when the `assets` resource is selected (previously shown for all resources)
+- **AI Tools node UI**: Replaced three separate boolean toggles (`Enable: Resolve Name to ID`, `Enable: Move Asset`, `Enable: Assets by Layout`) with a single `Extra Tools` multiOptions field. Available options are dynamically filtered based on the selected resource — only valid enrichment tools for that resource are shown.
+- **`hudu_{resource}_get_id_by_name` schema**: Removed redundant `resource_type` parameter — each tool is already scoped to its resource by name. Schema now only contains `name` and `limit`.
+- **`hudu_{resource}_get_id_by_name` coverage**: Extended from 8 to 13 resources — added `asset_passwords` (search), `networks` (exact), `groups` (search), `vlans` (exact), `vlan_zones` (exact).
 
 ## [2.0.5] - 2026-04-10
 
