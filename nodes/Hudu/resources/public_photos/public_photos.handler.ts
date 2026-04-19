@@ -58,10 +58,10 @@ export async function handlePublicPhotoOperation(
       const filter = this.getNodeParameter('filter', i, {}) as IDataObject;
       let recordTypeFilter = '';
       let recordIdFilter: number | null = null;
-      if (filter && Array.isArray(filter.criteria) && filter.criteria.length > 0) {
-        const criteria = filter.criteria[0] as IDataObject;
+      const criteria = filter?.criteria as IDataObject | undefined;
+      if (criteria) {
         recordTypeFilter = (criteria.record_type_filter as string) || '';
-        recordIdFilter = criteria.record_id_filter !== undefined ? (criteria.record_id_filter as number) : null;
+        recordIdFilter = criteria.record_id_filter != null ? (criteria.record_id_filter as number) : null;
       }
 
       let photos = await handleListing.call(
@@ -88,7 +88,7 @@ export async function handlePublicPhotoOperation(
     }
 
     case 'get': {
-      const photoId = this.getNodeParameter('id', i) as number;
+      const photoId = this.getNodeParameter('id', i) as string;
       const download = this.getNodeParameter('download', i, false) as boolean;
 
       if (download) {
@@ -119,7 +119,7 @@ export async function handlePublicPhotoOperation(
     }
 
     case 'update': {
-      const id = this.getNodeParameter('id', i) as number;
+      const id = this.getNodeParameter('id', i) as string;
       const formData: IDataObject = {
         record_type: this.getNodeParameter('record_type', i) as string,
         record_id: this.getNodeParameter('record_id', i) as number,

@@ -126,6 +126,15 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     supportsPagination: true,
     label: 'Photo',
   },
+  public_photos: {
+    endpoint: '/public_photos',
+    pluralKey: 'public_photos',
+    singularKey: null,
+    bodyKey: null,
+    ops: ['get'],
+    supportsPagination: true,
+    label: 'Public Photo',
+  },
   procedure_tasks: {
     endpoint: '/procedure_tasks',
     pluralKey: 'procedure_tasks',

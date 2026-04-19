@@ -98,6 +98,18 @@ export function getGetSchema() {
   });
 }
 
+export function getPublicPhotosGetSchema() {
+  return z.object({
+    id: z
+      .number()
+      .int()
+      .positive()
+      .describe(
+        "Public photo numeric ID — the integer 'numeric_id' from the article or company response's 'public_photos' array. Returns METADATA ONLY (id, numeric_id, url, record_type, record_id, file_name, file_size) — NEVER binary image content. Do NOT pass the slug string from '/public_photo/<slug>' HTML links — the API only accepts integers and returns 404 for slugs.",
+      ),
+  });
+}
+
 export function getArticlesGetSchema() {
   return z.object({
     id: idSchema,
@@ -491,6 +503,26 @@ export function getPhotosGetAllSchema() {
       .optional()
       .describe('Filter by photo folder ID'),
     archived: archivedSchema,
+    limit: limitSchema,
+  });
+}
+
+export function getPublicPhotosGetAllSchema() {
+  return z.object({
+    record_type: z
+      .string()
+      .optional()
+      .describe(
+        "Filter by associated record type. Valid values: 'Article' (knowledge-base article), 'Company' (client company record). Case-sensitive exact match.",
+      ),
+    record_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        "Filter by the numeric ID of the associated record. Use together with record_type. Obtain from a prior getAll call on the relevant resource (e.g., hudu_articles or hudu_companies with operation 'getAll').",
+      ),
     limit: limitSchema,
   });
 }
@@ -1021,6 +1053,8 @@ function getGetAllSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getMatchersGetAllSchema();
     case 'photos':
       return getPhotosGetAllSchema();
+    case 'public_photos':
+      return getPublicPhotosGetAllSchema();
     case 'procedure_tasks':
       return getProcedureTasksGetAllSchema();
     default:
@@ -1099,7 +1133,9 @@ function getSchemaForOperation(
 ): z.ZodObject<z.ZodRawShape> {
   switch (operation) {
     case 'get':
-      return resource === 'articles' ? getArticlesGetSchema() : getGetSchema();
+      if (resource === 'articles') return getArticlesGetSchema();
+      if (resource === 'public_photos') return getPublicPhotosGetSchema();
+      return getGetSchema();
     case 'getAll':
       return getGetAllSchemaForResource(resource);
     case 'create':

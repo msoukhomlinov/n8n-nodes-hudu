@@ -18,6 +18,7 @@ import {
   formatNoResultsFound,
 } from './error-formatter';
 import { relationFilterMapping } from '../resources/relations/relations.types';
+import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
 import { sortByTitleMatch, stripContentField } from './result-processor';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
@@ -26,7 +27,7 @@ const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 const NO_SEARCH_RESOURCES = new Set([
   'procedures', 'activity_logs', 'folders', 'networks', 'ip_addresses',
   'asset_layouts', 'relations', 'expirations', 'vlans', 'vlan_zones', 'matchers',
-  'photos', 'procedure_tasks',
+  'photos', 'public_photos', 'procedure_tasks',
 ]);
 const NUMERIC_FIELDS = new Set([
   'id',
@@ -56,6 +57,7 @@ const NUMERIC_FIELDS = new Set([
   'photoable_id',
   'parent_task_id',
   'procedure_id',
+  'record_id',
 ]);
 
 /**
@@ -153,6 +155,14 @@ export async function executeHuduAiTool(
         if (!params.id) {
           return JSON.stringify(formatMissingIdError(resource, operation, supportsSearch));
         }
+        // public_photos: API only accepts integer numeric_id — reject slug strings (e.g. 'a1b2c3d4')
+        if (resource === 'public_photos' && typeof params.id !== 'number') {
+          return JSON.stringify(wrapError(
+            resource, operation, ERROR_TYPES.VALIDATION_ERROR,
+            'public_photos get requires a numeric integer id (numeric_id), not a slug string.',
+            "Pass the integer 'numeric_id' from the article or company response's 'public_photos' array, not the slug string 'id' field.",
+          ));
+        }
         const data = await handleGetOperation.call(
           context as unknown as IExecuteFunctions,
           config.endpoint,
@@ -209,7 +219,7 @@ export async function executeHuduAiTool(
         const filters = buildFilters(filterParams);
         const hasFilters = Object.keys(filters).length > 0;
         let records: IDataObject[];
-        // Relations use client-side post-process filtering, not query params
+        // Relations and public_photos use client-side post-process filtering (API has no server-side filters)
         if (resource === 'relations') {
           records = await handleGetAllOperation.call(
             context as unknown as IExecuteFunctions,
@@ -220,6 +230,17 @@ export async function executeHuduAiTool(
             effectiveLimit,
             filters as IDataObject,
             relationFilterMapping,
+          );
+        } else if (resource === 'public_photos') {
+          records = await handleGetAllOperation.call(
+            context as unknown as IExecuteFunctions,
+            config.endpoint,
+            config.pluralKey ?? undefined,
+            {},
+            false,
+            effectiveLimit,
+            filters as IDataObject,
+            publicPhotoFilterMapping,
           );
         } else {
           records = await handleGetAllOperation.call(

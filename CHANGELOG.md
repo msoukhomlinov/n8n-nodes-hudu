@@ -1,9 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Future version — n8n Creator Portal (Cloud submission)
+
+**Planned approach:** split into two packages — **this package** as the verified, n8n Cloud–submittable build **without** the `HuduAiTools` node (main Hudu node remains, including `usableAsTool` where applicable), and a **separate package** that includes full Hudu AI Tools for self‑hosted installs only (not submitted to n8n Cloud). The items below come from Creator Portal / community package scanner review and are to be closed as part of that split and follow‑up work.
+
+### Outstanding — Cloud / scanner
+
+- **[MEDIUM] `HuduAiTools` AI tool output connection type** (`nodes/Hudu/HuduAiTools.node.ts`): The tools output uses `{ type: 'ai_tool' as NodeConnectionType }` — a string literal cast instead of the enum value. **Fix:** import the **value** `NodeConnectionTypes` from `n8n-workflow` (not only the `NodeConnectionType` type) and set `type: NodeConnectionTypes.AiTool` on the output definition.
+
+- **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
+
 ## [2.1.3] - 2026-04-19
 
 ### Added
+- `hudu_public_photos` AI tool: new resource — `get` only using `numeric_id` (integer); `getAll` excluded (full-corpus client-side fetch causes MCP timeout `-32001`). `hudu_articles` `get` description mandates proactive photo fetching: when `include_content=true`, agent MUST call `hudu_public_photos get` with each photo's `numeric_id` from the response `public_photos` array.
 - `hudu_articles` (`getAll`): new `enable_sharing` filter — restricts results to publicly shareable articles
 - `hudu_articles` (`getAll`): new `updated_at_start` / `updated_at_end` filters — ISO 8601 UTC range filter for last-modified date
 - `hudu_articles` (`getAll`, `get`): new `include_content` flag — opt-in to include full HTML content field (default false; article bodies average ~9k chars each)
@@ -19,6 +30,17 @@ All notable changes to this project will be documented in this file.
 - `hudu_articles` (`getAll`): `archived` filter removed — this parameter was silently ignored by the Hudu API (not a supported query param on `GET /articles`); schema validation will now reject it
 - `hudu_articles_get_id_by_name` enrichment tool: removed — name-to-ID resolution is now baked into `hudu_articles` with `operation: 'getAll'` and `name` param; users who had "Resolve Name to ID" enabled for articles will no longer see this tool registered (degrades silently via existing guard)
 
+### Fixed
+- `public_photos` (`get`, `update`): Photo ID field: API path parameter is integer-only (`numeric_id`); response returns slug-based `id` field for display but requests must use `numeric_id`
+- `public_photos` (`getAll`): Record Type / Record ID filters were silently ignored — `fixedCollection` returns criteria as plain object, not array; `Array.isArray` check always failed
+- `HuduAiTools`: removed `usableAsTool: true` — conflicts with `supplyData()`; caused runtime `UnexpectedError` (n8n PR #13075)
+- `runtime.ts`: zod now resolved from `require.main` first (top-level n8n copy), preventing silent `instanceof ZodType` failures in `normalizeToolSchema`
+- `runtime.ts`: `getRuntimeRequire()` tries `require.main` before `ANCHOR_CANDIDATES` to prevent devDep shadowing during `npm link`
+- `runtime.ts`: added `getLazyLogWrapper()` export for optional tool visibility in n8n execution view
+- `runtime.ts`: `RuntimeRequire` type now includes `.resolve()` method — fixed pre-existing TypeScript compile error (`Property 'resolve' does not exist on type 'RuntimeRequire'`)
+- `description-builders.ts`: delete description now includes "ONLY on explicit user intent. Do not infer from context." (write safety Layer 3)
+- `description-builders.ts`: create/update descriptions now include "Confirm field values with user before executing when acting autonomously." (write safety Layer 3)
+
 ### Breaking Changes
 | Change | Severity | Migration |
 |--------|----------|-----------|
@@ -26,16 +48,6 @@ All notable changes to this project will be documented in this file.
 | `content` excluded from `getAll`/`get` by default | HIGH | Add `include_content: true` to any workflow that reads article bodies |
 | `archived` filter removed from `getAll` | MEDIUM | Was silently ignored — no functional regression, but schema validation now rejects it |
 | `hudu_articles_get_id_by_name` tool removed | MEDIUM | Use `hudu_articles` with `operation: 'getAll'` and `name` instead |
-
-## Future version — n8n Creator Portal (Cloud submission)
-
-**Planned approach:** split into two packages — **this package** as the verified, n8n Cloud–submittable build **without** the `HuduAiTools` node (main Hudu node remains, including `usableAsTool` where applicable), and a **separate package** that includes full Hudu AI Tools for self‑hosted installs only (not submitted to n8n Cloud). The items below come from Creator Portal / community package scanner review and are to be closed as part of that split and follow‑up work.
-
-### Outstanding — Cloud / scanner
-
-- **[MEDIUM] `HuduAiTools` AI tool output connection type** (`nodes/Hudu/HuduAiTools.node.ts`): The tools output uses `{ type: 'ai_tool' as NodeConnectionType }` — a string literal cast instead of the enum value. **Fix:** import the **value** `NodeConnectionTypes` from `n8n-workflow` (not only the `NodeConnectionType` type) and set `type: NodeConnectionTypes.AiTool` on the output definition.
-
-- **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
 ## [2.1.2] - 2026-04-18
 

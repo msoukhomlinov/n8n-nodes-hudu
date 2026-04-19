@@ -34,7 +34,21 @@ export function buildGetDescription(
     return (
       "Fetch a single article record by its numeric ID. " +
       "ONLY call when you already have a numeric ID — if you only have a title, call hudu_articles with operation 'getAll' and 'name' first. " +
-      "By default the HTML content field is stripped — set include_content=true only when you need to read or quote the article body; leave false when you need only metadata."
+      "By default the HTML content field is stripped — set include_content=true only when you need to read or quote the article body; leave false when you need only metadata. " +
+      "When reading content (include_content=true): the response includes a 'public_photos' array — objects with 'numeric_id' (integer) for each embedded image. " +
+      "Call hudu_public_photos with operation 'get' and each photo's 'numeric_id' BEFORE editing or redacting the article — this verifies each embedded photo still exists so your edits do not accidentally break or remove valid image references. " +
+      "Skip this verification step when you are only reading, summarising, or quoting the article (no write-back). " +
+      "Do NOT use the slug from '/public_photo/<slug>' HTML links as the id — the API returns 404 for slugs; use 'numeric_id' only."
+    );
+  }
+  if (resourceName === 'public_photos') {
+    return (
+      "Fetch public photo METADATA by numeric ID — returns id (slug), numeric_id, url, record_type, record_id, file_name, file_size. " +
+      "Returns METADATA ONLY — NEVER returns binary image bytes or image content. n8n's tool architecture forcibly JSON-stringifies every tool result, so binary data in AI tool responses is impossible by design. Do NOT attempt to return, decode, or analyse image content from this call. " +
+      "PRIMARY use: before editing or redacting an article (or company record) that contains embedded '/public_photo/<slug>' images, call this with each photo's 'numeric_id' to verify the photo still exists — this prevents your edits from breaking or removing references to photos that were already deleted upstream. " +
+      "SECONDARY use: surface the 'url' (a publicly accessible absolute URL, no Hudu auth required) or 'file_name' / 'file_size' to the user so they can open the image in their browser. " +
+      "NOT useful for: visual analysis of image content, describing what a diagram or screenshot shows, or OCR — this tool cannot see images. If the user asks what an image depicts, explain you can only supply the URL for them to view. " +
+      "Pass the 'numeric_id' (integer) from the article or company response's 'public_photos' array. Do NOT pass the slug string from '/public_photo/<slug>' HTML links — the API only accepts integers and returns 404 for slugs."
     );
   }
   const lookupHint = supportsSearch
@@ -63,7 +77,18 @@ export function buildGetAllDescription(
       "Content is stripped from results by default (set include_content=true to include). " +
       "Narrow with company_id, folder_id, draft, enable_sharing, or updated_at_start/end date range. " +
       "Results contain numeric 'id' on each record — capture for get, update, delete, or archive. " +
+      "Article HTML (fetched via 'get' with include_content=true) contains embedded images; the response includes a 'public_photos' array with 'numeric_id' per image — when editing or redacting the article, call hudu_public_photos 'get' with that integer FIRST to verify each embedded photo still exists (prevents breaking image references). Skip this step when just reading or summarising. Use 'numeric_id', NOT the slug from HTML links. " +
       "If results are unexpectedly empty, verify API key permissions."
+    );
+  }
+  if (resource === 'public_photos') {
+    return (
+      ref +
+      "List public photo records in Hudu. Public photos are images embedded in article or company HTML content as '/public_photo/<slug>' links. " +
+      "WARNING: Hudu has no server-side filters on this endpoint — record_type and record_id are applied client-side after paging the full photo corpus. ALWAYS provide both record_type ('Article' or 'Company') AND record_id to keep the fetch bounded. " +
+      "Each result's 'id' is a string slug (display only); 'numeric_id' is the integer required for operation 'get' — do NOT pass the slug string; 'url' is the direct image URL for display or download. " +
+      "Increase 'limit' toward 100 only if you expect a record to have many embedded photos. " +
+      "If results are empty, verify record_type and record_id match a record that actually has embedded photos."
     );
   }
   if (supportsSearch) {
@@ -107,6 +132,7 @@ export function buildCreateDescription(
     `Create a new ${label} record in Hudu. ` +
     reqList +
     foreignKeyHint +
+    `Confirm field values with user before executing when acting autonomously. ` +
     `On success returns the created record including its assigned numeric 'id' (use for subsequent operations). ` +
     `If you receive a validation error, check that all required fields are provided with valid values.`
   );
@@ -124,6 +150,7 @@ export function buildUpdateDescription(
     `Update an existing ${label} record in Hudu by numeric ID. ` +
     `PREREQUISITE: you need the numeric ID. If you only have a name or text, ${lookupHint} ` +
     `Provide only the fields you want to change — unchanged fields can be omitted (PATCH semantics). ` +
+    `Confirm field values with user before executing when acting autonomously. ` +
     `Returns the updated record.`
   );
 }
@@ -140,6 +167,7 @@ export function buildDeleteDescription(
     `Permanently and irreversibly delete a ${label} record from Hudu by numeric ID. ` +
     `Consider using 'archive' instead — it hides the record while preserving data for later restoration. ` +
     `PREREQUISITE: confirm the correct ID — ${confirmHint} ` +
+    `ONLY on explicit user intent. Do not infer from context. Confirm ID is correct before proceeding. ` +
     `Returns deletion confirmation.`
   );
 }

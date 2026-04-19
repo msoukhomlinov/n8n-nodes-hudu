@@ -13,7 +13,7 @@ type DynamicStructuredToolCtor = new (fields: {
 }) => DynamicStructuredTool;
 
 export type RuntimeZod = typeof ZodNamespace;
-type RuntimeRequire = (moduleId: string) => unknown;
+type RuntimeRequire = { (moduleId: string): unknown; resolve(id: string): string };
 
 /**
  * Anchor candidates — packages in n8n's dependency tree that can serve as
@@ -23,18 +23,28 @@ type RuntimeRequire = (moduleId: string) => unknown;
 const ANCHOR_CANDIDATES = ['@langchain/classic/agents', 'langchain/agents'] as const;
 
 function getRuntimeRequire(): { runtimeReq: RuntimeRequire | null; diagnostic: string | null } {
-  const errors: string[] = [];
+  // eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
+  const { createRequire } = require('module') as {
+    createRequire: (filename: string) => RuntimeRequire;
+  };
 
+  // Try require.main first (prevents devDep shadowing during npm link)
+  const tried: string[] = [];
+  try {
+    const req = createRequire(require.main?.filename ?? __filename);
+    req.resolve('@langchain/classic/agents');
+    return { runtimeReq: req, diagnostic: 'resolved via require.main' };
+  } catch (e) {
+    tried.push(`require.main: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // Fall back to ANCHOR_CANDIDATES
   for (const anchor of ANCHOR_CANDIDATES) {
     try {
       const anchorPath = require.resolve(anchor) as string;
-      // eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
-      const { createRequire } = require('module') as {
-        createRequire: (filename: string) => RuntimeRequire;
-      };
-      return { runtimeReq: createRequire(anchorPath), diagnostic: null };
+      return { runtimeReq: createRequire(anchorPath), diagnostic: `resolved via anchor: ${anchor}` };
     } catch (e) {
-      errors.push(`${anchor}: ${e instanceof Error ? e.message : String(e)}`);
+      tried.push(`${anchor}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -42,11 +52,22 @@ function getRuntimeRequire(): { runtimeReq: RuntimeRequire | null; diagnostic: s
   // but record a diagnostic for Proxy error messages.
   const diagnostic =
     `[HuduAiTools] No runtime anchor found. Tried: ${ANCHOR_CANDIDATES.join(', ')}. ` +
-    `Errors: ${errors.join(' | ')}`;
+    `Errors: ${tried.join(' | ')}`;
   return { runtimeReq: null, diagnostic };
 }
 
 const { runtimeReq, diagnostic } = getRuntimeRequire();
+
+// Resolve zod SEPARATELY via require.main to get the top-level zod instance
+// that n8n's normalizeToolSchema uses for `instanceof ZodType` checks.
+// eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
+const { createRequire: _createRequire } = require('module') as {
+  createRequire: (filename: string) => RuntimeRequire;
+};
+let _topLevelZodReq: RuntimeRequire | null = null;
+try {
+  _topLevelZodReq = _createRequire(require.main?.filename ?? __filename);
+} catch (_) {}
 
 // Wrap module-level resolutions so a missing package produces a clear error at
 // execution time (via NodeOperationError in supplyData) rather than a cryptic
@@ -64,7 +85,16 @@ if (runtimeReq) {
   } catch (e) {
     langchainLoadError = e instanceof Error ? e.message : String(e);
   }
+}
 
+// Resolve zod via require.main first (top-level copy used by n8n's instanceof check).
+// Fall back to the anchor runtimeReq only if require.main is unavailable.
+if (_topLevelZodReq) {
+  try {
+    _runtimeZod = _topLevelZodReq('zod') as RuntimeZod;
+  } catch (_) {}
+}
+if (!_runtimeZod && runtimeReq) {
   try {
     _runtimeZod = runtimeReq('zod') as RuntimeZod;
   } catch (e) {
@@ -115,3 +145,21 @@ export const runtimeZod: RuntimeZod = new Proxy({} as RuntimeZod, {
     return (_runtimeZod as any)[prop];
   },
 });
+
+let _logWrapper: ((tool: unknown, context: unknown) => unknown) | undefined;
+let _logWrapperResolved = false;
+
+export function getLazyLogWrapper(): ((tool: unknown, context: unknown) => unknown) | undefined {
+  if (_logWrapperResolved) return _logWrapper;
+  _logWrapperResolved = true;
+  try {
+    if (runtimeReq) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const aiUtilities = runtimeReq('@n8n/ai-utilities') as Record<string, any> | undefined;
+      _logWrapper = aiUtilities?.logWrapper ?? aiUtilities?.default?.logWrapper;
+    }
+  } catch (_) {
+    // best-effort — not available in all n8n versions
+  }
+  return _logWrapper;
+}

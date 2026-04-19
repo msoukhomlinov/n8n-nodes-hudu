@@ -50,7 +50,7 @@ export const publicPhotosFields: INodeProperties[] = [
   {
     displayName: 'Photo ID',
     name: 'id',
-    type: 'number',
+    type: 'string',
     displayOptions: {
       show: {
         resource: ['public_photos'],
@@ -58,8 +58,8 @@ export const publicPhotosFields: INodeProperties[] = [
       },
     },
     required: true,
-    default: 0,
-    description: 'The ID of the public photo to retrieve',
+    default: '',
+    description: 'Numeric ID of the photo to retrieve. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>id</code> field — the API returns 404 for slug values.',
   },
   {
     displayName: 'Download',
@@ -204,7 +204,7 @@ export const publicPhotosFields: INodeProperties[] = [
   {
     displayName: 'Photo ID',
     name: 'id',
-    type: 'number',
+    type: 'string',
     displayOptions: {
       show: {
         resource: ['public_photos'],
@@ -212,8 +212,8 @@ export const publicPhotosFields: INodeProperties[] = [
       },
     },
     required: true,
-    default: 0,
-    description: 'The ID of the public photo to update',
+    default: '',
+    description: 'Numeric ID of the photo to update. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>id</code> field — the API returns 404 for slug values.',
   },
   {
     displayName: 'Record Type',
