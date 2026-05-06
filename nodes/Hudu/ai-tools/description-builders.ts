@@ -116,8 +116,25 @@ export function buildCreateDescription(
   requiredFields: string[],
   referenceUtc?: string,
   supportsSearch = true,
+  resource = '',
 ): string {
   const ref = referenceUtc ? dateTimeReferenceSnippet(referenceUtc) : '';
+
+  if (resource === 'articles') {
+    return (
+      ref +
+      'Create a new article in Hudu. ' +
+      'SCOPE — provide ONE of: (a) company_id (numeric, use hudu_companies_get_id_by_name if unknown), ' +
+      '(b) folder_id (company_id auto-resolved internally — no extra call needed), ' +
+      'or (c) global=true for a global article not tied to any company. ' +
+      'folder_id is optional when global=true (places article in a global folder). ' +
+      'global=true takes precedence over any provided company_id. ' +
+      'content accepts HTML or Markdown. ' +
+      'Confirm field values with user before executing when acting autonomously. ' +
+      'On success returns the created article including its numeric id.'
+    );
+  }
+
   const reqList =
     requiredFields.length > 0 ? `Required fields: ${requiredFields.join(', ')}. ` : '';
   const idFields = requiredFields.filter((f) => f.endsWith('_id') && f !== 'id');
@@ -214,7 +231,7 @@ export function buildUnifiedDescription(
       case 'getAll':
         return `- getAll: ${buildGetAllDescription(resourceLabel, undefined, supportsSearch, resource)}`;
       case 'create':
-        return `- create: ${buildCreateDescription(resourceLabel, requiredFields, undefined, supportsSearch)}`;
+        return `- create: ${buildCreateDescription(resourceLabel, requiredFields, undefined, supportsSearch, resource)}`;
       case 'update':
         return `- update: ${buildUpdateDescription(resourceLabel, resource, supportsSearch)}`;
       case 'delete':
