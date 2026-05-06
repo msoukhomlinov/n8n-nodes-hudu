@@ -11,6 +11,17 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.2.0] - 2026-05-06
+
+### Added
+- `hudu_articles` (`create`): `global` boolean field (default `false`) — set `true` to create a global article not scoped to any company; strips `company_id` from the API call and skips resolution
+- `hudu_articles` (`create`): auto-resolve `company_id` from `folder_id` — if `folder_id` provided and `company_id` absent, executor fetches `GET /folders/{id}` and injects `company_id` (eliminates separate company lookup)
+- `hudu_articles` (`create`): structured error when neither `company_id`, `folder_id`, nor `global=true` provided — guides LLM to correct scope pattern
+
+### Changed
+- `hudu_articles` (`create`): `company_id` and `folder_id` descriptions updated to reflect auto-resolve and `global` precedence
+- `hudu_articles` (`create`): tool description updated with explicit SCOPE guidance (three paths: `company_id` / `folder_id` / `global=true`)
+
 ## [2.1.3] - 2026-04-19
 
 ### Added
