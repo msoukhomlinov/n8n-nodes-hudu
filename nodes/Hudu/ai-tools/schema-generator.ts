@@ -571,8 +571,31 @@ export function getArticlesCreateSchema() {
   return z.object({
     name: nameSchema.describe('Article title'),
     content: z.string().optional().describe('Article content (HTML or Markdown)'),
-    company_id: optionalCompanyIdSchema,
-    folder_id: z.number().int().positive().optional().describe('Folder ID to place the article in'),
+    global: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        'Set true to create a global (non-company) article accessible across all companies. ' +
+        'When false (default), company_id or folder_id is required. ' +
+        'This field is not sent to Hudu — it only controls how the executor resolves company context. ' +
+        'global=true takes precedence over any provided company_id.',
+      ),
+    company_id: optionalCompanyIdSchema.describe(
+      'Numeric company ID. Omit if folder_id is provided — auto-resolved from folder. ' +
+      'If unknown, call hudu_companies_get_id_by_name to resolve company name to ID. ' +
+      'Ignored when global=true.',
+    ),
+    folder_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        'Folder ID to place the article in. ' +
+        'If provided without company_id, company_id is auto-resolved from the folder record (one internal API call). ' +
+        'Always sent to Hudu regardless of how company_id was resolved.',
+      ),
     enable_sharing: z.boolean().optional().describe('Whether to enable public sharing'),
   });
 }

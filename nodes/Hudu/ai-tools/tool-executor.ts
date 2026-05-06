@@ -112,6 +112,76 @@ function getWriteEndpointAndFields(
   };
 }
 
+async function resolveArticleCreateContext(
+  params: Record<string, unknown>,
+  context: ISupplyDataFunctions,
+): Promise<{ resolvedParams: Record<string, unknown>; errorJson?: string }> {
+  const isGlobal = params.global === true;
+  const companyId = params.company_id;
+  const folderId = params.folder_id;
+
+  // Strip client-only field — never reaches Hudu API
+  const rest = Object.fromEntries(
+    Object.entries(params).filter(([k]) => k !== 'global'),
+  ) as Record<string, unknown>;
+  let resolved = rest;
+
+  // global=true wins; strip company_id too
+  if (isGlobal) {
+    const withoutCompany = Object.fromEntries(
+      Object.entries(resolved).filter(([k]) => k !== 'company_id'),
+    ) as Record<string, unknown>;
+    return { resolvedParams: withoutCompany };
+  }
+
+  // company_id present — no resolution needed
+  if (companyId !== undefined && companyId !== null) {
+    return { resolvedParams: resolved };
+  }
+
+  // folder_id present — resolve company_id from folder
+  if (folderId !== undefined && folderId !== null) {
+    try {
+      const folderData = await handleGetOperation.call(
+        context as unknown as IExecuteFunctions,
+        '/folders',
+        folderId as number,
+        'folder',
+      );
+      const folder = folderData as Record<string, unknown>;
+      if (folder.company_id !== undefined && folder.company_id !== null) {
+        resolved = { ...resolved, company_id: folder.company_id };
+      }
+      // folder.company_id === null → global folder, proceed without company_id
+      return { resolvedParams: resolved };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        resolvedParams: resolved,
+        errorJson: JSON.stringify(formatApiError(
+          `Folder ${folderId} lookup failed: ${msg}`,
+          'articles',
+          'create',
+        )),
+      };
+    }
+  }
+
+  // No identifiers — require the LLM to provide one
+  return {
+    resolvedParams: resolved,
+    errorJson: JSON.stringify(
+      wrapError(
+        'articles',
+        'create',
+        ERROR_TYPES.MISSING_REQUIRED_FIELD,
+        'company_id, folder_id, or global=true is required to create an article.',
+        'Provide a numeric company_id, a folder_id (company auto-resolved from folder), or set global=true to create a global article. Call hudu_companies_get_id_by_name to resolve a company name to its numeric ID.',
+      ),
+    ),
+  };
+}
+
 export async function executeHuduAiTool(
   context: ISupplyDataFunctions,
   resource: string,
@@ -293,11 +363,19 @@ export async function executeHuduAiTool(
       }
 
       case 'create': {
+        // Articles: resolve company_id from folder_id if absent, handle global flag
+        let createParams = params;
+        if (resource === 'articles') {
+          const { resolvedParams, errorJson } = await resolveArticleCreateContext(params, context);
+          if (errorJson) return errorJson;
+          createParams = resolvedParams;
+        }
+
         // For company-endpoint resources (assets), strip company_id from body and
         // use it for endpoint routing instead. For all other resources, company_id
         // must remain in the body as a regular API field.
         const { endpoint, fields } = getWriteEndpointAndFields(
-          params,
+          createParams,
           config.endpoint,
           config.requiresCompanyEndpoint,
         );
