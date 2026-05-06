@@ -121,12 +121,16 @@ async function resolveArticleCreateContext(
   const folderId = params.folder_id;
 
   // Strip client-only field — never reaches Hudu API
-  const { global: _global, ...rest } = params;
+  const rest = Object.fromEntries(
+    Object.entries(params).filter(([k]) => k !== 'global'),
+  ) as Record<string, unknown>;
   let resolved = rest;
 
   // global=true wins; strip company_id too
   if (isGlobal) {
-    const { company_id: _cid, ...withoutCompany } = resolved;
+    const withoutCompany = Object.fromEntries(
+      Object.entries(resolved).filter(([k]) => k !== 'company_id'),
+    ) as Record<string, unknown>;
     return { resolvedParams: withoutCompany };
   }
 
