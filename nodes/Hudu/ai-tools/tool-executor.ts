@@ -154,18 +154,15 @@ async function resolveArticleCreateContext(
       }
       // folder.company_id === null → global folder, proceed without company_id
       return { resolvedParams: resolved };
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       return {
         resolvedParams: resolved,
-        errorJson: JSON.stringify(
-          wrapError(
-            'articles',
-            'create',
-            ERROR_TYPES.ENTITY_NOT_FOUND,
-            `Folder ${folderId} not found or not accessible. Verify the folder_id or provide company_id directly.`,
-            'Provide a valid folder_id, a numeric company_id, or set global=true for a global article.',
-          ),
-        ),
+        errorJson: JSON.stringify(formatApiError(
+          `Folder ${folderId} lookup failed: ${msg}`,
+          'articles',
+          'create',
+        )),
       };
     }
   }
