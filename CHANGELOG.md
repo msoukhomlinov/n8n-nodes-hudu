@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.2.1] - 2026-05-06
+
+### Fixed
+- Assets create/update: custom field values (including AssetTag fields) were silently dropped — API requires `custom_fields` array with snake_case field label keys, not `fields` array with `asset_layout_field_id`/`value` objects (fixes #22)
+
 ## [2.2.0] - 2026-05-06
 
 ### Added
