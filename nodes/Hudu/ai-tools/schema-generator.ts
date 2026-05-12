@@ -207,10 +207,17 @@ export function getArticlesGetAllSchema() {
       .string()
       .optional()
       .describe(
-        "Filter by article slug. Hudu URLs follow /kba/{shortHash}/{seoSlug} (e.g. /kba/22a0a2941fb1/16-how-to-set-up-azure-tags) — the stored slug is the suffixed form '{seoSlug}-{shortHash}'. Accepts EITHER form: the full suffixed slug (passed through to Hudu) OR the SEO portion only (auto-translated via search + client-side post-filter). Paste either the value from the URL or the slug field of a prior getAll result.",
+        "Filter by article slug — the 12-character short-hash that Hudu stores in the record's `slug` field (e.g. `22a0a2941fb1`). This is the FIRST path segment after `/kba/` in a Hudu URL: `/kba/{slug}/{seo-suffix}`. The trailing `{seo-suffix}` portion of the URL (derived from the article title) is NOT queryable — use `search` or `name` for title-based lookup instead. Get the short hash from a prior getAll result's `slug` field or from the URL.",
       ),
     draft: z.boolean().optional().describe('Filter by draft status'),
-    folder_id: z.number().int().positive().optional().describe('Filter by folder ID'),
+    folder_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        'Filter by folder ID. Hudu /articles API does not natively accept folder_id — applied via bounded pagination (scans up to 20 pages × 100 records = 2000 articles). If the target folder contains articles ranked deeper than that, combine folder_id with `company_id` or `search` to narrow the upstream fetch. The response result.warnings array reports scan stats and whether the cap was hit.',
+      ),
     enable_sharing: z.boolean().optional().describe('Filter to publicly shareable articles only.'),
     updated_at_start: z
       .string()

@@ -11,6 +11,23 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.3.1] - 2026-05-12
+
+### Fixed
+- **`hudu_articles getAll slug` filter regression introduced in 2.3.0.** Round-1's "dual-form slug handling" was built on an incorrect model of Hudu's stored slug field. The stored `slug` is the 12-character short hash alone (e.g. `22a0a2941fb1`), NOT `{seoSlug}-{shortHash}`. The Round-1 SEO-detection branch routed every form through a search + post-filter path that never matched, causing `NO_RESULTS_FOUND` for every slug input. Reverted to verbatim passthrough — Hudu /articles GET natively accepts `slug` per `api-docs-v2.41.0.json`.
+- **`hudu_articles getAll folder_id` over-filtered.** Single-page upstream fetch + client-side folder_id filter silently dropped target articles when they weren't in the first page of upstream's default sort. Now performs bounded pagination via the new `paginatedPostFilter` helper (default cap: 20 pages × 100 records = 2000 records scanned). Result includes scan stats in `result.warnings[0]` so the LLM understands what was scanned.
+
+### Added
+- **`nodes/Hudu/ai-tools/pagination-helper.ts`** — new reusable `paginatedPostFilter<T>(context, endpoint, pluralKey, baseFilters, predicate, limit, maxPages=20, pageSize=100)` utility. Pages upstream until `limit` matches collected, upstream exhausted, or `maxPages` reached. Returns `{items, pagesScanned, recordsScanned, capHit, exhausted}`. Designed for future declared filters that Hudu doesn't support natively.
+
+### Changed
+- **`hudu_articles getAll slug` description** — now documents the actual stored slug shape (12-hex short hash, first path segment after `/kba/`). SEO-suffix portion of URLs called out as not queryable.
+- **`hudu_articles getAll folder_id` description** — documents the bounded pagination behaviour, scan cap, and recommendation to combine with company_id/search for folders with deeply-ranked articles.
+- **`result.warnings[0]` for folder_id** — now reports scan stats (`pagesScanned`, `recordsScanned`, `exhausted` / `capHit` / `limit satisfied`) instead of generic downgrade prose.
+
+### Removed
+- **Slug downgrade warning** — Round-1 emitted `result.warnings` entry for SEO-slug routing. With Round-2's verbatim passthrough fix, no client-side downgrade occurs — warning was misleading and is gone.
+
 ## [2.3.0] - 2026-05-12
 
 ### Fixed

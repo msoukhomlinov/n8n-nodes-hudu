@@ -22,6 +22,7 @@ import { relationFilterMapping } from '../resources/relations/relations.types';
 import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
 import { sortByTitleMatch, stripContentField, stripPhotosField } from './result-processor';
 import { runGetIdByName, runMoveAsset, runGetByLayout, GET_ID_BY_NAME_SUPPORTED_RESOURCES } from './enrichment-executor';
+import { paginatedPostFilter, type PaginatedPostFilterResult } from './pagination-helper';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -305,25 +306,7 @@ export async function executeHuduAiTool(
           delete params.folder_id; // never forward — Hudu silently ignores it
         }
 
-        // Step 4b: slug dual-form handling — articles only.
-        // Hudu URLs are /kba/{shortHash}/{seoSlug}; the stored slug is '{seoSlug}-{shortHash}'.
-        // SHORT_HASH_RE matches a trailing '-{12 hex chars}'. If absent, treat as SEO-only slug:
-        // route the fetch via 'search' (if no other text query is set) and post-filter results
-        // whose stored slug starts with '{seoSlug}-'.
-        let seoSlugPostFilter: string | undefined;
-        if (resource === 'articles' && typeof params.slug === 'string') {
-          const slugVal = params.slug as string;
-          const SHORT_HASH_RE = /-[0-9a-f]{12}$/;
-          if (!SHORT_HASH_RE.test(slugVal)) {
-            seoSlugPostFilter = slugVal;
-            delete params.slug;
-            if (!params.search && !capturedName) {
-              params.search = slugVal;
-            }
-          }
-        }
-
-        // Step 5: existing destructure + buildFilters + API call
+// Step 5: existing destructure + buildFilters + API call
         // When capturedName is set, params.limit is already 100 so effectiveLimit = 100.
         const { limit = 25, ...filterParams } = params;
         const effectiveLimit = limit as number;
@@ -334,10 +317,16 @@ export async function executeHuduAiTool(
         // records existed upstream. Skip the probe for nameResolutionBaked (already fetches a wide
         // 100-candidate pool that gets re-ranked and sliced to userLimit — its truncation note is
         // already correctly suppressed by the userLimit < 100 condition) and for resources using
-        // post-process filtering (relations, public_photos — slice happens inside handleListing).
-        const wantsProbe = !capturedName && resource !== 'relations' && resource !== 'public_photos';
+        // post-process filtering (relations, public_photos — slice happens inside handleListing)
+        // and for bounded-pagination paths (articles+folder_id — paginatedPostFilter owns truncation).
+        const wantsProbe =
+          !capturedName &&
+          resource !== 'relations' &&
+          resource !== 'public_photos' &&
+          articlesFolderIdPostFilter === undefined;
         const fetchLimit = wantsProbe ? effectiveLimit + 1 : effectiveLimit;
         let upstreamHasMore = false;
+        let folderIdScanStats: PaginatedPostFilterResult<IDataObject> | undefined;
         // Relations and public_photos use client-side post-process filtering (API has no server-side filters)
         if (resource === 'relations') {
           records = await handleGetAllOperation.call(
@@ -361,6 +350,19 @@ export async function executeHuduAiTool(
             filters as IDataObject,
             publicPhotoFilterMapping,
           );
+        } else if (articlesFolderIdPostFilter !== undefined) {
+          // Bounded paginated scan — articles+folder_id. Hudu /articles does NOT accept folder_id
+          // as a query param; pages upstream until limit matches collected, upstream exhausted,
+          // or page cap hit. Owns its own truncation signalling via scan stats.
+          folderIdScanStats = await paginatedPostFilter<IDataObject>(
+            context,
+            config.endpoint,
+            config.pluralKey ?? 'articles',
+            filters,
+            (item) => item.folder_id === articlesFolderIdPostFilter,
+            effectiveLimit,
+          );
+          records = folderIdScanStats.items;
         } else {
           records = await handleGetAllOperation.call(
             context as unknown as IExecuteFunctions,
@@ -384,22 +386,8 @@ export async function executeHuduAiTool(
           records = records.slice(0, userLimit);
         }
 
-        // Step 6b: SEO-slug post-filter — articles only.
-        // Match records whose stored slug starts with the SEO portion followed by the short hash separator.
-        if (seoSlugPostFilter) {
-          const prefix = seoSlugPostFilter + '-';
-          records = records.filter((r) => {
-            const s = (r as Record<string, unknown>).slug;
-            return typeof s === 'string' && s.startsWith(prefix);
-          });
-        }
-
-        // Step 6c: client-side post-filters for declared filters Hudu API does not support upstream.
-        // Filter field IS on response items so this is exact; we emit a warnings entry below to flag
-        // the downgrade to the LLM (so result narrowness is understood as best-effort client-side).
-        if (articlesFolderIdPostFilter !== undefined) {
-          records = records.filter((r) => (r as IDataObject).folder_id === articlesFolderIdPostFilter);
-        }
+        // Step 6c: folder_id post-filter is now applied inside paginatedPostFilter (folderIdScanStats path) —
+        // no additional client-side filter needed here.
 
         // Step 7: content stripping — supportsContentField resources only.
         if (config.supportsContentField) {
@@ -429,26 +417,25 @@ export async function executeHuduAiTool(
         }
 
         const resultPayload: Record<string, unknown> = { items: records, count: records.length };
-        // Truncation: prefer the explicit upstreamHasMore signal from the +1 probe. Fall back to the
-        // length-equals-limit heuristic for resources that skip the probe (post-process-filtered paths
-        // and nameResolutionBaked — the latter is naturally suppressed when userLimit < 100).
-        const truncated = upstreamHasMore || (!wantsProbe && records.length >= effectiveLimit);
+        // Truncation signal hierarchy:
+        //   1. paginatedPostFilter capHit (articles+folder_id path) — more matches may exist beyond the scan cap
+        //   2. upstreamHasMore (+1 probe on the standard path)
+        //   3. length-equals-limit heuristic (post-process-filtered paths only; nameResolutionBaked already suppresses naturally)
+        const truncated =
+          (folderIdScanStats?.capHit ?? false) ||
+          upstreamHasMore ||
+          (!wantsProbe && folderIdScanStats === undefined && records.length >= effectiveLimit);
         if (truncated) {
           resultPayload.truncated = true;
-          resultPayload.note = `Results capped at ${effectiveLimit}. Use filters to narrow the search or increase 'limit' (max 100).`;
+          resultPayload.note = folderIdScanStats?.capHit
+            ? `folder_id scan capped at ${folderIdScanStats.pagesScanned} pages (${folderIdScanStats.recordsScanned} records inspected). More matches may exist beyond the scan window — narrow with company_id or search to surface deeper records.`
+            : `Results capped at ${effectiveLimit}. Use filters to narrow the search or increase 'limit' (max 100).`;
         }
-        if (articlesFolderIdPostFilter !== undefined) {
+        if (folderIdScanStats !== undefined) {
           addResultWarning(
             resultPayload,
             'folder_id',
-            'Hudu API does not support folder_id as a GET /articles query parameter; results were filtered client-side after the upstream fetch. If the result set is empty unexpectedly, the upstream pre-narrowing may have excluded the folder — consider also providing company_id or search to narrow the upstream fetch first.',
-          );
-        }
-        if (seoSlugPostFilter) {
-          addResultWarning(
-            resultPayload,
-            'slug',
-            "Received a SEO-only slug (Hudu stores slugs as '{seoSlug}-{shortHash}'); routed the fetch via 'search' upstream and post-filtered results whose slug starts with '{seoSlug}-'. If you have the full suffixed slug from a prior getAll, pass that for an exact match.",
+            `Hudu /articles API does not support folder_id as a query param. Matches were collected via bounded pagination (${folderIdScanStats.pagesScanned} page(s), ${folderIdScanStats.recordsScanned} records scanned, ${folderIdScanStats.exhausted ? 'upstream exhausted' : folderIdScanStats.capHit ? 'cap reached — more may exist' : 'limit satisfied'}). For folders with articles ranked beyond the default scan window, combine folder_id with company_id or search to narrow upstream.`,
           );
         }
         return JSON.stringify(wrapSuccess(resource, operation, resultPayload));
