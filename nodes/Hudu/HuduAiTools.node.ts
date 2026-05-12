@@ -23,12 +23,6 @@ import {
 } from './ai-tools/schema-generator';
 import { RuntimeDynamicStructuredTool, runtimeZod } from './ai-tools/runtime';
 import { wrapError, ERROR_TYPES } from './ai-tools/error-formatter';
-import {
-    buildGetIdByNameTool,
-    buildMoveAssetTool,
-    buildCompanyAssetsByLayoutTool,
-    GET_ID_BY_NAME_SUPPORTED_RESOURCES,
-} from './ai-tools/enrichment-executor';
 
 const OPERATION_LABELS: Record<string, string> = {
     get: 'Get by ID',
@@ -38,6 +32,9 @@ const OPERATION_LABELS: Record<string, string> = {
     delete: 'Delete',
     archive: 'Archive',
     unarchive: 'Unarchive',
+    getIdByName: 'Resolve name to ID',
+    move: 'Move asset between companies',
+    getByLayout: 'List assets by layout (labelled custom fields)',
 };
 
 const runtimeSchemas = getRuntimeSchemaBuilders(runtimeZod);
@@ -134,27 +131,7 @@ export class HuduAiTools implements INodeType {
                 name: 'allowWriteOperations',
                 type: 'boolean',
                 default: false,
-                description: 'Whether to enable mutating tools (create, update, delete, archive, unarchive). Disabled = read-only.',
-            },
-            {
-                displayName: 'Extra Tools Names or IDs',
-                name: 'enrichmentTools',
-                type: 'multiOptions',
-                default: [],
-                displayOptions: {
-                    show: {
-                        resource: [
-                            'asset_layouts', 'asset_passwords', 'assets', 'companies',
-                            'folders', 'groups', 'networks', 'procedures', 'users',
-                            'vlan_zones', 'vlans', 'websites',
-                        ],
-                    },
-                },
-                typeOptions: {
-                    loadOptionsMethod: 'getEnrichmentToolOptions',
-                    loadOptionsDependsOn: ['resource'],
-                },
-                description: 'Optional enrichment tools to expose alongside the main resource tool. Available options depend on the selected resource. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                description: 'Whether to enable mutating tools (create, update, delete, archive, unarchive, move). Disabled = read-only.',
             },
         ],
     };
@@ -163,7 +140,6 @@ export class HuduAiTools implements INodeType {
         loadOptions: {
             getToolResources,
             getToolResourceOperations,
-            getEnrichmentToolOptions,
         },
     };
 
@@ -171,10 +147,6 @@ export class HuduAiTools implements INodeType {
         const resource = this.getNodeParameter('resource', itemIndex) as string;
         const operations = this.getNodeParameter('operations', itemIndex) as string[];
         const allowWriteOperations = this.getNodeParameter('allowWriteOperations', itemIndex, false) as boolean;
-        const enrichmentToolValues = this.getNodeParameter('enrichmentTools', itemIndex, []) as string[];
-        const enableGetIdByName = enrichmentToolValues.includes('getIdByName') && GET_ID_BY_NAME_SUPPORTED_RESOURCES.includes(resource);
-        const enableMoveAsset = enrichmentToolValues.includes('moveAsset');
-        const enableCompanyAssetsByLayout = enrichmentToolValues.includes('assetsByLayout');
 
         if (!resource) {
             throw new NodeOperationError(this.getNode(), 'Resource is required');
@@ -262,14 +234,7 @@ export class HuduAiTools implements INodeType {
             },
         });
 
-        const enrichmentTools = [];
-        if (enableGetIdByName) enrichmentTools.push(buildGetIdByNameTool(this, referenceUtc, resource));
-        if (enableMoveAsset) enrichmentTools.push(buildMoveAssetTool(this, referenceUtc, resource));
-        if (enableCompanyAssetsByLayout) enrichmentTools.push(buildCompanyAssetsByLayoutTool(this, referenceUtc, resource));
-
-        return enrichmentTools.length === 0
-            ? { response: unifiedTool }
-            : { response: [unifiedTool, ...enrichmentTools] };
+        return { response: unifiedTool };
     }
 
     /**
@@ -426,34 +391,3 @@ async function getToolResourceOperations(this: ILoadOptionsFunctions): Promise<I
     return options;
 }
 
-async function getEnrichmentToolOptions(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-    const resource = this.getCurrentNodeParameter('resource') as string;
-    if (!resource) return [];
-
-    const options: INodePropertyOptions[] = [];
-
-    if (GET_ID_BY_NAME_SUPPORTED_RESOURCES.includes(resource)) {
-        options.push({
-            name: 'Resolve Name to ID',
-            value: 'getIdByName',
-            description: `Add hudu_${resource}_get_id_by_name tool — resolves names to numeric IDs for this resource`,
-        });
-    }
-
-    if (resource === 'assets') {
-        options.push(
-            {
-                name: 'Move Asset',
-                value: 'moveAsset',
-                description: 'Add hudu_assets_move tool — moves an asset between companies (requires write access)',
-            },
-            {
-                name: 'Assets by Layout',
-                value: 'assetsByLayout',
-                description: 'Add hudu_assets_by_layout tool — lists assets of a specific type for a company with labelled custom fields',
-            },
-        );
-    }
-
-    return options;
-}

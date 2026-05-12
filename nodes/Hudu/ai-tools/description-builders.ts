@@ -214,6 +214,44 @@ export function buildArchiveDescription(
   );
 }
 
+function buildGetIdByNameDescription(resourceLabel: string, resource: string): string {
+  const exactResources = new Set(['asset_layouts', 'folders', 'networks', 'procedures', 'vlans', 'vlan_zones']);
+  const isExact = exactResources.has(resource);
+  const matchNote = isExact
+    ? 'EXACT case-sensitive match required.'
+    : 'Partial/fuzzy match — shorter terms return more results.';
+  return (
+    `Resolve a ${resourceLabel} name to its numeric Hudu ID. ${matchNote} ` +
+    `Returns up to [limit] slim records (id, name, plus a few key reference fields). ` +
+    `Use before any operation requiring a numeric ${resourceLabel} ID. ` +
+    `Prefer this over operation 'getAll' just to find an ID. Requires field: name. Optional: limit (default 5, max 20).`
+  );
+}
+
+function buildMoveDescription(): string {
+  return (
+    'Move an asset between companies. Recreates the asset under the target company (preserving standard and custom field values) ' +
+    'then deletes the original. There is no native Hudu API endpoint for this operation. ' +
+    'IMPORTANT: Relations pointing to the original asset will NOT be automatically updated — ' +
+    'use hudu_relations to re-establish them after the move if needed. ' +
+    'Set delete_original=false to create a copy without removing the original (verify before committing the move). ' +
+    'PREREQUISITE: confirm the correct asset_id and target_company_id before calling — this operation cannot be undone automatically if delete_original=true. ' +
+    'Requires fields: asset_id, target_company_id. Optional: delete_original (default true).'
+  );
+}
+
+function buildGetByLayoutDescription(): string {
+  return (
+    'List all assets of a specific type (layout) for a company, with custom field values labelled by field name. ' +
+    'Accepts company name or ID, and layout name or ID. Layout name must be an EXACT case-sensitive match — ' +
+    'use hudu_asset_layouts with operation getIdByName if unsure of the exact name. ' +
+    'Returns assets with a labelled fields object (e.g., {"Hostname": "SRV01", "IP Address": "10.0.0.1"}) ' +
+    'instead of raw numeric field IDs. ' +
+    "This is the preferred operation for 'show me all [servers/switches/firewalls] for [company]' queries. " +
+    'Requires either company_id or company_name, and either layout_id or layout_name. Optional: include_archived (default false).'
+  );
+}
+
 export function buildUnifiedDescription(
   resourceLabel: string,
   resource: string,
@@ -239,6 +277,12 @@ export function buildUnifiedDescription(
       case 'archive':
       case 'unarchive':
         return `- ${operation}: ${buildArchiveDescription(resourceLabel, operation, resource, supportsSearch)}`;
+      case 'getIdByName':
+        return `- getIdByName: ${buildGetIdByNameDescription(resourceLabel, resource)}`;
+      case 'move':
+        return `- move: ${buildMoveDescription()}`;
+      case 'getByLayout':
+        return `- getByLayout: ${buildGetByLayoutDescription()}`;
       default:
         return `- ${operation}: Operation available for this resource.`;
     }

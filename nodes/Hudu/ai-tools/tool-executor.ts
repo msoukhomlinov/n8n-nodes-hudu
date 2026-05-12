@@ -16,10 +16,12 @@ import {
   formatApiError,
   formatNotFoundError,
   formatNoResultsFound,
+  addResultWarning,
 } from './error-formatter';
 import { relationFilterMapping } from '../resources/relations/relations.types';
 import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
-import { sortByTitleMatch, stripContentField } from './result-processor';
+import { sortByTitleMatch, stripContentField, stripPhotosField } from './result-processor';
+import { runGetIdByName, runMoveAsset, runGetByLayout, GET_ID_BY_NAME_SUPPORTED_RESOURCES } from './enrichment-executor';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -58,6 +60,8 @@ const NUMERIC_FIELDS = new Set([
   'parent_task_id',
   'procedure_id',
   'record_id',
+  'target_company_id',
+  'layout_id',
 ]);
 
 /**
@@ -218,9 +222,11 @@ export async function executeHuduAiTool(
   try {
     switch (operation) {
       case 'get': {
-        // Extract include_content before any API call — never sent to API
+        // Extract include_content / include_photos before any API call — never sent to API
         const includeContent = (params.include_content as boolean) ?? false;
+        const includePhotos = (params.include_photos as boolean) ?? false;
         delete params.include_content;
+        delete params.include_photos;
 
         if (!params.id) {
           return JSON.stringify(formatMissingIdError(resource, operation, supportsSearch));
@@ -247,10 +253,14 @@ export async function executeHuduAiTool(
         if (isMissingData) {
           return JSON.stringify(formatNotFoundError(resource, operation, params.id as number, supportsSearch));
         }
-        const result = config.supportsContentField
-          ? (stripContentField<IDataObject>([data as IDataObject], includeContent) as IDataObject[])[0]
-          : data;
-        return JSON.stringify(wrapSuccess(resource, operation, result));
+        let processed: IDataObject = data as IDataObject;
+        if (config.supportsContentField) {
+          processed = (stripContentField<IDataObject>([processed], includeContent, config.contentField) as IDataObject[])[0];
+        }
+        if (config.supportsPhotosField) {
+          processed = (stripPhotosField<IDataObject>([processed], includePhotos, config.photosField) as IDataObject[])[0];
+        }
+        return JSON.stringify(wrapSuccess(resource, operation, processed));
       }
 
       case 'getAll': {
@@ -259,7 +269,9 @@ export async function executeHuduAiTool(
 
         // Step 2: extract client-only fields BEFORE params destructure — never sent to API
         const includeContent = (params.include_content as boolean) ?? false;
+        const includePhotos = (params.include_photos as boolean) ?? false;
         delete params.include_content;
+        delete params.include_photos;
 
         // Step 3: date combining — no flag needed; these fields only exist on articles schema
         const updatedAtStart = params.updated_at_start as string | undefined;
@@ -282,6 +294,35 @@ export async function executeHuduAiTool(
           params.limit = 100;         // wide candidate pool for re-ranking
         }
 
+        // Step 4a: strip filters that the upstream Hudu API does NOT support as query params
+        // but are declared on our schemas — we apply them client-side as post-filters after fetch.
+        // Map: resource → declared-but-unsupported filter names + the response-item field they match.
+        const articlesFolderIdPostFilter =
+          resource === 'articles' && typeof params.folder_id === 'number'
+            ? (params.folder_id as number)
+            : undefined;
+        if (articlesFolderIdPostFilter !== undefined) {
+          delete params.folder_id; // never forward — Hudu silently ignores it
+        }
+
+        // Step 4b: slug dual-form handling — articles only.
+        // Hudu URLs are /kba/{shortHash}/{seoSlug}; the stored slug is '{seoSlug}-{shortHash}'.
+        // SHORT_HASH_RE matches a trailing '-{12 hex chars}'. If absent, treat as SEO-only slug:
+        // route the fetch via 'search' (if no other text query is set) and post-filter results
+        // whose stored slug starts with '{seoSlug}-'.
+        let seoSlugPostFilter: string | undefined;
+        if (resource === 'articles' && typeof params.slug === 'string') {
+          const slugVal = params.slug as string;
+          const SHORT_HASH_RE = /-[0-9a-f]{12}$/;
+          if (!SHORT_HASH_RE.test(slugVal)) {
+            seoSlugPostFilter = slugVal;
+            delete params.slug;
+            if (!params.search && !capturedName) {
+              params.search = slugVal;
+            }
+          }
+        }
+
         // Step 5: existing destructure + buildFilters + API call
         // When capturedName is set, params.limit is already 100 so effectiveLimit = 100.
         const { limit = 25, ...filterParams } = params;
@@ -289,6 +330,14 @@ export async function executeHuduAiTool(
         const filters = buildFilters(filterParams);
         const hasFilters = Object.keys(filters).length > 0;
         let records: IDataObject[];
+        // Truncation accuracy: for the standard path, fetch effectiveLimit+1 to probe whether more
+        // records existed upstream. Skip the probe for nameResolutionBaked (already fetches a wide
+        // 100-candidate pool that gets re-ranked and sliced to userLimit — its truncation note is
+        // already correctly suppressed by the userLimit < 100 condition) and for resources using
+        // post-process filtering (relations, public_photos — slice happens inside handleListing).
+        const wantsProbe = !capturedName && resource !== 'relations' && resource !== 'public_photos';
+        const fetchLimit = wantsProbe ? effectiveLimit + 1 : effectiveLimit;
+        let upstreamHasMore = false;
         // Relations and public_photos use client-side post-process filtering (API has no server-side filters)
         if (resource === 'relations') {
           records = await handleGetAllOperation.call(
@@ -319,8 +368,12 @@ export async function executeHuduAiTool(
             config.pluralKey ?? undefined,
             filters,
             false,
-            effectiveLimit,
+            fetchLimit,
           );
+          if (wantsProbe && records.length > effectiveLimit) {
+            upstreamHasMore = true;
+            records = records.slice(0, effectiveLimit);
+          }
         }
 
         // Step 6: title sort — nameResolutionBaked resources only.
@@ -331,9 +384,30 @@ export async function executeHuduAiTool(
           records = records.slice(0, userLimit);
         }
 
+        // Step 6b: SEO-slug post-filter — articles only.
+        // Match records whose stored slug starts with the SEO portion followed by the short hash separator.
+        if (seoSlugPostFilter) {
+          const prefix = seoSlugPostFilter + '-';
+          records = records.filter((r) => {
+            const s = (r as Record<string, unknown>).slug;
+            return typeof s === 'string' && s.startsWith(prefix);
+          });
+        }
+
+        // Step 6c: client-side post-filters for declared filters Hudu API does not support upstream.
+        // Filter field IS on response items so this is exact; we emit a warnings entry below to flag
+        // the downgrade to the LLM (so result narrowness is understood as best-effort client-side).
+        if (articlesFolderIdPostFilter !== undefined) {
+          records = records.filter((r) => (r as IDataObject).folder_id === articlesFolderIdPostFilter);
+        }
+
         // Step 7: content stripping — supportsContentField resources only.
         if (config.supportsContentField) {
-          records = stripContentField<IDataObject>(records, includeContent) as IDataObject[];
+          records = stripContentField<IDataObject>(records, includeContent, config.contentField) as IDataObject[];
+        }
+        // Step 7b: photos stripping — supportsPhotosField resources only.
+        if (config.supportsPhotosField) {
+          records = stripPhotosField<IDataObject>(records, includePhotos, config.photosField) as IDataObject[];
         }
 
         // Step 8: zero-results error — build presentation filters from originalParams so
@@ -345,7 +419,7 @@ export async function executeHuduAiTool(
             Object.fromEntries(
               Object.entries(originalParams).filter(
                 ([k]) =>
-                  !['include_content', 'limit', 'resource', 'operation', 'updated_at_start', 'updated_at_end'].includes(k),
+                  !['include_content', 'include_photos', 'limit', 'resource', 'operation', 'updated_at_start', 'updated_at_end'].includes(k),
               ),
             ),
           );
@@ -355,9 +429,27 @@ export async function executeHuduAiTool(
         }
 
         const resultPayload: Record<string, unknown> = { items: records, count: records.length };
-        if (records.length >= effectiveLimit) {
+        // Truncation: prefer the explicit upstreamHasMore signal from the +1 probe. Fall back to the
+        // length-equals-limit heuristic for resources that skip the probe (post-process-filtered paths
+        // and nameResolutionBaked — the latter is naturally suppressed when userLimit < 100).
+        const truncated = upstreamHasMore || (!wantsProbe && records.length >= effectiveLimit);
+        if (truncated) {
           resultPayload.truncated = true;
           resultPayload.note = `Results capped at ${effectiveLimit}. Use filters to narrow the search or increase 'limit' (max 100).`;
+        }
+        if (articlesFolderIdPostFilter !== undefined) {
+          addResultWarning(
+            resultPayload,
+            'folder_id',
+            'Hudu API does not support folder_id as a GET /articles query parameter; results were filtered client-side after the upstream fetch. If the result set is empty unexpectedly, the upstream pre-narrowing may have excluded the folder — consider also providing company_id or search to narrow the upstream fetch first.',
+          );
+        }
+        if (seoSlugPostFilter) {
+          addResultWarning(
+            resultPayload,
+            'slug',
+            "Received a SEO-only slug (Hudu stores slugs as '{seoSlug}-{shortHash}'); routed the fetch via 'search' upstream and post-filtered results whose slug starts with '{seoSlug}-'. If you have the full suffixed slug from a prior getAll, pass that for an exact match.",
+          );
         }
         return JSON.stringify(wrapSuccess(resource, operation, resultPayload));
       }
@@ -466,6 +558,39 @@ export async function executeHuduAiTool(
           id: params.id,
           archived: operation === 'archive',
         }));
+      }
+
+      case 'getIdByName': {
+        if (!GET_ID_BY_NAME_SUPPORTED_RESOURCES.includes(resource)) {
+          return JSON.stringify(wrapError(
+            resource, operation, ERROR_TYPES.UNKNOWN_RESOURCE,
+            `getIdByName is not supported for resource: ${resource}.`,
+            `Supported resources: ${GET_ID_BY_NAME_SUPPORTED_RESOURCES.join(', ')}.`,
+          ));
+        }
+        return runGetIdByName(context, resource, params);
+      }
+
+      case 'move': {
+        if (resource !== 'assets') {
+          return JSON.stringify(wrapError(
+            resource, operation, ERROR_TYPES.INVALID_OPERATION,
+            `move is only supported for assets, not ${resource}.`,
+            'Call hudu_assets with operation move.',
+          ));
+        }
+        return runMoveAsset(context, params);
+      }
+
+      case 'getByLayout': {
+        if (resource !== 'assets') {
+          return JSON.stringify(wrapError(
+            resource, operation, ERROR_TYPES.INVALID_OPERATION,
+            `getByLayout is only supported for assets, not ${resource}.`,
+            'Call hudu_assets with operation getByLayout.',
+          ));
+        }
+        return runGetByLayout(context, params);
       }
 
       default:

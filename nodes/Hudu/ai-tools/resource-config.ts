@@ -5,7 +5,10 @@ export type HuduOperation =
   | 'update'
   | 'delete'
   | 'archive'
-  | 'unarchive';
+  | 'unarchive'
+  | 'getIdByName'
+  | 'move'
+  | 'getByLayout';
 
 export interface HuduResourceConfig {
   /** API path, e.g. '/companies' */
@@ -30,6 +33,10 @@ export interface HuduResourceConfig {
   contentField?: string;
   /** When true: translates name param to search, bumps limit to 100, title-sorts results */
   nameResolutionBaked?: boolean;
+  /** When true: adds include_photos schema field; strips photosField array from get/getAll responses unless include_photos=true */
+  supportsPhotosField?: boolean;
+  /** Field name to strip when supportsPhotosField is true. Defaults to 'public_photos'. */
+  photosField?: string;
 }
 
 export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
@@ -38,7 +45,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'companies',
     singularKey: 'company',
     bodyKey: 'company',
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'getIdByName'],
     supportsPagination: true,
     label: 'Company',
   },
@@ -51,6 +58,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     supportsPagination: true,
     label: 'Article',
     supportsContentField: true,
+    supportsPhotosField: true,
     nameResolutionBaked: true,
   },
   assets: {
@@ -58,7 +66,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'assets',
     singularKey: 'asset',
     bodyKey: 'asset',
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'getIdByName', 'move', 'getByLayout'],
     supportsPagination: true,
     label: 'Asset',
     requiresCompanyEndpoint: true,
@@ -68,7 +76,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'websites',
     singularKey: 'website',
     bodyKey: 'website',
-    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'getIdByName'],
     supportsPagination: true,
     label: 'Website',
   },
@@ -77,7 +85,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'users',
     singularKey: 'user',
     bodyKey: null,
-    ops: ['get', 'getAll'],
+    ops: ['get', 'getAll', 'getIdByName'],
     supportsPagination: true,
     label: 'User',
   },
@@ -86,7 +94,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'asset_passwords',
     singularKey: 'asset_password',
     bodyKey: 'asset_password',
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'getIdByName'],
     supportsPagination: true,
     label: 'Asset Password',
   },
@@ -95,7 +103,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'procedures',
     singularKey: 'procedure',
     bodyKey: null,
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'getIdByName'],
     supportsPagination: true,
     label: 'Procedure',
   },
@@ -113,7 +121,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'folders',
     singularKey: 'folder',
     bodyKey: 'folder',
-    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'getIdByName'],
     supportsPagination: true,
     label: 'Folder',
   },
@@ -149,7 +157,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'networks',
     singularKey: 'network',
     bodyKey: 'network',
-    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'getIdByName'],
     supportsPagination: false,
     label: 'Network',
   },
@@ -167,7 +175,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'asset_layouts',
     singularKey: 'asset_layout',
     bodyKey: null,
-    ops: ['get', 'getAll'],
+    ops: ['get', 'getAll', 'getIdByName'],
     supportsPagination: true,
     label: 'Asset Layout',
   },
@@ -194,7 +202,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: null,
     singularKey: 'group',
     bodyKey: null,
-    ops: ['get', 'getAll'],
+    ops: ['get', 'getAll', 'getIdByName'],
     supportsPagination: true,
     label: 'Group',
   },
@@ -203,7 +211,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'vlans',
     singularKey: 'vlan',
     bodyKey: 'vlan',
-    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'getIdByName'],
     supportsPagination: false,
     label: 'VLAN',
   },
@@ -212,7 +220,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'vlan_zones',
     singularKey: 'vlan_zone',
     bodyKey: 'vlan_zone',
-    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'getIdByName'],
     supportsPagination: false,
     label: 'VLAN Zone',
   },
@@ -233,4 +241,5 @@ export const WRITE_OPERATIONS: HuduOperation[] = [
   'delete',
   'archive',
   'unarchive',
+  'move',
 ];

@@ -11,6 +11,36 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.3.0] - 2026-05-12
+
+### Fixed
+- **AI Tools: bare `{"success":true}` regression on companies, folders, websites, procedures and their `_get_id_by_name` helpers** — caused by `supplyData()` returning `{response: [unifiedTool, enrichmentTool]}` (array form). n8n MCP Trigger only handles single-tool responses; the array path collapsed every tool call to a bare success echo. Empirical proof: articles/relations/procedure_tasks (no enrichment, single-tool response) returned the full envelope while every enrichment-enabled resource returned bare success. Fold-in (see Changed) eliminates the array path entirely.
+- **`hudu_articles` photo blowout** — article responses included full `public_photos` arrays (often 25+ entries × ~180 chars each per article) regardless of `include_content`. Single `getAll limit=10` calls blew the 25k-token output budget. Default flip to `include_photos=false` (see Added).
+- **`hudu_articles` slug filter only matched the suffixed DB form** — Hudu URLs are `/kba/{shortHash}/{seoSlug}` but the stored slug is `'{seoSlug}-{shortHash}'`. Pasting the SEO-only portion from a URL returned `NO_RESULTS_FOUND`. Now accepts either form (see Changed).
+- **`hudu_articles.folder_id` filter silently ignored** — Hudu API does not list `folder_id` as a supported GET `/articles` query parameter (verified against `api-docs-v2.41.0.json`). Filter was passed in the query string and dropped upstream. Now applied client-side as a post-filter after fetch; warning emitted in result payload to flag the downgrade.
+
+### Added
+- **`hudu_articles` (`get`, `getAll`): `include_photos` flag (default `false`)** — opt-in to the `public_photos` array. Default false matches `include_content` ergonomics. Set true only when verifying or surfacing embedded photo references.
+- **`HuduResourceConfig`: `supportsPhotosField` + `photosField`** — flag pair mirroring the existing `supportsContentField`/`contentField` infrastructure. Currently enabled for `articles` only; generalises cleanly to any future resource that returns a large photo array.
+- **`result-processor.ts`: `stripPhotosField()`** — sibling of `stripContentField()`, opt-in retention semantics.
+- **Result `warnings` channel** — getAll success envelopes now optionally include `result.warnings: Array<{filter, reason}>` populated when a declared filter is downgraded to a client-side post-filter (folder_id) or routed through alternative fields (SEO slug). Lets the LLM understand why result narrowness may differ from naive expectations.
+- **Truncation accuracy probe** — getAll fetches `limit+1` records upstream (where pagination semantics permit) and uses the explicit `upstreamHasMore` signal to set `truncated`. Eliminates false positives where the last page contained exactly `limit` records. Skipped for `nameResolutionBaked` (already overfetches 100 and slices) and post-process-filtered resources (relations, public_photos).
+- **Slug dual-form acceptance on `hudu_articles getAll`** — schema description documents Hudu's `/kba/{shortHash}/{seoSlug}` URL pattern. Executor detects the suffixed form via `/-[0-9a-f]{12}$/` regex; passes that through to Hudu. SEO-only form is routed via the `search` query param and client-side post-filtered on `slug.startsWith('{seoSlug}-')`. Warning emitted.
+
+### Changed
+- **AI Tools: enrichment tools folded into operations on the unified tool**. `hudu_companies_get_id_by_name`, `hudu_assets_move`, `hudu_assets_by_layout` (and the per-resource `_get_id_by_name` siblings) are gone. Same behaviour now reachable via `operation: 'getIdByName'` on 12 resources (companies, assets, asset_layouts, asset_passwords, folders, groups, networks, procedures, users, vlans, vlan_zones, websites) and `operation: 'move'` / `operation: 'getByLayout'` on assets. Single tool per resource, single registration path, no array form.
+- **`HuduAiTools` node: dropped the `enrichmentTools` UI field.** Replaced by the unified operations list — operations enabled in the multiOptions field are the only configuration surface.
+- **`supplyData()` always returns `{response: unifiedTool}`** — single tool. Array form removed.
+- **Tool descriptions for `getIdByName` / `move` / `getByLayout`** integrated into the unified tool description (per-operation lines under "Pass one of the following values in the required 'operation' field").
+
+### Breaking Changes
+| Change | Severity | Migration |
+|--------|----------|-----------|
+| `hudu_*_get_id_by_name` tools removed; replaced by `operation: 'getIdByName'` on the corresponding `hudu_*` tool | HIGH | Update agent tool calls to use `hudu_<resource>` with `operation: 'getIdByName'`. No more separate tool names. Workflows that had `enrichmentTools: ["getIdByName"]` set on `HuduAiTools` nodes will silently drop the field; ensure `getIdByName` is selected in the operations multiOptions instead. |
+| `hudu_assets_move` / `hudu_assets_by_layout` tools removed; replaced by `operation: 'move'` and `operation: 'getByLayout'` on `hudu_assets` | HIGH | Use `hudu_assets` with the new operations. Enable them in the operations multiOptions. |
+| `hudu_articles` default photo behaviour: `public_photos` now stripped unless `include_photos=true` | MEDIUM | Add `include_photos: true` to any workflow that relied on photos being auto-present. |
+| `enrichmentTools` UI field removed from `HuduAiTools` | MEDIUM | n8n will ignore the persisted value on existing workflows. Re-edit nodes to select the new operations in the operations multiOptions list. |
+
 ## [2.2.1] - 2026-05-06
 
 ### Fixed

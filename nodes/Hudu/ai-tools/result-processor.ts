@@ -29,3 +29,20 @@ export function stripContentField<T extends Record<string, unknown>>(
     return result;
   });
 }
+
+/**
+ * Strip the photos field (e.g. public_photos array) from results unless explicitly requested.
+ * Article public_photos arrays alone can run to dozens of entries per record and blow context budgets.
+ */
+export function stripPhotosField<T extends Record<string, unknown>>(
+  items: T[],
+  includePhotos: boolean,
+  photosField = 'public_photos',
+): T[] {
+  if (includePhotos) return items;
+  return items.map((item) => {
+    const result = { ...item };
+    delete result[photosField];
+    return result;
+  });
+}

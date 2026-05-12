@@ -45,6 +45,32 @@ export function wrapSuccess(
   return { schemaVersion: '1', success: true, operation, resource, result };
 }
 
+/**
+ * A warning recorded against a getAll result — usually emitted when a declared filter
+ * is not supported by the upstream API and has been downgraded to a client-side post-filter
+ * or silently ignored. Lets the LLM understand why a filter may not have narrowed results
+ * as expected.
+ */
+export interface ResultWarning {
+  filter: string;
+  reason: string;
+}
+
+/**
+ * Mutates the getAll result payload to include a warning entry. Creates the warnings
+ * array if absent. Use to record downgrade decisions for declared filters.
+ */
+export function addResultWarning(
+  payload: Record<string, unknown>,
+  filter: string,
+  reason: string,
+): void {
+  const existing = payload.warnings;
+  const list = Array.isArray(existing) ? (existing as ResultWarning[]) : [];
+  list.push({ filter, reason });
+  payload.warnings = list;
+}
+
 export function wrapError(
   resource: string,
   operation: string,

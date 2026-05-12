@@ -120,6 +120,13 @@ export function getArticlesGetSchema() {
       .describe(
         "Include the full HTML content field. Default false — article bodies consume significant context. Set true only when you need to read or quote the article body.",
       ),
+    include_photos: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        "Include the 'public_photos' array (metadata for each embedded image). Default false — photo arrays can run to dozens of entries per article and waste context. Set true ONLY when you need to verify embedded photos exist before editing/redacting the article, or surface photo URLs to the user. Pair with include_content=true to coordinate edits with image references.",
+      ),
   });
 }
 
@@ -196,7 +203,12 @@ export function getArticlesGetAllSchema() {
         "Article title to fuzzy-resolve to an ID. Sends your text as a search, fetches up to 100 candidates, and ranks results by how many title words match. Use this when you know the article title. Prefer over 'search' for title-based lookups.",
       ),
     company_id: optionalCompanyIdSchema,
-    slug: z.string().optional().describe('Filter by URL slug'),
+    slug: z
+      .string()
+      .optional()
+      .describe(
+        "Filter by article slug. Hudu URLs follow /kba/{shortHash}/{seoSlug} (e.g. /kba/22a0a2941fb1/16-how-to-set-up-azure-tags) — the stored slug is the suffixed form '{seoSlug}-{shortHash}'. Accepts EITHER form: the full suffixed slug (passed through to Hudu) OR the SEO portion only (auto-translated via search + client-side post-filter). Paste either the value from the URL or the slug field of a prior getAll result.",
+      ),
     draft: z.boolean().optional().describe('Filter by draft status'),
     folder_id: z.number().int().positive().optional().describe('Filter by folder ID'),
     enable_sharing: z.boolean().optional().describe('Filter to publicly shareable articles only.'),
@@ -218,6 +230,13 @@ export function getArticlesGetAllSchema() {
       .default(false)
       .describe(
         "Include the full HTML content field in each result. Default false — article bodies are large HTML that fills context quickly. Set true only when you need to read or quote the article body; otherwise leave false and call get with include_content=true for a specific article.",
+      ),
+    include_photos: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        "Include the 'public_photos' array on each result. Default false — photo arrays alone can run to dozens of objects per article and blow context budgets. Set true ONLY when you need to verify or surface embedded photo URLs. Use the dedicated hudu_public_photos tool for direct photo metadata when you have a numeric_id.",
       ),
     limit: limitSchema,
   });
@@ -1020,6 +1039,9 @@ const OPERATION_LABELS: Record<HuduOperation, string> = {
   delete: 'Delete',
   archive: 'Archive',
   unarchive: 'Unarchive',
+  getIdByName: 'Resolve name to ID',
+  move: 'Move asset',
+  getByLayout: 'Assets by layout',
 };
 
 const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
@@ -1030,7 +1052,110 @@ const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
   'delete',
   'archive',
   'unarchive',
+  'getIdByName',
+  'move',
+  'getByLayout',
 ]);
+
+// Resources whose getIdByName uses EXACT case-sensitive match upstream
+// (mirrors enrichment-executor.ts EXACT_MATCH_RESOURCES, keyed by plural HuduResourceConfig name)
+const GETIDBYNAME_EXACT_MATCH_RESOURCES: ReadonlySet<string> = new Set([
+  'asset_layouts',
+  'folders',
+  'networks',
+  'procedures',
+  'vlans',
+  'vlan_zones',
+]);
+
+export function getGetIdByNameSchema(resource: string): z.ZodObject<z.ZodRawShape> {
+  const isExact = GETIDBYNAME_EXACT_MATCH_RESOURCES.has(resource);
+  const nameDesc = isExact
+    ? 'Name to resolve — EXACT case-sensitive match required (used by getIdByName operation).'
+    : 'Name or partial name to resolve (fuzzy/partial match — used by getIdByName operation). Shorter terms return more results.';
+  return z.object({
+    name: z.string().min(1).describe(nameDesc),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(20)
+      .optional()
+      .default(5)
+      .describe('Maximum number of matching records to return for getIdByName (default 5, max 20).'),
+  });
+}
+
+export function getMoveAssetSchema() {
+  return z.object({
+    asset_id: z
+      .number()
+      .int()
+      .positive()
+      .describe('Numeric ID of the asset to move (from a prior getAll or get result).'),
+    target_company_id: z
+      .number()
+      .int()
+      .positive()
+      .describe(
+        "Numeric ID of the destination company. Use hudu_companies with operation getIdByName if you only have the company name.",
+      ),
+    delete_original: z
+      .boolean()
+      .optional()
+      .default(true)
+      .describe(
+        'If true (default), delete the original asset after successful creation at the target company. ' +
+          'Set to false to create a copy without deleting the original — useful for verifying the move before committing.',
+      ),
+  });
+}
+
+export function getByLayoutSchema() {
+  return z.object({
+    company_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        'Numeric company ID. Provide this OR company_name (if both given, company_id takes precedence). Used by getByLayout.',
+      ),
+    company_name: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Company name (partial search) for getByLayout. Used only when company_id is not provided.'),
+    layout_id: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Numeric asset layout ID. Provide this OR layout_name. Used by getByLayout.'),
+    layout_name: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Asset layout name — EXACT case-sensitive match for getByLayout. Used only when layout_id is not provided. ' +
+          'If unsure of the exact name, use hudu_asset_layouts with operation getIdByName first.',
+      ),
+    search: z
+      .string()
+      .optional()
+      .describe(
+        'Optional partial-text filter applied to the asset list within the resolved company+layout result set (used by getByLayout). Matches the upstream Hudu /assets search semantics.',
+      ),
+    limit: limitSchema,
+    include_archived: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        'If true, include archived assets in getByLayout results. Default false (active assets only).',
+      ),
+  });
+}
 
 function isHuduOperation(operation: string): operation is HuduOperation {
   return SUPPORTED_OPERATIONS.has(operation as HuduOperation);
@@ -1170,6 +1295,12 @@ function getSchemaForOperation(
     case 'archive':
     case 'unarchive':
       return config.requiresCompanyEndpoint ? getArchiveWithCompanySchema() : getArchiveSchema();
+    case 'getIdByName':
+      return getGetIdByNameSchema(resource);
+    case 'move':
+      return getMoveAssetSchema();
+    case 'getByLayout':
+      return getByLayoutSchema();
   }
 }
 
