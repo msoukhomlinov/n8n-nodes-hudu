@@ -11,6 +11,25 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.4.4] - 2026-05-14
+
+### Fixed
+- **2.4.3 side-effect: help-only tool when user-selected ops collapsed to empty.** Previously the auto-include for `'help'` ran BEFORE the "No tools to expose" guard, so a node where the user ticked only write ops without enabling `allowWriteOperations` silently degraded to a help-only tool instead of throwing the explicit error. The empty-check now runs against the pre-help count: if no non-help ops survive the filter, the original `No tools to expose. Select operations and enable "Allow Write Operations" if you need mutating operations.` error fires. Help auto-include runs after the guard passes. Mirrored in both `supplyData()` and `execute()` paths.
+
+### Changed
+- **`Help / workflow notes` option in the node UI now labelled `(always on)`** with a description: `Auto-enabled regardless of selection — agents reach long-form workflow prose via operation='help' topic='overview'.` Makes it visually clear to users opening the node that help is not a toggle they need to think about. The option still appears in the multiOptions list so users see what `operation=help` does; ticking or un-ticking it has no effect at runtime.
+
+## [2.4.3] - 2026-05-14
+
+### Fixed
+- **`operation: 'help'` rejected by Zod enum on resources where help was added in a later release without re-editing each workflow node.** Symptom: agent calls `hudu_companies operation=help` → `Expected 'get'|'getAll'|...|'getIdByName', received 'help'`. Same for `hudu_folders`, `hudu_procedures`, `hudu_relations`. Root cause: `supplyData()` and `execute()` filtered the resource's available ops by the saved `operations` multiOptions array on the node. If the node was created before `help` was registered for that resource, the saved selection has no `help` entry, so the runtime enum never includes it — even though the tool description (built from the same filtered list) also lists `help` as available. Description and validator agreed on absence in that path, but the description for OTHER tools that DID have `help` selected suggested to the agent that help worked everywhere. Worse than absent: agents try and fail.
+
+### Changed
+- **`help` is now auto-enabled** in both `supplyData()` and `execute()` paths whenever the resource registers it in `config.ops`, regardless of UI multiOptions selection. Help is read-only metadata/discoverability, not a regular operation — it should always be reachable when the resource has help content, without forcing users to manually re-tick `Help / workflow notes` on every Hudu AI Tools node in every workflow after each release that extends help coverage. The `Help / workflow notes` toggle remains in the node UI for visibility but is no longer load-bearing.
+
+### Migration
+No code or workflow changes required. After `npm run build && npm link` (and `npm link n8n-nodes-hudu` in `~/.n8n/nodes`, then restart n8n), `operation=help topic=overview` works on all 8 enabled resources regardless of which operations are ticked in each node's UI.
+
 ## [2.4.2] - 2026-05-14
 
 ### Added

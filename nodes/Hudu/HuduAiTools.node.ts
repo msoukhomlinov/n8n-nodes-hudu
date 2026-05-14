@@ -170,11 +170,25 @@ export class HuduAiTools implements INodeType {
             return config.ops.includes(typedOp);
         });
 
-        if (enabledOperations.length === 0) {
+        // Empty-check runs BEFORE the help auto-include — a node where the user's selection
+        // collapses to nothing (e.g. only write ops ticked but allowWriteOperations=false)
+        // should still throw the explicit "No tools to expose" error rather than silently
+        // degrade to a help-only tool.
+        const hasNonHelpOps = enabledOperations.some((op) => op !== 'help');
+        if (!hasNonHelpOps) {
             throw new NodeOperationError(
                 this.getNode(),
                 'No tools to expose. Select operations and enable "Allow Write Operations" if you need mutating operations.',
             );
+        }
+
+        // `help` is read-only metadata/discoverability — auto-enable whenever the resource
+        // registers it, regardless of UI multiOptions selection. Avoids forcing users to
+        // re-edit every Hudu AI Tools node in their workflows whenever help is added in a
+        // later release; the saved `operations` array on existing nodes would otherwise
+        // exclude `help` and the Zod operation enum would reject `operation=help` calls.
+        if (config.ops.includes('help') && !enabledOperations.includes('help')) {
+            enabledOperations.push('help');
         }
 
         const getAllSchema = runtimeSchemas.buildUnifiedSchema(resource, ['getAll'], config);
@@ -264,11 +278,22 @@ export class HuduAiTools implements INodeType {
             (op) => !WRITE_OPERATIONS.includes(op as HuduOperation) || allowWriteOperations,
         );
 
-        if (effectiveOps.length === 0) {
+        // Empty-check uses the pre-help count: a node whose user-selected ops collapse to
+        // nothing should throw, not silently degrade to a help-only tool. Mirrors supplyData.
+        const effectiveHasNonHelpOps = effectiveOps.some((op) => op !== 'help');
+        if (!effectiveHasNonHelpOps) {
             throw new NodeOperationError(
                 this.getNode(),
                 'No permitted operations. Enable "Allow Write Operations" if needed.',
             );
+        }
+
+        // `help` is read-only metadata — auto-enable whenever the resource registers it,
+        // so Agent V3 tool calls with `operation=help` are accepted even when the saved
+        // workflow's UI selection predates the resource's help registration. Mirrors the
+        // supplyData() path so both consumption paths behave identically.
+        if (config.ops.includes('help') && !effectiveOps.includes('help')) {
+            effectiveOps.push('help');
         }
 
         const items = this.getInputData();
@@ -381,10 +406,14 @@ async function getToolResourceOperations(this: ILoadOptionsFunctions): Promise<I
     const options: INodePropertyOptions[] = [];
     for (const op of config.ops) {
         if (WRITE_OPERATIONS.includes(op) && !allowWriteOperations) continue;
+        const isHelp = op === 'help';
+        const label = OPERATION_LABELS[op] ?? op;
         options.push({
-            name: OPERATION_LABELS[op] ?? op,
+            name: isHelp ? `${label} (always on)` : label,
             value: op,
-            description: `${op} operation for ${config.label}`,
+            description: isHelp
+                ? `Auto-enabled regardless of selection — agents reach long-form workflow prose via operation='help' topic='overview'.`
+                : `${op} operation for ${config.label}`,
         });
     }
     return options;
