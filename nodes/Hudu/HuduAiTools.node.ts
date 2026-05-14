@@ -35,6 +35,7 @@ const OPERATION_LABELS: Record<string, string> = {
     getIdByName: 'Resolve name to ID',
     move: 'Move asset between companies',
     getByLayout: 'List assets by layout (labelled custom fields)',
+    help: 'Help / workflow notes',
 };
 
 const runtimeSchemas = getRuntimeSchemaBuilders(runtimeZod);
@@ -178,13 +179,11 @@ export class HuduAiTools implements INodeType {
 
         const getAllSchema = runtimeSchemas.buildUnifiedSchema(resource, ['getAll'], config);
         const supportsSearch = 'search' in getAllSchema.shape;
-        const referenceUtc = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
         const unifiedSchema = runtimeSchemas.buildUnifiedSchema(resource, enabledOperations, config);
         const unifiedDescription = buildUnifiedDescription(
             resourceLabel,
             resource,
             enabledOperations,
-            referenceUtc,
             supportsSearch,
             config,
         );

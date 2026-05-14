@@ -11,6 +11,73 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.4.1] - 2026-05-14
+
+### Fixed
+- **Tool description bloat.** Every `hudu_*` tool's description started with a 50-token `Reference: current UTC date-time when these tools were loaded is …` preamble and continued with verbose per-operation prose (workflow tutorials, photo-verification dance, ID-resolution prerequisites). `hudu_articles` was ~5028 chars; the other six tools 3300-3550 each. Replaced with a single-paragraph template:
+  ```
+  Manage Hudu {Label} records. Operations: {list}. {one-line usage hint}. Envelope v2 — 'error' key = failure; default-valued fields omitted.
+  ```
+  Projected char counts (all ops enabled): `hudu_articles` ~395, others 190-285. ~5000-token reduction across the seven-tool MCP workflow per session.
+
+### Added
+- **`operation: 'help'` on `hudu_articles` and `hudu_public_photos`** — returns long-form workflow prose on demand. Accepts optional `topic` (enum):
+  - articles: `overview` (default), `photos`, `search`, `create`
+  - public_photos: `overview`
+  Response shape: `{ topic, availableTopics, content }`. Costs zero tokens until invoked.
+- **`nodes/Hudu/ai-tools/help-registry.ts`** — central `HELP_TOPICS` map + `runHelp(resource, params)` executor. Pure read-side metadata module; no API calls.
+- **`HuduOperation.help`** in `resource-config.ts` and the schema-generator `SUPPORTED_OPERATIONS` set.
+
+### Changed
+- **`buildUnifiedDescription` signature**: dropped `referenceUtc` parameter. The fresh-timestamp regen in `HuduAiTools.node.ts` (`new Date().toISOString()…`) is gone.
+- **`buildGetAllDescription` / `buildCreateDescription` signatures**: dropped `referenceUtc` parameter. (These helpers are now unreferenced by the unified path but retained as exports for potential future surfaces.)
+- **Per-operation prose** (per-op workflow tutorials) no longer ships with the tool description. The relevant guidance now lives in (a) the per-parameter `description` field in the inputSchema (already shipped), or (b) the new `help` operation for the two resources where it materially helped.
+- **Removed** the centralised `Response envelope: schemaVersion '2'…` preamble from the unified description. Replaced with the terse `Envelope v2 — 'error' key = failure; default-valued fields omitted.` clause inside the new template.
+- **Dead-code purge** in `description-builders.ts` — removed nine orphaned helpers (`buildGetDescription`, `buildGetAllDescription`, `buildCreateDescription`, `buildUpdateDescription`, `buildDeleteDescription`, `buildArchiveDescription`, `buildGetIdByNameDescription`, `buildMoveDescription`, `buildGetByLayoutDescription`), `getRequiredFields`, `REQUIRED_FIELDS_BY_RESOURCE`, and `dateTimeReferenceSnippet`. File is now exclusively `RESOURCE_HINTS` + `buildUnifiedDescription`.
+
+### Breaking Changes
+| Change | Severity | Migration |
+|--------|----------|-----------|
+| Tool description prose dramatically shortened; per-op workflow tutorials no longer in the description | LOW | Use `operation='help'` on articles or public_photos for the offloaded prose. Other resources rely on per-parameter `description` in the inputSchema. |
+| `buildUnifiedDescription` no longer accepts `referenceUtc` | LOW (internal) | Only impacts users importing the helper directly — unlikely. |
+
+## [2.4.0] - 2026-05-14
+
+### Fixed
+- **`hudu_articles getAll folder_id` returned zero items for sparse folders.** Bounded post-filter scanned upstream's default-ordered first 2000 articles client-side and silently dropped folders whose articles were ranked beyond that window. Now pre-resolves the folder's owning `company_id` (one extra `/folders/{id}` GET) and injects it as a NATIVE Hudu upstream filter, drastically narrowing the scan. Folders flagged as global (`company_id:null` on the folder record) fall back to the unnarrowed bounded scan. `result.warnings[]` documents the auto-resolve.
+- **`hudu_articles search` ranked unrelated body-hits above exact-title matches.** Existing word-overlap ranking only ran when `name` was supplied. Now `search` on `nameResolutionBaked` resources (articles) triggers the same wide-fetch-then-rerank path, AND the ranker has been extended with a substring-boost tier: titles containing the full query string as a substring score +1000 above word-overlap, so exact-title matches surface ahead of generic body hits.
+- **`procedures` read responses leaked Rails write-payload key `procedure_tasks_attributes`.** That key is the Hudu/Rails convention for `accepts_nested_attributes_for` on CREATE/UPDATE bodies and has no place on a READ. Renamed to `tasks` on the read side only.
+- **`draft` (and other documented booleans) inconsistent — null on some records, false on others.** Now uniformly omitted when default (null/false). Same omit-policy applied to all documented-default fields per resource → identical field sets across same-resource records.
+
+### Added
+- **`result-processor.ts`: `omitDefaults(item, resource)`** — uniform default-strip driven by the new `DEFAULT_FIELD_VALUES` map in `resource-config.ts`. Every record runs through it; absence of a field means "default applies".
+- **`result-processor.ts`: `reshapeProcedureRecord` and `reshapeProcedureTaskRecord`** — single `assignee:{id,name,initials}` block on procedure tasks ONLY when an assignee exists; the legacy assignment fields are dropped (five `*_user_*` keys plus `assigned_users` and `subtask_ids`). Procedures get the renamed `tasks` array with per-task reshape applied.
+- **`result-processor.ts`: `slimPhotoRecord(photo)`** — slims each public photo to `{numeric_id, url, file_name, size}`. Drops slug `id` (not callable), `record_type` and `record_id` (echo parent context), renames `file_size` → `size`. Applied to `hudu_public_photos get`, and to article `public_photos` arrays when `include_photos=true`.
+- **`tool-executor.ts`: `postProcessRecord(record, resource, config, includeContent, includePhotos)`** — single shaping pipeline invoked from both `get` and `getAll` for consistent record shape.
+- **Title-match ranker is now two-tier**: full-query-substring on `name` scores `+1000` over per-token overlap. Stable sort preserves upstream order on ties.
+
+### Changed
+- **Response envelope schemaVersion bumped to `'2'`.** Fields:
+  - `success: boolean` discriminator REMOVED from both success and error envelopes — presence of `error` = failure, absence = success.
+  - `count` REMOVED from list payloads (`{items}` only; LLM reads `items.length`). Applied to `getAll`, `getIdByName`, and `getByLayout`.
+  - `note` REMOVED alongside `truncated:true` — the boolean is sufficient; remediation guidance lives in the tool description.
+  - Documented default values (null/false/empty array) OMITTED from each record per the `DEFAULT_FIELD_VALUES` map (articles, companies, websites, procedures, procedure_tasks).
+- **`hudu_articles getAll` folder_id description** rewritten to document the folder→company auto-resolve, the native-filter injection, and the global-folder fall-through.
+- **`hudu_articles getAll` search description** rewritten to document the substring-boost ranking and clarify when to prefer `name`.
+- **`hudu_articles getAll/get` include_photos description** notes the slim shape (`numeric_id, url, file_name, size`).
+- **`hudu_public_photos get` description** notes the slim shape.
+- **Unified tool description prefix** describes the envelope v2 contract, omit-defaults policy, and procedures `tasks`/`assignee` shape.
+
+### Breaking Changes
+| Change | Severity | Migration |
+|--------|----------|-----------|
+| `success` boolean field dropped from response envelope (both success and error) | MEDIUM | Check for `error` key presence instead. `schemaVersion` now `'2'`. |
+| `count` dropped from list payloads (getAll, getIdByName, getByLayout) | LOW | Read `items.length` instead. |
+| `note` dropped alongside `truncated:true` | LOW | `truncated:true` is the sole signal; tool descriptions document remediation. |
+| Documented default-value fields omitted from records (e.g. `archived:false`, `enable_sharing:null`, `draft:false`) | LOW-MEDIUM | Absence of a field on a record now means "default value applies" — handle missing keys with the resource's documented default. |
+| Procedure read responses: `procedure_tasks_attributes` renamed to `tasks` (always emitted as an array — `[]` when no tasks); each task drops five `*_user_*` keys plus `assigned_users` and `subtask_ids`, and gains an `assignee:{id,name,initials}` block when assigned | MEDIUM | Update consumers to read `tasks` (not `procedure_tasks_attributes`) and `task.assignee.*` (not `task.first_assigned_user_*`). |
+| Public photo records slimmed to `{numeric_id, url, file_name, size}` on both `hudu_public_photos get` and article `public_photos` arrays | MEDIUM | Use `numeric_id` (was already the callable id), `url`, `file_name`, `size` (was `file_size`). Drop reliance on slug `id`, `record_type`, `record_id`. |
+
 ## [2.3.1] - 2026-05-12
 
 ### Fixed

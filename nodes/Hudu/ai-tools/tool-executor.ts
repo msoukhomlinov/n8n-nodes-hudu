@@ -7,7 +7,7 @@ import {
   handleDeleteOperation,
   handleArchiveOperation,
 } from '../utils/operations';
-import { HUDU_RESOURCE_CONFIG } from './resource-config';
+import { HUDU_RESOURCE_CONFIG, type HuduResourceConfig } from './resource-config';
 import {
   wrapSuccess,
   wrapError,
@@ -20,9 +20,18 @@ import {
 } from './error-formatter';
 import { relationFilterMapping } from '../resources/relations/relations.types';
 import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
-import { sortByTitleMatch, stripContentField, stripPhotosField } from './result-processor';
+import {
+  sortByTitleMatch,
+  stripContentField,
+  stripPhotosField,
+  slimPhotoRecord,
+  omitDefaults,
+  reshapeProcedureRecord,
+  reshapeProcedureTaskRecord,
+} from './result-processor';
 import { runGetIdByName, runMoveAsset, runGetByLayout, GET_ID_BY_NAME_SUPPORTED_RESOURCES } from './enrichment-executor';
 import { paginatedPostFilter, type PaginatedPostFilterResult } from './pagination-helper';
+import { runHelp, HELP_ENABLED_RESOURCES } from './help-registry';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -115,6 +124,36 @@ function getWriteEndpointAndFields(
     endpoint: company_id ? `/companies/${company_id}/assets` : endpoint,
     fields,
   };
+}
+
+/**
+ * Apply the full read-side shaping pipeline to a single record:
+ *   content/photos strip → procedures rename + per-task assignee block
+ *   → public_photos slim → omitDefaults (uniform field set per resource).
+ * Called from both `get` and `getAll` paths.
+ */
+function postProcessRecord(
+  record: IDataObject,
+  resource: string,
+  config: HuduResourceConfig,
+  includeContent: boolean,
+  includePhotos: boolean,
+): IDataObject {
+  let out: IDataObject = record;
+  if (config.supportsContentField) {
+    out = (stripContentField<IDataObject>([out], includeContent, config.contentField) as IDataObject[])[0];
+  }
+  if (config.supportsPhotosField) {
+    out = (stripPhotosField<IDataObject>([out], includePhotos, config.photosField) as IDataObject[])[0];
+  }
+  if (resource === 'procedures') {
+    out = reshapeProcedureRecord(out);
+  } else if (resource === 'procedure_tasks') {
+    out = reshapeProcedureTaskRecord(out);
+  } else if (resource === 'public_photos') {
+    out = slimPhotoRecord(out) as IDataObject;
+  }
+  return omitDefaults(out, resource);
 }
 
 async function resolveArticleCreateContext(
@@ -254,13 +293,13 @@ export async function executeHuduAiTool(
         if (isMissingData) {
           return JSON.stringify(formatNotFoundError(resource, operation, params.id as number, supportsSearch));
         }
-        let processed: IDataObject = data as IDataObject;
-        if (config.supportsContentField) {
-          processed = (stripContentField<IDataObject>([processed], includeContent, config.contentField) as IDataObject[])[0];
-        }
-        if (config.supportsPhotosField) {
-          processed = (stripPhotosField<IDataObject>([processed], includePhotos, config.photosField) as IDataObject[])[0];
-        }
+        const processed = postProcessRecord(
+          data as IDataObject,
+          resource,
+          config,
+          includeContent,
+          includePhotos,
+        );
         return JSON.stringify(wrapSuccess(resource, operation, processed));
       }
 
@@ -283,7 +322,10 @@ export async function executeHuduAiTool(
           params.updated_at = `${updatedAtStart ?? ''},${updatedAtEnd ?? ''}`;
         }
 
-        // Step 4: name resolution — nameResolutionBaked resources only
+        // Step 4: name resolution — nameResolutionBaked resources only.
+        // Two branches: (a) explicit `name` param → translate to upstream search, wide fetch, rerank.
+        //              (b) explicit `search` param (no name) → keep search, wide fetch, rerank to
+        //                  promote full-title-substring matches over generic search hits.
         let capturedName: string | undefined;
         let userLimit = 25;
         if (config.nameResolutionBaked && params.name) {
@@ -293,9 +335,46 @@ export async function executeHuduAiTool(
           delete params.name;
           params.search = capturedName;
           params.limit = 100;         // wide candidate pool for re-ranking
+        } else if (config.nameResolutionBaked && params.search && !params.name) {
+          capturedName = params.search as string;
+          userLimit = (params.limit as number) ?? 25;
+          params.limit = 100;         // wide candidate pool for re-ranking
         }
 
-        // Step 4a: strip filters that the upstream Hudu API does NOT support as query params
+        // Step 4a: pre-resolve folder→company for articles+folder_id calls.
+        // Hudu /articles does NOT accept folder_id as a query param, so folder_id is applied
+        // via bounded post-filter. When the caller did not supply company_id, look the folder
+        // up once and inject its company_id as a NATIVE upstream filter — drastically narrows
+        // the scan window (sparse folders no longer get lost beyond the page cap). Folders are
+        // owned by a single company OR are global; only inject when non-global.
+        let folderCompanyResolved: { folderId: number; companyId: number } | undefined;
+        if (
+          resource === 'articles' &&
+          typeof params.folder_id === 'number' &&
+          params.company_id === undefined
+        ) {
+          try {
+            const folderData = await handleGetOperation.call(
+              context as unknown as IExecuteFunctions,
+              '/folders',
+              params.folder_id as number,
+              'folder',
+            );
+            const folder = folderData as Record<string, unknown> | null;
+            const folderCompanyId = folder?.company_id;
+            if (typeof folderCompanyId === 'number') {
+              params.company_id = folderCompanyId;
+              folderCompanyResolved = {
+                folderId: params.folder_id as number,
+                companyId: folderCompanyId,
+              };
+            }
+          } catch {
+            // Folder lookup failed (404, network, etc.) — fall through to unnarrowed scan.
+          }
+        }
+
+        // Step 4b: strip filters that the upstream Hudu API does NOT support as query params
         // but are declared on our schemas — we apply them client-side as post-filters after fetch.
         // Map: resource → declared-but-unsupported filter names + the response-item field they match.
         const articlesFolderIdPostFilter =
@@ -389,14 +468,11 @@ export async function executeHuduAiTool(
         // Step 6c: folder_id post-filter is now applied inside paginatedPostFilter (folderIdScanStats path) —
         // no additional client-side filter needed here.
 
-        // Step 7: content stripping — supportsContentField resources only.
-        if (config.supportsContentField) {
-          records = stripContentField<IDataObject>(records, includeContent, config.contentField) as IDataObject[];
-        }
-        // Step 7b: photos stripping — supportsPhotosField resources only.
-        if (config.supportsPhotosField) {
-          records = stripPhotosField<IDataObject>(records, includePhotos, config.photosField) as IDataObject[];
-        }
+        // Step 7: per-record shaping pipeline (content/photos strip, procedure rename, photo slim,
+        // omitDefaults). Uniform application → identical field sets across same-resource records.
+        records = records.map((record) =>
+          postProcessRecord(record as IDataObject, resource, config, includeContent, includePhotos),
+        ) as IDataObject[];
 
         // Step 8: zero-results error — build presentation filters from originalParams so
         // the LLM sees name: "..." not the translated search: "...".
@@ -416,8 +492,9 @@ export async function executeHuduAiTool(
           );
         }
 
-        const resultPayload: Record<string, unknown> = { items: records, count: records.length };
-        // Truncation signal hierarchy:
+        const resultPayload: Record<string, unknown> = { items: records };
+        // Truncation signal hierarchy (`truncated: true` is the only signal — no prose note,
+        // remediation is in the tool description and tool descriptions already cover increasing limit):
         //   1. paginatedPostFilter capHit (articles+folder_id path) — more matches may exist beyond the scan cap
         //   2. upstreamHasMore (+1 probe on the standard path)
         //   3. length-equals-limit heuristic (post-process-filtered paths only; nameResolutionBaked already suppresses naturally)
@@ -427,15 +504,19 @@ export async function executeHuduAiTool(
           (!wantsProbe && folderIdScanStats === undefined && records.length >= effectiveLimit);
         if (truncated) {
           resultPayload.truncated = true;
-          resultPayload.note = folderIdScanStats?.capHit
-            ? `folder_id scan capped at ${folderIdScanStats.pagesScanned} pages (${folderIdScanStats.recordsScanned} records inspected). More matches may exist beyond the scan window — narrow with company_id or search to surface deeper records.`
-            : `Results capped at ${effectiveLimit}. Use filters to narrow the search or increase 'limit' (max 100).`;
+        }
+        if (folderCompanyResolved !== undefined) {
+          addResultWarning(
+            resultPayload,
+            'folder_id',
+            `Folder ${folderCompanyResolved.folderId} → company_id ${folderCompanyResolved.companyId} auto-resolved and injected as a native upstream filter to narrow the bounded scan window.`,
+          );
         }
         if (folderIdScanStats !== undefined) {
           addResultWarning(
             resultPayload,
             'folder_id',
-            `Hudu /articles API does not support folder_id as a query param. Matches were collected via bounded pagination (${folderIdScanStats.pagesScanned} page(s), ${folderIdScanStats.recordsScanned} records scanned, ${folderIdScanStats.exhausted ? 'upstream exhausted' : folderIdScanStats.capHit ? 'cap reached — more may exist' : 'limit satisfied'}). For folders with articles ranked beyond the default scan window, combine folder_id with company_id or search to narrow upstream.`,
+            `Hudu /articles API does not accept folder_id as a query param. Matches collected via bounded pagination (${folderIdScanStats.pagesScanned} page(s), ${folderIdScanStats.recordsScanned} records scanned, ${folderIdScanStats.exhausted ? 'upstream exhausted' : folderIdScanStats.capHit ? 'cap reached — more may exist' : 'limit satisfied'}).`,
           );
         }
         return JSON.stringify(wrapSuccess(resource, operation, resultPayload));
@@ -578,6 +659,17 @@ export async function executeHuduAiTool(
           ));
         }
         return runGetByLayout(context, params);
+      }
+
+      case 'help': {
+        if (!HELP_ENABLED_RESOURCES.includes(resource)) {
+          return JSON.stringify(wrapError(
+            resource, operation, ERROR_TYPES.INVALID_OPERATION,
+            `help is not registered for ${resource}.`,
+            `Resources with help topics: ${HELP_ENABLED_RESOURCES.join(', ')}.`,
+          ));
+        }
+        return runHelp(resource, params);
       }
 
       default:

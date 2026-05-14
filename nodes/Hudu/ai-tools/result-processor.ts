@@ -1,5 +1,9 @@
+import { DEFAULT_FIELD_VALUES } from './resource-config';
+
 /**
- * Word-overlap title scoring. Only called when name param was provided.
+ * Title-match ranker with two-tier scoring:
+ *   tier 1 — full query as a case-insensitive substring of the title (score += 1000)
+ *   tier 2 — count of query tokens present in the title (score += matched-token count)
  * Empty token list (all-delimiter query) = score 0 = stable no-op.
  */
 export function sortByTitleMatch<T extends Record<string, unknown>>(
@@ -7,10 +11,15 @@ export function sortByTitleMatch<T extends Record<string, unknown>>(
   query: string,
   nameField = 'name',
 ): T[] {
-  const tokens = query.toLowerCase().split(/[\s\-_/]+/).filter(Boolean);
+  const lowerQuery = query.toLowerCase().trim();
+  const tokens = lowerQuery.split(/[\s\-_/]+/).filter(Boolean);
   if (tokens.length === 0) return items;
-  const score = (item: T) =>
-    tokens.filter((t) => String(item[nameField] ?? '').toLowerCase().includes(t)).length;
+  const score = (item: T) => {
+    const name = String(item[nameField] ?? '').toLowerCase();
+    const substringBoost = lowerQuery && name.includes(lowerQuery) ? 1000 : 0;
+    const overlap = tokens.filter((t) => name.includes(t)).length;
+    return substringBoost + overlap;
+  };
   return [...items].sort((a, b) => score(b) - score(a)); // stable (ES2019 / Node 12+)
 }
 
@@ -31,18 +40,115 @@ export function stripContentField<T extends Record<string, unknown>>(
 }
 
 /**
- * Strip the photos field (e.g. public_photos array) from results unless explicitly requested.
- * Article public_photos arrays alone can run to dozens of entries per record and blow context budgets.
+ * Slim a photo record to the four fields the LLM can actually use:
+ *   numeric_id (integer id for the API), url (absolute, public), file_name, size.
+ * Drops slug `id` (display-only, not callable), `record_type` / `record_id`
+ * (caller already has the parent's context), and renames file_size → size.
+ */
+export function slimPhotoRecord(p: Record<string, unknown>): Record<string, unknown> {
+  return {
+    numeric_id: p.numeric_id,
+    url: p.url,
+    file_name: p.file_name,
+    size: p.file_size ?? p.size,
+  };
+}
+
+/**
+ * For each item: when includePhotos=false strip the photos field entirely; when true,
+ * slim each photo to {numeric_id, url, file_name, size}. Article public_photos arrays
+ * alone can run to dozens of entries per record and blow context budgets.
  */
 export function stripPhotosField<T extends Record<string, unknown>>(
   items: T[],
   includePhotos: boolean,
   photosField = 'public_photos',
 ): T[] {
-  if (includePhotos) return items;
   return items.map((item) => {
-    const result = { ...item };
-    delete result[photosField];
-    return result;
+    const result: Record<string, unknown> = { ...item };
+    if (!includePhotos) {
+      delete result[photosField];
+      return result as T;
+    }
+    const photos = result[photosField];
+    if (Array.isArray(photos)) {
+      result[photosField] = (photos as Record<string, unknown>[]).map(slimPhotoRecord);
+    }
+    return result as T;
   });
+}
+
+/**
+ * True when val matches one of the documented defaults. Empty-array defaults are
+ * sentinel-matched: a default of `[]` matches any zero-length array on the record.
+ */
+function matchesDefault(val: unknown, defaults: unknown[]): boolean {
+  for (const d of defaults) {
+    if (val === d) return true;
+    if (Array.isArray(d) && d.length === 0 && Array.isArray(val) && (val as unknown[]).length === 0) return true;
+  }
+  return false;
+}
+
+/**
+ * Omit fields whose value matches a documented default for the resource. Uniform
+ * application → identical field sets across records of the same resource. Defaults
+ * are declared once in DEFAULT_FIELD_VALUES and surfaced in tool descriptions, so
+ * the LLM knows what an omitted field implies.
+ */
+export function omitDefaults<T extends Record<string, unknown>>(item: T, resource: string): T {
+  const defaults = DEFAULT_FIELD_VALUES[resource];
+  if (!defaults) return item;
+  const out: Record<string, unknown> = { ...item };
+  for (const [field, vals] of Object.entries(defaults)) {
+    if (!(field in out)) continue;
+    if (matchesDefault(out[field], vals)) {
+      delete out[field];
+    }
+  }
+  return out as T;
+}
+
+const PROCEDURE_TASKS_ATTR_KEY = 'procedure_tasks_attributes';
+
+/**
+ * Reshape a single procedure task record:
+ *   - When an assignee exists, emit a single `assignee` block ({id, name, initials}).
+ *   - Drop all six legacy `*_user_*` keys whether assigned or not.
+ *   - Apply omitDefaults('procedure_tasks').
+ */
+export function reshapeProcedureTaskRecord<T extends Record<string, unknown>>(record: T): T {
+  const out: Record<string, unknown> = { ...record };
+  const uid = out.first_assigned_user_id;
+  if (uid !== null && uid !== undefined) {
+    out.assignee = {
+      id: uid,
+      name: out.first_assigned_user_name ?? null,
+      initials: out.first_assigned_user_initials ?? null,
+    };
+  }
+  delete out.first_assigned_user_id;
+  delete out.first_assigned_user_name;
+  delete out.first_assigned_user_initials;
+  delete out.user_id;
+  delete out.user_name;
+  delete out.assigned_users;
+  delete out.subtask_ids;
+  return omitDefaults(out, 'procedure_tasks') as T;
+}
+
+/**
+ * Reshape a procedure read response: rename Rails-style `procedure_tasks_attributes`
+ * write-key to `tasks`, then per-task reshape (assignee block, drop *_user_* keys).
+ */
+export function reshapeProcedureRecord<T extends Record<string, unknown>>(record: T): T {
+  const out: Record<string, unknown> = { ...record };
+  if (PROCEDURE_TASKS_ATTR_KEY in out) {
+    const tasks = out[PROCEDURE_TASKS_ATTR_KEY];
+    out.tasks = Array.isArray(tasks)
+      ? (tasks as Record<string, unknown>[]).map(reshapeProcedureTaskRecord)
+      : [];
+    delete out[PROCEDURE_TASKS_ATTR_KEY];
+  }
+  return out as T;
 }

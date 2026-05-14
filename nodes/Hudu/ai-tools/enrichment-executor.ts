@@ -113,7 +113,7 @@ export async function runGetIdByName(
             return slim;
         });
 
-        return JSON.stringify(wrapSuccess(resource, 'getIdByName', { items, count: items.length }));
+        return JSON.stringify(wrapSuccess(resource, 'getIdByName', { items }));
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         return JSON.stringify(wrapError(
@@ -400,11 +400,9 @@ export async function runGetByLayout(
             layout_id: resolvedLayoutId,
             layout_name: resolvedLayoutName,
             assets: transformedAssets,
-            count: transformedAssets.length,
         };
         if (transformedAssets.length >= limit) {
             result.truncated = true;
-            result.note = `Results capped at ${limit}. Increase 'limit' (max 100) to retrieve more.`;
         }
 
         return JSON.stringify(wrapSuccess('assets', 'getByLayout', result));

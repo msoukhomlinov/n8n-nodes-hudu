@@ -105,7 +105,7 @@ export function getPublicPhotosGetSchema() {
       .int()
       .positive()
       .describe(
-        "Public photo numeric ID — the integer 'numeric_id' from the article or company response's 'public_photos' array. Returns METADATA ONLY (id, numeric_id, url, record_type, record_id, file_name, file_size) — NEVER binary image content. Do NOT pass the slug string from '/public_photo/<slug>' HTML links — the API only accepts integers and returns 404 for slugs.",
+        "Public photo numeric ID — the integer 'numeric_id' from a prior article or company response's 'public_photos' array. Returns slim METADATA (numeric_id, url, file_name, size) — NEVER binary image content. Slug display id, record_type, and record_id are stripped (caller already has the parent's context). Do NOT pass the slug string from '/public_photo/<slug>' HTML links — the API only accepts integers and returns 404 for slugs.",
       ),
   });
 }
@@ -125,7 +125,7 @@ export function getArticlesGetSchema() {
       .optional()
       .default(false)
       .describe(
-        "Include the 'public_photos' array (metadata for each embedded image). Default false — photo arrays can run to dozens of entries per article and waste context. Set true ONLY when you need to verify embedded photos exist before editing/redacting the article, or surface photo URLs to the user. Pair with include_content=true to coordinate edits with image references.",
+        "Include the 'public_photos' array (slim metadata for each embedded image: numeric_id, url, file_name, size). Default false — photo arrays can run to dozens of entries per article and waste context. Set true ONLY when you need to verify embedded photos exist before editing/redacting the article, or surface photo URLs to the user. Pair with include_content=true to coordinate edits with image references.",
       ),
   });
 }
@@ -194,7 +194,7 @@ export function getArticlesGetAllSchema() {
       .string()
       .optional()
       .describe(
-        "Partial text match across article title and content. Use for topic or keyword exploration. For resolving a known article title to an ID, prefer 'name' (title-biased ranking).",
+        "Partial text match across article title AND body content. Results are re-ranked locally so any record whose title contains the full query as a substring is promoted ahead of body-only matches — exact-title lookups bubble to position 0. For known full titles prefer 'name' (same two-tier ranking, but skips body-only hits entirely).",
       ),
     name: z
       .string()
@@ -216,7 +216,7 @@ export function getArticlesGetAllSchema() {
       .positive()
       .optional()
       .describe(
-        'Filter by folder ID. Hudu /articles API does not natively accept folder_id — applied via bounded pagination (scans up to 20 pages × 100 records = 2000 articles). If the target folder contains articles ranked deeper than that, combine folder_id with `company_id` or `search` to narrow the upstream fetch. The response result.warnings array reports scan stats and whether the cap was hit.',
+        "Filter by folder ID. Hudu /articles does not accept folder_id as a native query param — applied as a bounded post-filter. When you do not also pass company_id, the folder is auto-resolved to its owning company_id (one extra API call) and that company is injected as a native upstream filter, which keeps the scan window tight even for sparse folders. For global folders (company_id null on the folder record) the bounded scan runs unnarrowed (up to 20 pages × 100 records). Result warnings document the auto-resolve and scan stats.",
       ),
     enable_sharing: z.boolean().optional().describe('Filter to publicly shareable articles only.'),
     updated_at_start: z
@@ -243,7 +243,7 @@ export function getArticlesGetAllSchema() {
       .optional()
       .default(false)
       .describe(
-        "Include the 'public_photos' array on each result. Default false — photo arrays alone can run to dozens of objects per article and blow context budgets. Set true ONLY when you need to verify or surface embedded photo URLs. Use the dedicated hudu_public_photos tool for direct photo metadata when you have a numeric_id.",
+        "Include the 'public_photos' array on each result (slim metadata: numeric_id, url, file_name, size). Default false — photo arrays alone can run to dozens of objects per article and blow context budgets. Set true ONLY when you need to verify or surface embedded photo URLs. Use the dedicated hudu_public_photos tool for direct photo metadata when you have a numeric_id.",
       ),
     limit: limitSchema,
   });
@@ -1049,6 +1049,7 @@ const OPERATION_LABELS: Record<HuduOperation, string> = {
   getIdByName: 'Resolve name to ID',
   move: 'Move asset',
   getByLayout: 'Assets by layout',
+  help: 'Help / workflow notes',
 };
 
 const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
@@ -1062,6 +1063,7 @@ const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
   'getIdByName',
   'move',
   'getByLayout',
+  'help',
 ]);
 
 // Resources whose getIdByName uses EXACT case-sensitive match upstream
@@ -1115,6 +1117,37 @@ export function getMoveAssetSchema() {
         'If true (default), delete the original asset after successful creation at the target company. ' +
           'Set to false to create a copy without deleting the original — useful for verifying the move before committing.',
       ),
+  });
+}
+
+/**
+ * Per-resource map of help topics. Mirrors `HELP_TOPICS` in help-registry.ts so the
+ * schema can declare the valid enum. Kept here (not imported) to avoid coupling the
+ * runtime schema converter to the help-content module.
+ */
+const HELP_TOPIC_ENUM: Record<string, readonly [string, ...string[]]> = {
+  articles: ['overview', 'photos', 'search', 'create'],
+  public_photos: ['overview'],
+};
+
+export function getHelpSchema(resource: string) {
+  const topics = HELP_TOPIC_ENUM[resource];
+  if (topics) {
+    return z.object({
+      topic: z
+        .enum(topics)
+        .optional()
+        .default('overview')
+        .describe(
+          `Help topic. Default 'overview'. Available: ${topics.join(', ')}. Returns long-form workflow prose.`,
+        ),
+    });
+  }
+  return z.object({
+    topic: z
+      .string()
+      .optional()
+      .describe("Help topic. Default 'overview' if omitted."),
   });
 }
 
@@ -1308,6 +1341,8 @@ function getSchemaForOperation(
       return getMoveAssetSchema();
     case 'getByLayout':
       return getByLayoutSchema();
+    case 'help':
+      return getHelpSchema(resource);
   }
 }
 

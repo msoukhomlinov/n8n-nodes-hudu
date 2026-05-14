@@ -4,18 +4,19 @@
 
 interface ToolEnvelope {
   schemaVersion: string;
-  success: boolean;
   operation: string;
   resource: string;
 }
 
+/**
+ * schemaVersion '2' convention: presence of `error` = failure, absence = success.
+ * The `success` discriminator field has been dropped. Clients should check for `error`.
+ */
 export interface SuccessEnvelope extends ToolEnvelope {
-  success: true;
   result: unknown;
 }
 
 export interface ErrorEnvelope extends ToolEnvelope {
-  success: false;
   error: {
     errorType: string;
     message: string;
@@ -42,7 +43,7 @@ export function wrapSuccess(
   operation: string,
   result: unknown,
 ): SuccessEnvelope {
-  return { schemaVersion: '1', success: true, operation, resource, result };
+  return { schemaVersion: '2', operation, resource, result };
 }
 
 /**
@@ -80,8 +81,7 @@ export function wrapError(
   context?: Record<string, unknown>,
 ): ErrorEnvelope {
   return {
-    schemaVersion: '1',
-    success: false,
+    schemaVersion: '2',
     operation,
     resource,
     error: { errorType, message, nextAction, ...(context ? { context } : {}) },

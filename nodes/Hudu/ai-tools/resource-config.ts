@@ -8,7 +8,8 @@ export type HuduOperation =
   | 'unarchive'
   | 'getIdByName'
   | 'move'
-  | 'getByLayout';
+  | 'getByLayout'
+  | 'help';
 
 export interface HuduResourceConfig {
   /** API path, e.g. '/companies' */
@@ -54,7 +55,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'articles',
     singularKey: 'article',
     bodyKey: 'article',
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'help'],
     supportsPagination: true,
     label: 'Article',
     supportsContentField: true,
@@ -139,7 +140,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'public_photos',
     singularKey: null,
     bodyKey: null,
-    ops: ['get'],
+    ops: ['get', 'help'],
     supportsPagination: true,
     label: 'Public Photo',
   },
@@ -243,3 +244,46 @@ export const WRITE_OPERATIONS: HuduOperation[] = [
   'unarchive',
   'move',
 ];
+
+/**
+ * Per-resource map of field → values considered "default". Any field whose value
+ * matches one of the listed defaults is omitted from the response envelope. The
+ * tool description names the default once so the LLM can correctly interpret an
+ * omitted field. Empty array `[]` is a sentinel that matches any zero-length array.
+ *
+ * Guarantees uniform field sets across same-resource records (every record runs
+ * through the same default-strip) and saves the per-record null-byte cost on
+ * fields that hold their default the vast majority of the time.
+ */
+export const DEFAULT_FIELD_VALUES: Record<string, Record<string, unknown[]>> = {
+  articles: {
+    enable_sharing: [null, false],
+    share_url: [null, ''],
+    archived: [false],
+    draft: [null, false],
+  },
+  companies: {
+    parent_company_id: [null],
+    parent_company_name: [null, ''],
+    archived: [false],
+  },
+  websites: {
+    keyword: [null, ''],
+    headers: [null, ''],
+    cloudflare_details: [null, ''],
+    discarded_at: [null],
+    asset_field_id: [null],
+    archived: [false],
+    paused: [false],
+  },
+  procedures: {
+    parent_procedure: [null],
+    paused: [null, false],
+    archived: [false],
+  },
+  procedure_tasks: {
+    completed: [null, false],
+    description: [null, ''],
+    due_date: [null],
+  },
+};
