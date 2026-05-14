@@ -11,6 +11,44 @@ All notable changes to this project will be documented in this file.
 
 - **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
+## [2.4.2] - 2026-05-14
+
+### Added
+- **`operation: 'help'` propagated to 6 additional resources**: `companies`, `folders`, `websites`, `procedures`, `procedure_tasks`, `relations`. Each registers an `overview` topic capturing the resource's filter set, gotchas, and create/archive rules. Articles, public_photos help unchanged.
+- **HELP_TOPICS entries** added in `help-registry.ts` for the 6 new resources (overview prose per resource — ~600-900 chars each).
+- **HELP_TOPIC_ENUM entries** added in `schema-generator.ts` so the tool schema declares the valid `topic` enum per resource. Without this, agents would call `operation=help` without knowing which topics exist.
+- **`RESOURCE_HINTS` entries updated** to mention `operation=help topic=overview` for each newly-registered resource — agents now see the help pointer in the lean tool description.
+
+### Notes for deployment
+**If observing pre-2.4.1 behaviour (UTC preamble, multi-thousand-char tool descriptions, missing help op):** the n8n install is running stale code. Verify by:
+- Check `package.json` version inside n8n's installed copy: `cat ~/.n8n/nodes/node_modules/n8n-nodes-hudu/package.json | grep version`. Must show 2.4.2 (or 2.4.1 at minimum for the description lean).
+- Reinstall: `cd /path/to/n8n-nodes-hudu && npm run build && npm link`, then `cd ~/.n8n/nodes && npm link n8n-nodes-hudu`, then restart n8n.
+- After restart, dump `tools/list` from the MCP server. `hudu_articles` description ≤ 500 chars and contains no "Reference: current UTC date-time" text. Other six tools ≤ 350 chars and include `operation=help topic=overview` reference.
+
+### Char-count regression check (measured live from dist/)
+With `help` added to every brief-listed resource (one extra operation in the enum + an `operation=help topic=overview` reference in the hint), descriptions remain under target. Folder + procedure hints were trimmed to compensate for the longer operation list.
+| Tool | Target | Actual |
+|---|---|---|
+| articles | ≤500 | 374 |
+| companies | ≤300 | 291 |
+| folders | ≤300 | 268 |
+| websites | ≤300 | 249 |
+| procedures | ≤300 | 274 |
+| procedure_tasks | ≤300 | 258 |
+| relations | ≤300 | 255 |
+| public_photos | ≤300 | 233 |
+
+### Help-op smoke-test (measured live from dist/)
+All 8 enabled resources return a valid envelope on `operation=help topic=overview`. Topic content sizes:
+- articles 1392, public_photos 1232, companies 879, folders 861, websites 803, procedures 1099, procedure_tasks 1022, relations 1104 chars.
+- Unknown topic → `VALIDATION_ERROR` with `availableTopics` hint.
+- Unsupported resource (no entry in HELP_TOPICS) → `INVALID_OPERATION`.
+
+### QA fixes applied
+- **procedures help**: `name` filter labelled "EXACT match, case-insensitive" (was wrongly "case-sensitive"). Hudu API spec for `/procedures` GET explicitly states case-insensitive exact match.
+- **procedure_tasks help**: `name` filter labelled "EXACT match" (dropped misleading "case-sensitive" qualifier; spec is silent — neutral is safer).
+- **relations help**: corrected `IpAddress` → `IPAddress` to match the canonical `RESOURCE_TYPES` enum in `nodes/Hudu/utils/constants.ts`. Wrong casing would have caused 422 validation errors on relation create.
+
 ## [2.4.1] - 2026-05-14
 
 ### Fixed

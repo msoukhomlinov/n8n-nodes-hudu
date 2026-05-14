@@ -6,14 +6,18 @@
 const RESOURCE_HINTS: Record<string, string> = {
   articles:
     "'name' = fuzzy title; 'search' = full-text (both re-rank exact-title to top). include_content/include_photos opt-in. folder_id auto-resolves company_id. operation=help topic=overview for workflow notes.",
-  companies: 'Use getIdByName for fuzzy name→id resolution.',
+  companies:
+    'Use getIdByName for fuzzy name→id resolution. operation=help topic=overview for filters and archive rules.',
   folders:
-    'Folders carry company_id (used by hudu_articles folder_id filtering for auto-narrowing).',
-  websites: "'name' IS the URL (must include https:// or http://).",
+    'Folders carry company_id (powers hudu_articles folder_id auto-narrowing). operation=help topic=overview.',
+  websites:
+    "'name' IS the URL (must include https:// or http://). operation=help topic=overview.",
   procedures:
-    "Read responses expose nested tasks under 'tasks' (each with optional 'assignee' block).",
-  procedure_tasks: "Task carries 'assignee:{id,name,initials}' only when assigned.",
-  relations: 'fromable_/toable_ pairs declare both ends; types from RESOURCE_TYPES.',
+    "Nested 'tasks' on reads (each with optional 'assignee'). operation=help topic=overview.",
+  procedure_tasks:
+    "Task carries 'assignee:{id,name,initials}' only when assigned. operation=help topic=overview for cross-procedure filtering.",
+  relations:
+    'fromable_/toable_ pairs declare both ends; types from RESOURCE_TYPES. operation=help topic=overview for data model.',
   assets:
     'Use getIdByName for name→id. move recreates+deletes via /companies/{id}/assets. getByLayout labels custom fields.',
   asset_passwords: 'Use getIdByName for fuzzy name→id resolution.',

@@ -1128,6 +1128,12 @@ export function getMoveAssetSchema() {
 const HELP_TOPIC_ENUM: Record<string, readonly [string, ...string[]]> = {
   articles: ['overview', 'photos', 'search', 'create'],
   public_photos: ['overview'],
+  companies: ['overview'],
+  folders: ['overview'],
+  websites: ['overview'],
+  procedures: ['overview'],
+  procedure_tasks: ['overview'],
+  relations: ['overview'],
 };
 
 export function getHelpSchema(resource: string) {
