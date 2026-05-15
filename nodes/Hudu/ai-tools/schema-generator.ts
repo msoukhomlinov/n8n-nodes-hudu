@@ -12,6 +12,30 @@ import {
 } from '../utils/constants';
 
 // ---------------------------------------------------------------------------
+// Module-level schema cache — credential-independent (API schema is static)
+// ---------------------------------------------------------------------------
+const _readOnlySchemaCache = new Map<string, z.ZodObject<z.ZodRawShape>>();
+const READONLY_SCHEMA_CACHE_MAX = 200;
+
+function _readOnlyCacheKey(
+  resource: string,
+  operations: string[],
+  config: {
+    requiresCompanyEndpoint?: boolean;
+    supportsContentField?: boolean;
+    supportsPhotosField?: boolean;
+  },
+): string {
+  return [
+    resource,
+    [...operations].sort().join(','),
+    config.supportsContentField ? '1' : '0',
+    config.supportsPhotosField ? '1' : '0',
+    config.requiresCompanyEndpoint ? '1' : '0',
+  ].join('|');
+}
+
+// ---------------------------------------------------------------------------
 // Common base schemas
 // ---------------------------------------------------------------------------
 
@@ -35,12 +59,12 @@ const RESOURCE_TYPES_DESC = buildTypeDesc(RESOURCE_TYPES, RESOURCE_TYPE_DESCRIPT
 const idSchema = z
   .number()
   .int()
-  .positive()
+  .min(1)
   .describe('Numeric record ID (from a prior getAll result). Must be an integer.');
 const optionalIdSchema = z
   .number()
   .int()
-  .positive()
+  .min(1)
   .optional()
   .describe('Numeric record ID (from a prior getAll result)');
 const limitSchema = z
@@ -56,14 +80,14 @@ const limitSchema = z
 const companyIdSchema = z
   .number()
   .int()
-  .positive()
+  .min(1)
   .describe(
     'Numeric company ID. If unknown, call hudu_companies with operation getAll with search to find the company and get its id.',
   );
 const optionalCompanyIdSchema = z
   .number()
   .int()
-  .positive()
+  .min(1)
   .optional()
   .describe(
     'Filter by numeric company ID. If unknown, call hudu_companies with operation getAll with search to find it.',
@@ -103,7 +127,7 @@ export function getPublicPhotosGetSchema() {
     id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .describe(
         "Public photo numeric ID — the integer 'numeric_id' from a prior article or company response's 'public_photos' array. Returns slim METADATA (numeric_id, url, file_name, size) — NEVER binary image content. Slug display id, record_type, and record_id are stripped (caller already has the parent's context). Do NOT pass the slug string from '/public_photo/<slug>' HTML links — the API only accepts integers and returns 404 for slugs.",
       ),
@@ -213,7 +237,7 @@ export function getArticlesGetAllSchema() {
     folder_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         "Filter by folder ID. Hudu /articles does not accept folder_id as a native query param — applied as a bounded post-filter. When you do not also pass company_id, the folder is auto-resolved to its owning company_id (one extra API call) and that company is injected as a native upstream filter, which keeps the scan window tight even for sparse folders. For global folders (company_id null on the folder record) the bounded scan runs unnarrowed (up to 20 pages × 100 records). Result warnings document the auto-resolve and scan stats.",
@@ -262,7 +286,7 @@ export function getAssetsGetAllSchema() {
     asset_layout_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Filter by asset layout ID (asset type/category). Call hudu_asset_layouts with operation getAll to find available layouts.',
@@ -337,7 +361,7 @@ export function getProceduresGetAllSchema() {
     parent_process_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter runs by parent process ID'),
     created_at: z
@@ -354,12 +378,12 @@ export function getProceduresGetAllSchema() {
 
 export function getActivityLogsGetAllSchema() {
   return z.object({
-    user_id: z.number().int().positive().optional().describe('Filter by user ID'),
+    user_id: z.number().int().min(1).optional().describe('Filter by user ID'),
     user_email: z.string().optional().describe('Filter by user email'),
     resource_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter by resource numeric ID (use together with resource_type)'),
     resource_type: z
@@ -388,7 +412,7 @@ export function getFoldersGetAllSchema() {
   return z.object({
     name: optionalNameSchemaNoSearch,
     company_id: optionalCompanyIdSchema,
-    parent_folder_id: z.number().int().positive().optional().describe('Filter by parent folder ID'),
+    parent_folder_id: z.number().int().min(1).optional().describe('Filter by parent folder ID'),
     folder_type: z
       .enum(FOLDER_TYPES)
       .optional()
@@ -402,7 +426,7 @@ export function getNetworksGetAllSchema() {
     name: optionalNameSchemaNoSearch,
     company_id: optionalCompanyIdSchema,
     archived: archivedSchema,
-    location_id: z.number().int().positive().optional().describe('Filter by location ID'),
+    location_id: z.number().int().min(1).optional().describe('Filter by location ID'),
     network_type: z.number().int().optional().describe('Filter by network type'),
     limit: limitSchema,
   });
@@ -412,10 +436,10 @@ export function getIpAddressesGetAllSchema() {
   return z.object({
     address: z.string().optional().describe('Filter by IP address'),
     company_id: optionalCompanyIdSchema,
-    network_id: z.number().int().positive().optional().describe('Filter by network ID'),
+    network_id: z.number().int().min(1).optional().describe('Filter by network ID'),
     status: ipAddressStatusOptionalSchema,
     fqdn: z.string().optional().describe('Filter by FQDN (exact match)'),
-    asset_id: z.number().int().positive().optional().describe('Filter by asset ID'),
+    asset_id: z.number().int().min(1).optional().describe('Filter by asset ID'),
     limit: limitSchema,
   });
 }
@@ -433,7 +457,7 @@ export function getRelationsGetAllSchema() {
     fromable_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter by source record numeric ID'),
     fromable_type: z
@@ -443,7 +467,7 @@ export function getRelationsGetAllSchema() {
     toable_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter by target record numeric ID'),
     toable_type: z
@@ -482,7 +506,7 @@ export function getVlansGetAllSchema() {
   return z.object({
     name: optionalNameSchemaNoSearch,
     company_id: optionalCompanyIdSchema,
-    vlan_zone_id: z.number().int().positive().optional().describe('Filter by VLAN zone ID'),
+    vlan_zone_id: z.number().int().min(1).optional().describe('Filter by VLAN zone ID'),
     limit: limitSchema,
   });
 }
@@ -500,7 +524,7 @@ export function getMatchersGetAllSchema() {
     integration_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Filter matchers by integration. Check your Hudu integrations settings for the numeric integration ID.',
@@ -519,13 +543,13 @@ export function getPhotosGetAllSchema() {
     photoable_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter by parent record ID (use together with photoable_type)'),
     folder_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter by photo folder ID'),
     archived: archivedSchema,
@@ -544,7 +568,7 @@ export function getPublicPhotosGetAllSchema() {
     record_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         "Filter by the numeric ID of the associated record. Use together with record_type. Obtain from a prior getAll call on the relevant resource (e.g., hudu_articles or hudu_companies with operation 'getAll').",
@@ -558,7 +582,7 @@ export function getProcedureTasksGetAllSchema() {
     procedure_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Filter by process/run ID. If unknown, call hudu_procedures with operation getAll to find it.'),
     name: optionalNameSchemaNoSearch,
@@ -589,7 +613,7 @@ export function getCompaniesCreateSchema() {
     website: z.string().url().optional().describe('Company website URL'),
     notes: z.string().optional().describe('Notes'),
     fax_number: z.string().optional().describe('Fax number'),
-    parent_company_id: z.number().int().positive().optional().describe('Parent company ID'),
+    parent_company_id: z.number().int().min(1).optional().describe('Parent company ID'),
   });
 }
 
@@ -615,7 +639,7 @@ export function getArticlesCreateSchema() {
     folder_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Folder ID to place the article in. ' +
@@ -632,7 +656,7 @@ export function getAssetsCreateSchema() {
     asset_layout_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .describe(
         'Asset layout ID that defines the type and custom fields of this asset. If unknown, call hudu_asset_layouts with operation getAll to find available layouts and their IDs.',
       ),
@@ -681,7 +705,7 @@ export function getAssetPasswordsCreateSchema() {
     asset_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Asset ID to associate with. If unknown, call hudu_assets with operation getAll with search to find it.',
@@ -693,11 +717,11 @@ export function getAssetPasswordsCreateSchema() {
     passwordable_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Resource ID this password belongs to'),
     password_type: z.string().optional().describe('Password type'),
-    password_folder_id: z.number().int().positive().optional().describe('Password folder ID'),
+    password_folder_id: z.number().int().min(1).optional().describe('Password folder ID'),
     login_url: z.string().optional().describe('Login URL'),
     in_portal: z.boolean().optional().describe('Whether visible in portal'),
     otp_secret: z.string().optional().describe('OTP secret for 2FA'),
@@ -710,7 +734,7 @@ export function getProceduresCreateSchema() {
     company_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Company ID to scope this procedure to. Omit or null = global template. If unknown, call hudu_companies with operation getAll with search to find it.',
@@ -727,7 +751,7 @@ export function getFoldersCreateSchema() {
     parent_folder_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Parent folder ID. If unknown, call hudu_folders with operation getAll with the name filter to find it.',
@@ -750,14 +774,14 @@ export function getNetworksCreateSchema() {
     location_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Location ID. Check your Hudu settings or existing networks for valid location IDs.',
       ),
     notes: z.string().optional().describe('Notes (rich text)'),
-    status_list_item_id: z.number().int().positive().optional().describe('Status list item ID'),
-    role_list_item_id: z.number().int().positive().optional().describe('Role list item ID'),
+    status_list_item_id: z.number().int().min(1).optional().describe('Status list item ID'),
+    role_list_item_id: z.number().int().min(1).optional().describe('Role list item ID'),
   });
 }
 
@@ -766,21 +790,21 @@ export function getIpAddressesCreateSchema() {
     address: z.string().describe('IP address'),
     company_id: companyIdSchema,
     status: ipAddressStatusSchema,
-    network_id: z.number().int().positive().optional().describe('Network ID this IP belongs to'),
+    network_id: z.number().int().min(1).optional().describe('Network ID this IP belongs to'),
     description: z.string().optional().describe('Description'),
     fqdn: z.string().optional().describe('Fully qualified domain name'),
-    asset_id: z.number().int().positive().optional().describe('Asset ID to associate with'),
+    asset_id: z.number().int().min(1).optional().describe('Asset ID to associate with'),
     skip_dns_validation: z.boolean().optional().describe('Whether to skip DNS validation'),
   });
 }
 
 export function getRelationsCreateSchema() {
   return z.object({
-    fromable_id: z.number().int().positive().describe('Numeric ID of the source record'),
+    fromable_id: z.number().int().min(1).describe('Numeric ID of the source record'),
     fromable_type: z
       .string()
       .describe(`Type of the source (from) record in this relation. ${RESOURCE_TYPES_DESC}`),
-    toable_id: z.number().int().positive().describe('Numeric ID of the target record'),
+    toable_id: z.number().int().min(1).describe('Numeric ID of the target record'),
     toable_type: z
       .string()
       .describe(`Type of the target (to) record in this relation. ${RESOURCE_TYPES_DESC}`),
@@ -794,11 +818,11 @@ export function getVlansCreateSchema() {
     name: nameSchema.describe('VLAN name'),
     company_id: companyIdSchema,
     vlan_id: z.number().int().min(1).max(4094).optional().describe('VLAN ID (1–4094)'),
-    vlan_zone_id: z.number().int().positive().optional().describe('VLAN zone ID'),
+    vlan_zone_id: z.number().int().min(1).optional().describe('VLAN zone ID'),
     description: z.string().optional().describe('Description'),
     notes: z.string().optional().describe('Notes (rich text)'),
-    status_list_item_id: z.number().int().positive().optional().describe('Status list item ID'),
-    role_list_item_id: z.number().int().positive().optional().describe('Role list item ID'),
+    status_list_item_id: z.number().int().min(1).optional().describe('Status list item ID'),
+    role_list_item_id: z.number().int().min(1).optional().describe('Role list item ID'),
   });
 }
 
@@ -836,7 +860,7 @@ export function getCompaniesUpdateSchema() {
     website: z.string().url().optional().describe('Company website URL'),
     notes: z.string().optional().describe('Notes'),
     fax_number: z.string().optional().describe('Fax number'),
-    parent_company_id: z.number().int().positive().optional().describe('Parent company ID'),
+    parent_company_id: z.number().int().min(1).optional().describe('Parent company ID'),
   });
 }
 
@@ -846,7 +870,7 @@ export function getArticlesUpdateSchema() {
     name: z.string().optional().describe('Article title'),
     content: z.string().optional().describe('Article content'),
     company_id: optionalCompanyIdSchema,
-    folder_id: z.number().int().positive().optional().describe('Folder ID'),
+    folder_id: z.number().int().min(1).optional().describe('Folder ID'),
     enable_sharing: z.boolean().optional().describe('Whether to enable public sharing'),
     draft: z.boolean().optional().describe('Whether the article is a draft'),
   });
@@ -905,11 +929,11 @@ export function getAssetPasswordsUpdateSchema() {
     passwordable_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Resource ID this password belongs to'),
     password_type: z.string().optional().describe('Password type'),
-    password_folder_id: z.number().int().positive().optional().describe('Password folder ID'),
+    password_folder_id: z.number().int().min(1).optional().describe('Password folder ID'),
     login_url: z.string().optional().describe('Login URL'),
     in_portal: z.boolean().optional().describe('Whether visible in portal'),
     otp_secret: z.string().optional().describe('OTP secret for 2FA'),
@@ -939,12 +963,12 @@ export function getFoldersUpdateSchema() {
   return z.object({
     id: idSchema,
     name: z.string().optional().describe('Folder name'),
-    company_id: z.number().int().positive().optional().describe('Company ID'),
+    company_id: z.number().int().min(1).optional().describe('Company ID'),
     description: z.string().optional().describe('Folder description'),
     parent_folder_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Parent folder ID. If unknown, call hudu_folders with operation getAll with the name filter to find it.',
@@ -957,22 +981,22 @@ export function getNetworksUpdateSchema() {
   return z.object({
     id: idSchema,
     name: z.string().optional().describe('Network name'),
-    company_id: z.number().int().positive().optional().describe('Company ID'),
+    company_id: z.number().int().min(1).optional().describe('Company ID'),
     network_type: z.number().int().optional().describe('Network type'),
     address: z.string().optional().describe('Network address (CIDR)'),
     description: z.string().optional().describe('Description'),
     location_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Location ID. Check your Hudu settings or existing networks for valid location IDs.',
       ),
     notes: z.string().optional().describe('Notes (rich text)'),
     archived: z.boolean().optional().describe('Whether the network is archived'),
-    status_list_item_id: z.number().int().positive().optional().describe('Status list item ID'),
-    role_list_item_id: z.number().int().positive().optional().describe('Role list item ID'),
+    status_list_item_id: z.number().int().min(1).optional().describe('Status list item ID'),
+    role_list_item_id: z.number().int().min(1).optional().describe('Role list item ID'),
   });
 }
 
@@ -980,12 +1004,12 @@ export function getIpAddressesUpdateSchema() {
   return z.object({
     id: idSchema,
     address: z.string().optional().describe('IP address'),
-    company_id: z.number().int().positive().optional().describe('Company ID'),
-    network_id: z.number().int().positive().optional().describe('Network ID this IP belongs to'),
+    company_id: z.number().int().min(1).optional().describe('Company ID'),
+    network_id: z.number().int().min(1).optional().describe('Network ID this IP belongs to'),
     status: ipAddressStatusOptionalSchema,
     description: z.string().optional().describe('Description'),
     fqdn: z.string().optional().describe('Fully qualified domain name'),
-    asset_id: z.number().int().positive().optional().describe('Asset ID to associate with'),
+    asset_id: z.number().int().min(1).optional().describe('Asset ID to associate with'),
     skip_dns_validation: z.boolean().optional().describe('Whether to skip DNS validation'),
   });
 }
@@ -1003,13 +1027,13 @@ export function getVlansUpdateSchema() {
   return z.object({
     id: idSchema,
     name: z.string().optional().describe('VLAN name'),
-    company_id: z.number().int().positive().optional().describe('Company ID'),
+    company_id: z.number().int().min(1).optional().describe('Company ID'),
     vlan_id: z.number().int().min(1).max(4094).optional().describe('VLAN ID (1–4094)'),
-    vlan_zone_id: z.number().int().positive().optional().describe('VLAN zone ID'),
+    vlan_zone_id: z.number().int().min(1).optional().describe('VLAN zone ID'),
     description: z.string().optional().describe('Description'),
     notes: z.string().optional().describe('Notes (rich text)'),
-    status_list_item_id: z.number().int().positive().optional().describe('Status list item ID'),
-    role_list_item_id: z.number().int().positive().optional().describe('Role list item ID'),
+    status_list_item_id: z.number().int().min(1).optional().describe('Status list item ID'),
+    role_list_item_id: z.number().int().min(1).optional().describe('Role list item ID'),
   });
 }
 
@@ -1029,11 +1053,11 @@ export function getMatchersUpdateSchema() {
     company_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Company ID to map this matcher to'),
-    potential_company_id: z.number().int().positive().optional().describe('Potential company ID'),
-    sync_id: z.number().int().positive().optional().describe('Sync ID'),
+    potential_company_id: z.number().int().min(1).optional().describe('Potential company ID'),
+    sync_id: z.number().int().min(1).optional().describe('Sync ID'),
     identifier: z.string().optional().describe('Identifier string'),
   });
 }
@@ -1100,12 +1124,12 @@ export function getMoveAssetSchema() {
     asset_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .describe('Numeric ID of the asset to move (from a prior getAll or get result).'),
     target_company_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .describe(
         "Numeric ID of the destination company. Use hudu_companies with operation getIdByName if you only have the company name.",
       ),
@@ -1162,7 +1186,7 @@ export function getByLayoutSchema() {
     company_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe(
         'Numeric company ID. Provide this OR company_name (if both given, company_id takes precedence). Used by getByLayout.',
@@ -1175,7 +1199,7 @@ export function getByLayoutSchema() {
     layout_id: z
       .number()
       .int()
-      .positive()
+      .min(1)
       .optional()
       .describe('Numeric asset layout ID. Provide this OR layout_name. Used by getByLayout.'),
     layout_name: z
@@ -1355,8 +1379,16 @@ function getSchemaForOperation(
 export function buildUnifiedSchema(
   resource: string,
   operations: string[],
-  config: { requiresCompanyEndpoint?: boolean },
+  config: {
+    requiresCompanyEndpoint?: boolean;
+    supportsContentField?: boolean;
+    supportsPhotosField?: boolean;
+  },
 ): z.ZodObject<z.ZodRawShape> {
+  const cacheKey = _readOnlyCacheKey(resource, operations, config);
+  const cached = _readOnlySchemaCache.get(cacheKey);
+  if (cached) return cached;
+
   const enabledOps = Array.from(new Set(operations.filter(isHuduOperation)));
 
   if (enabledOps.length === 0) {
@@ -1400,7 +1432,98 @@ export function buildUnifiedSchema(
     mergedShape[field] = mergedField;
   }
 
-  return z.object(mergedShape);
+  const result = z.object(mergedShape);
+  if (_readOnlySchemaCache.size >= READONLY_SCHEMA_CACHE_MAX) {
+    const firstKey = _readOnlySchemaCache.keys().next().value;
+    if (firstKey !== undefined) _readOnlySchemaCache.delete(firstKey);
+  }
+  _readOnlySchemaCache.set(cacheKey, result);
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Schema introspection — used by execute() describeFields operation
+// ---------------------------------------------------------------------------
+
+export interface FieldDescriptor {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'enum' | 'array' | 'object' | 'unknown';
+  required: boolean;
+  description?: string;
+  enumValues?: string[];
+}
+
+function zodTypeToFieldType(schema: z.ZodTypeAny): FieldDescriptor['type'] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const typeName = (schema._def as any)?.typeName as string | undefined;
+  if (typeName === 'ZodString') return 'string';
+  if (typeName === 'ZodNumber') return 'number';
+  if (typeName === 'ZodBoolean') return 'boolean';
+  if (typeName === 'ZodEnum') return 'enum';
+  if (typeName === 'ZodArray') return 'array';
+  if (typeName === 'ZodObject') return 'object';
+  return 'unknown';
+}
+
+function isRequiredField(schema: z.ZodTypeAny): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const typeName = (schema._def as any)?.typeName as string | undefined;
+  return typeName !== 'ZodOptional' && typeName !== 'ZodNullable' && typeName !== 'ZodDefault';
+}
+
+function unwrapField(schema: z.ZodTypeAny): z.ZodTypeAny {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const typeName = (schema._def as any)?.typeName as string | undefined;
+  if (typeName === 'ZodOptional' || typeName === 'ZodNullable' || typeName === 'ZodDefault') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return unwrapField((schema._def as any).innerType as z.ZodTypeAny);
+  }
+  return schema;
+}
+
+/**
+ * Describe the fields of a per-operation schema for a resource.
+ * Walks the raw (pre-runtime-conversion) ZodObject from getSchemaForOperation.
+ * Returns [] if no schema builder exists for the (resource, operation) pair.
+ *
+ * IMPORTANT: does NOT walk buildUnifiedSchema — that wraps all fields in .optional().
+ * This walks the per-op source schema to get accurate required/optional info.
+ */
+export function describeSchemaFields(resource: string, operation: string): FieldDescriptor[] {
+  if (!isHuduOperation(operation)) return [];
+  // config with requiresCompanyEndpoint=false is sufficient for field shape introspection
+  // (the flag only changes whether a company_id field is added, not existing fields)
+  const config = { requiresCompanyEndpoint: false };
+  let schema: z.ZodObject<z.ZodRawShape>;
+  try {
+    schema = getSchemaForOperation(resource, operation as HuduOperation, config);
+  } catch {
+    return [];
+  }
+
+  const shape =
+    typeof schema._def.shape === 'function' ? schema._def.shape() : schema._def.shape;
+  const fields: FieldDescriptor[] = [];
+
+  for (const [name, rawField] of Object.entries(shape ?? {})) {
+    const field = rawField as z.ZodTypeAny;
+    const required = isRequiredField(field);
+    const inner = unwrapField(field);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const innerDef = inner._def as any;
+    const enumValues: string[] | undefined =
+      innerDef?.typeName === 'ZodEnum' ? (innerDef.values as string[]) : undefined;
+
+    fields.push({
+      name,
+      type: zodTypeToFieldType(inner),
+      required,
+      description: field.description ?? inner.description,
+      enumValues,
+    });
+  }
+
+  return fields;
 }
 
 // Convert local zod schemas into the runtime zod class tree that n8n loaded.
@@ -1409,19 +1532,23 @@ export function buildUnifiedSchema(
 function toRuntimeZodSchema(schema: any, runtimeZ: RuntimeZod): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const def = schema?._def as any;
-  const typeName = def?.typeName as string | undefined;
+  // Zod v4 uses _def.type (string); v3 uses _def.typeName. Support both.
+  const typeName = (def?.typeName ?? def?.type) as string | undefined;
   let converted: unknown;
 
   switch (typeName) {
-    case 'ZodString': {
+    case 'ZodString':
+    case 'string': {
       let s = runtimeZ.string();
-      for (const check of def.checks ?? []) {
-        switch (check.kind) {
+      // v3: check.kind/check.value; v4: check._zod?.def ?? check
+      for (const rawCheck of def.checks ?? []) {
+        const check = rawCheck?._zod?.def ?? rawCheck;
+        switch (check.kind ?? check.type) {
           case 'min':
-            s = s.min(check.value);
+            s = s.min(check.value ?? check.minimum);
             break;
           case 'max':
-            s = s.max(check.value);
+            s = s.max(check.value ?? check.maximum);
             break;
           case 'email':
             s = s.email();
@@ -1439,18 +1566,26 @@ function toRuntimeZodSchema(schema: any, runtimeZ: RuntimeZod): any {
       converted = s;
       break;
     }
-    case 'ZodNumber': {
+    case 'ZodNumber':
+    case 'number': {
       let n = runtimeZ.number();
-      for (const check of def.checks ?? []) {
-        switch (check.kind) {
+      for (const rawCheck of def.checks ?? []) {
+        const check = rawCheck?._zod?.def ?? rawCheck;
+        switch (check.kind ?? check.type) {
           case 'int':
             n = n.int();
             break;
           case 'min':
-            n = check.inclusive === false ? n.gt(check.value) : n.min(check.value);
+            n =
+              check.inclusive === false
+                ? n.gt(check.value ?? check.minimum)
+                : n.min(check.value ?? check.minimum);
             break;
           case 'max':
-            n = check.inclusive === false ? n.lt(check.value) : n.max(check.value);
+            n =
+              check.inclusive === false
+                ? n.lt(check.value ?? check.maximum)
+                : n.max(check.value ?? check.maximum);
             break;
           default:
             break;
@@ -1460,25 +1595,43 @@ function toRuntimeZodSchema(schema: any, runtimeZ: RuntimeZod): any {
       break;
     }
     case 'ZodBoolean':
+    case 'boolean':
       converted = runtimeZ.boolean();
       break;
     case 'ZodUnknown':
+    case 'unknown':
       converted = runtimeZ.unknown();
       break;
     case 'ZodArray':
-      converted = runtimeZ.array(toRuntimeZodSchema(def.type, runtimeZ));
+    case 'array': {
+      // v3: def.type; v4: def.element
+      const itemSchema = def.element ?? def.type;
+      converted = runtimeZ.array(toRuntimeZodSchema(itemSchema, runtimeZ));
       break;
+    }
     case 'ZodEnum':
-      converted = runtimeZ.enum(def.values as [string, ...string[]]);
+    case 'enum': {
+      // v3: def.values; v4: schema.options or def.entries
+      const values =
+        def.values ??
+        (schema.options as string[] | undefined) ??
+        Object.keys(def.entries ?? {});
+      converted = runtimeZ.enum(values as [string, ...string[]]);
       break;
+    }
     case 'ZodRecord':
-      converted = runtimeZ.record(toRuntimeZodSchema(def.valueType, runtimeZ));
+    case 'record': {
+      const keySchema = def.keyType ? toRuntimeZodSchema(def.keyType, runtimeZ) : runtimeZ.string();
+      converted = runtimeZ.record(keySchema, toRuntimeZodSchema(def.valueType, runtimeZ));
       break;
-    case 'ZodObject': {
-      const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
-      const runtimeShape: Record<string, z.ZodTypeAny> = {};
-      for (const [key, value] of Object.entries(shape ?? {})) {
-        runtimeShape[key] = toRuntimeZodSchema(value, runtimeZ) as z.ZodTypeAny;
+    }
+    case 'ZodObject':
+    case 'object': {
+      const shape = typeof def.shape === 'function' ? def.shape() : (def.shape ?? {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const runtimeShape: Record<string, any> = {};
+      for (const [key, value] of Object.entries(shape)) {
+        runtimeShape[key] = toRuntimeZodSchema(value, runtimeZ);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let obj: any = runtimeZ.object(runtimeShape);
@@ -1488,23 +1641,41 @@ function toRuntimeZodSchema(schema: any, runtimeZ: RuntimeZod): any {
       break;
     }
     case 'ZodOptional':
+    case 'optional':
       converted = toRuntimeZodSchema(def.innerType, runtimeZ).optional();
       break;
     case 'ZodNullable':
+    case 'nullable':
       converted = toRuntimeZodSchema(def.innerType, runtimeZ).nullable();
       break;
     case 'ZodDefault':
-      converted = toRuntimeZodSchema(def.innerType, runtimeZ).default(def.defaultValue());
+    case 'default': {
+      // v3: def.defaultValue() (function); v4: def.defaultValue (raw value)
+      const defaultVal =
+        typeof def.defaultValue === 'function' ? def.defaultValue() : def.defaultValue;
+      converted = toRuntimeZodSchema(def.innerType, runtimeZ).default(defaultVal);
       break;
+    }
     case 'ZodLiteral':
-      converted = runtimeZ.literal(def.value);
+    case 'literal': {
+      // v3: def.value; v4: def.values[0]
+      const litVal = def.value ?? (Array.isArray(def.values) ? def.values[0] : undefined);
+      converted = runtimeZ.literal(litVal);
       break;
+    }
     case 'ZodUnion':
+    case 'union':
       converted = runtimeZ.union(
         (def.options ?? []).map((option: unknown) => toRuntimeZodSchema(option, runtimeZ)),
       );
       break;
+    case 'ZodEffects':
+    case 'effects':
+      // Pass through refinements/transforms — use the inner schema, drop the effect
+      converted = toRuntimeZodSchema(def.schema, runtimeZ);
+      break;
     default:
+      // Unknown Zod type — fall back to unknown() so the schema still functions
       converted = runtimeZ.unknown();
       break;
   }
@@ -1529,7 +1700,11 @@ export function getRuntimeSchemaBuilders(runtimeZ: RuntimeZod) {
     buildUnifiedSchema: (
       resource: string,
       operations: string[],
-      config: { requiresCompanyEndpoint?: boolean },
+      config: {
+        requiresCompanyEndpoint?: boolean;
+        supportsContentField?: boolean;
+        supportsPhotosField?: boolean;
+      },
     ) => withRuntimeZod(() => buildUnifiedSchema(resource, operations, config), runtimeZ),
   };
 }
