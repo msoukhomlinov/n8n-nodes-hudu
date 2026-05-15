@@ -15,7 +15,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Filters on getAll: company_id, folder_id, slug (12-char short hash only — SEO suffix not queryable), draft, enable_sharing, updated_at_start/end range.\n" +
       "Folder filtering: folder_id is not a native Hudu /articles query param. The executor pre-resolves the folder→owning company_id (one /folders GET) and injects company_id natively, then post-filters by folder_id. Global folders (company_id:null) fall back to a bounded scan (≤20 pages × 100 records).\n" +
       "Truncation signal: result.truncated:true means more matches exist beyond the cap — narrow with company_id or search.\n" +
-      "Envelope v2 — 'error' key = failure; default-valued fields omitted from records (treat absent field as default).\n" +
+      "Envelope v3 — 'error' key = failure; default-valued fields omitted from records (treat absent field as default).\n" +
       "See also: topic=photos (verification dance), topic=search (ranking detail), topic=create (scope rules).",
     photos:
       "Article photo verification workflow.\n" +
@@ -54,7 +54,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Filters on getAll: search (partial), name (EXACT case-sensitive), slug, id_in_integration, city, state, phone_number, website, archived. `search` re-ranks within Hudu — local re-rank not applied.\n" +
       "Create requires: name. Optional: company_type (Customer/Prospect/Vendor/Partner/Reseller/Internal), parent_company_id (resolve via getIdByName first), plus address/contact fields.\n" +
       "Archive vs delete: archive preserves data and is restorable via unarchive; delete is permanent. Always prefer archive unless user explicitly requested deletion.\n" +
-      "Envelope v2 — `error` key = failure; default-valued fields (parent_company_id:null, archived:false, etc.) omitted from records.",
+      "Envelope v3 — `error` key = failure; default-valued fields (parent_company_id:null, archived:false, etc.) omitted from records.",
   },
   folders: {
     overview:
@@ -64,7 +64,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Global folders: company_id is null. Articles in a global folder can't be narrowed by company — the scan runs unnarrowed (up to 20 pages × 100 records).\n" +
       "Create requires: name. Optional: company_id (omit for global), parent_folder_id (nested), folder_type (default 'article', immutable after creation), description, icon.\n" +
       "ID resolution: operation=getIdByName (EXACT case-sensitive match).\n" +
-      "Envelope v2 — `error` key = failure; default-valued fields omitted.",
+      "Envelope v3 — `error` key = failure; default-valued fields omitted.",
   },
   websites: {
     overview:
@@ -74,7 +74,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Monitoring flags: paused, disable_dns, disable_ssl, disable_whois, enable_dmarc_tracking, enable_dkim_tracking, enable_spf_tracking. monitor_type controls the type of monitoring.\n" +
       "Create requires: name (URL with protocol), company_id. Optional: keyword (page-content monitor), notes, all the disable_*/enable_* flags.\n" +
       "ID resolution: operation=getIdByName (fuzzy partial match).\n" +
-      "Envelope v2 — `error` key = failure; default-valued fields (keyword:null, headers:null, paused:false, archived:false, etc.) omitted.",
+      "Envelope v3 — `error` key = failure; default-valued fields (keyword:null, headers:null, paused:false, archived:false, etc.) omitted.",
   },
   procedures: {
     overview:
@@ -86,7 +86,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Create requires: name. Optional: company_id (omit for global template), description.\n" +
       "Update of `archived` only affects company processes — global processes and runs follow their parent.\n" +
       "ID resolution: operation=getIdByName (EXACT case-sensitive match).\n" +
-      "Envelope v2 — `error` key = failure; default-valued fields (parent_procedure:null, paused:false, archived:false) omitted.",
+      "Envelope v3 — `error` key = failure; default-valued fields (parent_procedure:null, paused:false, archived:false) omitted.",
   },
   procedure_tasks: {
     overview:
@@ -95,7 +95,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Each task record carries `assignee:{id,name,initials}` ONLY when a user is assigned. When unassigned, the field is absent — do NOT assume null means 'unassigned-but-acknowledged'. Legacy `*_user_*` keys and `assigned_users:[]` / `subtask_ids:[]` are stripped from the response (use the rename map: first_assigned_user_* → assignee.*).\n" +
       "Read-only at the AI Tools layer (no create/update/delete/archive operations exposed). Tasks are created and modified through their parent procedure.\n" +
       "To enumerate tasks for a procedure, call hudu_procedures get with the procedure id — the response carries `tasks` inline. hudu_procedure_tasks getAll is for cross-procedure filtering (e.g. by name across all runs for a company).\n" +
-      "Envelope v2 — `error` key = failure; default-valued fields (completed:false, description:null, due_date:null) omitted.",
+      "Envelope v3 — `error` key = failure; default-valued fields (completed:false, description:null, due_date:null) omitted.",
   },
   relations: {
     overview:
@@ -105,7 +105,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "GOTCHA: type field names are `fromable_type` / `toable_type` (NOT `froable_*` — easy typo).\n" +
       "Create requires all four: fromable_id, fromable_type, toable_id, toable_type. Optional: is_inverse, description.\n" +
       "When an asset is moved between companies via hudu_assets move, relations pointing to the original asset are NOT auto-rewritten — re-establish them using hudu_relations create after the move.\n" +
-      "Envelope v2 — `error` key = failure.",
+      "Envelope v3 — `error` key = failure.",
   },
 };
 

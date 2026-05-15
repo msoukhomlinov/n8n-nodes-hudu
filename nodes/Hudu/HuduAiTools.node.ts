@@ -37,6 +37,7 @@ const OPERATION_LABELS: Record<string, string> = {
     move: 'Move asset between companies',
     getByLayout: 'List assets by layout (labelled custom fields)',
     help: 'Help / workflow notes',
+    describeFields: 'Describe schema fields',
 };
 
 const runtimeSchemas = getRuntimeSchemaBuilders(runtimeZod);
@@ -86,13 +87,6 @@ function stripExecuteMetadata(params: Record<string, unknown>): Record<string, u
     }
     return cleanedParams;
 }
-
-// ---------------------------------------------------------------------------
-// Per-credential tool artifact cache
-// ---------------------------------------------------------------------------
-interface CacheEntry<T> { value: T; ts: number }
-const _artifactCache = new Map<string, CacheEntry<unknown>>();
-const ARTIFACT_CACHE_TTL_MS = 90_000;
 
 // ---------------------------------------------------------------------------
 // Node class
@@ -167,30 +161,6 @@ export class HuduAiTools implements INodeType {
         const config = HUDU_RESOURCE_CONFIG[resource];
         if (!config) {
             throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`);
-        }
-
-        // Credential-based cache key — avoids rebuilding the tool on every n8n execution
-        let credentialHash = 'default';
-        try {
-            const creds = await this.getCredentials('huduApi') as { apiKey: string; baseUrl: string };
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const { createHash } = require('node:crypto') as { createHash: (alg: string) => { update: (s: string) => { digest: (enc: string) => string } } };
-            credentialHash = createHash('sha256')
-                .update(`${creds.apiKey}|${creds.baseUrl}`)
-                .digest('hex')
-                .slice(0, 16);
-        } catch {
-            // best-effort — fall through to uncached build
-        }
-        const cacheKey = `${credentialHash}|${resource}|${[...operations].sort().join(',')}|${allowWriteOperations ? '1' : '0'}`;
-        const cached = _artifactCache.get(cacheKey);
-        if (cached && Date.now() - cached.ts < ARTIFACT_CACHE_TTL_MS) {
-            const logWrapper = getLazyLogWrapper();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const tool = cached.value as any;
-            const wrappedTool = logWrapper ? logWrapper(tool, this.getNode()) : tool;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return { response: wrappedTool as any };
         }
 
         const resourceLabel = config.label;
@@ -280,11 +250,15 @@ export class HuduAiTools implements INodeType {
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { operation: _operation, ...operationParams } = params;
+                if (operation === 'describeFields') {
+                    const targetOp = (operationParams.targetOperation as string) ?? 'getAll';
+                    const fields = describeSchemaFields(resource, targetOp);
+                    return JSON.stringify(buildMetadataResponse({ fields }));
+                }
                 return executeHuduAiTool(this, resource, operation, operationParams);
             },
         });
 
-        _artifactCache.set(cacheKey, { value: unifiedTool, ts: Date.now() });
         const logWrapper = getLazyLogWrapper();
         const wrappedTool = logWrapper ? logWrapper(unifiedTool, this.getNode()) : unifiedTool;
         return { response: wrappedTool as typeof unifiedTool };

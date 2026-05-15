@@ -37,7 +37,7 @@ const RESOURCE_HINTS: Record<string, string> = {
 };
 
 const ENVELOPE_PREAMBLE =
-  "Envelope v2 — 'error' key = failure; default-valued fields omitted.";
+  "Envelope v3 — 'error:true' = failure; absent 'error' = success.";
 
 // ---------------------------------------------------------------------------
 // Module-level description template cache — credential-independent
