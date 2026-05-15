@@ -1,8 +1,8 @@
 import {
     NodeOperationError,
+    NodeConnectionTypes,
 } from 'n8n-workflow';
 import type {
-    NodeConnectionType,
     IDataObject,
     IExecuteFunctions,
     ILoadOptionsFunctions,
@@ -20,9 +20,10 @@ import { executeHuduAiTool } from './ai-tools/tool-executor';
 import { buildUnifiedDescription } from './ai-tools/description-builders';
 import {
     getRuntimeSchemaBuilders,
+    describeSchemaFields,
 } from './ai-tools/schema-generator';
-import { RuntimeDynamicStructuredTool, runtimeZod } from './ai-tools/runtime';
-import { wrapError, ERROR_TYPES } from './ai-tools/error-formatter';
+import { RuntimeDynamicStructuredTool, runtimeZod, getLazyLogWrapper } from './ai-tools/runtime';
+import { wrapError, ERROR_TYPES, buildMetadataResponse } from './ai-tools/error-formatter';
 
 const OPERATION_LABELS: Record<string, string> = {
     get: 'Get by ID',
@@ -87,6 +88,13 @@ function stripExecuteMetadata(params: Record<string, unknown>): Record<string, u
 }
 
 // ---------------------------------------------------------------------------
+// Per-credential tool artifact cache
+// ---------------------------------------------------------------------------
+interface CacheEntry<T> { value: T; ts: number }
+const _artifactCache = new Map<string, CacheEntry<unknown>>();
+const ARTIFACT_CACHE_TTL_MS = 90_000;
+
+// ---------------------------------------------------------------------------
 // Node class
 // ---------------------------------------------------------------------------
 
@@ -102,7 +110,7 @@ export class HuduAiTools implements INodeType {
             name: 'Hudu AI Tools',
         },
         inputs: [],
-        outputs: [{ type: 'ai_tool' as NodeConnectionType, displayName: 'Tools' }],
+        outputs: [{ type: NodeConnectionTypes.AiTool, displayName: 'Tools' }],
         credentials: [{ name: 'huduApi', required: true }],
         properties: [
             {
@@ -161,6 +169,30 @@ export class HuduAiTools implements INodeType {
             throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`);
         }
 
+        // Credential-based cache key — avoids rebuilding the tool on every n8n execution
+        let credentialHash = 'default';
+        try {
+            const creds = await this.getCredentials('huduApi') as { apiKey: string; baseUrl: string };
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { createHash } = require('node:crypto') as { createHash: (alg: string) => { update: (s: string) => { digest: (enc: string) => string } } };
+            credentialHash = createHash('sha256')
+                .update(`${creds.apiKey}|${creds.baseUrl}`)
+                .digest('hex')
+                .slice(0, 16);
+        } catch {
+            // best-effort — fall through to uncached build
+        }
+        const cacheKey = `${credentialHash}|${resource}|${[...operations].sort().join(',')}|${allowWriteOperations ? '1' : '0'}`;
+        const cached = _artifactCache.get(cacheKey);
+        if (cached && Date.now() - cached.ts < ARTIFACT_CACHE_TTL_MS) {
+            const logWrapper = getLazyLogWrapper();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const tool = cached.value as any;
+            const wrappedTool = logWrapper ? logWrapper(tool, this.getNode()) : tool;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return { response: wrappedTool as any };
+        }
+
         const resourceLabel = config.label;
         const enabledOperations = operations.filter((op) => {
             const typedOp = op as HuduOperation;
@@ -189,6 +221,11 @@ export class HuduAiTools implements INodeType {
         // exclude `help` and the Zod operation enum would reject `operation=help` calls.
         if (config.ops.includes('help') && !enabledOperations.includes('help')) {
             enabledOperations.push('help');
+        }
+
+        // `describeFields` is always available — auto-enable regardless of UI selection
+        if (!enabledOperations.includes('describeFields')) {
+            enabledOperations.push('describeFields');
         }
 
         const getAllSchema = runtimeSchemas.buildUnifiedSchema(resource, ['getAll'], config);
@@ -247,7 +284,10 @@ export class HuduAiTools implements INodeType {
             },
         });
 
-        return { response: unifiedTool };
+        _artifactCache.set(cacheKey, { value: unifiedTool, ts: Date.now() });
+        const logWrapper = getLazyLogWrapper();
+        const wrappedTool = logWrapper ? logWrapper(unifiedTool, this.getNode()) : unifiedTool;
+        return { response: wrappedTool as typeof unifiedTool };
     }
 
     /**
@@ -294,6 +334,12 @@ export class HuduAiTools implements INodeType {
         // supplyData() path so both consumption paths behave identically.
         if (config.ops.includes('help') && !effectiveOps.includes('help')) {
             effectiveOps.push('help');
+        }
+
+        // `describeFields` is always available — auto-enable so execute() path accepts it
+        // even if not explicitly selected in the UI (uses static schema, no user-selection needed).
+        if (!effectiveOps.includes('describeFields')) {
+            effectiveOps.push('describeFields');
         }
 
         const items = this.getInputData();
@@ -354,6 +400,17 @@ export class HuduAiTools implements INodeType {
             try {
                 // Exclude routing/metadata fields — passed as separate arguments, not API params.
                 const params = stripExecuteMetadata(item.json as Record<string, unknown>);
+
+                // Pre-Zod bypass: describeFields uses static schema introspection, no API call needed
+                if (effectiveOp === 'describeFields') {
+                    const targetOp = (params.targetOperation as string) ?? 'getAll';
+                    const fields = describeSchemaFields(resource, targetOp);
+                    response.push({
+                        json: buildMetadataResponse({ fields }) as IDataObject,
+                        pairedItem: { item: itemIndex },
+                    });
+                    continue;
+                }
 
                 const resultJson = await executeHuduAiTool(
                     this as unknown as ISupplyDataFunctions,

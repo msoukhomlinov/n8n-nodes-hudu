@@ -1074,6 +1074,7 @@ const OPERATION_LABELS: Record<HuduOperation, string> = {
   move: 'Move asset',
   getByLayout: 'Assets by layout',
   help: 'Help / workflow notes',
+  describeFields: 'Describe schema fields',
 };
 
 const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
@@ -1088,6 +1089,7 @@ const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
   'move',
   'getByLayout',
   'help',
+  'describeFields',
 ]);
 
 // Resources whose getIdByName uses EXACT case-sensitive match upstream
@@ -1373,6 +1375,13 @@ function getSchemaForOperation(
       return getByLayoutSchema();
     case 'help':
       return getHelpSchema(resource);
+    case 'describeFields':
+      return z.object({
+        targetOperation: z
+          .string()
+          .optional()
+          .describe('Operation whose fields to describe (e.g. getAll, create, update). Defaults to getAll.'),
+      });
   }
 }
 

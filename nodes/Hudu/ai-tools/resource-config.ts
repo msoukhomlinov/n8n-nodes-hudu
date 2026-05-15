@@ -9,7 +9,8 @@ export type HuduOperation =
   | 'getIdByName'
   | 'move'
   | 'getByLayout'
-  | 'help';
+  | 'help'
+  | 'describeFields';
 
 export interface HuduResourceConfig {
   /** API path, e.g. '/companies' */
