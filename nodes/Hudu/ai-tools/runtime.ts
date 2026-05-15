@@ -16,6 +16,24 @@ export type RuntimeZod = typeof ZodNamespace;
 type RuntimeRequire = { (moduleId: string): unknown; resolve(id: string): string };
 
 /**
+ * n8n has THREE distinct module resolution trees that do NOT share instances:
+ *
+ * Tree 1 — n8n/node_modules/          : top-level (canonical zod, @n8n/ai-utilities)
+ * Tree 2 — @langchain/classic/node_modules/ : DynamicStructuredTool, @langchain/core
+ * Tree 3 — @n8n/n8n-nodes-langchain/node_modules/ : separate @langchain/core copy
+ *
+ * Getting the tree wrong causes silent instanceof failures:
+ *   - DynamicStructuredTool → must come from Tree 2 (@langchain/classic anchor)
+ *   - zod             → must come from Tree 1 (require.main → top-level node_modules)
+ *   - logWrapper      → must come from Tree 1 (@n8n/ai-utilities via runtimeReq)
+ *
+ * getRuntimeRequire() resolves via require.main first (prevents devDep shadowing during
+ * npm link), then falls back to ANCHOR_CANDIDATES.
+ * _topLevelZodReq is resolved separately via createRequire(require.main) to ensure
+ * n8n's normalizeToolSchema instanceof ZodType check uses the same zod copy.
+ */
+
+/**
  * Anchor candidates — packages in n8n's dependency tree that can serve as
  * a createRequire() anchor to resolve @langchain/core and zod from n8n's
  * module tree (not this package's bundled copies).
@@ -133,6 +151,9 @@ export const RuntimeDynamicStructuredTool: DynamicStructuredToolCtor = new Proxy
 
 export const runtimeZod: RuntimeZod = new Proxy({} as RuntimeZod, {
   get(_target, prop) {
+    // Guard: frameworks probe Symbol.toPrimitive, Symbol.toStringTag, .then (Promise thenable),
+    // and .constructor. Throwing on these causes misleading errors during structural inspection.
+    if (typeof prop === 'symbol' || prop === 'then' || prop === 'constructor') return undefined;
     if (!_runtimeZod) {
       throw new Error(
         `runtimeZod: zod could not be resolved from n8n's module tree (accessing .${String(prop)}). ` +
