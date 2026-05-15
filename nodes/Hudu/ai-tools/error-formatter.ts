@@ -1,103 +1,153 @@
 // ---------------------------------------------------------------------------
-// Result envelope types & factories
+// Result envelope v3 — flat shape, no schemaVersion, no success/result wrapper.
+// Success/failure signalled solely by presence of `error: true`.
 // ---------------------------------------------------------------------------
 
-interface ToolEnvelope {
-  schemaVersion: string;
-  operation: string;
-  resource: string;
-}
-
-/**
- * schemaVersion '2' convention: presence of `error` = failure, absence = success.
- * The `success` discriminator field has been dropped. Clients should check for `error`.
- */
-export interface SuccessEnvelope extends ToolEnvelope {
-  result: unknown;
-}
-
-export interface ErrorEnvelope extends ToolEnvelope {
-  error: {
-    errorType: string;
-    message: string;
-    nextAction: string;
-    context?: Record<string, unknown>;
-  };
-}
-
 export const ERROR_TYPES = {
-  API_ERROR: 'API_ERROR',
-  ENTITY_NOT_FOUND: 'ENTITY_NOT_FOUND',
-  NO_RESULTS_FOUND: 'NO_RESULTS_FOUND',
-  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
-  MISSING_ENTITY_ID: 'MISSING_ENTITY_ID',
+  // Existing (retained — do not remove or rename)
   INVALID_OPERATION: 'INVALID_OPERATION',
   WRITE_OPERATION_BLOCKED: 'WRITE_OPERATION_BLOCKED',
-  PERMISSION_DENIED: 'PERMISSION_DENIED',
-  VALIDATION_ERROR: 'VALIDATION_ERROR',
   UNKNOWN_RESOURCE: 'UNKNOWN_RESOURCE',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
+  NO_RESULTS_FOUND: 'NO_RESULTS_FOUND',
+  MISSING_ENTITY_ID: 'MISSING_ENTITY_ID',
+  API_ERROR: 'API_ERROR',
+  ENTITY_NOT_FOUND: 'ENTITY_NOT_FOUND',
+  // New in v3
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+  INVALID_PICKLIST_VALUE: 'INVALID_PICKLIST_VALUE',
+  INVALID_FIELDS: 'INVALID_FIELDS',
+  INVALID_WRITE_FIELDS: 'INVALID_WRITE_FIELDS',
+  MISSING_REQUIRED_FIELDS: 'MISSING_REQUIRED_FIELDS',
+  INVALID_FILTER_CONSTRAINT: 'INVALID_FILTER_CONSTRAINT',
+  WRITE_RESOLUTION_INCOMPLETE: 'WRITE_RESOLUTION_INCOMPLETE',
+  CONCURRENCY_CONFLICT: 'CONCURRENCY_CONFLICT',
 } as const;
 
-export function wrapSuccess(
-  resource: string,
-  operation: string,
-  result: unknown,
-): SuccessEnvelope {
-  return { schemaVersion: '2', operation, resource, result };
+export type ErrorType = (typeof ERROR_TYPES)[keyof typeof ERROR_TYPES];
+
+const ACTIONABLE_TYPES = new Set<ErrorType>([
+  ERROR_TYPES.INVALID_PICKLIST_VALUE,
+  ERROR_TYPES.INVALID_FIELDS,
+  ERROR_TYPES.INVALID_WRITE_FIELDS,
+  ERROR_TYPES.MISSING_REQUIRED_FIELDS,
+  ERROR_TYPES.ENTITY_NOT_FOUND,
+  ERROR_TYPES.INVALID_FILTER_CONSTRAINT,
+  ERROR_TYPES.WRITE_RESOLUTION_INCOMPLETE,
+]);
+
+export interface FlatErrorResponse {
+  error: true;
+  errorType: ErrorType;
+  summary: string;
+  nextAction?: string;
+  actionRequired?: true;
+  mustRetryAfter?: string[];
+  resource: string;
+  operation: string;
+  [key: string]: unknown;
 }
 
 /**
- * A warning recorded against a getAll result — usually emitted when a declared filter
- * is not supported by the upstream API and has been downgraded to a client-side post-filter
- * or silently ignored. Lets the LLM understand why a filter may not have narrowed results
- * as expected.
+ * Wrap an error in the v3 flat envelope.
+ * Backward-compatible: existing 5-arg calls (resource, operation, type, message, nextAction)
+ * continue to work — params 4+5 are renamed but positionally identical.
+ * actionRequired + summary prefix are auto-applied for ACTIONABLE_TYPES.
  */
-export interface ResultWarning {
-  filter: string;
-  reason: string;
-}
-
-/**
- * Mutates the getAll result payload to include a warning entry. Creates the warnings
- * array if absent. Use to record downgrade decisions for declared filters.
- */
-export function addResultWarning(
-  payload: Record<string, unknown>,
-  filter: string,
-  reason: string,
-): void {
-  const existing = payload.warnings;
-  const list = Array.isArray(existing) ? (existing as ResultWarning[]) : [];
-  list.push({ filter, reason });
-  payload.warnings = list;
-}
-
 export function wrapError(
   resource: string,
   operation: string,
-  errorType: string,
-  message: string,
-  nextAction: string,
+  errorType: ErrorType,
+  summary: string,
+  nextAction?: string,
   context?: Record<string, unknown>,
-): ErrorEnvelope {
+  mustRetryAfter?: string[],
+): FlatErrorResponse {
+  const actionRequired = ACTIONABLE_TYPES.has(errorType);
+  const summaryText =
+    actionRequired && nextAction ? `REQUIRED NEXT STEP: ${nextAction} — ${summary}` : summary;
   return {
-    schemaVersion: '2',
-    operation,
+    error: true,
+    errorType,
+    summary: summaryText,
+    ...(nextAction ? { nextAction } : {}),
+    ...(actionRequired ? { actionRequired: true } : {}),
+    ...(mustRetryAfter?.length ? { mustRetryAfter } : {}),
     resource,
-    error: { errorType, message, nextAction, ...(context ? { context } : {}) },
+    operation,
+    ...(context ?? {}),
   };
 }
 
 // ---------------------------------------------------------------------------
-// Thin wrappers — call sites in tool-executor.ts use these for convenience.
-// Each delegates to wrapError() internally.
+// v3 success builders
+// ---------------------------------------------------------------------------
+
+export function buildListResponse(
+  records: unknown[],
+  matchCount: number,
+  truncated: boolean,
+  warnings?: string[],
+): object {
+  return { records, matchCount, truncated, ...(warnings?.length ? { warnings } : {}) };
+}
+
+export function buildItemResponse(record: unknown): object {
+  return { record };
+}
+
+export function buildMutationResponse(
+  outcome: 'created' | 'updated' | 'archived' | 'unarchived',
+  record: unknown,
+): object {
+  return { outcome, record };
+}
+
+export function buildDeleteResponse(id: number | string): object {
+  return { outcome: 'deleted', id };
+}
+
+export function buildCountResponse(matchCount: number): object {
+  return { matchCount };
+}
+
+export function buildCompoundResponse(
+  outcome: string,
+  records: unknown[],
+  matchCount: number,
+): object {
+  return { outcome, records, matchCount };
+}
+
+export function buildMetadataResponse(data: {
+  fields?: unknown[];
+  picklistValues?: unknown[];
+  operationDoc?: unknown;
+}): object {
+  return { ...data };
+}
+
+/**
+ * Add a warning string to a v3 response. Non-mutating — returns a new object.
+ * Replaces the v2 addResultWarning (which mutated the payload and used a nested shape).
+ */
+export function addWarning(response: object, warning: string): object {
+  const existing = (response as Record<string, unknown>).warnings;
+  const list = Array.isArray(existing) ? (existing as string[]) : [];
+  return { ...response, warnings: [...list, warning] };
+}
+
+// ---------------------------------------------------------------------------
+// Thin wrappers — kept for backward compat. Call sites do not change.
 // ---------------------------------------------------------------------------
 
 export function formatMissingIdError(
   resource: string,
   operation: string,
   supportsSearch = true,
-): ErrorEnvelope {
+): FlatErrorResponse {
   const lookupHint = supportsSearch
     ? `call hudu_${resource} with operation 'getAll' and the 'search' parameter to find the record first.`
     : `call hudu_${resource} with operation 'getAll' with available filters to find the record first.`;
@@ -115,7 +165,7 @@ export function formatNotFoundError(
   operation: string,
   id: number,
   supportsSearch = true,
-): ErrorEnvelope {
+): FlatErrorResponse {
   const lookupHint = supportsSearch
     ? `Call hudu_${resource} with operation 'getAll' and the 'search' parameter to find the record by text, then use the numeric ID from the results.`
     : `Call hudu_${resource} with operation 'getAll' with available filters to find the record, then use the numeric ID from the results.`;
@@ -132,7 +182,7 @@ export function formatNoResultsFound(
   resource: string,
   operation: string,
   filters: Record<string, unknown>,
-): ErrorEnvelope {
+): FlatErrorResponse {
   return wrapError(
     resource,
     operation,
@@ -148,7 +198,7 @@ export function formatApiError(
   resource: string,
   operation: string,
   supportsSearch = true,
-): ErrorEnvelope {
+): FlatErrorResponse {
   const lowerMessage = message.toLowerCase();
 
   if (

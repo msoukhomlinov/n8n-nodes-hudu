@@ -1,4 +1,4 @@
-import { wrapSuccess, wrapError, ERROR_TYPES } from './error-formatter';
+import { wrapError, ERROR_TYPES, buildItemResponse } from './error-formatter';
 
 /**
  * Long-form workflow prose keyed by resource then topic. Returned verbatim by the
@@ -139,10 +139,6 @@ export function runHelp(resource: string, params: Record<string, unknown>): stri
     );
   }
   return JSON.stringify(
-    wrapSuccess(resource, 'help', {
-      topic: requestedTopic,
-      availableTopics: Object.keys(topics),
-      content,
-    }),
+    buildItemResponse({ topic: requestedTopic, availableTopics: Object.keys(topics), content }),
   );
 }

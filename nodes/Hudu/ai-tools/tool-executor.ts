@@ -9,14 +9,16 @@ import {
 } from '../utils/operations';
 import { HUDU_RESOURCE_CONFIG, type HuduResourceConfig } from './resource-config';
 import {
-  wrapSuccess,
   wrapError,
   ERROR_TYPES,
   formatMissingIdError,
   formatApiError,
   formatNotFoundError,
   formatNoResultsFound,
-  addResultWarning,
+  buildListResponse,
+  buildItemResponse,
+  buildMutationResponse,
+  buildDeleteResponse,
 } from './error-formatter';
 import { relationFilterMapping } from '../resources/relations/relations.types';
 import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
@@ -300,7 +302,7 @@ export async function executeHuduAiTool(
           includeContent,
           includePhotos,
         );
-        return JSON.stringify(wrapSuccess(resource, operation, processed));
+        return JSON.stringify(buildItemResponse(processed));
       }
 
       case 'getAll': {
@@ -492,7 +494,6 @@ export async function executeHuduAiTool(
           );
         }
 
-        const resultPayload: Record<string, unknown> = { items: records };
         // Truncation signal hierarchy (`truncated: true` is the only signal — no prose note,
         // remediation is in the tool description and tool descriptions already cover increasing limit):
         //   1. paginatedPostFilter capHit (articles+folder_id path) — more matches may exist beyond the scan cap
@@ -502,24 +503,18 @@ export async function executeHuduAiTool(
           (folderIdScanStats?.capHit ?? false) ||
           upstreamHasMore ||
           (!wantsProbe && folderIdScanStats === undefined && records.length >= effectiveLimit);
-        if (truncated) {
-          resultPayload.truncated = true;
-        }
+        const warnings: string[] = [];
         if (folderCompanyResolved !== undefined) {
-          addResultWarning(
-            resultPayload,
-            'folder_id',
-            `Folder ${folderCompanyResolved.folderId} → company_id ${folderCompanyResolved.companyId} auto-resolved and injected as a native upstream filter to narrow the bounded scan window.`,
+          warnings.push(
+            `folder_id auto-resolved: Folder ${folderCompanyResolved.folderId} → company_id ${folderCompanyResolved.companyId} auto-resolved and injected as a native upstream filter.`,
           );
         }
         if (folderIdScanStats !== undefined) {
-          addResultWarning(
-            resultPayload,
-            'folder_id',
-            `Hudu /articles API does not accept folder_id as a query param. Matches collected via bounded pagination (${folderIdScanStats.pagesScanned} page(s), ${folderIdScanStats.recordsScanned} records scanned, ${folderIdScanStats.exhausted ? 'upstream exhausted' : folderIdScanStats.capHit ? 'cap reached — more may exist' : 'limit satisfied'}).`,
+          warnings.push(
+            `folder_id scan: Hudu /articles API does not accept folder_id as a query param. Matches collected via bounded pagination (${folderIdScanStats.pagesScanned} page(s), ${folderIdScanStats.recordsScanned} records scanned, ${folderIdScanStats.exhausted ? 'upstream exhausted' : folderIdScanStats.capHit ? 'cap reached — more may exist' : 'limit satisfied'}).`,
           );
         }
-        return JSON.stringify(wrapSuccess(resource, operation, resultPayload));
+        return JSON.stringify(buildListResponse(records, records.length, truncated, warnings.length ? warnings : undefined));
       }
 
       case 'create': {
@@ -551,10 +546,7 @@ export async function executeHuduAiTool(
           config.singularKey && !Array.isArray(data)
             ? ((data as IDataObject)[config.singularKey] ?? data)
             : data;
-        return JSON.stringify(wrapSuccess(resource, operation, {
-          id: (entity as IDataObject)?.id,
-          ...entity as IDataObject,
-        }));
+        return JSON.stringify(buildMutationResponse('created', { id: (entity as IDataObject)?.id, ...entity as IDataObject }));
       }
 
       case 'update': {
@@ -585,10 +577,7 @@ export async function executeHuduAiTool(
           config.singularKey && !Array.isArray(data)
             ? ((data as IDataObject)[config.singularKey] ?? data)
             : data;
-        return JSON.stringify(wrapSuccess(resource, operation, {
-          id,
-          ...entity as IDataObject,
-        }));
+        return JSON.stringify(buildMutationResponse('updated', { id, ...entity as IDataObject }));
       }
 
       case 'delete': {
@@ -604,7 +593,7 @@ export async function executeHuduAiTool(
           params.id as number,
           companyId,
         );
-        return JSON.stringify(wrapSuccess(resource, operation, { id: params.id, deleted: true }));
+        return JSON.stringify(buildDeleteResponse(params.id as number));
       }
 
       case 'archive':
@@ -622,10 +611,10 @@ export async function executeHuduAiTool(
           operation === 'archive',
           companyId,
         );
-        return JSON.stringify(wrapSuccess(resource, operation, {
-          id: params.id,
-          archived: operation === 'archive',
-        }));
+        return JSON.stringify(buildMutationResponse(
+          operation === 'archive' ? 'archived' : 'unarchived',
+          { id: params.id },
+        ));
       }
 
       case 'getIdByName': {
@@ -681,6 +670,15 @@ export async function executeHuduAiTool(
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
+    if (error instanceof TypeError || error instanceof ReferenceError || error instanceof RangeError) {
+      return JSON.stringify(wrapError(
+        resource,
+        operation,
+        ERROR_TYPES.INTERNAL_ERROR,
+        `Tool internal error: ${msg}`,
+        'Do not retry with the same parameters — this is a bug in the tool.',
+      ));
+    }
     return JSON.stringify(formatApiError(msg, resource, operation, supportsSearch));
   }
 }

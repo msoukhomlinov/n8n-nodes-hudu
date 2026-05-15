@@ -6,7 +6,7 @@ import {
     handleDeleteOperation,
 } from '../utils/operations';
 import { getCompanyIdForAsset } from '../utils/operations/getCompanyIdForAsset';
-import { wrapSuccess, wrapError, ERROR_TYPES } from './error-formatter';
+import { wrapError, ERROR_TYPES, buildItemResponse, buildListResponse } from './error-formatter';
 
 // ---------------------------------------------------------------------------
 // getIdByName — reusable handler
@@ -113,7 +113,7 @@ export async function runGetIdByName(
             return slim;
         });
 
-        return JSON.stringify(wrapSuccess(resource, 'getIdByName', { items }));
+        return JSON.stringify(buildListResponse(items, items.length, false));
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         return JSON.stringify(wrapError(
@@ -246,7 +246,7 @@ export async function runMoveAsset(
             result.warning = deleteWarning;
         }
 
-        return JSON.stringify(wrapSuccess('assets', 'move', result));
+        return JSON.stringify(buildItemResponse(result));
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         return JSON.stringify(wrapError(
@@ -405,7 +405,7 @@ export async function runGetByLayout(
             result.truncated = true;
         }
 
-        return JSON.stringify(wrapSuccess('assets', 'getByLayout', result));
+        return JSON.stringify(buildItemResponse(result));
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         return JSON.stringify(wrapError(
