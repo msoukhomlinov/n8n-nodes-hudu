@@ -39,6 +39,22 @@ const RESOURCE_HINTS: Record<string, string> = {
 const ENVELOPE_PREAMBLE =
   "Envelope v2 — 'error' key = failure; default-valued fields omitted.";
 
+// ---------------------------------------------------------------------------
+// Module-level description template cache — credential-independent
+// Same API schema → same description for all credentials. Module lifetime.
+// ---------------------------------------------------------------------------
+const _descriptionTemplateCache = new Map<string, string>();
+const DESCRIPTION_CACHE_MAX = 600;
+
+function _descCacheKey(
+  resourceLabel: string,
+  resource: string,
+  operations: string[],
+  supportsSearch: boolean,
+): string {
+  return `${resource}|${[...operations].sort().join(',')}|${supportsSearch ? '1' : '0'}`;
+}
+
 /**
  * Build the unified tool description string passed to the LLM as the
  * DynamicStructuredTool description. Kept deliberately terse — operation list +
@@ -56,13 +72,15 @@ export function buildUnifiedDescription(
   supportsSearch: boolean,
   config: { requiresCompanyEndpoint?: boolean },
 ): string {
-  // Reference args reserved for future per-resource tuning (e.g. mention search/no-search
-  // variants directly in the hint, or surface the company-endpoint requirement).
-  void supportsSearch;
+  const cacheKey = _descCacheKey(resourceLabel, resource, operations, supportsSearch);
+  const cached = _descriptionTemplateCache.get(cacheKey);
+  if (cached) return cached;
+
+  // Reference args reserved for future per-resource tuning.
   void config;
   const enabledOps = Array.from(new Set(operations));
   const hint = RESOURCE_HINTS[resource] ?? '';
-  return [
+  const result = [
     `Manage Hudu ${resourceLabel} records.`,
     `Operations: ${enabledOps.join(', ')}.`,
     hint,
@@ -70,4 +88,11 @@ export function buildUnifiedDescription(
   ]
     .filter(Boolean)
     .join(' ');
+
+  if (_descriptionTemplateCache.size >= DESCRIPTION_CACHE_MAX) {
+    const firstKey = _descriptionTemplateCache.keys().next().value;
+    if (firstKey !== undefined) _descriptionTemplateCache.delete(firstKey);
+  }
+  _descriptionTemplateCache.set(cacheKey, result);
+  return result;
 }
