@@ -7,9 +7,32 @@ All notable changes to this project will be documented in this file.
 
 ### Outstanding — Cloud / scanner
 
-- **[MEDIUM] `HuduAiTools` AI tool output connection type** (`nodes/Hudu/HuduAiTools.node.ts`): The tools output uses `{ type: 'ai_tool' as NodeConnectionType }` — a string literal cast instead of the enum value. **Fix:** import the **value** `NodeConnectionTypes` from `n8n-workflow` (not only the `NodeConnectionType` type) and set `type: NodeConnectionTypes.AiTool` on the output definition.
+- **[HIGH] Official scanner rejects `require(‘module’)` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `’module’` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
 
-- **[HIGH] Official scanner rejects `require('module')` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `'module'` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
+### Resolved — Cloud / scanner
+
+- **[MEDIUM] ~~`HuduAiTools` AI tool output connection type~~** — Fixed in 2.5.0: `NodeConnectionTypes.AiTool` enum value now used in place of the `’ai_tool’ as NodeConnectionType` string cast.
+
+## [2.5.0] - 2026-05-15
+
+### Added
+- **`describeFields` operation on all AI Tools resources.** Call `operation: ‘describeFields’` (optionally `targetOperation: ‘create’|’getAll’|...`) to get the field list, types, required flags, descriptions, and enum values for any resource/operation pair — without an API call. Auto-enabled on every tool regardless of UI selection.
+- **Zod v4 dual support in `toRuntimeZodSchema`.** Schema conversion now reads both `_def.typeName` (Zod v3) and `_def.type` (Zod v4 string variant). Adds `ZodEffects`/`effects` passthrough and `unknown()` fallback with console warning for unrecognised types.
+- **`logWrapper` integration in `supplyData()`.** `getLazyLogWrapper()` is now applied to the tool before returning, enabling n8n’s built-in AI tool call logging when `@n8n/ai-utilities` is available.
+- **Module-level schema cache (`_readOnlySchemaCache`, max 200).** `buildUnifiedSchema` results are memoized by resource + operations + config flags — cache is credential-independent and survives across executions.
+- **Module-level description cache (`_descriptionTemplateCache`, max 600).** `buildUnifiedDescription` results are memoized — same schema always produces the same description string.
+- **`describeSchemaFields` / `FieldDescriptor` exported from `schema-generator.ts`.** Provides field introspection for the `describeFields` operation without going through the runtime Zod proxy.
+
+### Fixed
+- **`NodeConnectionTypes.AiTool` enum value** used in `HuduAiTools.node.ts` output definition — replaces the `’ai_tool’ as NodeConnectionType` string cast. Resolves the MEDIUM cloud scanner finding.
+- **`runtimeZod` Proxy symbol/thenable/constructor guards.** Framework probes for `Symbol.toPrimitive`, `Symbol.toStringTag`, `.then` (Promise thenable detection), and `.constructor` no longer throw misleading errors during structural inspection. Proxy now returns `undefined` for these probes.
+- **`.positive()` → `.min(1)` on all 64 numeric ID fields** in `schema-generator.ts`. `z.number().positive()` is removed in Zod v4; `.min(1)` is equivalent and supported in both v3 and v4.
+
+### Changed
+- **Result envelope migrated to v3 (flat shape).** `error-formatter.ts` rewritten: success/failure now signalled solely by presence of `error: true`. Drops `schemaVersion`, `wrapSuccess`, `addResultWarning`, `SuccessEnvelope`, `ErrorEnvelope`. Adds `wrapError` (backward-compatible 5-arg signature), `buildListResponse`, `buildItemResponse`, `buildMutationResponse`, `buildDeleteResponse`, `buildMetadataResponse`, `addWarning`. New `ERROR_TYPES`: `INTERNAL_ERROR`, `INVALID_PICKLIST_VALUE`, `INVALID_FIELDS`, `INVALID_WRITE_FIELDS`, `MISSING_REQUIRED_FIELDS`, `INVALID_FILTER_CONSTRAINT`, `WRITE_RESOLUTION_INCOMPLETE`, `CONCURRENCY_CONFLICT`. `ACTIONABLE_TYPES` auto-sets `actionRequired: true` and prefixes summary with `REQUIRED NEXT STEP:` for errors that require an immediate follow-up.
+- **Outer catch in `executeHuduAiTool`** now distinguishes `TypeError | ReferenceError | RangeError` → `INTERNAL_ERROR` (do not retry) vs API errors → `API_ERROR` (check params and retry).
+- **Envelope preamble** in tool descriptions updated from "Envelope v2" to "Envelope v3 — ‘error:true’ = failure; absent ‘error’ = success." Propagated through `description-builders.ts` and all 7 occurrences in `help-registry.ts`.
+- **Three-module-tree comment** added to `runtime.ts` documenting n8n’s three distinct module resolution trees and why each dependency must come from a specific tree to avoid silent `instanceof` failures.
 
 ## [2.4.4] - 2026-05-14
 
