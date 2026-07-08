@@ -540,7 +540,7 @@ export const websitesFields: INodeProperties[] = [
     },
     required: true,
     default: '',
-    description: 'The company to associate with the website. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+    description: 'Accepts a company name or numeric ID. The company to associate with the website. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',

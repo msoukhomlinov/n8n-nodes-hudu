@@ -536,7 +536,7 @@ export const assetsFields: INodeProperties[] = [
     },
     default: '',
     description:
-      'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+      'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
   },
   {
     displayName: 'Target Asset Layout Name or ID',
