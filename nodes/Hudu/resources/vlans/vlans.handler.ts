@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import {
   handleCreateOperation,
@@ -35,7 +35,7 @@ export async function handleVlansOperation(
       }
 
       if (filters.company_id) {
-        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+        filters.company_id = await resolveRequiredCompanyId(this, filters.company_id, this.getNode(), 'Company ID');
       }
       const qs: IDataObject = {
         ...filters,
@@ -171,7 +171,8 @@ export async function handleVlansOperation(
     }
 
     case 'create': {
-      const companyId = validateCompanyId(
+      const companyId = await resolveRequiredCompanyId(
+        this,
         this.getNodeParameter('company_id', i),
         this.getNode(),
         'Company ID'
@@ -212,7 +213,16 @@ export async function handleVlansOperation(
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('[ResourceParams] VLAN update parameters', { id, updateFields });
       }
-      
+
+      if (updateFields.company_id !== undefined && updateFields.company_id !== null && updateFields.company_id !== '') {
+        updateFields.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
+      }
+
       const body = {
         vlan: {
           ...updateFields,

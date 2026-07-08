@@ -2,6 +2,7 @@ import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { handleUpdateOperation, handleDeleteOperation } from '../../utils/operations';
 import { handleMatcherGetAllOperation } from '../../utils/operations/matchers';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { resolveRequiredCompanyId } from '../../utils';
 import type { MatcherOperation } from './matchers.types';
 
 export async function handleMatcherOperation(
@@ -36,13 +37,28 @@ export async function handleMatcherOperation(
       // Build the request body with only defined fields
       const matcherUpdate: IDataObject = {};
 
-      if (updateFields.company_id !== undefined) {
-        matcherUpdate.company_id = Number.parseInt(updateFields.company_id as string, 10);
+      if (
+        updateFields.company_id !== undefined &&
+        updateFields.company_id !== null &&
+        updateFields.company_id !== ''
+      ) {
+        matcherUpdate.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
-      if (updateFields.potential_company_id !== undefined) {
-        matcherUpdate.potential_company_id = Number.parseInt(
-          updateFields.potential_company_id as string,
-          10,
+      if (
+        updateFields.potential_company_id !== undefined &&
+        updateFields.potential_company_id !== null &&
+        updateFields.potential_company_id !== ''
+      ) {
+        matcherUpdate.potential_company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.potential_company_id,
+          this.getNode(),
+          'Potential Company ID',
         );
       }
       if (updateFields.sync_id !== undefined) {

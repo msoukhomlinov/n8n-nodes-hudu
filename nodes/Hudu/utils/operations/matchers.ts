@@ -1,5 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { handleListing } from '../requestUtils';
+import { resolveRequiredCompanyId } from '../companyResolver';
 
 export async function handleMatcherGetAllOperation(
   this: IExecuteFunctions,
@@ -22,8 +23,13 @@ export async function handleMatcherGetAllOperation(
   if (filters.identifier !== undefined) {
     queryParams.identifier = filters.identifier;
   }
-  if (filters.company_id !== undefined) {
-    queryParams.company_id = Number.parseInt(filters.company_id as string, 10);
+  if (filters.company_id !== undefined && filters.company_id !== null && filters.company_id !== '') {
+    queryParams.company_id = await resolveRequiredCompanyId(
+      this,
+      filters.company_id,
+      this.getNode(),
+      'Company ID',
+    );
   }
 
   // Use the shared handleListing function for proper pagination support

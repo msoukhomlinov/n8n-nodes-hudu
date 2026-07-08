@@ -1,6 +1,10 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
+import {
+  processDateRange,
+  type DateRangePreset,
+  resolveRequiredCompanyId,
+} from '../../utils';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -24,7 +28,8 @@ export async function handleNetworksOperation(
       const body: IDataObject = {
         name: this.getNodeParameter('name', i) as string,
         address: this.getNodeParameter('address', i) as string,
-        company_id: validateCompanyId(
+        company_id: await resolveRequiredCompanyId(
+          this,
           this.getNodeParameter('company_id', i),
           this.getNode(),
           'Company ID',
@@ -105,7 +110,7 @@ export async function handleNetworksOperation(
 
       // Validate company_id if provided
       if (filters.company_id !== undefined && filters.company_id !== null && filters.company_id !== '') {
-        qs.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+        qs.company_id = await resolveRequiredCompanyId(this, filters.company_id, this.getNode(), 'Company ID');
       }
 
       // Pass archived filter if present
@@ -164,7 +169,7 @@ export async function handleNetworksOperation(
       for (const [key, value] of Object.entries(updateFields)) {
         if (value !== undefined && value !== null && value !== '') {
           if (key === 'company_id') {
-            networkBody[key] = validateCompanyId(value, this.getNode(), 'Company ID');
+            networkBody[key] = await resolveRequiredCompanyId(this, value, this.getNode(), 'Company ID');
           } else if (key === 'vlan_id') {
             const v = String(value).trim();
             if (v !== '' && !Number.isNaN(Number.parseInt(v, 10))) {

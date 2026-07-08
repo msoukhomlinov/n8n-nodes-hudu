@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -24,7 +24,7 @@ export async function handleIpAddressesOperation(
     case 'getAll': {
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       if (filters.company_id) {
-        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+        filters.company_id = await resolveRequiredCompanyId(this, filters.company_id, this.getNode(), 'Company ID');
       }
       // Normalise network_id: remove empty strings, parse numeric strings
       if (filters.network_id !== undefined) {
@@ -99,7 +99,12 @@ export async function handleIpAddressesOperation(
     case 'create': {
       const address = this.getNodeParameter('address', i) as string;
       const status = this.getNodeParameter('status', i) as string;
-      const companyId = Number.parseInt(this.getNodeParameter('company_id', i) as string, 10);
+      const companyId = await resolveRequiredCompanyId(
+        this,
+        this.getNodeParameter('company_id', i),
+        this.getNode(),
+        'Company ID',
+      );
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
       // Map 'comments' to 'notes' for API compatibility
@@ -137,7 +142,12 @@ export async function handleIpAddressesOperation(
       const updateFields = this.getNodeParameter('ipAddressUpdateFields', i) as IDataObject;
 
       if (updateFields.company_id) {
-        updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+        updateFields.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
 
       // Normalise network_id for update: parse numeric strings
