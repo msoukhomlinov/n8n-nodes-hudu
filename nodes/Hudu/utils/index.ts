@@ -20,6 +20,7 @@ export * from './requestUtils';
 export * from './filterUtils';
 export * from './constants';
 export * from './validation';
+export * from './companyResolver';
 export * from './fieldTypeUtils';
 export * from './assetFieldUtils';
 export * from './fieldErrorUtils'; 
