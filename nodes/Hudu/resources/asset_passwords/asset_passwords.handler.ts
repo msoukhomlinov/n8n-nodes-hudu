@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -27,6 +27,20 @@ export async function handleAssetPasswordOperation(
         const returnAll = this.getNodeParameter('returnAll', i) as boolean;
         const filters = this.getNodeParameter('filters', i) as IDataObject;
         const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+
+        if (
+          filters.company_id !== undefined &&
+          filters.company_id !== null &&
+          filters.company_id !== ''
+        ) {
+          filters.company_id = await resolveRequiredCompanyId(
+            this,
+            filters.company_id,
+            this.getNode(),
+            'Company ID',
+          );
+        }
+
         const qs: IDataObject = {
           ...filters,
         };
@@ -110,7 +124,12 @@ export async function handleAssetPasswordOperation(
         // Get required fields directly
         const name = this.getNodeParameter('name', i) as string;
         const password = this.getNodeParameter('password', i) as string;
-        const companyId = this.getNodeParameter('company_id', i) as number;
+        const companyId = await resolveRequiredCompanyId(
+          this,
+          this.getNodeParameter('company_id', i),
+          this.getNode(),
+          'Company ID',
+        );
 
         // Get additional fields
         const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
@@ -134,6 +153,20 @@ export async function handleAssetPasswordOperation(
         }
 
         const updateFields = this.getNodeParameter('assetPasswordUpdateFields', i) as IDataObject;
+
+        if (
+          updateFields.company_id !== undefined &&
+          updateFields.company_id !== null &&
+          updateFields.company_id !== ''
+        ) {
+          updateFields.company_id = await resolveRequiredCompanyId(
+            this,
+            updateFields.company_id,
+            this.getNode(),
+            'Company ID',
+          );
+        }
+
         responseData = await handleUpdateOperation.call(this, resourceEndpoint, id, { asset_password: updateFields });
         break;
       }

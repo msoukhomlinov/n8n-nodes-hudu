@@ -453,7 +453,7 @@ export const articlesFields: INodeProperties[] = [
     },
     default: '',
     description:
-      'Used to associate article with a company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+      'Used to associate article with a company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Enable Sharing',
@@ -649,7 +649,7 @@ export const articlesFields: INodeProperties[] = [
         },
         default: '',
         description:
-          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+          'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Content',
@@ -713,7 +713,7 @@ export const articlesFields: INodeProperties[] = [
         },
         default: '',
         description:
-          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+          'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Draft',

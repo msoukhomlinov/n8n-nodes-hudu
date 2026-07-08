@@ -3,6 +3,7 @@ import { NodeOperationError } from 'n8n-workflow';
 import { handleGetOperation, handleGetAllOperation, handleCreateOperation, handleUpdateOperation, handleDeleteOperation } from '../../utils/operations';
 import type { PasswordFoldersOperations } from './password_folders.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { resolveRequiredCompanyId } from '../../utils';
 
 export async function handlePasswordFoldersOperation(
   this: IExecuteFunctions,
@@ -58,6 +59,19 @@ export async function handlePasswordFoldersOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
+      if (
+        filters.company_id !== undefined &&
+        filters.company_id !== null &&
+        filters.company_id !== ''
+      ) {
+        filters.company_id = await resolveRequiredCompanyId(
+          this,
+          filters.company_id,
+          this.getNode(),
+          'Company ID',
+        );
+      }
+
       const qs: IDataObject = {
         ...filters,
       };
@@ -84,7 +98,7 @@ export async function handlePasswordFoldersOperation(
       body.name = name;
       body.security = security;
       if (companyId !== undefined && companyId !== null && companyId !== '') {
-        body.company_id = Number.parseInt(companyId as string, 10);
+        body.company_id = await resolveRequiredCompanyId(this, companyId, this.getNode(), 'Company ID');
       }
       if (description) {
         body.description = description;
@@ -118,7 +132,12 @@ export async function handlePasswordFoldersOperation(
       if (updateFields.company_id === '') {
         delete updateFields.company_id;
       } else if (updateFields.company_id !== undefined && updateFields.company_id !== null) {
-        updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+        updateFields.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
 
       if (updateFields.description === '') {

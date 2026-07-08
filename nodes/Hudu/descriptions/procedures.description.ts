@@ -136,7 +136,7 @@ export const proceduresFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'Filter by company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Created At',
@@ -412,7 +412,7 @@ export const proceduresFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company for this process. Leave empty/null for a global template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The company for this process. Leave empty/null for a global template. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },
@@ -496,7 +496,7 @@ export const proceduresFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company for the new procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The company for the new procedure. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Name',
@@ -548,7 +548,7 @@ export const proceduresFields: INodeProperties[] = [
         operation: ['duplicate'],
       },
     },
-    description: 'The company for the new duplicated procedure. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+    description: 'The company for the new duplicated procedure. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',

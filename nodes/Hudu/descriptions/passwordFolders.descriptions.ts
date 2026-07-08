@@ -145,7 +145,7 @@ export const passwordFoldersFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company to associate with the password folder. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The company to associate with the password folder. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Name',
@@ -213,7 +213,7 @@ export const passwordFoldersFields: INodeProperties[] = [
       },
     },
     default: '',
-    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+    description: 'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Description',
@@ -287,7 +287,7 @@ export const passwordFoldersFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        description: 'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',

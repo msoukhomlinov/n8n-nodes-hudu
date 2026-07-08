@@ -13,6 +13,20 @@ All notable changes to this project will be documented in this file.
 
 - **[MEDIUM] ~~`HuduAiTools` AI tool output connection type~~** — Fixed in 2.5.0: `NodeConnectionTypes.AiTool` enum value now used in place of the `’ai_tool’ as NodeConnectionType` string cast.
 
+## [2.6.2] - 2026-07-08
+
+### Changed
+- **AI tools runtime now resolves `DynamicStructuredTool` and `zod` via a positive n8n-owned-tree anchor instead of a blind `require.cache` scan (issue #29).** The v1 fix (#26/#27/#28) deferred resolution to execution time and added a `require.cache` fallback, but that fallback took the *first* path-pattern match — so on a host where another community node bundles its own `zod`, it could win the wrong copy. A foreign `ZodType` class identity fails n8n's `normalizeToolSchema` `instanceof ZodType` check **silently**: the schema degrades to raw JSON Schema and tools surface as "object schema missing properties" with no error in the logs. **Fix:** `requireFromCachedTree(patterns, id)` finds an already-cached module belonging to an n8n-owned package (`@n8n/n8n-nodes-langchain` first, then `@langchain/classic` for tools; `@n8n/n8n-nodes-langchain`, `n8n-workflow`, `n8n-core` for zod) and `createRequire()`s the dependency from that module — tying the resolved copy to n8n's real dependency graph by package identity, independent of `require.cache` order and pnpm's flat virtual-store realpaths.
+- **Resolution is now symmetric and `__filename`-free.** `require.main` is tried first for both `zod` and `DynamicStructuredTool`, guarded for `require.main` being undefined (ESM-launched n8n, queue-mode / worker_threads). The previous `?? __filename` fallbacks are removed — falling back to `__filename` self-resolved this package's own bundled copy, exactly the wrong-identity copy the fix avoids. The `require.main` zod path is additionally checked to ensure it does not point inside this package before being accepted.
+- **`getLazyLogWrapper()` routed through the same anchor sequence** for consistency (not correctness-critical — `logWrapper` is a plain function, never `instanceof`-checked).
+- **Foreign-key company inputs now accept a company name as well as a numeric ID (issue #25).** Every field that references the organization a record belongs to — on assets, networks, VLANs, VLAN zones, IP addresses, matchers, rack storages, articles, folders, procedures, procedure tasks, password folders, asset passwords, and the companies parent-company field — resolves a supplied company name to its ID (case-insensitive exact match via `/companies` search; a numeric ID still short-circuits with no extra call). Ambiguous names (more than one company) and unknown names raise a clear error listing how to disambiguate. The companies resource's own primary identity field is unchanged (it still takes an ID or slug).
+
+### Removed
+- **The blind `findCachedExports` `require.cache` path-scans for `@langchain/core` and `zod`.** When the positive anchor cannot resolve a dependency, resolution now **fails clean** — the lazy Proxy throws a clear diagnostic error rather than guessing another community node's bundled copy.
+
+### Fixed
+- **`zod` moved from `devDependencies` to `dependencies`.** `ai-tools/schema-generator.ts` statically `import`s `zod` at module-load (registration) time, so on pnpm-strict-isolated n8n hosts (v2.29.x+) where this package installs outside n8n's own `node_modules`, `zod` must be installed alongside the package or registration can throw ("Unrecognized node type"). `@langchain/core` remains an optional `peerDependency` (host-provided at runtime).
+
 ## [2.6.1] - 2026-07-08
 
 ### Changed

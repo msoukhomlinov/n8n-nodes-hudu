@@ -113,7 +113,7 @@ export const vlansFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'Filter by company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Name',
@@ -246,7 +246,7 @@ export const vlansFields: INodeProperties[] = [
     },
     default: '',
     required: true,
-    description: 'The company to associate with the VLAN. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+    description: 'The company to associate with the VLAN. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',
@@ -364,7 +364,7 @@ export const vlansFields: INodeProperties[] = [
         },
         default: '',
         description:
-          'Change VLAN company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+          'Change VLAN company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',

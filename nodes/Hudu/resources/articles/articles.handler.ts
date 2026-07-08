@@ -12,7 +12,7 @@ import type { ArticlesOperation, IArticlePostProcessFilters } from './articles.t
 import type { FilterMapping } from '../../utils/types';
 import { articleFilterMapping } from './articles.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
-import { processDateRange, type DateRangePreset, validateCompanyId } from '../../utils';
+import { processDateRange, type DateRangePreset, resolveRequiredCompanyId } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { processArticleContent, processArticlesContent } from '../../utils/markdownUtils';
 import { buildFolderPath } from '../../utils/folderUtils';
@@ -63,7 +63,7 @@ export async function handleArticlesOperation(
 
       const company_id = this.getNodeParameter('company_id', i, '') as string;
       if (company_id) {
-        body.company_id = Number.parseInt(company_id, 10);
+        body.company_id = await resolveRequiredCompanyId(this, company_id, this.getNode(), 'Company ID');
       }
 
       const enable_sharing = this.getNodeParameter('enable_sharing', i, false) as boolean;
@@ -251,7 +251,7 @@ export async function handleArticlesOperation(
 
       // Validate company_id if provided in filters
       if (apiFilters.company_id) {
-        apiFilters.company_id = validateCompanyId(apiFilters.company_id, this.getNode(), 'Company ID');
+        apiFilters.company_id = await resolveRequiredCompanyId(this, apiFilters.company_id, this.getNode(), 'Company ID');
       }
 
       const qs: IDataObject = {
@@ -417,6 +417,19 @@ export async function handleArticlesOperation(
 
       if (Object.keys(updateFields).length === 0) {
         throw new Error('No fields to update were provided');
+      }
+
+      if (
+        updateFields.company_id !== undefined &&
+        updateFields.company_id !== null &&
+        updateFields.company_id !== ''
+      ) {
+        updateFields.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
 
       responseData = await handleUpdateOperation.call(

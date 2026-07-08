@@ -122,7 +122,7 @@ export const procedureTasksFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Filter by the company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'Filter by the company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
     ],
   },

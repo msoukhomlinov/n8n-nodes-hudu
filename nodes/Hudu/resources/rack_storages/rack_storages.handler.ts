@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
 import {
   handleCreateOperation,
   handleDeleteOperation,
@@ -25,7 +25,7 @@ export async function handleRackStorageOperation(
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
 
       if (filters.company_id) {
-        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+        filters.company_id = await resolveRequiredCompanyId(this, filters.company_id, this.getNode(), 'Company ID');
       }
       const qs: IDataObject = {
         ...filters,
@@ -84,7 +84,12 @@ export async function handleRackStorageOperation(
     case 'create': {
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
       if (additionalFields.company_id) {
-        additionalFields.company_id = Number.parseInt(additionalFields.company_id as string, 10);
+        additionalFields.company_id = await resolveRequiredCompanyId(
+          this,
+          additionalFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
 
       const body = {
@@ -102,7 +107,12 @@ export async function handleRackStorageOperation(
       const updateFields = this.getNodeParameter('rackStorageUpdateFields', i) as IDataObject;
 
       if (updateFields.company_id) {
-        updateFields.company_id = Number.parseInt(updateFields.company_id as string, 10);
+        updateFields.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
 
       const body = {

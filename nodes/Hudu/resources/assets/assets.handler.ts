@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, validateCompanyId, huduApiRequest } from '../../utils';
+import { processDateRange, resolveRequiredCompanyId, resolveCompanyId, huduApiRequest } from '../../utils';
 import type { IDateRange } from '../../utils';
 import {
   handleGetAllOperation,
@@ -43,7 +43,8 @@ export async function handleAssetsOperation(
   switch (operation) {
     case 'create': {
       debugLog('[OPERATION_CREATE] Processing create asset operation');
-      const companyId = validateCompanyId(
+      const companyId = await resolveRequiredCompanyId(
+        this,
         this.getNodeParameter('company_id', i) as string,
         this.getNode(),
         'Company ID'
@@ -267,7 +268,19 @@ export async function handleAssetsOperation(
       // Determine which endpoint to use based on filters
       // /companies/{company_id}/assets only supports: page, archived, page_size
       // /assets supports: company_id, id, name, primary_serial, asset_layout_id, slug, search, updated_at, archived, page, page_size
-      const companyId = mappedFilters.company_id;
+      // Resolve a company name (if provided via expression) to its numeric id before
+      // it is used either as a URL path segment or a query param below.
+      const companyId = await resolveCompanyId(
+        this,
+        mappedFilters.company_id,
+        this.getNode(),
+        'Company ID',
+      );
+      if (companyId === undefined) {
+        delete mappedFilters.company_id;
+      } else {
+        mappedFilters.company_id = companyId;
+      }
       const filtersRequiringAssetsEndpoint = ['id', 'name', 'primary_serial', 'asset_layout_id', 'slug', 'search', 'updated_at'];
       const hasFiltersRequiringAssetsEndpoint = filtersRequiringAssetsEndpoint.some(key => 
         Object.prototype.hasOwnProperty.call(mappedFilters, key) && mappedFilters[key] !== undefined && mappedFilters[key] !== ''

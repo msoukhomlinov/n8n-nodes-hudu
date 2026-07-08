@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import {
 	handleCreateOperation,
@@ -35,7 +35,7 @@ export async function handleWebsitesOperation(
       }
 
       if (filters.company_id) {
-        filters.company_id = validateCompanyId(filters.company_id, this.getNode(), 'Company ID');
+        filters.company_id = await resolveRequiredCompanyId(this, filters.company_id, this.getNode(), 'Company ID');
       }
       const qs: IDataObject = {
         ...filters,
@@ -133,10 +133,11 @@ export async function handleWebsitesOperation(
     }
 
     case 'create': {
-      const companyId = validateCompanyId(
+      const companyId = await resolveRequiredCompanyId(
+        this,
         this.getNodeParameter('company_id', i),
         this.getNode(),
-        'Company ID'
+        'Company ID',
       );
       const name = this.getNodeParameter('name', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
