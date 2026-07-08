@@ -11,6 +11,7 @@ import type { FolderOperation, IFolderPostProcessFilters, IFolderPathResponse, I
 import { folderFilterMapping } from './folders.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { buildFolderPath } from '../../utils/folderUtils';
+import { resolveRequiredCompanyId } from '../../utils';
 import type { ICompany } from '../companies/companies.types';
 
 export async function handleFolderOperation(
@@ -42,6 +43,19 @@ export async function handleFolderOperation(
         }
       }
 
+      if (
+        apiFilters.company_id !== undefined &&
+        apiFilters.company_id !== null &&
+        apiFilters.company_id !== ''
+      ) {
+        apiFilters.company_id = await resolveRequiredCompanyId(
+          this,
+          apiFilters.company_id,
+          this.getNode(),
+          'Company ID',
+        );
+      }
+
       responseData = await handleGetAllOperation.call(
         this,
         resourceEndpoint,
@@ -64,6 +78,19 @@ export async function handleFolderOperation(
     case 'create': {
       const name = this.getNodeParameter('name', i) as string;
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+      if (
+        additionalFields.company_id !== undefined &&
+        additionalFields.company_id !== null &&
+        additionalFields.company_id !== ''
+      ) {
+        additionalFields.company_id = await resolveRequiredCompanyId(
+          this,
+          additionalFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
+      }
 
       const body: IDataObject = {
         name,
@@ -94,6 +121,13 @@ export async function handleFolderOperation(
 
       if (updateFields.company_id === '') {
         updateFields.company_id = null;
+      } else if (updateFields.company_id !== undefined && updateFields.company_id !== null) {
+        updateFields.company_id = await resolveRequiredCompanyId(
+          this,
+          updateFields.company_id,
+          this.getNode(),
+          'Company ID',
+        );
       }
 
       const body: IDataObject = {

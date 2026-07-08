@@ -9,6 +9,7 @@ import {
 import type { ProcedureTasksOperations } from './procedure_tasks.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { convertToDateOnlyFormat } from '../../utils/dateUtils';
+import { resolveRequiredCompanyId } from '../../utils';
 
 export async function handleProcedureTasksOperation(
   this: IExecuteFunctions,
@@ -58,6 +59,19 @@ export async function handleProcedureTasksOperation(
 
       // Strip zero-value ID filters that would match no records
       if (qs.procedure_id === 0) delete qs.procedure_id;
+
+      if (
+        filters.company_id !== undefined &&
+        filters.company_id !== null &&
+        filters.company_id !== ''
+      ) {
+        qs.company_id = await resolveRequiredCompanyId(
+          this,
+          filters.company_id,
+          this.getNode(),
+          'Company ID',
+        );
+      }
 
       return await handleGetAllOperation.call(
         this,

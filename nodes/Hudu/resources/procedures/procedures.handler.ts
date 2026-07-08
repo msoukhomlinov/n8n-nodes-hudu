@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -29,7 +29,8 @@ export async function handleProceduresOperation(
 
       // Validate company_id if provided
       if (additionalFields.company_id) {
-        additionalFields.company_id = validateCompanyId(
+        additionalFields.company_id = await resolveRequiredCompanyId(
+          this,
           additionalFields.company_id,
           this.getNode(),
           'Company ID'
@@ -92,7 +93,8 @@ export async function handleProceduresOperation(
 
       // Validate company_id if provided in filters
       if (filters.company_id) {
-        filters.company_id = validateCompanyId(
+        filters.company_id = await resolveRequiredCompanyId(
+          this,
           filters.company_id,
           this.getNode(),
           'Company ID'
@@ -185,7 +187,8 @@ export async function handleProceduresOperation(
 
       // Validate and add company_id if provided
       if (additionalFields.company_id) {
-        qs.company_id = validateCompanyId(
+        qs.company_id = await resolveRequiredCompanyId(
+          this,
           additionalFields.company_id,
           this.getNode(),
           'Company ID'
@@ -215,7 +218,8 @@ export async function handleProceduresOperation(
 
     case 'duplicate': {
       const procedureId = this.getNodeParameter('id', i) as string;
-      const companyId = validateCompanyId(
+      const companyId = await resolveRequiredCompanyId(
+        this,
         this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'

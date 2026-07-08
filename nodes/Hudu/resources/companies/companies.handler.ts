@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId, validateCompanyId } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -29,7 +29,8 @@ export async function handleCompaniesOperation(
 
       // Validate parent_company_id if provided
       if (additionalFields.parent_company_id) {
-        additionalFields.parent_company_id = validateCompanyId(
+        additionalFields.parent_company_id = await resolveRequiredCompanyId(
+          this,
           additionalFields.parent_company_id,
           this.getNode(),
           'Parent Company ID'
@@ -150,7 +151,8 @@ export async function handleCompaniesOperation(
 
       // Validate parent_company_id if provided
       if (updateFields.parent_company_id) {
-        updateFields.parent_company_id = validateCompanyId(
+        updateFields.parent_company_id = await resolveRequiredCompanyId(
+          this,
           updateFields.parent_company_id,
           this.getNode(),
           'Parent Company ID'
