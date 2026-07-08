@@ -230,11 +230,9 @@ export const runtimeZod: RuntimeZod = new Proxy({} as RuntimeZod, {
 });
 
 let _logWrapper: ((tool: unknown, context: unknown) => unknown) | undefined;
-let _logWrapperResolved = false;
 
 export function getLazyLogWrapper(): ((tool: unknown, context: unknown) => unknown) | undefined {
-  if (_logWrapperResolved) return _logWrapper;
-  _logWrapperResolved = true;
+  if (_logWrapper) return _logWrapper;
   try {
     if (runtimeReq) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
