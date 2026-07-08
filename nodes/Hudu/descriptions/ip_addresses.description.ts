@@ -94,7 +94,7 @@ export const ipAddressFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        description: 'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Created At',
@@ -478,7 +478,7 @@ export const ipAddressFields: INodeProperties[] = [
         operation: ['create', 'update'],
       },
     },
-    description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+    description: 'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',

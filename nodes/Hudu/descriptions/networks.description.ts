@@ -90,7 +90,7 @@ export const networksFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'Filter by company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Created At',
@@ -486,7 +486,7 @@ export const networksFields: INodeProperties[] = [
       },
     },
     default: '',
-    description: 'The company to associate with the network. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+    description: 'The company to associate with the network. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Additional Fields',
@@ -702,7 +702,7 @@ export const networksFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company to associate with the network. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The company to associate with the network. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',

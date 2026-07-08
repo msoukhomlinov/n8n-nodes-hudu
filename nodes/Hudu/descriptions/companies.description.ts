@@ -174,7 +174,7 @@ export const companiesFields: INodeProperties[] = [
         },
         default: '',
         description:
-          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+          'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Phone Number',
@@ -634,7 +634,7 @@ export const companiesFields: INodeProperties[] = [
         },
         default: '',
         description:
-          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+          'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Phone Number',

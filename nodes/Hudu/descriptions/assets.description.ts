@@ -157,7 +157,7 @@ export const assetsFields: INodeProperties[] = [
     },
     default: '',
     description:
-      'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+      'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   // ----------------------------------
   //         assets:create
@@ -303,7 +303,7 @@ export const assetsFields: INodeProperties[] = [
         },
         default: '',
         description:
-          'Filter assets by the parent company\'s ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+          'Filter assets by the parent company\'s ID. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'ID',
@@ -536,7 +536,7 @@ export const assetsFields: INodeProperties[] = [
     },
     default: '',
     description:
-      'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+      'Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
   },
   {
     displayName: 'Target Asset Layout Name or ID',

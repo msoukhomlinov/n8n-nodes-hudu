@@ -123,7 +123,7 @@ export const rackStorageFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company to associate with the rack storage. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The company to associate with the rack storage. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',
@@ -190,7 +190,7 @@ export const rackStorageFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'The company to associate with the rack storage. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'The company to associate with the rack storage. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Description',
@@ -305,7 +305,7 @@ export const rackStorageFields: INodeProperties[] = [
           },
         },
         default: '',
-        description: 'Filter by company. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        description: 'Filter by company. Accepts a company name or numeric ID. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
       },
       {
         displayName: 'Created At',
