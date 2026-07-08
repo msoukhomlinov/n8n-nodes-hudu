@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-hudu",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "This n8n custom node facilitates integration with Hudu's API.",
   "keywords": [
     "n8n-community-node-package",
@@ -36,7 +36,17 @@
     "dist"
   ],
   "peerDependencies": {
-    "n8n-workflow": "*"
+    "n8n-workflow": "*",
+    "@langchain/core": "*",
+    "@n8n/ai-utilities": "*"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": true
+    },
+    "@n8n/ai-utilities": {
+      "optional": true
+    }
   },
   "n8n": {
     "n8nNodesApiVersion": 1,

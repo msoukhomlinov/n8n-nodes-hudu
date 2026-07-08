@@ -96,13 +96,16 @@ function findCachedExports<T>(
   validate: (exports: Record<string, unknown>) => T | undefined,
 ): T | undefined {
   try {
-    // eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
-    const Module = require('module') as { _cache?: Record<string, { exports: unknown }> };
-    const cache = Module._cache;
+    // require.cache is the public, documented CommonJS alias that points at the exact
+    // same underlying object as the internal Module._cache. It is available directly in
+    // CJS module scope (this file compiles to CJS via tsc), so no require('module') needed.
+    const cache = require.cache;
     if (!cache) return undefined;
     for (const key of Object.keys(cache)) {
       if (!pathPattern.test(key)) continue;
-      const result = validate(cache[key].exports as Record<string, unknown>);
+      const entry = cache[key];
+      if (!entry) continue;
+      const result = validate(entry.exports as Record<string, unknown>);
       if (result !== undefined) return result;
     }
   } catch (_) {
@@ -113,6 +116,7 @@ function findCachedExports<T>(
 
 const { runtimeReq, diagnostic } = getRuntimeRequire();
 let langchainResolutionDiagnostic = diagnostic;
+let zodResolutionDiagnostic = diagnostic;
 
 // Resolve zod SEPARATELY via require.main to get the top-level zod instance
 // that n8n's normalizeToolSchema uses for `instanceof ZodType` checks.
@@ -165,19 +169,48 @@ function resolveDynamicStructuredTool(): DynamicStructuredToolCtor | undefined {
   return _RuntimeDynamicStructuredTool;
 }
 
-// Resolve zod via require.main first (top-level copy used by n8n's instanceof check).
-// Fall back to the anchor runtimeReq only if require.main is unavailable.
-if (_topLevelZodReq) {
-  try {
-    _runtimeZod = _topLevelZodReq('zod') as RuntimeZod;
-  } catch (_) {}
-}
-if (!_runtimeZod && runtimeReq) {
-  try {
-    _runtimeZod = runtimeReq('zod') as RuntimeZod;
-  } catch (e) {
-    zodLoadError = e instanceof Error ? e.message : String(e);
+function resolveRuntimeZod(): RuntimeZod | undefined {
+  if (_runtimeZod) return _runtimeZod;
+
+  // Primary path: require.main → top-level zod (the copy n8n's normalizeToolSchema uses
+  // for `instanceof ZodType`). Preserved as the first attempt so the common, working
+  // install resolves exactly as before this became lazy.
+  if (_topLevelZodReq) {
+    try {
+      _runtimeZod = _topLevelZodReq('zod') as RuntimeZod;
+      if (_runtimeZod) return _runtimeZod;
+    } catch (_) {}
   }
+
+  // Fall back to the anchor runtimeReq if require.main is unavailable/failed.
+  if (runtimeReq) {
+    try {
+      _runtimeZod = runtimeReq('zod') as RuntimeZod;
+      if (_runtimeZod) return _runtimeZod;
+    } catch (e) {
+      zodLoadError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  // Fallback for pnpm-isolated installs where no filesystem anchor reaches zod at all
+  // (same failure class resolveDynamicStructuredTool() handles for @langchain/core):
+  // scan require.cache for the zod namespace once it's resident. Validate the exports
+  // look like zod by confirming ZodType is a function (n8n's normalizeToolSchema does
+  // `instanceof ZodType`, so ZodType must be present and be the same class identity) and
+  // that the `object` factory is present (our schema-generator calls z.object). The path
+  // regex is narrowed to zod's own entry files so it never matches zod-to-json-schema or
+  // other zod-adjacent packages; the exports-shape check is the real safety net.
+  const cached = findCachedExports(/[\\/]zod[\\/](lib|dist|index|v3|v4)/, (exports) =>
+    typeof exports['ZodType'] === 'function' && typeof exports['object'] === 'function'
+      ? (exports as unknown as RuntimeZod)
+      : undefined,
+  );
+  if (cached) {
+    _runtimeZod = cached;
+    zodLoadError = null;
+    zodResolutionDiagnostic = 'resolved via require.cache scan (pnpm-isolated install)';
+  }
+  return _runtimeZod;
 }
 
 // IMPORTANT: Proxy target MUST be `function () {}`, not `{}`.
@@ -216,16 +249,17 @@ export const runtimeZod: RuntimeZod = new Proxy({} as RuntimeZod, {
     // Guard: frameworks probe Symbol.toPrimitive, Symbol.toStringTag, .then (Promise thenable),
     // and .constructor. Throwing on these causes misleading errors during structural inspection.
     if (typeof prop === 'symbol' || prop === 'then' || prop === 'constructor') return undefined;
-    if (!_runtimeZod) {
+    const zod = resolveRuntimeZod();
+    if (!zod) {
       throw new Error(
         `runtimeZod: zod could not be resolved from n8n's module tree (accessing .${String(prop)}). ` +
         'Ensure zod is installed in the n8n environment.' +
-        (diagnostic ? ` Diagnostic: ${diagnostic}` : '') +
+        (zodResolutionDiagnostic ? ` Diagnostic: ${zodResolutionDiagnostic}` : '') +
         (zodLoadError ? ` Load error: ${zodLoadError}` : ''),
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (_runtimeZod as any)[prop];
+    return (zod as any)[prop];
   },
 });
 
