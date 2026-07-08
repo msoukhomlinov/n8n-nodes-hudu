@@ -13,6 +13,15 @@ All notable changes to this project will be documented in this file.
 
 - **[MEDIUM] ~~`HuduAiTools` AI tool output connection type~~** — Fixed in 2.5.0: `NodeConnectionTypes.AiTool` enum value now used in place of the `’ai_tool’ as NodeConnectionType` string cast.
 
+## [2.6.1] - 2026-07-08
+
+### Changed
+- **`findCachedExports()` now reads the documented `require.cache` instead of the internal `Module._cache`.** `require.cache` is the public CommonJS alias that points at the exact same underlying module-cache object, and is available directly in CJS module scope (this file compiles to CJS via tsc), so the fallback no longer needs `require('module')` at all. Behaviour is identical; the change removes a dependency on an undocumented Node internal and drops one `require('module')` call from the AI tools runtime.
+- **`zod` resolution now has a `require.cache`-scan fallback, mirroring `DynamicStructuredTool`.** Previously zod was resolved eagerly at module load via `require.main` (`_topLevelZodReq`) then the `@langchain/classic`/`langchain` anchor (`runtimeReq`), with **no** cache-scan fallback — so on pnpm-strict-isolated n8n installs (v2.29.x+) where neither anchor can reach n8n's zod, `_runtimeZod` stayed `undefined` and every `runtimeZod` Proxy access threw forever. This is the same failure class that issue #26's fix already handled for `@langchain/core/tools`. Resolution is now lazy (on first Proxy access) via `resolveRuntimeZod()`: it keeps the require.main-first ordering as the primary path (nothing regresses for the common working case), then falls back to scanning `require.cache` for the zod namespace once it's resident, validating the exports look like zod (`ZodType` and `object` are functions — n8n's `normalizeToolSchema` does `instanceof ZodType`) and preserving class identity. Memoization is result-based (only on success), so it retries until it resolves once. The cache-scan path regex is narrowed to zod's own entry files (`lib`/`dist`/`index`/`v3`/`v4`) so it never matches `zod-to-json-schema` or other zod-adjacent packages.
+
+### Added
+- **`@langchain/core` and `@n8n/ai-utilities` declared as optional `peerDependencies`.** These are host-provided by n8n at runtime (never installed by this package — installing a duplicate copy would break n8n's `instanceof` class-identity checks). Declaring them as optional peers documents the host-provided contract and gives an install-time drift signal without changing resolution. `n8n-workflow` remains a required (non-optional) peer.
+
 ## [2.6.0] - 2026-07-08
 
 ### Fixed
