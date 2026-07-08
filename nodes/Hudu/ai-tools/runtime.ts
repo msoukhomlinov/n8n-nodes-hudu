@@ -31,6 +31,16 @@ type RuntimeRequire = { (moduleId: string): unknown; resolve(id: string): string
  * npm link), then falls back to ANCHOR_CANDIDATES.
  * _topLevelZodReq is resolved separately via createRequire(require.main) to ensure
  * n8n's normalizeToolSchema instanceof ZodType check uses the same zod copy.
+ *
+ * Under pnpm-strict-isolated n8n installs (v2.29.x+), this package lives outside n8n's
+ * own node_modules tree (e.g. ~/.n8n/nodes/), so NEITHER require.main NOR
+ * ANCHOR_CANDIDATES can resolve into Tree 2 at all — @langchain/classic/core are only
+ * reachable from inside @n8n/n8n-nodes-langchain's isolated pnpm subtree, which no
+ * filesystem-based require.resolve() from here can walk into. findCachedExports() below
+ * is the fallback: n8n must load @langchain/core/tools itself (for its own Agent/MCP
+ * Trigger nodes) before ever calling supplyData() on a connected tool, so by execution
+ * time the module is already in Node's process-global require.cache — scanning for it
+ * there works regardless of install layout and returns the exact same class identity.
  */
 
 /**
@@ -74,7 +84,35 @@ function getRuntimeRequire(): { runtimeReq: RuntimeRequire | null; diagnostic: s
   return { runtimeReq: null, diagnostic };
 }
 
+/**
+ * Scans Node's process-global module cache (shared across every node_modules tree in
+ * this process, regardless of who loaded what) for an already-loaded module whose
+ * resolved path matches `pathPattern`, returning the first match whose exports satisfy
+ * `validate`. Must be called lazily (not at module load) — n8n requires node files for
+ * registration before any workflow runs, i.e. before langchain is loaded into cache.
+ */
+function findCachedExports<T>(
+  pathPattern: RegExp,
+  validate: (exports: Record<string, unknown>) => T | undefined,
+): T | undefined {
+  try {
+    // eslint-disable-next-line @n8n/community-nodes/no-restricted-imports, @typescript-eslint/no-require-imports
+    const Module = require('module') as { _cache?: Record<string, { exports: unknown }> };
+    const cache = Module._cache;
+    if (!cache) return undefined;
+    for (const key of Object.keys(cache)) {
+      if (!pathPattern.test(key)) continue;
+      const result = validate(cache[key].exports as Record<string, unknown>);
+      if (result !== undefined) return result;
+    }
+  } catch (_) {
+    // best-effort — require.cache introspection is not guaranteed across Node versions
+  }
+  return undefined;
+}
+
 const { runtimeReq, diagnostic } = getRuntimeRequire();
+let langchainResolutionDiagnostic = diagnostic;
 
 // Resolve zod SEPARATELY via require.main to get the top-level zod instance
 // that n8n's normalizeToolSchema uses for `instanceof ZodType` checks.
@@ -95,14 +133,36 @@ let _runtimeZod: RuntimeZod | undefined;
 let langchainLoadError: string | null = null;
 let zodLoadError: string | null = null;
 
-if (runtimeReq) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const coreTools = runtimeReq('@langchain/core/tools') as Record<string, any>;
-    _RuntimeDynamicStructuredTool = coreTools['DynamicStructuredTool'] as DynamicStructuredToolCtor;
-  } catch (e) {
-    langchainLoadError = e instanceof Error ? e.message : String(e);
+function resolveDynamicStructuredTool(): DynamicStructuredToolCtor | undefined {
+  if (_RuntimeDynamicStructuredTool) return _RuntimeDynamicStructuredTool;
+
+  if (runtimeReq) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const coreTools = runtimeReq('@langchain/core/tools') as Record<string, any>;
+      if (typeof coreTools?.['DynamicStructuredTool'] === 'function') {
+        _RuntimeDynamicStructuredTool = coreTools['DynamicStructuredTool'] as DynamicStructuredToolCtor;
+        return _RuntimeDynamicStructuredTool;
+      }
+    } catch (e) {
+      langchainLoadError = e instanceof Error ? e.message : String(e);
+    }
   }
+
+  // Fallback for pnpm-isolated installs where no filesystem anchor reaches Tree 2 at all:
+  // @langchain/core/tools is loaded by n8n's own Agent/MCP Trigger machinery before our
+  // supplyData() ever runs, so grab it straight out of require.cache once it's resident.
+  const cached = findCachedExports(/[\\/]@langchain[\\/]core[\\/]/, (exports) =>
+    typeof exports['DynamicStructuredTool'] === 'function'
+      ? (exports['DynamicStructuredTool'] as DynamicStructuredToolCtor)
+      : undefined,
+  );
+  if (cached) {
+    _RuntimeDynamicStructuredTool = cached;
+    langchainLoadError = null;
+    langchainResolutionDiagnostic = 'resolved via require.cache scan (pnpm-isolated install)';
+  }
+  return _RuntimeDynamicStructuredTool;
 }
 
 // Resolve zod via require.main first (top-level copy used by n8n's instanceof check).
@@ -128,21 +188,23 @@ export const RuntimeDynamicStructuredTool: DynamicStructuredToolCtor = new Proxy
   function () {} as unknown as DynamicStructuredToolCtor,
   {
     construct(_target, args) {
-      if (!_RuntimeDynamicStructuredTool) {
+      const ctor = resolveDynamicStructuredTool();
+      if (!ctor) {
         throw new Error(
           'RuntimeDynamicStructuredTool: @langchain/core/tools could not be resolved from n8n\'s module tree. ' +
           'Ensure @langchain/core is installed in the n8n environment.' +
-          (diagnostic ? ` Diagnostic: ${diagnostic}` : '') +
+          (langchainResolutionDiagnostic ? ` Diagnostic: ${langchainResolutionDiagnostic}` : '') +
           (langchainLoadError ? ` Load error: ${langchainLoadError}` : ''),
         );
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return new (_RuntimeDynamicStructuredTool as any)(...args) as object;
+      return new (ctor as any)(...args) as object;
     },
     get(_target, prop) {
-      if (_RuntimeDynamicStructuredTool) {
+      const ctor = resolveDynamicStructuredTool();
+      if (ctor) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (_RuntimeDynamicStructuredTool as any)[prop];
+        return (ctor as any)[prop];
       }
       return undefined;
     },
@@ -182,5 +244,14 @@ export function getLazyLogWrapper(): ((tool: unknown, context: unknown) => unkno
   } catch (_) {
     // best-effort — not available in all n8n versions
   }
+
+  if (!_logWrapper) {
+    // Same pnpm-isolation fallback as resolveDynamicStructuredTool() above.
+    _logWrapper = findCachedExports(/[\\/]@n8n[\\/]ai-utilities[\\/]/, (exports) => {
+      const fn = exports['logWrapper'] ?? (exports['default'] as Record<string, unknown> | undefined)?.['logWrapper'];
+      return typeof fn === 'function' ? (fn as (tool: unknown, context: unknown) => unknown) : undefined;
+    });
+  }
+
   return _logWrapper;
 }
