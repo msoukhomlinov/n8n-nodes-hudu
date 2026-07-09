@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file.
 
 - **[MEDIUM] ~~`HuduAiTools` AI tool output connection type~~** — Fixed in 2.5.0: `NodeConnectionTypes.AiTool` enum value now used in place of the `’ai_tool’ as NodeConnectionType` string cast.
 
+## [2.6.3] - 2026-07-09
+
+### Fixed
+- **`HuduAiTools` tool calls fail with `addInputData is not a function` when connected via MCP Server Trigger (issue #31).** `logWrapper` in `supplyData()` was passed `this.getNode()` (static `INode` descriptor) instead of `this` (`ISupplyDataFunctions` execution context). n8n's tool-call logging proxy invokes `addInputData` on every invocation before the tool handler runs, so every call threw immediately — including read-only ops like `help` that never touch the Hudu API.
+
 ## [2.6.2] - 2026-07-08
 
 ### Changed
