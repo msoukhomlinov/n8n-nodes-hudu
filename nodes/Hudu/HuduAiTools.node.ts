@@ -260,7 +260,7 @@ export class HuduAiTools implements INodeType {
         });
 
         const logWrapper = getLazyLogWrapper();
-        const wrappedTool = logWrapper ? logWrapper(unifiedTool, this.getNode()) : unifiedTool;
+        const wrappedTool = logWrapper ? logWrapper(unifiedTool, this) : unifiedTool;
         return { response: wrappedTool as typeof unifiedTool };
     }
 
