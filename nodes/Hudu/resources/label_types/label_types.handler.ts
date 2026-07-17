@@ -10,15 +10,37 @@ import {
 import type { LabelTypesOperation } from './label_types.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
-function normaliseNumberArray(value: unknown): number[] {
+/**
+ * Coerce an array of company IDs to positive integers.
+ * Rejects malformed values (e.g. "12abc", "12.5") instead of truncating via parseInt.
+ */
+function normaliseNumberArray(value: unknown, fieldName: string, itemIndex: number, node: INode): number[] {
   if (!Array.isArray(value)) {
     return [];
   }
-  return value
-    .map((v) => (typeof v === 'string' ? v.trim() : v))
-    .filter((v) => v !== '' && v !== null && v !== undefined)
-    .map((v) => (typeof v === 'string' ? Number.parseInt(v, 10) : Number(v)))
-    .filter((v) => Number.isFinite(v)) as number[];
+
+  const ids: number[] = [];
+  for (const raw of value) {
+    if (raw === '' || raw === null || raw === undefined) {
+      continue;
+    }
+
+    const candidate = typeof raw === 'string' ? raw.trim() : raw;
+    if (candidate === '') {
+      continue;
+    }
+
+    const num = typeof candidate === 'number' ? candidate : Number(candidate);
+    if (!Number.isInteger(num) || num < 1) {
+      throw new NodeOperationError(
+        node,
+        `${fieldName} must contain positive integers only (got ${JSON.stringify(raw)})`,
+        { itemIndex },
+      );
+    }
+    ids.push(num);
+  }
+  return ids;
 }
 
 export async function handleLabelTypesOperation(
@@ -62,6 +84,9 @@ export async function handleLabelTypesOperation(
       const accessLevel = this.getNodeParameter('access_level', i, 'all_companies') as string;
       const allowedCompanyIds = normaliseNumberArray(
         this.getNodeParameter('allowed_company_ids', i, []),
+        'allowed_company_ids',
+        i,
+        this.getNode() as unknown as INode,
       );
 
       if (!Array.isArray(applicableRecordTypes) || applicableRecordTypes.length === 0) {
@@ -103,7 +128,12 @@ export async function handleLabelTypesOperation(
       };
 
       if (Array.isArray(updateFields.allowed_company_ids)) {
-        updateFields.allowed_company_ids = normaliseNumberArray(updateFields.allowed_company_ids);
+        updateFields.allowed_company_ids = normaliseNumberArray(
+          updateFields.allowed_company_ids,
+          'labelTypeUpdateFields.allowed_company_ids',
+          i,
+          this.getNode() as unknown as INode,
+        );
       }
 
       if (updateFields.access_level === 'specific_companies') {

@@ -115,6 +115,8 @@ export const RESOURCES_WITH_PAGE_SIZE = [
   'matchers',
   'password_folders',
   'groups',
+  'label_types',
+  'labels',
   'procedures',
   'photos',
   'public_photos',
