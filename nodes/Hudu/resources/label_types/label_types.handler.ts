@@ -86,12 +86,12 @@ export async function handleLabelTypesOperation(
         this.getNodeParameter('allowed_company_ids', i, []),
         'allowed_company_ids',
         i,
-        this.getNode() as unknown as INode,
+        this.getNode(),
       );
 
       if (!Array.isArray(applicableRecordTypes) || applicableRecordTypes.length === 0) {
         throw new NodeOperationError(
-          this.getNode() as unknown as INode,
+          this.getNode(),
           'applicable_record_types is required and must contain at least one record type',
           { itemIndex: i },
         );
@@ -107,7 +107,7 @@ export async function handleLabelTypesOperation(
       if (accessLevel === 'specific_companies') {
         if (allowedCompanyIds.length === 0) {
           throw new NodeOperationError(
-            this.getNode() as unknown as INode,
+            this.getNode(),
             'allowed_company_ids is required when access_level is "specific_companies"',
             { itemIndex: i },
           );
@@ -132,7 +132,7 @@ export async function handleLabelTypesOperation(
           updateFields.allowed_company_ids,
           'labelTypeUpdateFields.allowed_company_ids',
           i,
-          this.getNode() as unknown as INode,
+          this.getNode(),
         );
       }
 
@@ -140,7 +140,7 @@ export async function handleLabelTypesOperation(
         const companies = updateFields.allowed_company_ids as number[] | undefined;
         if (!Array.isArray(companies) || companies.length === 0) {
           throw new NodeOperationError(
-            this.getNode() as unknown as INode,
+            this.getNode(),
             'labelTypeUpdateFields.allowed_company_ids is required when access_level is "specific_companies"',
             { itemIndex: i },
           );
