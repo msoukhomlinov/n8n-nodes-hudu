@@ -41,7 +41,7 @@ const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 const NO_SEARCH_RESOURCES = new Set([
   'procedures', 'activity_logs', 'folders', 'networks', 'ip_addresses',
   'asset_layouts', 'relations', 'expirations', 'vlans', 'vlan_zones', 'matchers',
-  'photos', 'public_photos', 'procedure_tasks',
+  'photos', 'public_photos', 'procedure_tasks', 'label_types', 'labels',
 ]);
 const NUMERIC_FIELDS = new Set([
   'id',
@@ -74,6 +74,8 @@ const NUMERIC_FIELDS = new Set([
   'record_id',
   'target_company_id',
   'layout_id',
+  'label_type_id',
+  'labelable_id',
 ]);
 
 /**

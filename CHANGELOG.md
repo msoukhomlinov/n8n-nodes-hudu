@@ -13,6 +13,18 @@ All notable changes to this project will be documented in this file.
 
 - **[MEDIUM] ~~`HuduAiTools` AI tool output connection type~~** — Fixed in 2.5.0: `NodeConnectionTypes.AiTool` enum value now used in place of the `’ai_tool’ as NodeConnectionType` string cast.
 
+## [2.7.0] - 2026-07-18
+
+### Added
+- **API alignment with Hudu 2.44.0** (issue #33). Reference spec: `api-docs-v2.44.0.json`. Diff tooling in `scripts/diff-swagger.mjs` now walks request-body and definition properties (not only top-level parameter names).
+- **Label Types resource** — full CRUD against `/label_types` (name, color, `applicable_record_types`, `access_level`, `allowed_company_ids`). Also exposed on Hudu AI Tools as `hudu_label_types`.
+- **Labels resource** — full CRUD against `/labels` (apply a label type to a record). Also exposed on Hudu AI Tools as `hudu_labels`.
+- **Websites `archived`** on create/update (regular node + AI Tools schemas).
+- **Companies Jump** optional `integration_id` and `integration_identifier` query params (documented in API 2.44.0).
+
+### Changed
+- README API compatibility line updated to **2.44.0**.
+
 ## [2.6.3] - 2026-07-09
 
 ### Fixed

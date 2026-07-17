@@ -563,6 +563,13 @@ export const websitesFields: INodeProperties[] = [
         description: 'The ID of the associated account',
       },
       {
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the website is archived',
+      },
+      {
         displayName: 'Asset Field ID',
         name: 'asset_field_id',
         type: 'number',
@@ -748,6 +755,13 @@ export const websitesFields: INodeProperties[] = [
         type: 'number',
         default: 0,
         description: 'The ID of the associated account',
+      },
+      {
+        displayName: 'Archived',
+        name: 'archived',
+        type: 'boolean',
+        default: false,
+        description: 'Whether the website is archived',
       },
       {
         displayName: 'Asset Field ID',

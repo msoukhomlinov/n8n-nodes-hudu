@@ -188,9 +188,13 @@ export async function handleCompaniesOperation(
 
     case 'jump': {
       const integrationSlug = this.getNodeParameter('integrationSlug', i) as string;
-      // API v2.39.6 only documents integration_slug parameter for /companies/jump
-      // Handler supports optional undocumented parameters but UI aligns with API docs
-      responseData = await handleCompanyJumpOperation.call(this, integrationSlug, {});
+      const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
+      const integrationId = additionalFields.integration_id as string | undefined;
+      const integrationIdentifier = additionalFields.integration_identifier as string | undefined;
+      responseData = await handleCompanyJumpOperation.call(this, integrationSlug, {
+        integrationId,
+        integrationIdentifier,
+      });
       break;
     }
   }

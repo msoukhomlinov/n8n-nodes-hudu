@@ -63,6 +63,8 @@ export class Hudu implements INodeType {
 			...descriptions.folderOperations,
 			...descriptions.groupsOperations,
 			...descriptions.ipAddressOperations,
+			...descriptions.labelTypesOperations,
+			...descriptions.labelsOperations,
 			...descriptions.listOptionsOperations,
 			...descriptions.listsOperations,
 			...descriptions.magicDashOperations,
@@ -99,6 +101,8 @@ export class Hudu implements INodeType {
 			...descriptions.folderFields,
 			...descriptions.groupsFields,
 			...descriptions.ipAddressFields,
+			...descriptions.labelTypesFields,
+			...descriptions.labelsFields,
 			...descriptions.listOptionsFields,
 			...descriptions.listsFields,
 			...descriptions.magicDashFields,
@@ -130,6 +134,8 @@ export class Hudu implements INodeType {
 			getAssetLayoutFieldValues: optionLoaders.getAssetLayoutFieldValues,
 			getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
 			getLists: optionLoaders.getLists,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			getLabelTypes: (optionLoaders as any).getLabelTypes as LoadOptionsHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			getGroups: (optionLoaders as any).getGroups as LoadOptionsHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,6 +283,20 @@ export class Hudu implements INodeType {
 						responseData = await resources.handleIpAddressesOperation.call(
 							this,
 							operation as resources.IpAddressOperations,
+							i,
+						);
+						break;
+					case 'label_types':
+						responseData = await resources.handleLabelTypesOperation.call(
+							this,
+							operation as resources.LabelTypesOperation,
+							i,
+						);
+						break;
+					case 'labels':
+						responseData = await resources.handleLabelsOperation.call(
+							this,
+							operation as resources.LabelsOperation,
 							i,
 						);
 						break;
