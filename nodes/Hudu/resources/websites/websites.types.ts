@@ -14,6 +14,7 @@ export interface IWebsite extends IDataObject {
   monitored_at?: string; // The timestamp when the website was last monitored
   headers?: object; // HTTP headers associated with the website (optional)
   paused?: boolean; // Indicates whether the monitoring of the website is paused
+  archived?: boolean; // When true, the website is archived
   sent_notifications?: boolean; // Indicates whether notifications related to the website have been sent
   account_id?: number; // The ID of the associated account
   asset_field_id?: number; // The ID of the related asset field (optional)

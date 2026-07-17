@@ -235,6 +235,24 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     supportsPagination: true,
     label: 'Matcher',
   },
+  label_types: {
+    endpoint: '/label_types',
+    pluralKey: 'label_types',
+    singularKey: 'label_type',
+    bodyKey: 'label_type',
+    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    supportsPagination: true,
+    label: 'Label Type',
+  },
+  labels: {
+    endpoint: '/labels',
+    pluralKey: 'labels',
+    singularKey: 'label',
+    bodyKey: 'label',
+    ops: ['get', 'getAll', 'create', 'update', 'delete'],
+    supportsPagination: true,
+    label: 'Label',
+  },
 };
 
 export const WRITE_OPERATIONS: HuduOperation[] = [

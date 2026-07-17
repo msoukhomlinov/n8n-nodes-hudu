@@ -189,6 +189,46 @@ export const ACTIVITY_LOG_ACTIONS = [
 ] as const;
 
 /**
+ * Record types that Labels / Label Types may apply to (Hudu API 2.44+).
+ * Casing matches the API enum (IpAddress, not IPAddress).
+ */
+export const LABEL_RECORD_TYPES = [
+  'Article',
+  'Asset',
+  'AssetPassword',
+  'Website',
+  'IpAddress',
+  'Vlan',
+  'VlanZone',
+  'Procedure',
+  'Network',
+  'RackStorage',
+] as const;
+export type LabelRecordType = (typeof LABEL_RECORD_TYPES)[number];
+
+/** n8n UI options for labelable / applicable_record_types multi-selects. */
+export const LABEL_RECORD_TYPE_OPTIONS = LABEL_RECORD_TYPES.map((value) => ({
+  name: value,
+  value,
+}));
+
+/**
+ * Human-readable meanings for label record types — used in LLM tool descriptions.
+ */
+export const LABEL_RECORD_TYPE_DESCRIPTIONS: Record<LabelRecordType, string> = {
+  Article: 'knowledge base article',
+  Asset: 'hardware/device/other asset record',
+  AssetPassword: 'password entry',
+  Website: 'monitored website',
+  IpAddress: 'IP address record',
+  Vlan: 'VLAN record',
+  VlanZone: 'VLAN zone record',
+  Procedure: 'runbook/checklist',
+  Network: 'network record',
+  RackStorage: 'rack storage record',
+};
+
+/**
  * Comprehensive list of resource types in Hudu
  */
 export const RESOURCE_TYPES = [

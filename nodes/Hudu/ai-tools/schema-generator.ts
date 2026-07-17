@@ -9,6 +9,8 @@ import {
   PROCEDURE_TYPES,
   PROCEDURE_SCOPES,
   FOLDER_TYPES,
+  LABEL_RECORD_TYPES,
+  LABEL_RECORD_TYPE_DESCRIPTIONS,
 } from '../utils/constants';
 
 // ---------------------------------------------------------------------------
@@ -55,6 +57,32 @@ const ipAddressStatusOptionalSchema = z
 // Shared resource-type description string — reused wherever resource_type / *able_type appears
 // Uses RESOURCE_TYPES from constants (same list the main Hudu node uses for all dropdowns)
 const RESOURCE_TYPES_DESC = buildTypeDesc(RESOURCE_TYPES, RESOURCE_TYPE_DESCRIPTIONS);
+
+// Label / Label Type record-type enum (API casing: IpAddress, not IPAddress)
+const LABEL_RECORD_TYPES_DESC = buildTypeDesc(
+  LABEL_RECORD_TYPES,
+  LABEL_RECORD_TYPE_DESCRIPTIONS,
+);
+const labelRecordTypeSchema = z
+  .enum(LABEL_RECORD_TYPES)
+  .describe(`Record type this label applies to. ${LABEL_RECORD_TYPES_DESC}`);
+const labelRecordTypeOptionalSchema = z
+  .enum(LABEL_RECORD_TYPES)
+  .optional()
+  .describe(`Record type this label applies to. ${LABEL_RECORD_TYPES_DESC}`);
+const labelRecordTypesArraySchema = z
+  .array(z.enum(LABEL_RECORD_TYPES))
+  .min(1)
+  .describe(
+    `One or more record types this label type may be applied to. ${LABEL_RECORD_TYPES_DESC}`,
+  );
+const labelRecordTypesArrayOptionalSchema = z
+  .array(z.enum(LABEL_RECORD_TYPES))
+  .min(1)
+  .optional()
+  .describe(
+    `One or more record types this label type may be applied to. ${LABEL_RECORD_TYPES_DESC}`,
+  );
 
 const idSchema = z
   .number()
@@ -685,6 +713,7 @@ export function getWebsitesCreateSchema() {
     keyword: z.string().optional().describe('Keyword to monitor on the page'),
     monitor_type: z.number().int().optional().describe('Monitor type'),
     paused: z.boolean().optional().describe('Whether to pause monitoring'),
+    archived: z.boolean().optional().describe('When true, the website is archived'),
     disable_dns: z.boolean().optional().describe('Whether to disable DNS checks'),
     disable_ssl: z.boolean().optional().describe('Whether to disable SSL checks'),
     disable_whois: z.boolean().optional().describe('Whether to disable WHOIS checks'),
@@ -903,6 +932,7 @@ export function getWebsitesUpdateSchema() {
       ),
     notes: z.string().optional().describe('Notes'),
     paused: z.boolean().optional().describe('Whether monitoring is paused'),
+    archived: z.boolean().optional().describe('When true, the website is archived'),
     keyword: z.string().optional().describe('Keyword to monitor on the page'),
     monitor_type: z.number().int().optional().describe('Monitor type'),
     disable_dns: z.boolean().optional().describe('Whether to disable DNS checks'),
@@ -1059,6 +1089,157 @@ export function getMatchersUpdateSchema() {
     potential_company_id: z.number().int().min(1).optional().describe('Potential company ID'),
     sync_id: z.number().int().min(1).optional().describe('Sync ID'),
     identifier: z.string().optional().describe('Identifier string'),
+  });
+}
+
+export function getLabelTypesGetAllSchema() {
+  return z.object({
+    name: optionalNameSchemaNoSearch,
+    color: z
+      .string()
+      .optional()
+      .describe('Filter by exact color value (e.g. #0000ff)'),
+    slug: z.string().optional().describe('Filter by exact slug value'),
+    created_at: z
+      .string()
+      .optional()
+      .describe('Filter by creation date (YYYY-MM-DD or ISO datetime)'),
+    updated_at: z
+      .string()
+      .optional()
+      .describe('Filter by update date (YYYY-MM-DD or ISO datetime)'),
+    limit: limitSchema,
+  });
+}
+
+export function getLabelsGetAllSchema() {
+  return z.object({
+    label_type_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe(
+        'Filter by label type ID. If unknown, call hudu_label_types with operation getAll first.',
+      ),
+    labelable_type: labelRecordTypeOptionalSchema,
+    labelable_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Filter by the ID of the labeled record'),
+    user_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Filter by the ID of the user who applied the label'),
+    created_at: z
+      .string()
+      .optional()
+      .describe('Filter by creation date (YYYY-MM-DD or ISO datetime)'),
+    updated_at: z
+      .string()
+      .optional()
+      .describe('Filter by update date (YYYY-MM-DD or ISO datetime)'),
+    limit: limitSchema,
+  });
+}
+
+export function getLabelTypesCreateSchema() {
+  return z.object({
+    name: nameSchema.describe('Label type name (must be unique)'),
+    color: z
+      .string()
+      .min(1)
+      .describe('Hex color value (e.g. #0000ff). Accepts 3- or 6-digit hex.'),
+    applicable_record_types: labelRecordTypesArraySchema,
+    access_level: z
+      .enum(['all_companies', 'specific_companies'])
+      .optional()
+      .describe(
+        'Values: all_companies (available to every company — default), specific_companies (restricted to allowed_company_ids).',
+      ),
+    allowed_company_ids: z
+      .array(z.number().int().min(1))
+      .optional()
+      .describe(
+        'Company IDs to restrict the label type to. Required when access_level is specific_companies; ignored when all_companies. If unknown, call hudu_companies with operation getAll with search.',
+      ),
+  });
+}
+
+export function getLabelsCreateSchema() {
+  return z.object({
+    label_type_id: z
+      .number()
+      .int()
+      .min(1)
+      .describe(
+        'ID of the label type to apply. If unknown, call hudu_label_types with operation getAll to find it.',
+      ),
+    labelable_type: labelRecordTypeSchema,
+    labelable_id: z
+      .number()
+      .int()
+      .min(1)
+      .describe('Numeric ID of the record being labeled (from a prior getAll on that resource)'),
+    user_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Optional ID of the user applying the label'),
+  });
+}
+
+export function getLabelTypesUpdateSchema() {
+  return z.object({
+    id: idSchema,
+    name: z.string().optional().describe('Label type name'),
+    color: z
+      .string()
+      .optional()
+      .describe('Hex color value (e.g. #0000ff). Accepts 3- or 6-digit hex.'),
+    applicable_record_types: labelRecordTypesArrayOptionalSchema,
+    access_level: z
+      .enum(['all_companies', 'specific_companies'])
+      .optional()
+      .describe(
+        'Values: all_companies (available to every company), specific_companies (restricted to allowed_company_ids).',
+      ),
+    allowed_company_ids: z
+      .array(z.number().int().min(1))
+      .optional()
+      .describe(
+        'Company IDs to restrict the label type to. Required when access_level is specific_companies.',
+      ),
+  });
+}
+
+export function getLabelsUpdateSchema() {
+  return z.object({
+    id: idSchema,
+    label_type_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('ID of the label type to apply'),
+    labelable_type: labelRecordTypeOptionalSchema,
+    labelable_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Numeric ID of the record being labeled'),
+    user_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Optional ID of the user applying the label'),
   });
 }
 
@@ -1277,6 +1458,10 @@ function getGetAllSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getPublicPhotosGetAllSchema();
     case 'procedure_tasks':
       return getProcedureTasksGetAllSchema();
+    case 'label_types':
+      return getLabelTypesGetAllSchema();
+    case 'labels':
+      return getLabelsGetAllSchema();
     default:
       return getAssetLayoutsGetAllSchema();
   }
@@ -1308,6 +1493,10 @@ function getCreateSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getVlansCreateSchema();
     case 'vlan_zones':
       return getVlanZonesCreateSchema();
+    case 'label_types':
+      return getLabelTypesCreateSchema();
+    case 'labels':
+      return getLabelsCreateSchema();
     default:
       return getCompaniesCreateSchema();
   }
@@ -1341,6 +1530,10 @@ function getUpdateSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getVlanZonesUpdateSchema();
     case 'matchers':
       return getMatchersUpdateSchema();
+    case 'label_types':
+      return getLabelTypesUpdateSchema();
+    case 'labels':
+      return getLabelsUpdateSchema();
     default:
       return getCompaniesUpdateSchema();
   }

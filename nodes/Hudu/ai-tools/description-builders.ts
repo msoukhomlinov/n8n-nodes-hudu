@@ -34,6 +34,10 @@ const RESOURCE_HINTS: Record<string, string> = {
   photos: 'Internal photo records (not the embedded public_photos / numeric_id flow).',
   public_photos:
     'Slim shape: {numeric_id, url, file_name, size}. operation=help topic=overview for the verification workflow.',
+  label_types:
+    'No search — filter getAll by exact name/color/slug. Create requires name, color, applicable_record_types.',
+  labels:
+    'Apply a label type to a record. Create requires label_type_id, labelable_type, labelable_id. No search filter.',
 };
 
 const ENVELOPE_PREAMBLE =

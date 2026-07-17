@@ -4,7 +4,7 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.41.0 (reference: `api-docs-v2.41.0.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.44.0 (reference: `api-docs-v2.44.0.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/msoukhomlinov)
 
@@ -85,7 +85,7 @@ To use this node, you need to:
 - Create, update, delete, and retrieve companies
 - Get operation supports numeric ID or slug selection via Identifier Type toggle
 - List all companies with filtering support
-- Jump to company by integration
+- Jump to company by integration (slug plus optional `integration_id` / `integration_identifier`)
 
 ### Expirations
 - Get all expirations with comprehensive filtering (company, expiration type, resource ID/type, date ranges)
@@ -160,6 +160,15 @@ To use this node, you need to:
 - Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Filters: name, default, search; supports pagination
 
+### Label Types
+- Full CRUD for label type definitions (name, color, applicable record types, access level)
+- Restrict a label type to specific companies when access level is `specific_companies`
+- Filters: name, color, slug, created_at, updated_at; supports pagination
+
+### Labels
+- Full CRUD for applying label types to records (articles, assets, websites, and other supported types)
+- Filters: label_type_id, labelable_type, labelable_id, user_id, created_at, updated_at; supports pagination
+
 ### Users
 - Get user information
 - Get operation supports numeric ID or slug selection via Identifier Type toggle
@@ -185,7 +194,7 @@ To use this node, you need to:
 - Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Link to companies
 - Filter by company and status
-- **All fields supported, including new email security fields:** `enable_dmarc_tracking`, `enable_dkim_tracking`, `enable_spf_tracking`, and more
+- Create/update support `archived` plus monitoring flags (`paused`, `disable_*`, `enable_*` email security fields)
 
 ## Hudu AI Tools Node
 
@@ -214,6 +223,8 @@ The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`
 | Folders | get, getAll, create, update, delete |
 | Groups | get, getAll |
 | IP Addresses | get, getAll, create, update, delete |
+| Label Types | get, getAll, create, update, delete |
+| Labels | get, getAll, create, update, delete |
 | Matchers | getAll |
 | Networks | get, getAll, create, update, delete, archive, unarchive |
 | Procedures | get, getAll, create, update, delete, archive, unarchive |

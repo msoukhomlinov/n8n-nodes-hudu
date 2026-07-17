@@ -58,6 +58,14 @@ export const resourceOptions = [
     value: 'ipAddresses',
   },
   {
+    name: 'Label',
+    value: 'labels',
+  },
+  {
+    name: 'Label Type',
+    value: 'label_types',
+  },
+  {
     name: 'List',
     value: 'lists',
   },

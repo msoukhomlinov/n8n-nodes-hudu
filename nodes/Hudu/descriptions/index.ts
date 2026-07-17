@@ -10,6 +10,8 @@ export * from './companies.description';
 export * from './expirations.description';
 export * from './folders.description';
 export * from './ip_addresses.description';
+export * from './label_types.description';
+export * from './labels.description';
 export * from './list_options.description';
 export * from './lists.description';
 export * from './magic_dash.description';
