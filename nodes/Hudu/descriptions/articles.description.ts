@@ -142,6 +142,20 @@ export const articlesFields: INodeProperties[] = [
     },
   },
   {
+    displayName: 'Chunk By Heading',
+    name: 'chunkByHeading',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to split each article into one output item per heading section (for RAG/vector ingestion). Changes output cardinality: N articles become M chunk items. Replaces markdown_content on the item; requires Include Markdown Content.',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+      },
+    },
+  },
+  {
     displayName: 'Include Company Details',
     name: 'includeCompanyDetails',
     type: 'boolean',
@@ -564,6 +578,20 @@ export const articlesFields: INodeProperties[] = [
     default: false,
     description:
       'Whether to prepend a YAML frontmatter block (title, URL, company, folder, updated date) to the Markdown content for source citation. Only applies when Include Markdown Content is enabled.',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+      },
+    },
+  },
+  {
+    displayName: 'Chunk By Heading',
+    name: 'chunkByHeading',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to split each article into one output item per heading section (for RAG/vector ingestion). Changes output cardinality: N articles become M chunk items. Replaces markdown_content on the item; requires Include Markdown Content.',
     displayOptions: {
       show: {
         resource: ['articles'],
