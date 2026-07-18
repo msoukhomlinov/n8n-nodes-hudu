@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - README API compatibility line updated to **2.44.0**.
+- README Hudu AI Tools section now documents the **unified tool** model — one `hudu_{resource}` tool per resource with a required `operation` enum — instead of the obsolete per-operation names like `hudu_companies_getAll` (issue #35).
 
 ## [2.6.3] - 2026-07-09
 
