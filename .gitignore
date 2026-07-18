@@ -16,6 +16,8 @@ build/
 *.tsbuildinfo
 *.map
 *.d.ts
+# Hand-written ambient type declarations under nodes/ are source, not build output.
+!nodes/**/*.d.ts
 
 # IDE and editor
 .idea/

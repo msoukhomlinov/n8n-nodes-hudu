@@ -1,4 +1,4 @@
-import { convertHtmlToMarkdown } from './htmlToMarkdown';
+import { convertHtmlToMarkdown } from './markdown/htmlToMarkdown';
 
 /**
  * Utility functions for markdown conversion and processing
