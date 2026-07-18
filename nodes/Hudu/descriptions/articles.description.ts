@@ -128,6 +128,20 @@ export const articlesFields: INodeProperties[] = [
       'Whether to include the article content converted to markdown format. Useful for AI tooling and text processing workflows.',
   },
   {
+    displayName: 'Include Source Frontmatter',
+    name: 'includeFrontmatter',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to prepend a YAML frontmatter block (title, URL, company, folder, updated date) to the Markdown content for source citation. Only applies when Include Markdown Content is enabled.',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['get'],
+      },
+    },
+  },
+  {
     displayName: 'Include Company Details',
     name: 'includeCompanyDetails',
     type: 'boolean',
@@ -436,6 +450,18 @@ export const articlesFields: INodeProperties[] = [
     description: 'Article content',
   },
   {
+    displayName: 'Content Format',
+    name: 'contentFormat',
+    type: 'options',
+    default: 'html',
+    options: [
+      { name: 'HTML', value: 'html' },
+      { name: 'Markdown', value: 'markdown' },
+    ],
+    description: 'Whether the Content field is HTML (sent as-is) or Markdown (converted to HTML before sending to Hudu)',
+    displayOptions: { show: { resource: ['articles'], operation: ['create', 'update'] } },
+  },
+  {
     displayName: 'Company Name or ID',
     name: 'company_id',
     type: 'options',
@@ -530,6 +556,20 @@ export const articlesFields: INodeProperties[] = [
     default: false,
     description:
       'Whether to include article content converted to markdown format for each article. Useful for AI tooling and text processing workflows.',
+  },
+  {
+    displayName: 'Include Source Frontmatter',
+    name: 'includeFrontmatter',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to prepend a YAML frontmatter block (title, URL, company, folder, updated date) to the Markdown content for source citation. Only applies when Include Markdown Content is enabled.',
+    displayOptions: {
+      show: {
+        resource: ['articles'],
+        operation: ['getAll'],
+      },
+    },
   },
   {
     displayName: 'Include Company Details',
