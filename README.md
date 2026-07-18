@@ -198,7 +198,7 @@ To use this node, you need to:
 
 ## Hudu AI Tools Node
 
-The `Hudu AI Tools` node connects to n8n's **AI Agent** and exposes Hudu operations as individual structured tools that an LLM can invoke directly.
+The `Hudu AI Tools` node connects to n8n's **AI Agent** and exposes Hudu as unified structured tools that an LLM can invoke directly.
 
 ### How it works
 
@@ -207,7 +207,7 @@ The `Hudu AI Tools` node connects to n8n's **AI Agent** and exposes Hudu operati
 3. Select a **Resource** and the **Operations** to expose
 4. Optionally enable **Allow Write Operations** to permit create / update / delete / archive
 
-The AI Agent receives one named tool per operation (e.g. `hudu_companies_getAll`, `hudu_assets_create`) and can call them autonomously based on the user's request. The `get` operation is exposed as `getById` (e.g. `hudu_companies_getById`) so the LLM clearly understands a numeric ID is required.
+The AI Agent receives **one tool per resource** (e.g. `hudu_companies`, `hudu_assets`), not one tool per operation. Each tool requires an `operation` field (`get`, `getAll`, `create`, `update`, `delete`, and other resource-specific ops) that selects the action. Use `operation: 'get'` only when you already have a numeric ID from a prior `getAll` (or similar) result.
 
 ### Supported resources
 
