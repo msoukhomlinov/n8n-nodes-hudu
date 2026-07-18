@@ -22,6 +22,27 @@ import {
 import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layout_fields.types';
 import { isStandardField } from '../../utils/fieldTypeUtils';
 import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
+import { convertHtmlToMarkdown, looksLikeHtml } from '../../utils/markdown/htmlToMarkdown';
+
+/**
+ * Adds a sibling `markdown` key to each entry in asset.fields (shape: { id, label,
+ * value, position }, per IAssetField) whose `value` is a string that looksLikeHtml.
+ * Non-HTML/plain-text values are left untouched. See looksLikeHtml() for the
+ * heuristic's known limits.
+ */
+function addFieldMarkdown(asset: IDataObject): IDataObject {
+  if (!Array.isArray(asset.fields)) return asset;
+
+  const fields = (asset.fields as IDataObject[]).map((field) => {
+    const value = field?.value;
+    if (typeof value === 'string' && looksLikeHtml(value)) {
+      return { ...field, markdown: convertHtmlToMarkdown(value) };
+    }
+    return field;
+  });
+
+  return { ...asset, fields };
+}
 
 function toSnakeCaseFieldLabel(label: string): string {
   return label
@@ -225,7 +246,12 @@ export async function handleAssetsOperation(
 
         responseData = assets[0];
       }
-      
+
+      const includeFieldMarkdownGet = this.getNodeParameter('includeFieldMarkdown', i, false) as boolean;
+      if (includeFieldMarkdownGet) {
+        responseData = addFieldMarkdown(responseData as IDataObject);
+      }
+
       debugLog('[API_RESPONSE] Get asset response', responseData);
       break;
     }
@@ -311,7 +337,12 @@ export async function handleAssetsOperation(
         returnAll,
         limit,
       );
-      
+
+      const includeFieldMarkdownGetAll = this.getNodeParameter('includeFieldMarkdown', i, false) as boolean;
+      if (includeFieldMarkdownGetAll) {
+        responseData = (responseData as IDataObject[]).map(addFieldMarkdown);
+      }
+
       debugLog('[API_RESPONSE] Get all assets response');
       break;
     }
