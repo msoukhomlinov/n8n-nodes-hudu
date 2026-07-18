@@ -1,17 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Future version — n8n Creator Portal (Cloud submission)
+## Editions
 
-**Planned approach:** split into two packages — **this package** as the verified, n8n Cloud–submittable build **without** the `HuduAiTools` node (main Hudu node remains, including `usableAsTool` where applicable), and a **separate package** that includes full Hudu AI Tools for self‑hosted installs only (not submitted to n8n Cloud). The items below come from Creator Portal / community package scanner review and are to be closed as part of that split and follow‑up work.
-
-### Outstanding — Cloud / scanner
-
-- **[HIGH] Official scanner rejects `require(‘module’)` in AI tools runtime** (`nodes/Hudu/ai-tools/runtime.ts`): `@n8n/scan-community-package` reports that require of `’module’` is not allowed. Hudu AI Tools uses `createRequire` from Node’s `module` built-in (after resolving an anchor via `require.resolve`) so `@langchain/core` and `zod` load from n8n’s dependency tree and avoid class identity mismatches with bundled copies. The scanner still flags this pattern for verified nodes. **Resolution:** either a different mechanism to obtain LangChain’s `DynamicStructuredTool` that satisfies the scanner, or confining the AI Tools node to the non–Cloud package only.
-
-### Resolved — Cloud / scanner
-
-- **[MEDIUM] ~~`HuduAiTools` AI tool output connection type~~** — Fixed in 2.5.0: `NodeConnectionTypes.AiTool` enum value now used in place of the `’ai_tool’ as NodeConnectionType` string cast.
+`n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-cloud](https://github.com/msoukhomlinov/n8n-nodes-hudu-cloud)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
 ## [2.7.0] - 2026-07-18
 
