@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`convertHtmlToMarkdown snapshot > matches the known-good conversion of a representative Hudu article 1`] = `
+"# Deploying the VPN Gateway
+
+Follow these steps to configure the **site-to-site** tunnel. See the [vendor documentation](https://docs.example.com/vpn) for background.
+
+## Prerequisites
+
+| Item | Value |
+| --- | --- |
+| Public IP | 203.0.113.10 |
+| Pre-shared key | stored in Passwords |
+
+## Configuration
+
+\`\`\`bash
+config system ipsec
+  set peer 203.0.113.10
+  set psk-secret redacted
+end
+\`\`\`
+
+-   Confirm firewall rules allow UDP 500/4500
+-   Verify routing table includes the remote subnet
+-   Test the tunnel with a ping across the link"
+`;

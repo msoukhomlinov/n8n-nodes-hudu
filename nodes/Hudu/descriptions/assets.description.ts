@@ -139,6 +139,20 @@ export const assetsFields: INodeProperties[] = [
     description: 'The unique ID or slug of the asset to operate on',
   },
   {
+    displayName: 'Include Field Markdown',
+    name: 'includeFieldMarkdown',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to add a Markdown version alongside each RichText (HTML) custom field value in the fields array. HTML fields are detected heuristically.',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['get'],
+      },
+    },
+  },
+  {
     displayName: 'Company Name or ID',
     name: 'company_id',
     type: 'options',
@@ -260,6 +274,20 @@ export const assetsFields: INodeProperties[] = [
     description: 'Max number of results to return',
   },
   createWrapResultsField('assets'),
+  {
+    displayName: 'Include Field Markdown',
+    name: 'includeFieldMarkdown',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to add a Markdown version alongside each RichText (HTML) custom field value in the fields array. HTML fields are detected heuristically.',
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['getAll'],
+      },
+    },
+  },
   {
     displayName: 'Filters',
     name: 'filters',

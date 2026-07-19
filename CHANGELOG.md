@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-cloud](https://github.com/msoukhomlinov/n8n-nodes-hudu-cloud)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [Unreleased]
+
+### Added
+- **Optional Markdown output** (`markdown_content`) on Articles and Magic Dash get/getAll, with optional YAML source frontmatter.
+- **Heading-based chunking for Articles** (get/getAll) — splits each article into one output item per heading section, with per-chunk source metadata, for RAG/vector ingestion.
+- **Markdown content input** (`Content Format: HTML | Markdown`) on Articles and Magic Dash create/update, converted to HTML via `marked` before sending to Hudu.
+- **Optional Markdown for RichText custom fields on Assets** (get/getAll), via heuristic HTML detection.
+- **Hudu AI Tools**: `output_markdown` + `include_frontmatter` read flags (Articles) and `output_markdown` (Assets), plus a `content_format` write flag (Articles) with real Markdown-to-HTML conversion.
+
+### Changed
+- Article Markdown conversion (`Include Markdown Content`) now uses the maintained `turndown` library (with GFM tables/strikethrough/task-lists) instead of the internal regex converter. The exact `markdown_content` text may differ slightly from previous versions; behaviour is otherwise equivalent. Opt-in, so no workflow change is required.
+
 ## [2.7.0] - 2026-07-18
 
 ### Added

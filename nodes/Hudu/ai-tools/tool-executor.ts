@@ -30,10 +30,13 @@ import {
   omitDefaults,
   reshapeProcedureRecord,
   reshapeProcedureTaskRecord,
+  addArticleMarkdown,
+  addAssetFieldMarkdown,
 } from './result-processor';
 import { runGetIdByName, runMoveAsset, runGetByLayout, GET_ID_BY_NAME_SUPPORTED_RESOURCES } from './enrichment-executor';
 import { paginatedPostFilter, type PaginatedPostFilterResult } from './pagination-helper';
 import { runHelp, HELP_ENABLED_RESOURCES } from './help-registry';
+import { convertMarkdownToHtml } from '../utils/markdown/markdownToHtml';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -131,6 +134,19 @@ function getWriteEndpointAndFields(
 }
 
 /**
+ * Strips the client-only content_format flag and, when 'markdown', converts `content`
+ * to HTML before it reaches the Hudu API. Mirrors the regular node's contentFormat
+ * handling so AI-tools writes behave identically.
+ */
+export function applyContentFormat(params: Record<string, unknown>): Record<string, unknown> {
+  const { content_format, ...rest } = params;
+  if (content_format === 'markdown' && typeof rest.content === 'string') {
+    rest.content = convertMarkdownToHtml(rest.content as string);
+  }
+  return rest;
+}
+
+/**
  * Apply the full read-side shaping pipeline to a single record:
  *   content/photos strip → procedures rename + per-task assignee block
  *   → public_photos slim → omitDefaults (uniform field set per resource).
@@ -142,8 +158,19 @@ function postProcessRecord(
   config: HuduResourceConfig,
   includeContent: boolean,
   includePhotos: boolean,
+  outputMarkdown: boolean,
+  includeFrontmatter: boolean,
 ): IDataObject {
   let out: IDataObject = record;
+  // Markdown must be derived from the raw record BEFORE stripContentField can delete
+  // `content` below — include_content and output_markdown are independent flags.
+  if (outputMarkdown) {
+    if (resource === 'articles') {
+      out = addArticleMarkdown(out, includeFrontmatter);
+    } else if (resource === 'assets') {
+      out = addAssetFieldMarkdown(out);
+    }
+  }
   if (config.supportsContentField) {
     out = (stripContentField<IDataObject>([out], includeContent, config.contentField) as IDataObject[])[0];
   }
@@ -269,8 +296,12 @@ export async function executeHuduAiTool(
         // Extract include_content / include_photos before any API call — never sent to API
         const includeContent = (params.include_content as boolean) ?? false;
         const includePhotos = (params.include_photos as boolean) ?? false;
+        const outputMarkdown = (params.output_markdown as boolean) ?? false;
+        const includeFrontmatter = (params.include_frontmatter as boolean) ?? false;
         delete params.include_content;
         delete params.include_photos;
+        delete params.output_markdown;
+        delete params.include_frontmatter;
 
         if (!params.id) {
           return JSON.stringify(formatMissingIdError(resource, operation, supportsSearch));
@@ -303,6 +334,8 @@ export async function executeHuduAiTool(
           config,
           includeContent,
           includePhotos,
+          outputMarkdown,
+          includeFrontmatter,
         );
         return JSON.stringify(buildItemResponse(processed));
       }
@@ -314,8 +347,12 @@ export async function executeHuduAiTool(
         // Step 2: extract client-only fields BEFORE params destructure — never sent to API
         const includeContent = (params.include_content as boolean) ?? false;
         const includePhotos = (params.include_photos as boolean) ?? false;
+        const outputMarkdown = (params.output_markdown as boolean) ?? false;
+        const includeFrontmatter = (params.include_frontmatter as boolean) ?? false;
         delete params.include_content;
         delete params.include_photos;
+        delete params.output_markdown;
+        delete params.include_frontmatter;
 
         // Step 3: date combining — no flag needed; these fields only exist on articles schema
         const updatedAtStart = params.updated_at_start as string | undefined;
@@ -475,7 +512,15 @@ export async function executeHuduAiTool(
         // Step 7: per-record shaping pipeline (content/photos strip, procedure rename, photo slim,
         // omitDefaults). Uniform application → identical field sets across same-resource records.
         records = records.map((record) =>
-          postProcessRecord(record as IDataObject, resource, config, includeContent, includePhotos),
+          postProcessRecord(
+            record as IDataObject,
+            resource,
+            config,
+            includeContent,
+            includePhotos,
+            outputMarkdown,
+            includeFrontmatter,
+          ),
         ) as IDataObject[];
 
         // Step 8: zero-results error — build presentation filters from originalParams so
@@ -525,7 +570,7 @@ export async function executeHuduAiTool(
         if (resource === 'articles') {
           const { resolvedParams, errorJson } = await resolveArticleCreateContext(params, context);
           if (errorJson) return errorJson;
-          createParams = resolvedParams;
+          createParams = applyContentFormat(resolvedParams);
         }
 
         // For company-endpoint resources (assets), strip company_id from body and
@@ -560,8 +605,9 @@ export async function executeHuduAiTool(
         // where it is used for endpoint routing. For all other resources, company_id
         // belongs in the request body as a regular API field.
         const { id, ...withoutId } = params;
+        const updateParams = resource === 'articles' ? applyContentFormat(withoutId) : withoutId;
         const { endpoint: baseEndpoint, fields } = getWriteEndpointAndFields(
-          withoutId,
+          updateParams,
           config.endpoint,
           config.requiresCompanyEndpoint,
         );

@@ -7,6 +7,33 @@ import {
 } from '../../utils/operations/magic_dash';
 import type { MagicDashOperation } from './magic_dash.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { convertHtmlToMarkdown } from '../../utils/markdown/htmlToMarkdown';
+import { convertMarkdownToHtml } from '../../utils/markdown/markdownToHtml';
+import { buildFrontmatter } from '../../utils/markdown/frontmatter';
+
+/**
+ * Adds a markdown_content field (converted from the item's HTML content field)
+ * and, optionally, a prepended YAML frontmatter block for source citation.
+ * Mirrors the Articles processArticleContent pattern for Magic Dash's field set.
+ */
+function processMagicDashContent(
+  item: IDataObject,
+  includeFrontmatterBlock: boolean,
+): IDataObject {
+  if (!item.content) return item;
+
+  let md = convertHtmlToMarkdown(item.content as string);
+  if (includeFrontmatterBlock) {
+    const fm = buildFrontmatter({
+      title: (item.title as string) ?? null,
+      company_name: (item.company_name as string) ?? null,
+      content_link: (item.content_link as string) ?? null,
+    });
+    md = `${fm}\n${md}`;
+  }
+
+  return { ...item, markdown_content: md };
+}
 
 /**
  * Resolve company ID to company name
@@ -55,13 +82,30 @@ export async function handleMagicDashOperation(
       const returnAll = this.getNodeParameter('returnAll', i) as boolean;
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
+      const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+      const includeFrontmatter = this.getNodeParameter('includeFrontmatter', i, false) as boolean;
 
-      return await handleMagicDashGetAllOperation.call(this, filters, returnAll, limit as 25);
+      const items = await handleMagicDashGetAllOperation.call(this, filters, returnAll, limit as 25);
+
+      if (includeMarkdownContent) {
+        return items.map((item) => processMagicDashContent(item, includeFrontmatter));
+      }
+
+      return items;
     }
 
     case 'get': {
       const id = this.getNodeParameter('id', i) as number;
-      return await handleMagicDashGetByIdOperation.call(this, id);
+      const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+      const includeFrontmatter = this.getNodeParameter('includeFrontmatter', i, false) as boolean;
+
+      const item = await handleMagicDashGetByIdOperation.call(this, id);
+
+      if (includeMarkdownContent) {
+        return processMagicDashContent(item, includeFrontmatter);
+      }
+
+      return item;
     }
 
     case 'createOrUpdate': {
@@ -69,7 +113,12 @@ export async function handleMagicDashOperation(
       const message = this.getNodeParameter('message', i) as string;
       const companyValue = this.getNodeParameter('companyName', i) as string | number;
       const title = this.getNodeParameter('title', i) as string;
-      const content = this.getNodeParameter('content', i) as string;
+      const contentFormat = this.getNodeParameter('contentFormat', i, 'html') as string;
+      let content = this.getNodeParameter('content', i) as string;
+
+      if (content && contentFormat === 'markdown') {
+        content = convertMarkdownToHtml(content);
+      }
 
       // Resolve company ID to name (API requires company_name string)
       const companyName = await resolveCompanyName(this, companyValue);

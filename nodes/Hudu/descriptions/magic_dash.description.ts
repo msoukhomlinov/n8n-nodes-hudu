@@ -86,6 +86,34 @@ export const magicDashFields: INodeProperties[] = [
   },
   createWrapResultsField('magic_dash'),
   {
+    displayName: 'Include Markdown Content',
+    name: 'includeMarkdownContent',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['getAll'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to include the Magic Dash content converted to markdown format for each item. Useful for AI tooling and text processing workflows.',
+  },
+  {
+    displayName: 'Include Source Frontmatter',
+    name: 'includeFrontmatter',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to prepend a YAML frontmatter block (title, company, content link) to the Markdown content for source citation. Only applies when Include Markdown Content is enabled.',
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['getAll'],
+      },
+    },
+  },
+  {
     displayName: 'Filters',
     name: 'filters',
     type: 'collection',
@@ -186,6 +214,18 @@ export const magicDashFields: INodeProperties[] = [
     default: '',
     description:
       'HTML content (tables, images, videos, etc.) to be displayed in the Magic Dash Item',
+  },
+  {
+    displayName: 'Content Format',
+    name: 'contentFormat',
+    type: 'options',
+    default: 'html',
+    options: [
+      { name: 'HTML', value: 'html' },
+      { name: 'Markdown', value: 'markdown' },
+    ],
+    description: 'Whether the Content field is HTML (sent as-is) or Markdown (converted to HTML before sending to Hudu)',
+    displayOptions: { show: { resource: ['magic_dash'], operation: ['createOrUpdate'] } },
   },
   {
     displayName: 'Additional Fields',
@@ -300,5 +340,33 @@ export const magicDashFields: INodeProperties[] = [
     default: 0,
     required: true,
     description: 'The ID of the Magic Dash item to get',
+  },
+  {
+    displayName: 'Include Markdown Content',
+    name: 'includeMarkdownContent',
+    type: 'boolean',
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['get'],
+      },
+    },
+    default: false,
+    description:
+      'Whether to include the Magic Dash content converted to markdown format. Useful for AI tooling and text processing workflows.',
+  },
+  {
+    displayName: 'Include Source Frontmatter',
+    name: 'includeFrontmatter',
+    type: 'boolean',
+    default: false,
+    description:
+      'Whether to prepend a YAML frontmatter block (title, company, content link) to the Markdown content for source citation. Only applies when Include Markdown Content is enabled.',
+    displayOptions: {
+      show: {
+        resource: ['magic_dash'],
+        operation: ['get'],
+      },
+    },
   },
 ];

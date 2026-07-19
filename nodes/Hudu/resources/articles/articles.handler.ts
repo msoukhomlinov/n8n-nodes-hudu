@@ -14,7 +14,8 @@ import { articleFilterMapping } from './articles.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
 import { processDateRange, type DateRangePreset, resolveRequiredCompanyId } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-import { processArticleContent, processArticlesContent } from '../../utils/markdownUtils';
+import { processArticleContent, processArticlesContent, buildArticleChunks } from '../../utils/markdownUtils';
+import { convertMarkdownToHtml } from '../../utils/markdown/markdownToHtml';
 import { buildFolderPath } from '../../utils/folderUtils';
 import type { IFolder } from '../folders/folders.types';
 import type { ICompany } from '../companies/companies.types';
@@ -56,9 +57,10 @@ export async function handleArticlesOperation(
       }
       body.name = name;
 
+      const contentFormat = this.getNodeParameter('contentFormat', i, 'html') as string;
       const content = this.getNodeParameter('content', i, '') as string;
       if (content) {
-        body.content = content;
+        body.content = contentFormat === 'markdown' ? convertMarkdownToHtml(content) : content;
       }
 
       const company_id = this.getNodeParameter('company_id', i, '') as string;
@@ -88,6 +90,8 @@ export async function handleArticlesOperation(
       const articleId = this.getNodeParameter('articleId', i) as string;
       const identifierType = this.getNodeParameter('identifierType', i, 'id') as string;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+      const includeFrontmatter = this.getNodeParameter('includeFrontmatter', i, false) as boolean;
+      const chunkMode = this.getNodeParameter('chunkByHeading', i, false) as boolean;
       const includeFolderDetails = this.getNodeParameter('includeFolderDetails', i, false) as boolean;
       const includeCompanyDetails = this.getNodeParameter('includeCompanyDetails', i, false) as boolean;
       const prependCompanyToFolderPath = this.getNodeParameter(
@@ -210,9 +214,11 @@ export async function handleArticlesOperation(
 
         const sortedArticle = sortArticleKeys(article);
 
-        // Process markdown content if requested
-        if (includeMarkdownContent) {
-          responseData = processArticleContent(sortedArticle, true);
+        // Chunk mode is mutually exclusive with markdown/frontmatter attachment
+        if (chunkMode) {
+          responseData = buildArticleChunks(sortedArticle);
+        } else if (includeMarkdownContent) {
+          responseData = processArticleContent(sortedArticle, true, includeFrontmatter);
         } else {
           responseData = sortedArticle;
         }
@@ -226,6 +232,8 @@ export async function handleArticlesOperation(
       const filters = this.getNodeParameter('filters', i) as IDataObject;
       const limit = this.getNodeParameter('limit', i, HUDU_API_CONSTANTS.PAGE_SIZE) as number;
       const includeMarkdownContent = this.getNodeParameter('includeMarkdownContent', i, false) as boolean;
+      const includeFrontmatter = this.getNodeParameter('includeFrontmatter', i, false) as boolean;
+      const chunkMode = this.getNodeParameter('chunkByHeading', i, false) as boolean;
       const includeFolderDetails = this.getNodeParameter('includeFolderDetails', i, false) as boolean;
       const includeCompanyDetails = this.getNodeParameter('includeCompanyDetails', i, false) as boolean;
       const prependCompanyToFolderPath = this.getNodeParameter(
@@ -400,9 +408,11 @@ export async function handleArticlesOperation(
 
         const sortedArticles = articles.map((item) => sortArticleKeys(item));
 
-        // Process markdown content if requested
-        if (includeMarkdownContent) {
-          responseData = processArticlesContent(sortedArticles, true);
+        // Chunk mode is mutually exclusive with markdown/frontmatter attachment
+        if (chunkMode) {
+          responseData = sortedArticles.flatMap(buildArticleChunks);
+        } else if (includeMarkdownContent) {
+          responseData = processArticlesContent(sortedArticles, true, includeFrontmatter);
         } else {
           responseData = sortedArticles;
         }
@@ -417,6 +427,11 @@ export async function handleArticlesOperation(
 
       if (Object.keys(updateFields).length === 0) {
         throw new Error('No fields to update were provided');
+      }
+
+      const updateContentFormat = this.getNodeParameter('contentFormat', i, 'html') as string;
+      if (updateFields.content && updateContentFormat === 'markdown') {
+        updateFields.content = convertMarkdownToHtml(updateFields.content as string);
       }
 
       if (
