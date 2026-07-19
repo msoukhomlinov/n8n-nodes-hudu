@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## Editions
 
-`n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-cloud](https://github.com/msoukhomlinov/n8n-nodes-hudu-cloud)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
+`n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
 ## [2.8.0] - 2026-07-19
 
