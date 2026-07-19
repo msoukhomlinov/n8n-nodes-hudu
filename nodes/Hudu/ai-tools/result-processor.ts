@@ -1,6 +1,5 @@
 import { DEFAULT_FIELD_VALUES } from './resource-config';
 import { processArticleContent } from '../utils/markdownUtils';
-import { convertHtmlToMarkdown, looksLikeHtml } from '../utils/markdown/htmlToMarkdown';
 
 /**
  * Title-match ranker with two-tier scoring:
@@ -170,19 +169,9 @@ export function addArticleMarkdown<T extends Record<string, unknown>>(
 }
 
 /**
- * Add a sibling `markdown` key to each entry in asset.fields (shape: { id, label, value,
- * position }) whose `value` looksLikeHtml. Mirrors addFieldMarkdown() in the regular
- * node's assets.handler.ts so AI-tools output matches exactly. include_frontmatter has
+ * Re-exported from the shared helper so this stays the single import site for
+ * tool-executor.ts. Mirrors addAssetFieldMarkdown() used by the regular node's
+ * assets.handler.ts so AI-tools output matches exactly. include_frontmatter has
  * no analog here (no single content field to prepend a citation block to) and is a no-op.
  */
-export function addAssetFieldMarkdown<T extends Record<string, unknown>>(asset: T): T {
-  if (!Array.isArray((asset as Record<string, unknown>).fields)) return asset;
-  const fields = ((asset as Record<string, unknown>).fields as Record<string, unknown>[]).map((field) => {
-    const value = field?.value;
-    if (typeof value === 'string' && looksLikeHtml(value)) {
-      return { ...field, markdown: convertHtmlToMarkdown(value) };
-    }
-    return field;
-  });
-  return { ...asset, fields } as T;
-}
+export { addAssetFieldMarkdown } from '../utils/markdown/assetFields';

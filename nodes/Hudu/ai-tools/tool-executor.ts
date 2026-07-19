@@ -138,7 +138,7 @@ function getWriteEndpointAndFields(
  * to HTML before it reaches the Hudu API. Mirrors the regular node's contentFormat
  * handling so AI-tools writes behave identically.
  */
-function applyContentFormat(params: Record<string, unknown>): Record<string, unknown> {
+export function applyContentFormat(params: Record<string, unknown>): Record<string, unknown> {
   const { content_format, ...rest } = params;
   if (content_format === 'markdown' && typeof rest.content === 'string') {
     rest.content = convertMarkdownToHtml(rest.content as string);

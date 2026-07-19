@@ -203,12 +203,6 @@ export function getAssetsGetSchema() {
       .describe(
         'Add a markdown_content field (or per-field markdown for assets) converted from the record HTML.',
       ),
-    include_frontmatter: z
-      .boolean()
-      .optional()
-      .describe(
-        'Prepend a YAML frontmatter citation block to markdown_content. Requires output_markdown.',
-      ),
   });
 }
 
@@ -369,12 +363,6 @@ export function getAssetsGetAllSchema() {
       .optional()
       .describe(
         'Add a markdown_content field (or per-field markdown for assets) converted from the record HTML.',
-      ),
-    include_frontmatter: z
-      .boolean()
-      .optional()
-      .describe(
-        'Prepend a YAML frontmatter citation block to markdown_content. Requires output_markdown.',
       ),
     limit: limitSchema,
   });
