@@ -30,6 +30,8 @@ export function chunkByHeading(md: string): MarkdownChunk[] {
     const fence = line.match(/^\s*(`{3,}|~{3,})/);
     if (fence) {
       const ch = fence[1][0];
+      // ponytail: only the fence character is checked, not its length, so a nested
+      // fence of a different length could mis-close (non-CommonMark-strict); fine for typical Hudu content.
       if (!inFence) { inFence = true; fenceChar = ch; }
       else if (ch === fenceChar) { inFence = false; fenceChar = ''; }
     }

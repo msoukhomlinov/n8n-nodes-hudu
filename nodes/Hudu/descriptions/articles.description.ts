@@ -147,7 +147,7 @@ export const articlesFields: INodeProperties[] = [
     type: 'boolean',
     default: false,
     description:
-      'Whether to split each article into one output item per heading section (for RAG/vector ingestion). Changes output cardinality: N articles become M chunk items. Replaces markdown_content on the item; requires Include Markdown Content.',
+      'Whether to split each article into one output item per heading section (for RAG/vector ingestion). Takes precedence over Include Markdown Content and changes output cardinality: N articles become M chunk items.',
     displayOptions: {
       show: {
         resource: ['articles'],
@@ -591,7 +591,7 @@ export const articlesFields: INodeProperties[] = [
     type: 'boolean',
     default: false,
     description:
-      'Whether to split each article into one output item per heading section (for RAG/vector ingestion). Changes output cardinality: N articles become M chunk items. Replaces markdown_content on the item; requires Include Markdown Content.',
+      'Whether to split each article into one output item per heading section (for RAG/vector ingestion). Takes precedence over Include Markdown Content and changes output cardinality: N articles become M chunk items.',
     displayOptions: {
       show: {
         resource: ['articles'],
@@ -727,7 +727,7 @@ export const articlesFields: INodeProperties[] = [
           rows: 3,
         },
         default: '',
-        description: 'The HTML content of the article',
+        description: 'The content of the article (HTML, or Markdown if Content Format is set to Markdown)',
       },
       {
         displayName: 'Enable Sharing',

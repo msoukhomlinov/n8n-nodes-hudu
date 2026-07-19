@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Optional Markdown output** (`markdown_content`) on Articles and Magic Dash get/getAll, with optional YAML source frontmatter.
+- **Heading-based chunking for Articles** (get/getAll) — splits each article into one output item per heading section, with per-chunk source metadata, for RAG/vector ingestion.
+- **Markdown content input** (`Content Format: HTML | Markdown`) on Articles and Magic Dash create/update, converted to HTML via `marked` before sending to Hudu.
+- **Optional Markdown for RichText custom fields on Assets** (get/getAll), via heuristic HTML detection.
+- **Hudu AI Tools**: `output_markdown` + `include_frontmatter` read flags (Articles) and `output_markdown` (Assets), plus a `content_format` write flag (Articles) with real Markdown-to-HTML conversion.
+
 ### Changed
 - Article Markdown conversion (`Include Markdown Content`) now uses the maintained `turndown` library (with GFM tables/strikethrough/task-lists) instead of the internal regex converter. The exact `markdown_content` text may differ slightly from previous versions; behaviour is otherwise equivalent. Opt-in, so no workflow change is required.
 

@@ -37,8 +37,9 @@ export function convertHtmlToMarkdown(html: string): string {
 /**
  * Heuristic: does this value contain HTML element markup? Used to decide which
  * asset RichText field values to convert. Known limits: a plain-text field
- * containing something like <bob@example.com> is a false positive; plain text
- * without tags is a false negative but is already valid Markdown, so benign.
+ * containing a single-token angle-bracket form like <TODO>, <name>, or <token>
+ * is a false positive; plain text without tags is a false negative but is
+ * already valid Markdown, so benign.
  */
 export function looksLikeHtml(value: string): boolean {
   if (!value || typeof value !== 'string') return false;
