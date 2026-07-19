@@ -52,10 +52,26 @@ export function processArticlesContent(articles: any[], includeMarkdown = false,
  * Expands one article into one IDataObject per heading chunk, carrying flat
  * source metadata (the vector-store citation fields) onto every chunk.
  */
+// Enrichment fields the articles handler may attach when Include Company/Folder
+// Details is enabled; carried onto every chunk so requested source context isn't
+// dropped when Chunk By Heading is combined with those toggles.
+const ARTICLE_ENRICHMENT_KEYS = [
+  'company_id_label',
+  'folder_id_label',
+  'folder_path',
+  'folder_description',
+] as const;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildArticleChunks(article: any): IDataObject[] {
   const md = article?.content ? convertHtmlToMarkdown(article.content) : '';
   const chunks = chunkByHeading(md);
+
+  const enrichment: IDataObject = {};
+  for (const key of ARTICLE_ENRICHMENT_KEYS) {
+    if (article?.[key] !== undefined) enrichment[key] = article[key];
+  }
+
   return chunks.map((c, idx) => ({
     chunk_index: idx,
     chunk_count: chunks.length,
@@ -69,5 +85,6 @@ export function buildArticleChunks(article: any): IDataObject[] {
     company_id: article.company_id ?? null,
     folder_id: article.folder_id ?? null,
     updated_at: article.updated_at ?? null,
+    ...enrichment,
   }));
 }
