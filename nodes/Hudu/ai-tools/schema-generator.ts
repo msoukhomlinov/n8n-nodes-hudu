@@ -179,6 +179,36 @@ export function getArticlesGetSchema() {
       .describe(
         "Include the 'public_photos' array (slim metadata for each embedded image: numeric_id, url, file_name, size). Default false — photo arrays can run to dozens of entries per article and waste context. Set true ONLY when you need to verify embedded photos exist before editing/redacting the article, or surface photo URLs to the user. Pair with include_content=true to coordinate edits with image references.",
       ),
+    output_markdown: z
+      .boolean()
+      .optional()
+      .describe(
+        'Add a markdown_content field (or per-field markdown for assets) converted from the record HTML.',
+      ),
+    include_frontmatter: z
+      .boolean()
+      .optional()
+      .describe(
+        'Prepend a YAML frontmatter citation block to markdown_content. Requires output_markdown.',
+      ),
+  });
+}
+
+export function getAssetsGetSchema() {
+  return z.object({
+    id: idSchema,
+    output_markdown: z
+      .boolean()
+      .optional()
+      .describe(
+        'Add a markdown_content field (or per-field markdown for assets) converted from the record HTML.',
+      ),
+    include_frontmatter: z
+      .boolean()
+      .optional()
+      .describe(
+        'Prepend a YAML frontmatter citation block to markdown_content. Requires output_markdown.',
+      ),
   });
 }
 
@@ -297,6 +327,18 @@ export function getArticlesGetAllSchema() {
       .describe(
         "Include the 'public_photos' array on each result (slim metadata: numeric_id, url, file_name, size). Default false — photo arrays alone can run to dozens of objects per article and blow context budgets. Set true ONLY when you need to verify or surface embedded photo URLs. Use the dedicated hudu_public_photos tool for direct photo metadata when you have a numeric_id.",
       ),
+    output_markdown: z
+      .boolean()
+      .optional()
+      .describe(
+        'Add a markdown_content field (or per-field markdown for assets) converted from the record HTML.',
+      ),
+    include_frontmatter: z
+      .boolean()
+      .optional()
+      .describe(
+        'Prepend a YAML frontmatter citation block to markdown_content. Requires output_markdown.',
+      ),
     limit: limitSchema,
   });
 }
@@ -322,6 +364,18 @@ export function getAssetsGetAllSchema() {
     primary_serial: z.string().optional().describe('Filter by primary serial number'),
     slug: z.string().optional().describe('Filter by URL slug'),
     archived: archivedSchema,
+    output_markdown: z
+      .boolean()
+      .optional()
+      .describe(
+        'Add a markdown_content field (or per-field markdown for assets) converted from the record HTML.',
+      ),
+    include_frontmatter: z
+      .boolean()
+      .optional()
+      .describe(
+        'Prepend a YAML frontmatter citation block to markdown_content. Requires output_markdown.',
+      ),
     limit: limitSchema,
   });
 }
@@ -648,7 +702,16 @@ export function getCompaniesCreateSchema() {
 export function getArticlesCreateSchema() {
   return z.object({
     name: nameSchema.describe('Article title'),
-    content: z.string().optional().describe('Article content (HTML or Markdown)'),
+    content: z
+      .string()
+      .optional()
+      .describe(
+        "Article content. HTML by default; set content_format='markdown' to write Markdown instead — it is converted to HTML before saving.",
+      ),
+    content_format: z
+      .enum(['html', 'markdown'])
+      .optional()
+      .describe("Format of the content field. 'markdown' is converted to HTML before saving. Default html."),
     global: z
       .boolean()
       .optional()
@@ -897,7 +960,16 @@ export function getArticlesUpdateSchema() {
   return z.object({
     id: idSchema,
     name: z.string().optional().describe('Article title'),
-    content: z.string().optional().describe('Article content'),
+    content: z
+      .string()
+      .optional()
+      .describe(
+        "Article content. HTML by default; set content_format='markdown' to write Markdown instead — it is converted to HTML before saving.",
+      ),
+    content_format: z
+      .enum(['html', 'markdown'])
+      .optional()
+      .describe("Format of the content field. 'markdown' is converted to HTML before saving. Default html."),
     company_id: optionalCompanyIdSchema,
     folder_id: z.number().int().min(1).optional().describe('Folder ID'),
     enable_sharing: z.boolean().optional().describe('Whether to enable public sharing'),
@@ -1547,6 +1619,7 @@ function getSchemaForOperation(
   switch (operation) {
     case 'get':
       if (resource === 'articles') return getArticlesGetSchema();
+      if (resource === 'assets') return getAssetsGetSchema();
       if (resource === 'public_photos') return getPublicPhotosGetSchema();
       return getGetSchema();
     case 'getAll':

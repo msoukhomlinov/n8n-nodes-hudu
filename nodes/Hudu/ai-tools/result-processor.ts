@@ -1,4 +1,6 @@
 import { DEFAULT_FIELD_VALUES } from './resource-config';
+import { processArticleContent } from '../utils/markdownUtils';
+import { convertHtmlToMarkdown, looksLikeHtml } from '../utils/markdown/htmlToMarkdown';
 
 /**
  * Title-match ranker with two-tier scoring:
@@ -151,4 +153,36 @@ export function reshapeProcedureRecord<T extends Record<string, unknown>>(record
     delete out[PROCEDURE_TASKS_ATTR_KEY];
   }
   return out as T;
+}
+
+/**
+ * Add `markdown_content` (converted from the article's HTML `content` field), optionally
+ * prefixed with a YAML frontmatter citation block. Delegates to the same
+ * processArticleContent helper the regular Hudu node uses, so output matches exactly.
+ * Must be called BEFORE stripContentField, while `content` is still present regardless
+ * of the caller's include_content choice.
+ */
+export function addArticleMarkdown<T extends Record<string, unknown>>(
+  record: T,
+  includeFrontmatter: boolean,
+): T {
+  return processArticleContent(record, true, includeFrontmatter) as T;
+}
+
+/**
+ * Add a sibling `markdown` key to each entry in asset.fields (shape: { id, label, value,
+ * position }) whose `value` looksLikeHtml. Mirrors addFieldMarkdown() in the regular
+ * node's assets.handler.ts so AI-tools output matches exactly. include_frontmatter has
+ * no analog here (no single content field to prepend a citation block to) and is a no-op.
+ */
+export function addAssetFieldMarkdown<T extends Record<string, unknown>>(asset: T): T {
+  if (!Array.isArray((asset as Record<string, unknown>).fields)) return asset;
+  const fields = ((asset as Record<string, unknown>).fields as Record<string, unknown>[]).map((field) => {
+    const value = field?.value;
+    if (typeof value === 'string' && looksLikeHtml(value)) {
+      return { ...field, markdown: convertHtmlToMarkdown(value) };
+    }
+    return field;
+  });
+  return { ...asset, fields } as T;
 }
