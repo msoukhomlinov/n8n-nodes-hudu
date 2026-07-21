@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, IDataObject, INodePropertyOptions } from 'n8n-workflow';
 import { handleListing } from '../../utils';
+import { debugLog } from '../../utils/debugConfig';
 
 interface AssetLayoutOption {
   name: string;
@@ -60,7 +61,8 @@ export async function getAssetLayouts(this: ILoadOptionsFunctions): Promise<INod
     }
 
     return mappedLayouts.map(({ name, value }) => ({ name, value }));
-  } catch {
+  } catch (error) {
+    debugLog('[OPTION_LOADING] Error in getAssetLayouts:', error);
     return [];
   }
 }

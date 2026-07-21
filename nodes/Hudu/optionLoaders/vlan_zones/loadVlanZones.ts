@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 import { handleListing } from '../../utils';
+import { debugLog } from '../../utils/debugConfig';
 
 interface HuduVlanZone { id: number; name: string; }
 
@@ -22,7 +23,8 @@ export async function getVlanZones(this: ILoadOptionsFunctions): Promise<INodePr
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return includeBlank ? [{ name: '- No VLAN Zone -', value: '' }, ...options] : options;
-  } catch {
+  } catch (error) {
+    debugLog('[OPTION_LOADING] Error in getVlanZones:', error);
     return [];
   }
 }

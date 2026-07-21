@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, IDataObject } from 'n8n-workflow';
 import { handleListing } from '../../utils';
+import { debugLog } from '../../utils/debugConfig';
 
 interface CompanyOption {
   name: string;
@@ -51,7 +52,8 @@ export async function getCompanies(this: ILoadOptionsFunctions) {
     }
 
     return mappedCompanies;
-  } catch {
+  } catch (error) {
+    debugLog('[OPTION_LOADING] Error in getCompanies:', error);
     return [];
   }
 }

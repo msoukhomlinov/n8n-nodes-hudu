@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.8.1] - 2026-07-22
+
+### Fixed
+- Removed the unsupported `subcategories` field from both node codex files (`Hudu.node.json`, `HuduAiTools.node.json`). Only `node`, `nodeVersion`, `codexVersion`, `categories`, `resources`, and `alias` are part of the codex schema; the extra field was silently ignored by n8n.
+- Option loaders no longer swallow API errors silently. Six `loadOptions` handlers (`getUsers`, `getCompanies`, `getGroups`, `getVlanZones`, `getAssetLayouts`, `getAssetLayoutFieldValues`) now log the error via `debugLog('[OPTION_LOADING] Error …', error)` before returning an empty list, matching the existing pattern in `getLists` and `loadLabelTypes`. Misconfigured credentials or API failures are now traceable instead of surfacing as an empty dropdown with no diagnostic.
+- Best-effort company/folder enrichment lookups in the Articles (3) and Folders (2) handlers now log via `debugLog('[ENRICHMENT] … failed …', error)` before falling back to a default. These remain non-fatal but are now traceable.
+
 ## [2.8.0] - 2026-07-19
 
 ### Added

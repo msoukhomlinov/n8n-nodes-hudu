@@ -11,6 +11,7 @@ import type { FolderOperation, IFolderPostProcessFilters, IFolderPathResponse, I
 import { folderFilterMapping } from './folders.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import { buildFolderPath } from '../../utils/folderUtils';
+import { debugLog } from '../../utils/debugConfig';
 import { resolveRequiredCompanyId } from '../../utils';
 import type { ICompany } from '../companies/companies.types';
 
@@ -182,12 +183,14 @@ export async function handleFolderOperation(
               if (company && company.name) {
                 companyLabel = company.name;
               }
-            } catch {
+            } catch (error) {
               // If company lookup fails, fall back to default label
+              debugLog('[ENRICHMENT] Company lookup failed, using default label:', error);
             }
           }
-        } catch {
+        } catch (error) {
           // If folder lookup fails, keep default label and base path
+          debugLog('[ENRICHMENT] Folder lookup failed, keeping default label:', error);
         }
 
         const companySeparator =

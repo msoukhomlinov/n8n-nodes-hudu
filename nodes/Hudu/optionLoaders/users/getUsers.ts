@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, IDataObject } from 'n8n-workflow';
 import { handleListing } from '../../utils';
+import { debugLog } from '../../utils/debugConfig';
 
 interface UserOption {
   name: string;
@@ -61,7 +62,8 @@ export async function getUsers(this: ILoadOptionsFunctions) {
     }
 
     return mappedUsers.map(({ name, value }) => ({ name, value }));
-  } catch {
+  } catch (error) {
+    debugLog('[OPTION_LOADING] Error in getUsers:', error);
     return [];
   }
 }

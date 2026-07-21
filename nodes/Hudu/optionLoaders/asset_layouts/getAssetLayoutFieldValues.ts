@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 import { handleGetOperation } from '../../utils/operations';
+import { debugLog } from '../../utils/debugConfig';
 import type { IAssetLayoutFieldEntity } from '../../resources/asset_layout_fields/asset_layout_fields.types';
 
 export async function getAssetLayoutFieldValues(
@@ -65,7 +66,8 @@ export async function getAssetLayoutFieldValues(
 				description: field.show_in_list.toString(),
 			},
 		];
-	} catch {
+	} catch (error) {
+		debugLog('[OPTION_LOADING] Error in getAssetLayoutFieldValues:', error);
 		return [];
 	}
 } 

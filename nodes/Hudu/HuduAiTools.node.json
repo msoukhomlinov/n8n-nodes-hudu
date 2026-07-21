@@ -3,9 +3,6 @@
   "nodeVersion": "1.0",
   "codexVersion": "1.0",
   "categories": ["AI"],
-  "subcategories": {
-    "AI": ["Tools"]
-  },
   "resources": {
     "primaryDocumentation": [
       { "url": "https://github.com/msoukhomlinov/n8n-nodes-hudu" }

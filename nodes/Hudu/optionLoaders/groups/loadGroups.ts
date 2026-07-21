@@ -1,5 +1,6 @@
 import type { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 import { handleListing } from '../../utils';
+import { debugLog } from '../../utils/debugConfig';
 
 interface HuduGroup {
   id: number;
@@ -35,7 +36,8 @@ export async function getGroups(this: ILoadOptionsFunctions): Promise<INodePrope
     }
 
     return options;
-  } catch {
+  } catch (error) {
+    debugLog('[OPTION_LOADING] Error in getGroups:', error);
     return [];
   }
 }
