@@ -134,11 +134,26 @@ describe('runMagicDash executor', () => {
     expect(parsed.error).toBe(true);
   });
 
-  it('getAll forwards company_id/title filters and reports records', async () => {
+  it('getAll forwards company_id/title filters (probing with limit + 1) and reports records', async () => {
     mockGetAll.mockResolvedValue([{ id: 1 }, { id: 2 }]);
     const parsed = JSON.parse(await runMagicDash(ctx, 'getAll', { company_id: 5, title: 'T', limit: 25 }));
-    expect(mockGetAll).toHaveBeenCalledWith({ company_id: 5, title: 'T' }, false, 25);
+    expect(mockGetAll).toHaveBeenCalledWith({ company_id: 5, title: 'T' }, false, 26);
     expect(parsed.matchCount).toBe(2);
+    expect(parsed.truncated).toBe(false);
+  });
+
+  it('getAll does not flag truncation for an exactly-limit result set', async () => {
+    mockGetAll.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+    const parsed = JSON.parse(await runMagicDash(ctx, 'getAll', { limit: 2 }));
+    expect(parsed.matchCount).toBe(2);
+    expect(parsed.truncated).toBe(false);
+  });
+
+  it('getAll flags truncation and slices to limit when more than limit exist', async () => {
+    mockGetAll.mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    const parsed = JSON.parse(await runMagicDash(ctx, 'getAll', { limit: 2 }));
+    expect(parsed.matchCount).toBe(2);
+    expect(parsed.truncated).toBe(true);
   });
 
   it('createOrUpdate resolves company_id to name, enforces exclusivity, and returns upserted', async () => {

@@ -63,11 +63,14 @@ export async function runMagicDash(
         filters.title = params.title as IDataObject[string];
       }
 
+      // Probe with limit + 1 so exactly-`limit` result sets are not falsely flagged as
+      // truncated: the bespoke pagination already slices to its limit, so the standard
+      // getAll path's +1 probe is reproduced here.
       let items = await handleMagicDashGetAllOperation.call(
         context as unknown as IExecuteFunctions,
         filters,
         false,
-        limit as 25,
+        (limit + 1) as 25,
       );
 
       if (items.length === 0 && Object.keys(filters).length > 0) {
@@ -76,13 +79,13 @@ export async function runMagicDash(
         );
       }
 
+      const truncated = items.length > limit;
+      if (truncated) items = items.slice(0, limit);
+
       if (outputMarkdown) {
         items = items.map((it) => addMagicDashMarkdown(it, includeFrontmatter));
       }
 
-      // Length-equals-limit heuristic: the bespoke pagination slices to `limit`, so a
-      // full page signals more records may exist upstream.
-      const truncated = items.length >= limit;
       return JSON.stringify(buildListResponse(items, items.length, truncated));
     }
 
