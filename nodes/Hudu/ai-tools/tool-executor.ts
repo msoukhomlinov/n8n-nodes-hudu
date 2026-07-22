@@ -39,9 +39,8 @@ import { runHelp, HELP_ENABLED_RESOURCES } from './help-registry';
 import { convertMarkdownToHtml } from '../utils/markdown/markdownToHtml';
 import { normaliseFieldType } from '../utils/fieldTypeUtils';
 import { ASSET_LAYOUT_FIELD_TYPES } from '../utils/constants';
-import { getAssetWithMetadata } from '../utils/assetFieldUtils';
+import { getAssetWithMetadata, toSnakeCaseFieldLabel } from '../utils/assetFieldUtils';
 import type { IAssetLayoutFieldEntity } from '../resources/asset_layout_fields/asset_layout_fields.types';
-import { toSnakeCase } from '../utils/formatters';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -175,7 +174,7 @@ async function getRichTextFieldKeys(
         keys.add(String(f.id));
         if (f.label) {
           keys.add(f.label);
-          keys.add(toSnakeCase(f.label));
+          keys.add(toSnakeCaseFieldLabel(f.label));
         }
       }
     }
