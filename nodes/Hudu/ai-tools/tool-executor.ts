@@ -37,6 +37,10 @@ import { runGetIdByName, runMoveAsset, runGetByLayout, GET_ID_BY_NAME_SUPPORTED_
 import { paginatedPostFilter, type PaginatedPostFilterResult } from './pagination-helper';
 import { runHelp, HELP_ENABLED_RESOURCES } from './help-registry';
 import { convertMarkdownToHtml } from '../utils/markdown/markdownToHtml';
+import { normaliseFieldType } from '../utils/fieldTypeUtils';
+import { ASSET_LAYOUT_FIELD_TYPES } from '../utils/constants';
+import { getAssetWithMetadata } from '../utils/assetFieldUtils';
+import type { IAssetLayoutFieldEntity } from '../resources/asset_layout_fields/asset_layout_fields.types';
 
 const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 
@@ -147,16 +151,47 @@ export function applyContentFormat(params: Record<string, unknown>): Record<stri
 }
 
 /**
- * Strips the client-only fields_format flag and, when 'markdown', converts the
- * 'value' key of custom_fields array items to HTML before they reach the Hudu API.
- * Mirrors the regular node's fieldsFormat handling for asset RichText fields.
+ * Fetches an asset layout and returns the numeric IDs of its RichText fields.
+ * Used to restrict Markdown->HTML conversion to RichText custom fields only,
+ * mirroring the regular node's field-type check.
  */
-export function applyAssetFieldsFormat(params: Record<string, unknown>): Record<string, unknown> {
+async function getRichTextFieldIds(
+  context: IExecuteFunctions | ISupplyDataFunctions,
+  layoutId: number,
+): Promise<Set<number>> {
+  const ids = new Set<number>();
+  const layoutResponse = (await handleGetOperation.call(
+    context as unknown as IExecuteFunctions,
+    '/asset_layouts',
+    String(layoutId),
+  )) as IDataObject;
+  const layout = layoutResponse?.asset_layout as { fields?: IAssetLayoutFieldEntity[] } | undefined;
+  if (layout && Array.isArray(layout.fields)) {
+    for (const f of layout.fields) {
+      if (normaliseFieldType(f.field_type) === ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT) {
+        ids.add(Number(f.id));
+      }
+    }
+  }
+  return ids;
+}
+
+/**
+ * Strips the client-only fields_format flag and, when 'markdown', converts the
+ * 'value' of custom_fields entries whose asset_layout_field_id is a RichText
+ * field to HTML before they reach the Hudu API. Non-RichText fields (Date, List,
+ * Text, ...) are left untouched to avoid corrupting them. Mirrors the regular
+ * node's fieldsFormat handling.
+ */
+export function applyAssetFieldsFormat(
+  params: Record<string, unknown>,
+  richTextFieldIds: Set<number>,
+): Record<string, unknown> {
   const { fields_format, ...rest } = params;
   if (fields_format === 'markdown' && Array.isArray(rest.custom_fields)) {
     rest.custom_fields = (rest.custom_fields as Record<string, unknown>[]).map((field) => {
       const entry: Record<string, unknown> = { ...field };
-      if (typeof entry.value === 'string') {
+      if (richTextFieldIds.has(Number(entry.asset_layout_field_id)) && typeof entry.value === 'string') {
         entry.value = convertMarkdownToHtml(entry.value);
       }
       return entry;
@@ -164,6 +199,7 @@ export function applyAssetFieldsFormat(params: Record<string, unknown>): Record<
   }
   return rest;
 }
+
 /**
  * Apply the full read-side shaping pipeline to a single record:
  *   content/photos strip → procedures rename + per-task assignee block
@@ -591,7 +627,16 @@ export async function executeHuduAiTool(
           if (errorJson) return errorJson;
           createParams = applyContentFormat(resolvedParams);
         } else if (resource === 'assets') {
-          createParams = applyAssetFieldsFormat(params);
+          let richTextFieldIds = new Set<number>();
+          if (
+            params.fields_format === 'markdown' &&
+            Array.isArray(params.custom_fields) &&
+            params.custom_fields.length > 0 &&
+            params.asset_layout_id != null
+          ) {
+            richTextFieldIds = await getRichTextFieldIds(context, Number(params.asset_layout_id));
+          }
+          createParams = applyAssetFieldsFormat(params, richTextFieldIds);
         }
 
         // For company-endpoint resources (assets), strip company_id from body and
@@ -626,7 +671,27 @@ export async function executeHuduAiTool(
         // where it is used for endpoint routing. For all other resources, company_id
         // belongs in the request body as a regular API field.
         const { id, ...withoutId } = params;
-        const updateParams = resource === 'articles' ? applyContentFormat(withoutId) : resource === 'assets' ? applyAssetFieldsFormat(withoutId) : withoutId;
+        let updateParams: Record<string, unknown>;
+        if (resource === 'articles') {
+          updateParams = applyContentFormat(withoutId);
+        } else if (resource === 'assets') {
+          let richTextFieldIds = new Set<number>();
+          if (
+            withoutId.fields_format === 'markdown' &&
+            Array.isArray(withoutId.custom_fields) &&
+            withoutId.custom_fields.length > 0
+          ) {
+            const meta = await getAssetWithMetadata(
+              context as unknown as IExecuteFunctions,
+              Number(id),
+              0,
+            );
+            richTextFieldIds = await getRichTextFieldIds(context, meta.assetLayoutId);
+          }
+          updateParams = applyAssetFieldsFormat(withoutId, richTextFieldIds);
+        } else {
+          updateParams = withoutId;
+        }
         const { endpoint: baseEndpoint, fields } = getWriteEndpointAndFields(
           updateParams,
           config.endpoint,

@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 ## [2.9.0] - 2026-07-22
 
 ### Added
-- **Markdown content input for Assets RichText custom fields** (issue #37). A new `Fields Format: HTML | Markdown` option on Asset create/update converts RichText custom-field values from Markdown to HTML via `marked` before sending to Hudu. On the regular node, RichText fields are detected from the asset layout (`field_type === 'RichText'`) so only those values are converted. On **Hudu AI Tools**, a matching `fields_format` write flag converts the string `value` of each `custom_fields` entry. Default remains `html` (values sent as-is), so existing workflows are unaffected.
+- **Markdown content input for Assets RichText custom fields** (issue #37). A new `Fields Format: HTML | Markdown` option on Asset create/update converts RichText custom-field values from Markdown to HTML via `marked` before sending to Hudu. Both the regular node and **Hudu AI Tools** (`fields_format` write flag) resolve the asset layout and convert only fields whose type is RichText (`field_type === 'RichText'`), leaving Date/List/Text and other field types untouched. Default remains `html` (values sent as-is), so existing workflows are unaffected.
 
 ## [2.8.1] - 2026-07-22
 

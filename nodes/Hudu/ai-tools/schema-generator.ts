@@ -751,7 +751,7 @@ export function getAssetsCreateSchema() {
     fields_format: z
       .enum(['html', 'markdown'])
       .optional()
-      .describe("Format of custom field string values. 'markdown' converts them to HTML before saving. Default html."),
+      .describe("Format of RichText custom field values. 'markdown' converts RichText fields to HTML before saving (other field types are left as-is). Default html."),
   });
 }
 
@@ -985,7 +985,7 @@ export function getAssetsUpdateSchema() {
     fields_format: z
       .enum(['html', 'markdown'])
       .optional()
-      .describe("Format of custom field string values. 'markdown' converts them to HTML before saving. Default html."),
+      .describe("Format of RichText custom field values. 'markdown' converts RichText fields to HTML before saving (other field types are left as-is). Default html."),
   });
 }
 
