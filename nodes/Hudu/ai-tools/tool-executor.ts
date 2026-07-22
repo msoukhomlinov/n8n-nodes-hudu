@@ -36,6 +36,7 @@ import {
 import { runGetIdByName, runMoveAsset, runGetByLayout, GET_ID_BY_NAME_SUPPORTED_RESOURCES } from './enrichment-executor';
 import { paginatedPostFilter, type PaginatedPostFilterResult } from './pagination-helper';
 import { runHelp, HELP_ENABLED_RESOURCES } from './help-registry';
+import { runMagicDash } from './magic-dash-executor';
 import { convertMarkdownToHtml } from '../utils/markdown/markdownToHtml';
 import { normaliseFieldType } from '../utils/fieldTypeUtils';
 import { ASSET_LAYOUT_FIELD_TYPES } from '../utils/constants';
@@ -48,7 +49,7 @@ const EXCLUDED_FILTER_FIELDS = new Set(['limit', 'resource', 'operation']);
 const NO_SEARCH_RESOURCES = new Set([
   'procedures', 'activity_logs', 'folders', 'networks', 'ip_addresses',
   'asset_layouts', 'relations', 'expirations', 'vlans', 'vlan_zones', 'matchers',
-  'photos', 'public_photos', 'procedure_tasks', 'label_types', 'labels',
+  'photos', 'public_photos', 'procedure_tasks', 'label_types', 'labels', 'magic_dash',
 ]);
 const NUMERIC_FIELDS = new Set([
   'id',
@@ -382,6 +383,10 @@ export async function executeHuduAiTool(
   const supportsSearch = !NO_SEARCH_RESOURCES.has(resource);
 
   try {
+    // Magic Dash is not a standard CRUD resource — custom get/getAll/createOrUpdate routing.
+    if (resource === 'magic_dash') {
+      return await runMagicDash(context, operation, params);
+    }
     switch (operation) {
       case 'get': {
         // Extract include_content / include_photos before any API call — never sent to API

@@ -3,6 +3,7 @@ export type HuduOperation =
   | 'getAll'
   | 'create'
   | 'update'
+  | 'createOrUpdate'
   | 'delete'
   | 'archive'
   | 'unarchive'
@@ -253,11 +254,21 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     supportsPagination: true,
     label: 'Label',
   },
+  magic_dash: {
+    endpoint: '/magic_dash',
+    pluralKey: null,
+    singularKey: null,
+    bodyKey: null,
+    ops: ['get', 'getAll', 'createOrUpdate'],
+    supportsPagination: true,
+    label: 'Magic Dash',
+  },
 };
 
 export const WRITE_OPERATIONS: HuduOperation[] = [
   'create',
   'update',
+  'createOrUpdate',
   'delete',
   'archive',
   'unarchive',

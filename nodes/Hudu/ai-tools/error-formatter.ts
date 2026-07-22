@@ -99,7 +99,7 @@ export function buildItemResponse(record: unknown): object {
 }
 
 export function buildMutationResponse(
-  outcome: 'created' | 'updated' | 'archived' | 'unarchived',
+  outcome: 'created' | 'updated' | 'upserted' | 'archived' | 'unarchived',
   record: unknown,
 ): object {
   return { outcome, record };
