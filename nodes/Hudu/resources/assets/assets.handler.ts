@@ -63,6 +63,11 @@ function convertRichTextFields(
   }
 
   for (const [fieldKey, fieldValue] of Object.entries(mappedFields)) {
+    // Standard fields (e.g. name) route to the top-level body and must never be
+    // converted, even if a RichText custom field shares their label.
+    if (isStandardField(fieldKey)) {
+      continue;
+    }
     if (richTextKeys.has(fieldKey) && typeof fieldValue === 'string') {
       mappedFields[fieldKey] = convertMarkdownToHtml(fieldValue);
     }
