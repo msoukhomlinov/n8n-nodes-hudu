@@ -238,6 +238,30 @@ export const assetsFields: INodeProperties[] = [
     description:
       'Map one or more asset fields to update, including name and other standard properties. You may update a single field or multiple fields in one operation.',
   },
+  {
+    displayName: 'Fields Format',
+    name: 'fieldsFormat',
+    type: 'options',
+    default: 'html',
+    options: [
+      {
+        name: 'HTML',
+        value: 'html',
+      },
+      {
+        name: 'Markdown',
+        value: 'markdown',
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ['assets'],
+        operation: ['create', 'update'],
+      },
+    },
+    description:
+      'Whether RichText field values are HTML (sent as-is) or Markdown (converted to HTML before sending to Hudu)',
+  },
 
   // ----------------------------------
   //         assets:getAll

@@ -13,6 +13,22 @@ import {
 import { ASSET_LAYOUT_FIELD_TYPES } from './constants';
 
 /**
+ * Normalises an asset layout field label into the snake_case key that the Hudu
+ * API expects in a custom_fields entry: lowercase, then every run of
+ * non-alphanumeric characters collapsed to a single underscore, with leading/
+ * trailing underscores trimmed (e.g. "OAuth Token" -> "oauth_token",
+ * "IPv4 Notes" -> "ipv4_notes"). This is the canonical key used when building
+ * the write payload, so any lookup against it must use the same transform.
+ */
+export function toSnakeCaseFieldLabel(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+/**
  * Interface for asset metadata with fields and layout info
  */
 export interface AssetWithMetadata {

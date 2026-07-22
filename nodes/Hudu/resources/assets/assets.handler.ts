@@ -11,25 +11,60 @@ import {
 import type { AssetsOperations } from './assets.types';
 import { NodeOperationError, NodeApiError } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
-import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { HUDU_API_CONSTANTS, ASSET_LAYOUT_FIELD_TYPES } from '../../utils/constants';
 import { getCompanyIdForAsset } from '../../utils/operations/getCompanyIdForAsset';
 import {
   getAssetWithMetadata,
   validateFieldForMapping,
   transformFieldValueForUpdate,
   updateAssetWithMappedFields,
+  toSnakeCaseFieldLabel,
 } from '../../utils/assetFieldUtils';
 import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layout_fields.types';
-import { isStandardField } from '../../utils/fieldTypeUtils';
+import { isStandardField, normaliseFieldType } from '../../utils/fieldTypeUtils';
 import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
 import { addAssetFieldMarkdown } from '../../utils/markdown/assetFields';
+import { convertMarkdownToHtml } from '../../utils/markdown/markdownToHtml';
 
-function toSnakeCaseFieldLabel(label: string): string {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+/**
+ * Converts Markdown field values to HTML for RichText layout fields
+ * when fieldsFormat is 'markdown'. Mutates mappedFields in place.
+ */
+function convertRichTextFields(
+  mappedFields: IDataObject,
+  layoutFields: IAssetLayoutFieldEntity[],
+  fieldsFormat: string,
+) {
+  if (fieldsFormat !== 'markdown' || !Array.isArray(layoutFields)) {
+    return;
+  }
+
+  // Field mappings may be keyed by numeric field ID or by field label
+  // (validateFieldForMapping accepts both), so collect both identifiers.
+  const richTextKeys = new Set<string>();
+  for (const f of layoutFields) {
+    if (normaliseFieldType(f.field_type) === ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT) {
+      richTextKeys.add(String(f.id));
+      if (f.label) {
+        richTextKeys.add(f.label);
+      }
+    }
+  }
+
+  if (richTextKeys.size === 0) {
+    return;
+  }
+
+  for (const [fieldKey, fieldValue] of Object.entries(mappedFields)) {
+    // Standard fields (e.g. name) route to the top-level body and must never be
+    // converted, even if a RichText custom field shares their label.
+    if (isStandardField(fieldKey)) {
+      continue;
+    }
+    if (richTextKeys.has(fieldKey) && typeof fieldValue === 'string') {
+      mappedFields[fieldKey] = convertMarkdownToHtml(fieldValue);
+    }
+  }
 }
 
 export async function handleAssetsOperation(
@@ -84,7 +119,11 @@ export async function handleAssetsOperation(
       if (!Array.isArray(layout.fields)) {
         throw new NodeOperationError(this.getNode(), `Asset layout with ID '${layoutId}' has no fields.`, { itemIndex: i });
       }
-      
+
+      // Convert Markdown to HTML for RichText fields if requested
+      const fieldsFormat = this.getNodeParameter('fieldsFormat', i, 'html') as string;
+      convertRichTextFields(mappedFields, layout.fields, fieldsFormat);
+
       // Process each mapped field
       for (const [fieldId, fieldValue] of Object.entries(mappedFields)) {
         if (isStandardField(fieldId)) {
@@ -359,7 +398,11 @@ export async function handleAssetsOperation(
         if (!Array.isArray(layout.fields)) {
           throw new NodeOperationError(this.getNode(), `Asset layout with ID '${assetMeta.assetLayoutId}' has no fields.`, { itemIndex: i });
         }
-        
+
+        // Convert Markdown to HTML for RichText fields if requested
+        const fieldsFormat = this.getNodeParameter('fieldsFormat', i, 'html') as string;
+        convertRichTextFields(mappedFields, layout.fields, fieldsFormat);
+
         const updatePayload: IDataObject = {};
         const customUpdateFields: IDataObject[] = [];
         
