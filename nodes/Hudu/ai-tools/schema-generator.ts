@@ -207,6 +207,71 @@ export function getAssetsGetSchema() {
 }
 
 // ---------------------------------------------------------------------------
+// Magic Dash — custom operations (get / getAll / createOrUpdate)
+// ---------------------------------------------------------------------------
+
+const MAGIC_DASH_OUTPUT_MARKDOWN_DESC =
+  'Add a markdown_content field converted from the Magic Dash HTML content field.';
+const MAGIC_DASH_INCLUDE_FRONTMATTER_DESC =
+  'Prepend a YAML frontmatter citation block (title, company, content link) to markdown_content. Requires output_markdown.';
+
+export function getMagicDashGetSchema() {
+  return z.object({
+    id: idSchema,
+    output_markdown: z.boolean().optional().describe(MAGIC_DASH_OUTPUT_MARKDOWN_DESC),
+    include_frontmatter: z.boolean().optional().describe(MAGIC_DASH_INCLUDE_FRONTMATTER_DESC),
+  });
+}
+
+export function getMagicDashGetAllSchema() {
+  return z.object({
+    company_id: optionalCompanyIdSchema,
+    title: z
+      .string()
+      .optional()
+      .describe('Filter by EXACT Magic Dash title (case-sensitive). This is the only text filter for Magic Dash.'),
+    output_markdown: z.boolean().optional().describe(MAGIC_DASH_OUTPUT_MARKDOWN_DESC),
+    include_frontmatter: z.boolean().optional().describe(MAGIC_DASH_INCLUDE_FRONTMATTER_DESC),
+    limit: limitSchema,
+  });
+}
+
+export function getMagicDashCreateOrUpdateSchema() {
+  return z.object({
+    title: nameSchema.describe(
+      'Magic Dash title. Together with company_id it identifies the item: an existing item with the same title and company is updated, otherwise a new one is created.',
+    ),
+    company_id: companyIdSchema.describe(
+      'Numeric company ID that owns the Magic Dash item (resolved to the company name Hudu requires). If unknown, call hudu_companies with operation getIdByName.',
+    ),
+    message: z.string().min(1).describe('The primary text displayed on the Magic Dash item (required).'),
+    content: z
+      .string()
+      .optional()
+      .describe(
+        "Optional body content (tables, images, etc.). HTML by default; set content_format='markdown' to write Markdown instead — it is converted to HTML before saving. Mutually exclusive with content_link (content wins if both are set).",
+      ),
+    content_format: z
+      .enum(['html', 'markdown'])
+      .optional()
+      .describe("Format of the content field. 'markdown' is converted to HTML before saving. Default html."),
+    content_link: z
+      .string()
+      .optional()
+      .describe("A link to an external website associated with the item's content. Mutually exclusive with content."),
+    icon: z
+      .string()
+      .optional()
+      .describe('Font Awesome icon code for the header (e.g. fa-home). Mutually exclusive with image_url (icon wins if both are set).'),
+    image_url: z
+      .string()
+      .optional()
+      .describe('URL of a header image. Mutually exclusive with icon.'),
+    shade: z.string().optional().describe('Optional accent colour (hex, e.g. #ff0000).'),
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Delete
 // ---------------------------------------------------------------------------
 
@@ -1316,6 +1381,7 @@ const OPERATION_LABELS: Record<HuduOperation, string> = {
   getAll: 'Get many',
   create: 'Create',
   update: 'Update',
+  createOrUpdate: 'Create or update',
   delete: 'Delete',
   archive: 'Archive',
   unarchive: 'Unarchive',
@@ -1331,6 +1397,7 @@ const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
   'getAll',
   'create',
   'update',
+  'createOrUpdate',
   'delete',
   'archive',
   'unarchive',
@@ -1530,6 +1597,8 @@ function getGetAllSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getLabelTypesGetAllSchema();
     case 'labels':
       return getLabelsGetAllSchema();
+    case 'magic_dash':
+      return getMagicDashGetAllSchema();
     default:
       return getAssetLayoutsGetAllSchema();
   }
@@ -1617,6 +1686,7 @@ function getSchemaForOperation(
       if (resource === 'articles') return getArticlesGetSchema();
       if (resource === 'assets') return getAssetsGetSchema();
       if (resource === 'public_photos') return getPublicPhotosGetSchema();
+      if (resource === 'magic_dash') return getMagicDashGetSchema();
       return getGetSchema();
     case 'getAll':
       return getGetAllSchemaForResource(resource);
@@ -1624,6 +1694,8 @@ function getSchemaForOperation(
       return getCreateSchemaForResource(resource);
     case 'update':
       return getUpdateSchemaForResource(resource);
+    case 'createOrUpdate':
+      return getMagicDashCreateOrUpdateSchema();
     case 'delete':
       return config.requiresCompanyEndpoint ? getDeleteWithCompanySchema() : getDeleteSchema();
     case 'archive':

@@ -30,6 +30,7 @@ const OPERATION_LABELS: Record<string, string> = {
     getAll: 'Get many (with filters)',
     create: 'Create',
     update: 'Update',
+    createOrUpdate: 'Create or update',
     delete: 'Delete',
     archive: 'Archive',
     unarchive: 'Unarchive',

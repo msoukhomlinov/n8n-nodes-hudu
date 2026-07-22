@@ -1,5 +1,7 @@
 import { DEFAULT_FIELD_VALUES } from './resource-config';
 import { processArticleContent } from '../utils/markdownUtils';
+import { convertHtmlToMarkdown } from '../utils/markdown/htmlToMarkdown';
+import { buildFrontmatter } from '../utils/markdown/frontmatter';
 
 /**
  * Title-match ranker with two-tier scoring:
@@ -166,6 +168,29 @@ export function addArticleMarkdown<T extends Record<string, unknown>>(
   includeFrontmatter: boolean,
 ): T {
   return processArticleContent(record, true, includeFrontmatter) as T;
+}
+
+/**
+ * Add `markdown_content` (converted from the Magic Dash HTML `content` field), optionally
+ * prefixed with a YAML frontmatter citation block (title, company, content link). Mirrors
+ * the regular node's processMagicDashContent so AI-tools output matches exactly. Returns the
+ * record unchanged when it has no `content`.
+ */
+export function addMagicDashMarkdown<T extends Record<string, unknown>>(
+  record: T,
+  includeFrontmatter: boolean,
+): T {
+  if (!record.content) return record;
+  let md = convertHtmlToMarkdown(record.content as string);
+  if (includeFrontmatter) {
+    const fm = buildFrontmatter({
+      title: (record.title as string) ?? null,
+      company_name: (record.company_name as string) ?? null,
+      content_link: (record.content_link as string) ?? null,
+    });
+    md = `${fm}\n${md}`;
+  }
+  return { ...record, markdown_content: md };
 }
 
 /**
