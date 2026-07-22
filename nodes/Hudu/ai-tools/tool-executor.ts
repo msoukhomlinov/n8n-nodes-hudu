@@ -147,6 +147,24 @@ export function applyContentFormat(params: Record<string, unknown>): Record<stri
 }
 
 /**
+ * Strips the client-only fields_format flag and, when 'markdown', converts the
+ * 'value' key of custom_fields array items to HTML before they reach the Hudu API.
+ * Mirrors the regular node's fieldsFormat handling for asset RichText fields.
+ */
+export function applyAssetFieldsFormat(params: Record<string, unknown>): Record<string, unknown> {
+  const { fields_format, ...rest } = params;
+  if (fields_format === 'markdown' && Array.isArray(rest.custom_fields)) {
+    rest.custom_fields = (rest.custom_fields as Record<string, unknown>[]).map((field) => {
+      const entry: Record<string, unknown> = { ...field };
+      if (typeof entry.value === 'string') {
+        entry.value = convertMarkdownToHtml(entry.value);
+      }
+      return entry;
+    });
+  }
+  return rest;
+}
+/**
  * Apply the full read-side shaping pipeline to a single record:
  *   content/photos strip → procedures rename + per-task assignee block
  *   → public_photos slim → omitDefaults (uniform field set per resource).
@@ -566,11 +584,14 @@ export async function executeHuduAiTool(
 
       case 'create': {
         // Articles: resolve company_id from folder_id if absent, handle global flag
+        // Assets: apply fields_format conversion
         let createParams = params;
         if (resource === 'articles') {
           const { resolvedParams, errorJson } = await resolveArticleCreateContext(params, context);
           if (errorJson) return errorJson;
           createParams = applyContentFormat(resolvedParams);
+        } else if (resource === 'assets') {
+          createParams = applyAssetFieldsFormat(params);
         }
 
         // For company-endpoint resources (assets), strip company_id from body and
@@ -605,7 +626,7 @@ export async function executeHuduAiTool(
         // where it is used for endpoint routing. For all other resources, company_id
         // belongs in the request body as a regular API field.
         const { id, ...withoutId } = params;
-        const updateParams = resource === 'articles' ? applyContentFormat(withoutId) : withoutId;
+        const updateParams = resource === 'articles' ? applyContentFormat(withoutId) : resource === 'assets' ? applyAssetFieldsFormat(withoutId) : withoutId;
         const { endpoint: baseEndpoint, fields } = getWriteEndpointAndFields(
           updateParams,
           config.endpoint,

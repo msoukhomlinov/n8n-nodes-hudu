@@ -748,6 +748,10 @@ export function getAssetsCreateSchema() {
       .array(z.record(z.string(), z.unknown()))
       .optional()
       .describe('Custom field values as array of objects with asset_layout_field_id (numeric) and value. Each object: { "asset_layout_field_id": <number>, "value": <value> }. Call hudu_asset_layouts with operation get and the layout ID to discover available field IDs.'),
+    fields_format: z
+      .enum(['html', 'markdown'])
+      .optional()
+      .describe("Format of custom field string values. 'markdown' converts them to HTML before saving. Default html."),
   });
 }
 
@@ -978,6 +982,10 @@ export function getAssetsUpdateSchema() {
       .array(z.record(z.string(), z.unknown()))
       .optional()
       .describe('Custom field values as array of objects with asset_layout_field_id (numeric) and value. Each object: { "asset_layout_field_id": <number>, "value": <value> }. Call hudu_asset_layouts with operation get and the layout ID to discover available field IDs.'),
+    fields_format: z
+      .enum(['html', 'markdown'])
+      .optional()
+      .describe("Format of custom field string values. 'markdown' converts them to HTML before saving. Default html."),
   });
 }
 

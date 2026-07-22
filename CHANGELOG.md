@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.9.0] - 2026-07-22
+
+### Added
+- **Markdown content input for Assets RichText custom fields** (issue #37). A new `Fields Format: HTML | Markdown` option on Asset create/update converts RichText custom-field values from Markdown to HTML via `marked` before sending to Hudu. On the regular node, RichText fields are detected from the asset layout (`field_type === 'RichText'`) so only those values are converted. On **Hudu AI Tools**, a matching `fields_format` write flag converts the string `value` of each `custom_fields` entry. Default remains `html` (values sent as-is), so existing workflows are unaffected.
+
 ## [2.8.1] - 2026-07-22
 
 ### Fixed
