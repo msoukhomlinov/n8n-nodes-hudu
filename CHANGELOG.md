@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Markdown content input for Assets RichText custom fields** (issue #37). A new `Fields Format: HTML | Markdown` option on Asset create/update converts RichText custom-field values from Markdown to HTML via `marked` before sending to Hudu. Both the regular node and **Hudu AI Tools** (`fields_format` write flag) resolve the asset layout and convert only fields whose type is RichText (`field_type === 'RichText'`), leaving Date/List/Text and other field types untouched. Default remains `html` (values sent as-is), so existing workflows are unaffected.
 
+### Changed
+- **Hudu AI Tools asset writes normalise `custom_fields` to Hudu's label-keyed shape.** Entries supplied as `{ asset_layout_field_id, value }` are now rewritten to the `{ <snake_case label>: value }` objects the Hudu API expects (matching the regular node's payload builder) by resolving the asset layout, so those writes persist instead of being ignored. Label/snake_case-keyed entries are forwarded unchanged.
+
 ## [2.8.1] - 2026-07-22
 
 ### Fixed

@@ -151,71 +151,89 @@ export function applyContentFormat(params: Record<string, unknown>): Record<stri
 }
 
 /**
- * Fetches an asset layout and returns the set of identifiers by which a
- * RichText field may be referenced in a custom_fields entry: its numeric id
- * (as a string), its raw label, and its snake_case label. Used to restrict
- * Markdown->HTML conversion to RichText fields only, mirroring the regular
- * node's field-type check.
+ * Fetches an asset layout and returns its field definitions (or an empty array
+ * when the layout cannot be read). Used to identify RichText fields and to map
+ * numeric field IDs to the snake_case label keys the Hudu API expects.
  */
-async function getRichTextFieldKeys(
+async function getAssetLayoutFields(
   context: IExecuteFunctions | ISupplyDataFunctions,
   layoutId: number,
-): Promise<Set<string>> {
-  const keys = new Set<string>();
+): Promise<IAssetLayoutFieldEntity[]> {
   const layoutResponse = (await handleGetOperation.call(
     context as unknown as IExecuteFunctions,
     '/asset_layouts',
     String(layoutId),
   )) as IDataObject;
   const layout = layoutResponse?.asset_layout as { fields?: IAssetLayoutFieldEntity[] } | undefined;
-  if (layout && Array.isArray(layout.fields)) {
-    for (const f of layout.fields) {
-      if (normaliseFieldType(f.field_type) === ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT) {
-        keys.add(String(f.id));
-        if (f.label) {
-          keys.add(f.label);
-          keys.add(toSnakeCaseFieldLabel(f.label));
-        }
-      }
-    }
-  }
-  return keys;
+  return layout && Array.isArray(layout.fields) ? layout.fields : [];
 }
 
 /**
- * Strips the client-only fields_format flag and, when 'markdown', converts
- * RichText custom-field values from Markdown to HTML before they reach the Hudu
- * API. Handles both accepted custom_fields shapes:
- *   - { asset_layout_field_id, value } — convert value when the id is RichText.
- *   - { <label|snake_case label>: content } — convert each string whose key
- *     resolves to a RichText field.
- * Non-RichText fields (Date, List, Text, ...) are left untouched. RichText
- * fields are identified via `richTextKeys` (id / label / snake_case label).
+ * Strips the client-only fields_format flag and normalises asset custom_fields
+ * for the Hudu API, which expects label/snake_case-keyed objects (e.g.
+ * { serial_number: '...' }), as the regular node emits.
+ *
+ * Two input shapes are accepted:
+ *   - { asset_layout_field_id, value } — rewritten to { <snake_label>: value }
+ *     using the layout; the value is converted from Markdown to HTML when the
+ *     field is RichText and fields_format is 'markdown'.
+ *   - { <label|snake_case label>: content } — already Hudu-shaped; each string
+ *     whose key resolves to a RichText field is converted when markdown.
+ *
+ * Non-RichText values are never converted. Entries whose asset_layout_field_id
+ * is unknown to the layout are left untouched.
  */
 export function applyAssetFieldsFormat(
   params: Record<string, unknown>,
-  richTextKeys: Set<string>,
+  layoutFields: IAssetLayoutFieldEntity[],
 ): Record<string, unknown> {
   const { fields_format, ...rest } = params;
-  if (fields_format === 'markdown' && Array.isArray(rest.custom_fields)) {
-    rest.custom_fields = (rest.custom_fields as Record<string, unknown>[]).map((field) => {
-      const entry: Record<string, unknown> = { ...field };
-      if ('asset_layout_field_id' in entry) {
-        // Explicit { asset_layout_field_id, value } shape.
-        if (richTextKeys.has(String(entry.asset_layout_field_id)) && typeof entry.value === 'string') {
-          entry.value = convertMarkdownToHtml(entry.value);
-        }
-      } else {
-        // Label/snake_case-keyed shape emitted by the regular node.
-        for (const [key, val] of Object.entries(entry)) {
-          if (richTextKeys.has(key) && typeof val === 'string') {
-            entry[key] = convertMarkdownToHtml(val);
-          }
+  if (!Array.isArray(rest.custom_fields)) {
+    return rest;
+  }
+
+  const isMarkdown = fields_format === 'markdown';
+  const snakeLabelById = new Map<string, string>();
+  const richTextKeys = new Set<string>();
+  for (const f of layoutFields) {
+    const snakeLabel = f.label ? toSnakeCaseFieldLabel(f.label) : '';
+    snakeLabelById.set(String(f.id), snakeLabel);
+    if (normaliseFieldType(f.field_type) === ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT) {
+      richTextKeys.add(String(f.id));
+      if (f.label) {
+        richTextKeys.add(f.label);
+        richTextKeys.add(snakeLabel);
+      }
+    }
+  }
+
+  rest.custom_fields = (rest.custom_fields as Record<string, unknown>[]).map((field) => {
+    if ('asset_layout_field_id' in field) {
+      // Rewrite { asset_layout_field_id, value } to Hudu's { <snake_label>: value }.
+      const idKey = String(field.asset_layout_field_id);
+      const snakeLabel = snakeLabelById.get(idKey);
+      if (snakeLabel === undefined) {
+        return { ...field };
+      }
+      let value = field.value;
+      if (isMarkdown && richTextKeys.has(idKey) && typeof value === 'string') {
+        value = convertMarkdownToHtml(value);
+      }
+      return { [snakeLabel]: value };
+    }
+
+    // Label/snake_case-keyed shape emitted by the regular node — already Hudu-shaped.
+    const entry: Record<string, unknown> = { ...field };
+    if (isMarkdown) {
+      for (const [key, val] of Object.entries(entry)) {
+        if (richTextKeys.has(key) && typeof val === 'string') {
+          entry[key] = convertMarkdownToHtml(val);
         }
       }
-      return entry;
-    });
-  }
+    }
+    return entry;
+  });
+
   return rest;
 }
 
@@ -638,24 +656,24 @@ export async function executeHuduAiTool(
       }
 
       case 'create': {
-        // Articles: resolve company_id from folder_id if absent, handle global flag
-        // Assets: apply fields_format conversion
+        // Articles: resolve company_id from folder_id if absent, handle global flag.
+        // Assets: normalise custom_fields to Hudu's label-keyed shape and, when
+        // fields_format is 'markdown', convert RichText values to HTML.
         let createParams = params;
         if (resource === 'articles') {
           const { resolvedParams, errorJson } = await resolveArticleCreateContext(params, context);
           if (errorJson) return errorJson;
           createParams = applyContentFormat(resolvedParams);
         } else if (resource === 'assets') {
-          let richTextKeys = new Set<string>();
+          let layoutFields: IAssetLayoutFieldEntity[] = [];
           if (
-            params.fields_format === 'markdown' &&
             Array.isArray(params.custom_fields) &&
             params.custom_fields.length > 0 &&
             params.asset_layout_id != null
           ) {
-            richTextKeys = await getRichTextFieldKeys(context, Number(params.asset_layout_id));
+            layoutFields = await getAssetLayoutFields(context, Number(params.asset_layout_id));
           }
-          createParams = applyAssetFieldsFormat(params, richTextKeys);
+          createParams = applyAssetFieldsFormat(params, layoutFields);
         }
 
         // For company-endpoint resources (assets), strip company_id from body and
@@ -694,9 +712,8 @@ export async function executeHuduAiTool(
         if (resource === 'articles') {
           updateParams = applyContentFormat(withoutId);
         } else if (resource === 'assets') {
-          let richTextKeys = new Set<string>();
+          let layoutFields: IAssetLayoutFieldEntity[] = [];
           if (
-            withoutId.fields_format === 'markdown' &&
             Array.isArray(withoutId.custom_fields) &&
             withoutId.custom_fields.length > 0
           ) {
@@ -705,9 +722,9 @@ export async function executeHuduAiTool(
               Number(id),
               0,
             );
-            richTextKeys = await getRichTextFieldKeys(context, meta.assetLayoutId);
+            layoutFields = await getAssetLayoutFields(context, meta.assetLayoutId);
           }
-          updateParams = applyAssetFieldsFormat(withoutId, richTextKeys);
+          updateParams = applyAssetFieldsFormat(withoutId, layoutFields);
         } else {
           updateParams = withoutId;
         }
