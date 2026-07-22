@@ -11,7 +11,7 @@ import {
 import type { AssetsOperations } from './assets.types';
 import { NodeOperationError, NodeApiError } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
-import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { HUDU_API_CONSTANTS, ASSET_LAYOUT_FIELD_TYPES } from '../../utils/constants';
 import { getCompanyIdForAsset } from '../../utils/operations/getCompanyIdForAsset';
 import {
   getAssetWithMetadata,
@@ -20,7 +20,7 @@ import {
   updateAssetWithMappedFields,
 } from '../../utils/assetFieldUtils';
 import type { IAssetLayoutFieldEntity } from '../asset_layout_fields/asset_layout_fields.types';
-import { isStandardField } from '../../utils/fieldTypeUtils';
+import { isStandardField, normaliseFieldType } from '../../utils/fieldTypeUtils';
 import { parseHuduApiErrorWithContext } from '../../utils/errorParser';
 import { addAssetFieldMarkdown } from '../../utils/markdown/assetFields';
 import { convertMarkdownToHtml } from '../../utils/markdown/markdownToHtml';
@@ -46,17 +46,25 @@ function convertRichTextFields(
     return;
   }
 
-  const richTextIds = layoutFields
-    .filter((f) => f.field_type === 'RichText')
-    .map((f) => String(f.id));
+  // Field mappings may be keyed by numeric field ID or by field label
+  // (validateFieldForMapping accepts both), so collect both identifiers.
+  const richTextKeys = new Set<string>();
+  for (const f of layoutFields) {
+    if (normaliseFieldType(f.field_type) === ASSET_LAYOUT_FIELD_TYPES.RICH_TEXT) {
+      richTextKeys.add(String(f.id));
+      if (f.label) {
+        richTextKeys.add(f.label);
+      }
+    }
+  }
 
-  if (richTextIds.length === 0) {
+  if (richTextKeys.size === 0) {
     return;
   }
 
-  for (const [fieldId, fieldValue] of Object.entries(mappedFields)) {
-    if (richTextIds.includes(fieldId) && typeof fieldValue === 'string') {
-      mappedFields[fieldId] = convertMarkdownToHtml(fieldValue);
+  for (const [fieldKey, fieldValue] of Object.entries(mappedFields)) {
+    if (richTextKeys.has(fieldKey) && typeof fieldValue === 'string') {
+      mappedFields[fieldKey] = convertMarkdownToHtml(fieldValue);
     }
   }
 }
