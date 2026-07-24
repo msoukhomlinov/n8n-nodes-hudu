@@ -5,9 +5,12 @@ import { buildFrontmatter } from '../utils/markdown/frontmatter';
 
 // Function words that dilute tier-2 title-word overlap. Deliberately small — only
 // high-frequency English glue words, NOT content words — so distinctive short words still score.
+// 'it' is deliberately excluded even though it's a common pronoun: Hudu is an IT documentation
+// tool, so 'IT' is a frequent content word in real titles (e.g. "IT Glue Import"); stripping it
+// would drop a distinctive token from both ranking and isConfidentTitleMatch.
 const TITLE_STOPWORDS = new Set([
   'a', 'an', 'and', 'as', 'at', 'be', 'by', 'for', 'from', 'how', 'in', 'is',
-  'it', 'of', 'on', 'or', 'the', 'to', 'up', 'with', 'your', 'you', 'this', 'that',
+  'of', 'on', 'or', 'the', 'to', 'up', 'with', 'your', 'you', 'this', 'that',
 ]);
 
 export const TITLE_SUBSTRING_BOOST = 1000;

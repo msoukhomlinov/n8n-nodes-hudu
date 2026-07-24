@@ -43,6 +43,12 @@ describe('isConfidentTitleMatch', () => {
     // substring, so tier 1 misses and tier 2's 2-token floor blocks the lone-word coincidence.
     expect(isConfidentTitleMatch('Configuring the corporate VPN gateway', 'the VPN')).toBe(false);
   });
+
+  it('treats "IT" as a content token, not the stopword "it" (acronym collision guard)', () => {
+    // Reordered query is not a literal substring, so this only passes if 'it' survives
+    // stopword-stripping as a distinctive token alongside 'glue'.
+    expect(isConfidentTitleMatch('IT Glue Import Guide', 'Glue IT')).toBe(true);
+  });
 });
 
 describe('sortByTitleMatch', () => {
