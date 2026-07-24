@@ -23,6 +23,12 @@ describe('titleMatchScore', () => {
     expect(score).toBeLessThan(TITLE_SUBSTRING_BOOST);
   });
 
+  it('does not award the tier-1 boost for a 2-letter token against an unrelated possessive word (its ≠ it + plural s)', () => {
+    // 'its' is a distinct word, not the plural of 'it' — the plural-s allowance must not bridge them.
+    const score = titleMatchScore('Its onboarding checklist', 'IT');
+    expect(score).toBeLessThan(TITLE_SUBSTRING_BOOST);
+  });
+
   it('does not throw and returns a non-negative score for an all-stopword query', () => {
     const score = titleMatchScore('How to reset a password', 'how to');
     expect(score).toBeGreaterThanOrEqual(0);
@@ -93,6 +99,11 @@ describe('isConfidentTitleMatch', () => {
     // 's' immediately after the token, it does not loosen the left-hand boundary or permit other
     // trailing characters, so this mid-word case from rounds 2-4 must keep failing.
     expect(isConfidentTitleMatch('How to split a document', 'it')).toBe(false);
+  });
+
+  it('is NOT confident for a 2-letter acronym against an unrelated title containing the possessive "its" (plural-s collision guard)', () => {
+    // 'its' is not the plural of 'it' — must not be treated as one via the trailing-s allowance.
+    expect(isConfidentTitleMatch('Its onboarding checklist', 'IT')).toBe(false);
   });
 });
 

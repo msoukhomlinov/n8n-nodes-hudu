@@ -51,9 +51,14 @@ function escapeRegExp(value: string): string {
 // fixed single-character allowance, not "any trailing alphanumeric" — 'it' still won't match
 // mid-word inside 'items' or 'kit' (the left boundary alone already blocks 'kit', since 'it' there
 // isn't preceded by a boundary) since only a bare 's' is special-cased.
+// The 's' allowance only applies to tokens of 3+ chars: a 2-letter token plus 's' often IS a
+// distinct English word rather than its plural (e.g. 'it' + 's' = 'its', a possessive pronoun,
+// not a plural of 'it') — so a bare 2-letter acronym like "IT" must not credit-match a title that
+// only contains the unrelated word "its".
 function hasWholeWordToken(lowerName: string, token: string): boolean {
   if (!token) return false;
-  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}s?(?:$|[^a-z0-9])`, 'i').test(lowerName);
+  const pluralSuffix = token.length >= 3 ? 's?' : '';
+  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}${pluralSuffix}(?:$|[^a-z0-9])`, 'i').test(lowerName);
 }
 
 export function titleMatchScore(name: string, query: string): number {
