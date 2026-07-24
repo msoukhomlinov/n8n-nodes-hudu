@@ -69,6 +69,13 @@ describe('isConfidentTitleMatch', () => {
     // short-circuit to confident before the tier-2 two-token floor ever runs.
     expect(isConfidentTitleMatch('Digital Onboarding Migration Guide', 'IT')).toBe(false);
   });
+
+  it('matches an underscore-separated title against a space-separated query (boundary/delimiter parity)', () => {
+    // queryTokens splits the query on '_' as a delimiter, so the boundary check on the title side
+    // must treat '_' as a boundary too — otherwise "mfa"/"office365" never whole-word-match inside
+    // "MFA_Office365" and a genuinely matching title scores 0.
+    expect(isConfidentTitleMatch('MFA_Office365', 'MFA Office365')).toBe(true);
+  });
 });
 
 describe('sortByTitleMatch', () => {

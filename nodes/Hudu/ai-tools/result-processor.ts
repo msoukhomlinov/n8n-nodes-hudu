@@ -41,11 +41,13 @@ function escapeRegExp(value: string): string {
 
 // Whole-word containment check for a token or full-query phrase — plain substring matching would
 // let a short string (e.g. 'it') falsely match inside an unrelated longer word (e.g. 'split'),
-// which defeats the acronym-preserving stopword guard above. Boundaries are
-// non-alphanumeric-or-underscore so punctuation-adjacent words (e.g. "VPN:") still match.
+// which defeats the acronym-preserving stopword guard above. Boundaries are non-alphanumeric —
+// underscore counts as a boundary here too, matching queryTokens' `_` delimiter, so a title like
+// "MFA_Office365" still whole-word-matches tokens split from a space-separated query — while
+// punctuation-adjacent words (e.g. "VPN:") still match.
 function hasWholeWordToken(lowerName: string, token: string): boolean {
   if (!token) return false;
-  return new RegExp(`(?:^|[^a-z0-9_])${escapeRegExp(token)}(?:$|[^a-z0-9_])`, 'i').test(lowerName);
+  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}(?:$|[^a-z0-9])`, 'i').test(lowerName);
 }
 
 export function titleMatchScore(name: string, query: string): number {
