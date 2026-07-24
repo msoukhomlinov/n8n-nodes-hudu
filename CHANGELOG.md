@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.10.0] - 2026-07-24
+
+### Added
+- **Confidence signal for `hudu_articles` name lookups** (issue #42). `getAll` responses for `name`-intent calls now include `bestMatchScore` and `noConfidentMatch`, so callers know to retry with a shorter fragment or `search` instead of trusting a weak top hit. Confidence fires when the top-ranked title either contains the full query as a substring OR contains every distinctive (non-stopword) query token when there are at least two of them — so a correctly-ranked reworded/reordered title (all distinctive words present, different order) is treated as confident rather than falsely flagged, while a partial overlap or a lone common-word coincidence still reports `noConfidentMatch: true`.
+
+### Fixed
+- **`hudu_articles` `name` fuzzy matching diluted by common words in long titles** (issue #42). Tier-2 title-word-overlap scoring now strips function words (`how`, `to`, `on`, `up`, etc.) before ranking, so a long multi-word title's distinctive terms aren't drowned out by shared stopwords. All-stopword queries fall back to raw tokens so they never zero out.
+- **`name` and `search` description text corrected.** Both parameters already shared one matcher (title + body, 100-candidate re-rank, exact-title substring boosted to top) — the descriptions previously implied they used different logic. Text now says so explicitly, recommends a short distinctive fragment over a full title, and notes possible indexing lag for very recently created articles.
+
 ## [2.9.0] - 2026-07-22
 
 ### Added

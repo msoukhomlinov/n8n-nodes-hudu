@@ -9,7 +9,7 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
   articles: {
     overview:
       "Hudu KB articles — full workflow.\n" +
-      "ID resolution: when you only have a title, call getAll with `name` (fuzzy, two-tier re-rank — full-substring boost +1000, then word-overlap; auto-fetches 100 candidates, returns top `limit`). For topic/content exploration call getAll with `search` (same re-rank but matches across title AND body). Both surface exact-title hits at position 0.\n" +
+      "ID resolution: `name` and `search` share one matcher — both send the same upstream search (title AND body), fetch up to 100 candidates, and re-rank locally (full-substring boost +1000, then distinctive-word overlap). Use `name` when resolving a known title to an ID (intent signal only, not a different search); use `search` for topic/content exploration. Pass a SHORT DISTINCTIVE fragment (3-5 words), not a full title or sentence — long queries dilute the upstream match and can push the target out of the candidate pool.\n" +
       "Body content: stripped by default. Set include_content=true on get/getAll to include HTML.\n" +
       "Photos: stripped by default. Set include_photos=true to include the `public_photos` array (slim shape: {numeric_id, url, file_name, size}).\n" +
       "Filters on getAll: company_id, folder_id, slug (12-char short hash only — SEO suffix not queryable), draft, enable_sharing, updated_at_start/end range.\n" +
@@ -25,10 +25,11 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
       "Photo records can NEVER carry binary image bytes through n8n's tool architecture — JSON-stringification at the executor boundary strips any binary payload. Use the `url` field (public, no auth required) to surface the image to a human; never attempt visual analysis from the tool result.",
     search:
       "Search vs name on hudu_articles getAll.\n" +
-      "`name`: send a known full or partial title. The executor translates to upstream search, fetches up to 100 candidates, and re-ranks with the two-tier title scorer (full-substring boost +1000, then per-word overlap). Best when the LLM has a title in hand.\n" +
-      "`search`: send a topic phrase or content keyword. Same upstream call, same re-rank — but matches body text too. Use when the LLM is exploring rather than resolving a title to an ID.\n" +
-      "Ranking guarantees: exact-title matches surface at position 0 when the full query appears as a substring of the title. Word-overlap is the fallback tier.\n" +
-      "If you get unexpected zero results, check API key permissions or relax filters; the re-rank cannot synthesise records that the upstream did not return.",
+      "`name` and `search` use the IDENTICAL matcher — both translate to the same upstream search (title AND body), fetch up to 100 candidates, and re-rank with the two-tier title scorer (full-substring boost +1000, then distinctive-word overlap; common glue words like 'how'/'to'/'up' are excluded from the overlap count). The only difference is intent: use `name` when resolving a known title to an ID; use `search` when exploring a topic. In both cases pass a SHORT DISTINCTIVE fragment (3-5 words) rather than a full title or sentence — long, common-word-heavy queries dilute the upstream match and can push the target out of the 100-candidate pool.\n" +
+      "Ranking guarantees: exact-title matches surface at position 0 when the full query appears as a substring of the title. Distinctive-word overlap is the fallback tier.\n" +
+      "If you get unexpected zero results, check API key permissions or relax filters; the re-rank cannot synthesise records that the upstream did not return.\n" +
+      "Indexing lag: articles created within the last few hours may not yet appear in search/name results. If you know the article exists and it is very recent, retry with a short distinctive 'search' fragment, or resolve by slug/id if you have it.\n" +
+      "name-lookup responses carry bestMatchScore + noConfidentMatch; noConfidentMatch:true means no returned title contained your full query as a substring — retry with a shorter distinctive fragment or use search.",
     create:
       "Hudu article create — scope rules.\n" +
       "Provide ONE of (a) numeric company_id, (b) folder_id (company_id auto-resolved internally via /folders GET), (c) global=true for a non-company-scoped article.\n" +
