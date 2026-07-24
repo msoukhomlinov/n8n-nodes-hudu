@@ -27,6 +27,13 @@ describe('titleMatchScore', () => {
     const score = titleMatchScore('How to reset a password', 'how to');
     expect(score).toBeGreaterThanOrEqual(0);
   });
+
+  it('awards the tier-1 substring boost when the title pluralizes the last query word', () => {
+    // "Reset Password" is not a literal substring of "Reset Passwords", but the plural 's' is a
+    // plain English pluralization and should still whole-word-match.
+    const score = titleMatchScore('Reset Passwords', 'Reset Password');
+    expect(score).toBeGreaterThanOrEqual(TITLE_SUBSTRING_BOOST);
+  });
 });
 
 describe('isConfidentTitleMatch', () => {
@@ -75,6 +82,17 @@ describe('isConfidentTitleMatch', () => {
     // must treat '_' as a boundary too — otherwise "mfa"/"office365" never whole-word-match inside
     // "MFA_Office365" and a genuinely matching title scores 0.
     expect(isConfidentTitleMatch('MFA_Office365', 'MFA Office365')).toBe(true);
+  });
+
+  it('is confident when the title pluralizes the query (singular query vs. plural title)', () => {
+    expect(isConfidentTitleMatch('Reset Passwords', 'Reset Password')).toBe(true);
+  });
+
+  it('still does NOT match a short token buried inside an unrelated word after the plural allowance (regression guard)', () => {
+    // 'it' must still fail against 'split' — the plural 's' allowance only tolerates a trailing
+    // 's' immediately after the token, it does not loosen the left-hand boundary or permit other
+    // trailing characters, so this mid-word case from rounds 2-4 must keep failing.
+    expect(isConfidentTitleMatch('How to split a document', 'it')).toBe(false);
   });
 });
 

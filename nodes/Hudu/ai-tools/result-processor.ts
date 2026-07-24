@@ -45,9 +45,15 @@ function escapeRegExp(value: string): string {
 // underscore counts as a boundary here too, matching queryTokens' `_` delimiter, so a title like
 // "MFA_Office365" still whole-word-matches tokens split from a space-separated query — while
 // punctuation-adjacent words (e.g. "VPN:") still match.
+// The right-hand boundary also tolerates one trailing literal 's' before the real boundary, so a
+// singular query word/phrase still whole-word-matches a pluralized title word (e.g. token/phrase
+// "password" or "reset password" matches title text "passwords"/"reset passwords"). This is a
+// fixed single-character allowance, not "any trailing alphanumeric" — 'it' still won't match
+// mid-word inside 'items' or 'kit' (the left boundary alone already blocks 'kit', since 'it' there
+// isn't preceded by a boundary) since only a bare 's' is special-cased.
 function hasWholeWordToken(lowerName: string, token: string): boolean {
   if (!token) return false;
-  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}(?:$|[^a-z0-9])`, 'i').test(lowerName);
+  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}s?(?:$|[^a-z0-9])`, 'i').test(lowerName);
 }
 
 export function titleMatchScore(name: string, query: string): number {
