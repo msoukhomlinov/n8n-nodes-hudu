@@ -17,6 +17,12 @@ describe('titleMatchScore', () => {
     expect(score).toBeLessThan(TITLE_SUBSTRING_BOOST);
   });
 
+  it('does not award the tier-1 boost for a single token buried inside an unrelated word', () => {
+    // 'it' is a substring of 'Digital' ("dig-it-al") but must not count as a whole-word tier-1 hit.
+    const score = titleMatchScore('Digital Onboarding Migration Guide', 'IT');
+    expect(score).toBeLessThan(TITLE_SUBSTRING_BOOST);
+  });
+
   it('does not throw and returns a non-negative score for an all-stopword query', () => {
     const score = titleMatchScore('How to reset a password', 'how to');
     expect(score).toBeGreaterThanOrEqual(0);
@@ -56,6 +62,12 @@ describe('isConfidentTitleMatch', () => {
     // confident just because 'it' happens to appear mid-word. (The literal phrase "it onboarding"
     // is not a substring of the title either, so tier 1 can't mask a tier-2 regression here.)
     expect(isConfidentTitleMatch('Digital Onboarding Migration Guide', 'IT Onboarding')).toBe(false);
+  });
+
+  it('is NOT confident on a single-token query that only substring-matches mid-word (tier-1 whole-word guard)', () => {
+    // Without a whole-word boundary on tier 1, 'IT' would substring-match inside "Digital" and
+    // short-circuit to confident before the tier-2 two-token floor ever runs.
+    expect(isConfidentTitleMatch('Digital Onboarding Migration Guide', 'IT')).toBe(false);
   });
 });
 

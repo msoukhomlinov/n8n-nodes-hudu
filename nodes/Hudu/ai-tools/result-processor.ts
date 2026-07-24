@@ -17,12 +17,14 @@ export const TITLE_SUBSTRING_BOOST = 1000;
 
 /**
  * Title-match score with two-tier scoring:
- *   tier 1 — full query as a case-insensitive substring of the title (score += TITLE_SUBSTRING_BOOST)
+ *   tier 1 — full query as a whole-word case-insensitive match within the title (score += TITLE_SUBSTRING_BOOST)
  *   tier 2 — count of distinctive (non-stopword) query tokens present in the title (score += matched-token count)
  * Stopwords are stripped from the tier-2 token set before the overlap count so common glue words
  * ('how', 'to', 'up', ...) don't dilute the score against distinctive words; an all-stopword query
- * (e.g. "how to") keeps its raw tokens so it never zeroes out. The substring check (tier 1) always
- * uses the full, untouched query. Empty token list (all-delimiter query) = score 0.
+ * (e.g. "how to") keeps its raw tokens so it never zeroes out. The tier-1 check always uses the
+ * full, untouched query and requires a whole-word boundary (see `hasWholeWordToken`) so a short
+ * query can't spuriously match mid-word inside an unrelated title. Empty token list (all-delimiter
+ * query) = score 0.
  */
 function queryTokens(query: string): { lowerQuery: string; contentTokens: string[]; tokens: string[] } {
   const lowerQuery = query.toLowerCase().trim();
@@ -37,10 +39,10 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Whole-word containment check for a single token — plain substring matching would let a short
-// token (e.g. 'it') falsely match inside an unrelated longer word (e.g. 'split'), which defeats
-// the acronym-preserving stopword guard above. Boundaries are non-alphanumeric-or-underscore so
-// punctuation-adjacent words (e.g. "VPN:") still match.
+// Whole-word containment check for a token or full-query phrase — plain substring matching would
+// let a short string (e.g. 'it') falsely match inside an unrelated longer word (e.g. 'split'),
+// which defeats the acronym-preserving stopword guard above. Boundaries are
+// non-alphanumeric-or-underscore so punctuation-adjacent words (e.g. "VPN:") still match.
 function hasWholeWordToken(lowerName: string, token: string): boolean {
   if (!token) return false;
   return new RegExp(`(?:^|[^a-z0-9_])${escapeRegExp(token)}(?:$|[^a-z0-9_])`, 'i').test(lowerName);
@@ -50,7 +52,7 @@ export function titleMatchScore(name: string, query: string): number {
   const { lowerQuery, tokens } = queryTokens(query);
   if (tokens.length === 0) return 0;
   const lowerName = name.toLowerCase();
-  const substringBoost = lowerQuery && lowerName.includes(lowerQuery) ? TITLE_SUBSTRING_BOOST : 0;
+  const substringBoost = hasWholeWordToken(lowerName, lowerQuery) ? TITLE_SUBSTRING_BOOST : 0;
   const overlap = tokens.filter((t) => hasWholeWordToken(lowerName, t)).length;
   return substringBoost + overlap;
 }
@@ -58,17 +60,20 @@ export function titleMatchScore(name: string, query: string): number {
 /**
  * Confidence verdict for a name/title lookup — distinct from the *ordering* score above.
  * True (confident) when EITHER:
- *   tier 1 — the full query is a case-insensitive substring of the title, OR
+ *   tier 1 — the full query is a whole-word case-insensitive match within the title, OR
  *   tier 2 — ALL distinctive (non-stopword) query tokens appear in the title as whole words AND
  *            there are at least 2 of them. The 2-token floor guards against a single common short
  *            word (e.g. "vpn", "ssl") coincidentally matching an otherwise-unrelated title.
  * A partial content-token overlap (some but not all present) is NOT confident, so a reworded
  * title that keeps every distinctive word passes while the original diluted-overlap bug does not.
+ * Tier 1 requires a whole-word boundary too (not a bare substring) — otherwise a single-token
+ * query like "IT" would falsely match mid-word inside an unrelated title (e.g. "Digital
+ * Onboarding") before the tier-2 two-token floor ever gets a chance to block it.
  */
 export function isConfidentTitleMatch(name: string, query: string): boolean {
   const { lowerQuery, contentTokens } = queryTokens(query);
   const lowerName = name.toLowerCase();
-  if (lowerQuery && lowerName.includes(lowerQuery)) return true;
+  if (hasWholeWordToken(lowerName, lowerQuery)) return true;
   return contentTokens.length >= 2 && contentTokens.every((t) => hasWholeWordToken(lowerName, t));
 }
 
