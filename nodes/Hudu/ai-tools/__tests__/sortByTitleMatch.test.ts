@@ -49,6 +49,14 @@ describe('isConfidentTitleMatch', () => {
     // stopword-stripping as a distinctive token alongside 'glue'.
     expect(isConfidentTitleMatch('IT Glue Import Guide', 'Glue IT')).toBe(true);
   });
+
+  it('does NOT match a short token against a substring buried inside an unrelated word (whole-word guard)', () => {
+    // 'it' is a substring of 'Digital' ("dig-it-al"), but must not count as a whole-word hit —
+    // otherwise an unrelated "Digital Onboarding Migration Guide" title would falsely score as
+    // confident just because 'it' happens to appear mid-word. (The literal phrase "it onboarding"
+    // is not a substring of the title either, so tier 1 can't mask a tier-2 regression here.)
+    expect(isConfidentTitleMatch('Digital Onboarding Migration Guide', 'IT Onboarding')).toBe(false);
+  });
 });
 
 describe('sortByTitleMatch', () => {

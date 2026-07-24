@@ -33,12 +33,25 @@ function queryTokens(query: string): { lowerQuery: string; contentTokens: string
   return { lowerQuery, contentTokens, tokens };
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Whole-word containment check for a single token — plain substring matching would let a short
+// token (e.g. 'it') falsely match inside an unrelated longer word (e.g. 'split'), which defeats
+// the acronym-preserving stopword guard above. Boundaries are non-alphanumeric-or-underscore so
+// punctuation-adjacent words (e.g. "VPN:") still match.
+function hasWholeWordToken(lowerName: string, token: string): boolean {
+  if (!token) return false;
+  return new RegExp(`(?:^|[^a-z0-9_])${escapeRegExp(token)}(?:$|[^a-z0-9_])`, 'i').test(lowerName);
+}
+
 export function titleMatchScore(name: string, query: string): number {
   const { lowerQuery, tokens } = queryTokens(query);
   if (tokens.length === 0) return 0;
   const lowerName = name.toLowerCase();
   const substringBoost = lowerQuery && lowerName.includes(lowerQuery) ? TITLE_SUBSTRING_BOOST : 0;
-  const overlap = tokens.filter((t) => lowerName.includes(t)).length;
+  const overlap = tokens.filter((t) => hasWholeWordToken(lowerName, t)).length;
   return substringBoost + overlap;
 }
 
@@ -46,9 +59,9 @@ export function titleMatchScore(name: string, query: string): number {
  * Confidence verdict for a name/title lookup — distinct from the *ordering* score above.
  * True (confident) when EITHER:
  *   tier 1 — the full query is a case-insensitive substring of the title, OR
- *   tier 2 — ALL distinctive (non-stopword) query tokens appear in the title AND there are
- *            at least 2 of them. The 2-token floor guards against a single common short word
- *            (e.g. "vpn", "ssl") coincidentally matching an otherwise-unrelated title.
+ *   tier 2 — ALL distinctive (non-stopword) query tokens appear in the title as whole words AND
+ *            there are at least 2 of them. The 2-token floor guards against a single common short
+ *            word (e.g. "vpn", "ssl") coincidentally matching an otherwise-unrelated title.
  * A partial content-token overlap (some but not all present) is NOT confident, so a reworded
  * title that keeps every distinctive word passes while the original diluted-overlap bug does not.
  */
@@ -56,7 +69,7 @@ export function isConfidentTitleMatch(name: string, query: string): boolean {
   const { lowerQuery, contentTokens } = queryTokens(query);
   const lowerName = name.toLowerCase();
   if (lowerQuery && lowerName.includes(lowerQuery)) return true;
-  return contentTokens.length >= 2 && contentTokens.every((t) => lowerName.includes(t));
+  return contentTokens.length >= 2 && contentTokens.every((t) => hasWholeWordToken(lowerName, t));
 }
 
 /**

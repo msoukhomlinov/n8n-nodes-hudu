@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **`hudu_articles` `name` fuzzy matching diluted by common words in long titles** (issue #42). Tier-2 title-word-overlap scoring now strips function words (`how`, `to`, `on`, `up`, etc.) before ranking, so a long multi-word title's distinctive terms aren't drowned out by shared stopwords. All-stopword queries fall back to raw tokens so they never zero out. `it` is excluded from the stopword list — Hudu is an IT documentation tool, so `IT` is a common content word in real titles (e.g. "IT Glue Import") that shouldn't be stripped.
 - **`name` and `search` description text corrected.** Both parameters already shared one matcher (title + body, 100-candidate re-rank, exact-title substring boosted to top) — the descriptions previously implied they used different logic. Text now says so explicitly, recommends a short distinctive fragment over a full title, and notes possible indexing lag for very recently created articles.
+- **Tier-2 token matching now requires a whole-word hit, not a bare substring.** `titleMatchScore` and `isConfidentTitleMatch` previously used plain `String.includes()` for each query token, so a short distinctive token (e.g. `it`) could spuriously match inside an unrelated longer word in the title (e.g. `split`), undermining both the ranking and the new confidence signal. Token checks are now boundary-aware (word-boundary regex) while the full-query substring check (tier 1) is unchanged.
 
 ## [2.9.0] - 2026-07-22
 
