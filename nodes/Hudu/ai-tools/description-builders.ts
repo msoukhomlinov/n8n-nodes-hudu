@@ -5,7 +5,7 @@
  */
 const RESOURCE_HINTS: Record<string, string> = {
   articles:
-    "'name' = fuzzy title; 'search' = full-text (both re-rank exact-title to top). include_content/include_photos opt-in. folder_id auto-resolves company_id. operation=help topic=overview for workflow notes.",
+    "'name' and 'search' share one matcher (title+body, re-rank exact-title to top); pass a short distinctive fragment, not a full title. include_content/include_photos opt-in. folder_id auto-resolves company_id. operation=help topic=overview for workflow notes.",
   companies:
     'Use getIdByName for fuzzy name→id resolution. operation=help topic=overview for filters and archive rules.',
   folders:

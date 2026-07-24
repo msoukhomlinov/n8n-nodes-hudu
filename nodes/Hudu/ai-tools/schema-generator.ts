@@ -335,13 +335,13 @@ export function getArticlesGetAllSchema() {
       .string()
       .optional()
       .describe(
-        "Partial text match across article title AND body content. Results are re-ranked locally so any record whose title contains the full query as a substring is promoted ahead of body-only matches — exact-title lookups bubble to position 0. For known full titles prefer 'name' (same two-tier ranking, but skips body-only hits entirely).",
+        "Partial text match across article title AND body content. Fetches up to 100 candidates and re-ranks locally: any record whose title contains your full query as a substring is promoted to position 0, then remaining records by distinctive-word overlap. Use a SHORT, DISTINCTIVE phrase (3-5 words), not a full sentence — long queries dilute the upstream match and can push the target out of the candidate pool. 'name' uses the identical matcher; use 'name' only to signal title-resolution intent.",
       ),
     name: z
       .string()
       .optional()
       .describe(
-        "Article title to fuzzy-resolve to an ID. Sends your text as a search, fetches up to 100 candidates, and ranks results by how many title words match. Use this when you know the article title. Prefer over 'search' for title-based lookups.",
+        "Article title lookup. Uses the SAME matcher and upstream call as 'search' (title + body, 100-candidate re-rank) — the difference is intent: use 'name' when resolving a known title to an ID. Pass a SHORT DISTINCTIVE fragment of the title (e.g. 3-5 unusual words), NOT the full title — long multi-word titles full of common words ('how', 'to', 'set', 'up', 'on') dilute upstream matching and may miss the target entirely. Recently-created articles (minutes/hours old) may not be indexed yet; if a known-existing article is not found, retry with 'search' and a short fragment. If the result has noConfidentMatch:true, retry with a shorter/different fragment or use 'search'.",
       ),
     company_id: optionalCompanyIdSchema,
     slug: z

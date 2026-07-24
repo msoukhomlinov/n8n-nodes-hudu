@@ -3,27 +3,106 @@ import { processArticleContent } from '../utils/markdownUtils';
 import { convertHtmlToMarkdown } from '../utils/markdown/htmlToMarkdown';
 import { buildFrontmatter } from '../utils/markdown/frontmatter';
 
+// Function words that dilute tier-2 title-word overlap. Deliberately small — only
+// high-frequency English glue words, NOT content words — so distinctive short words still score.
+// 'it' is deliberately excluded even though it's a common pronoun: Hudu is an IT documentation
+// tool, so 'IT' is a frequent content word in real titles (e.g. "IT Glue Import"); stripping it
+// would drop a distinctive token from both ranking and isConfidentTitleMatch.
+const TITLE_STOPWORDS = new Set([
+  'a', 'an', 'and', 'as', 'at', 'be', 'by', 'for', 'from', 'how', 'in', 'is',
+  'of', 'on', 'or', 'the', 'to', 'up', 'with', 'your', 'you', 'this', 'that',
+]);
+
+export const TITLE_SUBSTRING_BOOST = 1000;
+
 /**
- * Title-match ranker with two-tier scoring:
- *   tier 1 — full query as a case-insensitive substring of the title (score += 1000)
- *   tier 2 — count of query tokens present in the title (score += matched-token count)
- * Empty token list (all-delimiter query) = score 0 = stable no-op.
+ * Title-match score with two-tier scoring:
+ *   tier 1 — full query as a whole-word case-insensitive match within the title (score += TITLE_SUBSTRING_BOOST)
+ *   tier 2 — count of distinctive (non-stopword) query tokens present in the title (score += matched-token count)
+ * Stopwords are stripped from the tier-2 token set before the overlap count so common glue words
+ * ('how', 'to', 'up', ...) don't dilute the score against distinctive words; an all-stopword query
+ * (e.g. "how to") keeps its raw tokens so it never zeroes out. The tier-1 check always uses the
+ * full, untouched query and requires a whole-word boundary (see `hasWholeWordToken`) so a short
+ * query can't spuriously match mid-word inside an unrelated title. Empty token list (all-delimiter
+ * query) = score 0.
+ */
+function queryTokens(query: string): { lowerQuery: string; contentTokens: string[]; tokens: string[] } {
+  const lowerQuery = query.toLowerCase().trim();
+  const rawTokens = lowerQuery.split(/[\s\-_/]+/).filter(Boolean);
+  const contentTokens = rawTokens.filter((t) => !TITLE_STOPWORDS.has(t));
+  // all-stopword guard: keep raw tokens so an "how to"-style query never zeroes out
+  const tokens = contentTokens.length ? contentTokens : rawTokens;
+  return { lowerQuery, contentTokens, tokens };
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Whole-word containment check for a token or full-query phrase — plain substring matching would
+// let a short string (e.g. 'it') falsely match inside an unrelated longer word (e.g. 'split'),
+// which defeats the acronym-preserving stopword guard above. Boundaries are non-alphanumeric —
+// underscore counts as a boundary here too, matching queryTokens' `_` delimiter, so a title like
+// "MFA_Office365" still whole-word-matches tokens split from a space-separated query — while
+// punctuation-adjacent words (e.g. "VPN:") still match.
+// The right-hand boundary also tolerates one trailing literal 's' before the real boundary, so a
+// singular query word/phrase still whole-word-matches a pluralized title word (e.g. token/phrase
+// "password" or "reset password" matches title text "passwords"/"reset passwords"). This is a
+// fixed single-character allowance, not "any trailing alphanumeric" — 'it' still won't match
+// mid-word inside 'items' or 'kit' (the left boundary alone already blocks 'kit', since 'it' there
+// isn't preceded by a boundary) since only a bare 's' is special-cased.
+// The 's' allowance only applies to tokens of 3+ chars: a 2-letter token plus 's' often IS a
+// distinct English word rather than its plural (e.g. 'it' + 's' = 'its', a possessive pronoun,
+// not a plural of 'it') — so a bare 2-letter acronym like "IT" must not credit-match a title that
+// only contains the unrelated word "its".
+function hasWholeWordToken(lowerName: string, token: string): boolean {
+  if (!token) return false;
+  const pluralSuffix = token.length >= 3 ? 's?' : '';
+  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}${pluralSuffix}(?:$|[^a-z0-9])`, 'i').test(lowerName);
+}
+
+export function titleMatchScore(name: string, query: string): number {
+  const { lowerQuery, tokens } = queryTokens(query);
+  if (tokens.length === 0) return 0;
+  const lowerName = name.toLowerCase();
+  const substringBoost = hasWholeWordToken(lowerName, lowerQuery) ? TITLE_SUBSTRING_BOOST : 0;
+  const overlap = tokens.filter((t) => hasWholeWordToken(lowerName, t)).length;
+  return substringBoost + overlap;
+}
+
+/**
+ * Confidence verdict for a name/title lookup — distinct from the *ordering* score above.
+ * True (confident) when EITHER:
+ *   tier 1 — the full query is a whole-word case-insensitive match within the title, OR
+ *   tier 2 — ALL distinctive (non-stopword) query tokens appear in the title as whole words AND
+ *            there are at least 2 of them. The 2-token floor guards against a single common short
+ *            word (e.g. "vpn", "ssl") coincidentally matching an otherwise-unrelated title.
+ * A partial content-token overlap (some but not all present) is NOT confident, so a reworded
+ * title that keeps every distinctive word passes while the original diluted-overlap bug does not.
+ * Tier 1 requires a whole-word boundary too (not a bare substring) — otherwise a single-token
+ * query like "IT" would falsely match mid-word inside an unrelated title (e.g. "Digital
+ * Onboarding") before the tier-2 two-token floor ever gets a chance to block it.
+ */
+export function isConfidentTitleMatch(name: string, query: string): boolean {
+  const { lowerQuery, contentTokens } = queryTokens(query);
+  const lowerName = name.toLowerCase();
+  if (hasWholeWordToken(lowerName, lowerQuery)) return true;
+  return contentTokens.length >= 2 && contentTokens.every((t) => hasWholeWordToken(lowerName, t));
+}
+
+/**
+ * Sorts items by titleMatchScore against `query`, highest first (stable — ES2019 / Node 12+).
  */
 export function sortByTitleMatch<T extends Record<string, unknown>>(
   items: T[],
   query: string,
   nameField = 'name',
 ): T[] {
-  const lowerQuery = query.toLowerCase().trim();
-  const tokens = lowerQuery.split(/[\s\-_/]+/).filter(Boolean);
-  if (tokens.length === 0) return items;
-  const score = (item: T) => {
-    const name = String(item[nameField] ?? '').toLowerCase();
-    const substringBoost = lowerQuery && name.includes(lowerQuery) ? 1000 : 0;
-    const overlap = tokens.filter((t) => name.includes(t)).length;
-    return substringBoost + overlap;
-  };
-  return [...items].sort((a, b) => score(b) - score(a)); // stable (ES2019 / Node 12+)
+  return [...items].sort(
+    (a, b) =>
+      titleMatchScore(String(b[nameField] ?? ''), query) -
+      titleMatchScore(String(a[nameField] ?? ''), query),
+  );
 }
 
 /**

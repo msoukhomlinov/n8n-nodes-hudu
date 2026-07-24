@@ -24,6 +24,8 @@ import { relationFilterMapping } from '../resources/relations/relations.types';
 import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
 import {
   sortByTitleMatch,
+  titleMatchScore,
+  isConfidentTitleMatch,
   stripContentField,
   stripPhotosField,
   slimPhotoRecord,
@@ -465,9 +467,14 @@ export async function executeHuduAiTool(
         //                  promote full-title-substring matches over generic search hits.
         let capturedName: string | undefined;
         let userLimit = 25;
+        // nameIntent: true only when the caller resolved via `name` (title-lookup intent).
+        // A bare `search` legitimately may not be a title substring (topic/content search),
+        // so it is never flagged as an unconfident title match.
+        let nameIntent = false;
         if (config.nameResolutionBaked && params.name) {
           capturedName = params.name as string;
           userLimit = (params.limit as number) ?? 25;
+          nameIntent = true;
           delete params.search;       // name wins if both provided
           delete params.name;
           params.search = capturedName;
@@ -597,8 +604,16 @@ export async function executeHuduAiTool(
         // Step 6: title sort — nameResolutionBaked resources only.
         // Explicit generic + cast: sortByTitleMatch<T> returns T[], TS won't re-narrow to IDataObject[].
         // Truncation note naturally suppressed: records.length (≤ userLimit e.g. 25) < effectiveLimit (100).
+        // bestMatchScore is only captured for nameIntent (title-lookup) calls — see Step 8.
+        let bestMatchScore: number | undefined;
+        let confidentMatch = false;
         if (capturedName) {
           records = sortByTitleMatch<IDataObject>(records, capturedName) as IDataObject[];
+          if (nameIntent) {
+            const topName = records.length ? String(records[0].name ?? '') : '';
+            bestMatchScore = records.length ? titleMatchScore(topName, capturedName) : 0;
+            confidentMatch = records.length ? isConfidentTitleMatch(topName, capturedName) : false;
+          }
           records = records.slice(0, userLimit);
         }
 
@@ -657,7 +672,15 @@ export async function executeHuduAiTool(
             `folder_id scan: Hudu /articles API does not accept folder_id as a query param. Matches collected via bounded pagination (${folderIdScanStats.pagesScanned} page(s), ${folderIdScanStats.recordsScanned} records scanned, ${folderIdScanStats.exhausted ? 'upstream exhausted' : folderIdScanStats.capHit ? 'cap reached — more may exist' : 'limit satisfied'}).`,
           );
         }
-        return JSON.stringify(buildListResponse(records, records.length, truncated, warnings.length ? warnings : undefined));
+        const listResponse = buildListResponse(records, records.length, truncated, warnings.length ? warnings : undefined);
+        // Confidence signal: nameIntent (title-lookup via `name`) only — a bare `search` may
+        // legitimately not be a title substring, so it never carries this signal. Confidence
+        // fires on a full-query substring OR full distinctive-token coverage (see isConfidentTitleMatch),
+        // so a correctly top-ranked reworded title isn't falsely flagged uncertain.
+        const finalResponse = nameIntent
+          ? { ...listResponse, bestMatchScore, noConfidentMatch: !confidentMatch }
+          : listResponse;
+        return JSON.stringify(finalResponse);
       }
 
       case 'create': {
