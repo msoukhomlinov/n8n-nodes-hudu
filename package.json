@@ -81,6 +81,6 @@
     "prettier": "^3.5.3",
     "release-it": "^19.0.4",
     "typescript": "^5.9.2",
-    "vitest": "^2.1.0"
+    "vitest": "^3.2.6"
   }
 }
