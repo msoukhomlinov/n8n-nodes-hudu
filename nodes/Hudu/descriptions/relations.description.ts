@@ -1,12 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { RESOURCE_TYPES } from '../utils/constants';
+import { RELATION_RECORD_TYPE_OPTIONS } from '../utils/constants';
 import { createWrapResultsField } from './resources';
-
-// Convert RESOURCE_TYPES to options array
-const resourceTypeOptions = RESOURCE_TYPES.map((type) => ({
-  name: type.replace(/([A-Z])/g, ' $1').trim(), // Add spaces before capital letters
-  value: type,
-}));
 
 export const relationsOperations: INodeProperties[] = [
   {
@@ -92,41 +86,62 @@ export const relationsFields: INodeProperties[] = [
     },
     options: [
       {
-        displayName: 'From Entity ID 🐌',
+        displayName: 'Created At',
+        name: 'created_at',
+        type: 'dateTime',
+        default: '',
+        description: 'Filter by creation date (YYYY-MM-DD or ISO datetime)',
+      },
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        description: 'Filter by description',
+      },
+      {
+        displayName: 'From Entity ID',
         name: 'fromable_id',
         type: 'number',
         default: 0,
-        description: 'Filter by the ID of the origin entity (Filtering applied client-side, may impact performance)',
+        description: 'Filter by the ID of the origin entity',
       },
       {
-        displayName: 'From Entity Type 🐌',
+        displayName: 'From Entity Type',
         name: 'fromable_type',
         type: 'options',
         default: 'Asset',
-        options: resourceTypeOptions,
-        description: 'Filter by the type of the origin entity (Filtering applied client-side, may impact performance)',
+        options: RELATION_RECORD_TYPE_OPTIONS,
+        description: 'Filter by the type of the origin entity',
       },
       {
-        displayName: 'Is Inverse 🐌',
+        displayName: 'Is Inverse',
         name: 'is_inverse',
         type: 'boolean',
         default: false,
-        description: 'Whether the relation is inverse (Filtering applied client-side, may impact performance)',
+        description: 'Whether the relation is the inverse side',
       },
       {
-        displayName: 'To Entity ID 🐌',
+        displayName: 'To Entity ID',
         name: 'toable_id',
         type: 'number',
         default: 0,
-        description: 'Filter by the ID of the destination entity (Filtering applied client-side, may impact performance)',
+        description: 'Filter by the ID of the destination entity',
       },
       {
-        displayName: 'To Entity Type 🐌',
+        displayName: 'To Entity Type',
         name: 'toable_type',
         type: 'options',
         default: 'Asset',
-        options: resourceTypeOptions,
-        description: 'Filter by the type of the destination entity (Filtering applied client-side, may impact performance)',
+        options: RELATION_RECORD_TYPE_OPTIONS,
+        description: 'Filter by the type of the destination entity',
+      },
+      {
+        displayName: 'Updated At',
+        name: 'updated_at',
+        type: 'dateTime',
+        default: '',
+        description: 'Filter by update date (YYYY-MM-DD or ISO datetime)',
       },
     ],
   },
@@ -154,7 +169,7 @@ export const relationsFields: INodeProperties[] = [
     type: 'options',
     required: true,
     default: 'Asset',
-    options: resourceTypeOptions,
+    options: RELATION_RECORD_TYPE_OPTIONS,
     displayOptions: {
       show: {
         resource: ['relations'],
@@ -183,7 +198,7 @@ export const relationsFields: INodeProperties[] = [
     type: 'options',
     required: true,
     default: 'Asset',
-    options: resourceTypeOptions,
+    options: RELATION_RECORD_TYPE_OPTIONS,
     displayOptions: {
       show: {
         resource: ['relations'],

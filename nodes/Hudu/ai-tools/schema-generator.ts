@@ -11,6 +11,8 @@ import {
   FOLDER_TYPES,
   LABEL_RECORD_TYPES,
   LABEL_RECORD_TYPE_DESCRIPTIONS,
+  RELATION_RECORD_TYPES,
+  RELATION_RECORD_TYPE_DESCRIPTIONS,
 } from '../utils/constants';
 
 // ---------------------------------------------------------------------------
@@ -84,17 +86,24 @@ const labelRecordTypesArrayOptionalSchema = z
     `One or more record types this label type may be applied to. ${LABEL_RECORD_TYPES_DESC}`,
   );
 
+// Relation fromable/toable record-type enum (API 2.44.2+: IpAddress, not IPAddress)
+const RELATION_RECORD_TYPES_DESC = buildTypeDesc(
+  RELATION_RECORD_TYPES,
+  RELATION_RECORD_TYPE_DESCRIPTIONS,
+);
+const relationRecordTypeSchema = z
+  .enum(RELATION_RECORD_TYPES)
+  .describe(`Relation record type. ${RELATION_RECORD_TYPES_DESC}`);
+const relationRecordTypeOptionalSchema = z
+  .enum(RELATION_RECORD_TYPES)
+  .optional()
+  .describe(`Relation record type. ${RELATION_RECORD_TYPES_DESC}`);
+
 const idSchema = z
   .number()
   .int()
   .min(1)
   .describe('Numeric record ID (from a prior getAll result). Must be an integer.');
-const optionalIdSchema = z
-  .number()
-  .int()
-  .min(1)
-  .optional()
-  .describe('Numeric record ID (from a prior getAll result)');
 const limitSchema = z
   .number()
   .int()
@@ -588,27 +597,37 @@ export function getAssetLayoutsGetAllSchema() {
 
 export function getRelationsGetAllSchema() {
   return z.object({
-    id: optionalIdSchema.describe('Filter by relation ID'),
     fromable_id: z
       .number()
       .int()
       .min(1)
       .optional()
-      .describe('Filter by source record numeric ID'),
-    fromable_type: z
-      .string()
-      .optional()
-      .describe(`Type of the source (from) record in this relation. ${RESOURCE_TYPES_DESC}`),
+      .describe('Filter by source record numeric ID (server-side)'),
+    fromable_type: relationRecordTypeOptionalSchema.describe(
+      `Filter by type of the source (from) record. ${RELATION_RECORD_TYPES_DESC}`,
+    ),
     toable_id: z
       .number()
       .int()
       .min(1)
       .optional()
-      .describe('Filter by target record numeric ID'),
-    toable_type: z
+      .describe('Filter by target record numeric ID (server-side)'),
+    toable_type: relationRecordTypeOptionalSchema.describe(
+      `Filter by type of the target (to) record. ${RELATION_RECORD_TYPES_DESC}`,
+    ),
+    is_inverse: z
+      .boolean()
+      .optional()
+      .describe('Filter by whether the relation is the inverse side (server-side)'),
+    description: z.string().optional().describe('Filter by description (server-side)'),
+    created_at: z
       .string()
       .optional()
-      .describe(`Type of the target (to) record in this relation. ${RESOURCE_TYPES_DESC}`),
+      .describe('Filter by creation date — YYYY-MM-DD or ISO datetime (server-side)'),
+    updated_at: z
+      .string()
+      .optional()
+      .describe('Filter by update date — YYYY-MM-DD or ISO datetime (server-side)'),
     limit: limitSchema,
   });
 }
@@ -950,13 +969,13 @@ export function getIpAddressesCreateSchema() {
 export function getRelationsCreateSchema() {
   return z.object({
     fromable_id: z.number().int().min(1).describe('Numeric ID of the source record'),
-    fromable_type: z
-      .string()
-      .describe(`Type of the source (from) record in this relation. ${RESOURCE_TYPES_DESC}`),
+    fromable_type: relationRecordTypeSchema.describe(
+      `Type of the source (from) record. ${RELATION_RECORD_TYPES_DESC}`,
+    ),
     toable_id: z.number().int().min(1).describe('Numeric ID of the target record'),
-    toable_type: z
-      .string()
-      .describe(`Type of the target (to) record in this relation. ${RESOURCE_TYPES_DESC}`),
+    toable_type: relationRecordTypeSchema.describe(
+      `Type of the target (to) record. ${RELATION_RECORD_TYPES_DESC}`,
+    ),
     is_inverse: z.boolean().optional().describe('Whether this is an inverse relation'),
     description: z.string().optional().describe('Relation description'),
   });
