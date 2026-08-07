@@ -101,8 +101,8 @@ export const HELP_TOPICS: Record<string, Record<string, string>> = {
   relations: {
     overview:
       "Hudu relations — typed links between two records (fromable/toable pair).\n" +
-      "Data model: each relation has a `from` end (`fromable_type` + `fromable_id`) and a `to` end (`toable_type` + `toable_id`). Both ends must be valid Hudu resource types from RESOURCE_TYPES (e.g. 'Article', 'Asset', 'AssetPassword', 'Company', 'Folder', 'IPAddress', 'Network', 'Procedure', 'Vlan', 'Website'). The `is_inverse` flag distinguishes the canonical direction.\n" +
-      "Filters on getAll: id, fromable_id, fromable_type, toable_id, toable_type. All applied client-side via post-process filter (Hudu /relations has no native filter params) — combine specific ID+type pairs to keep the result bounded.\n" +
+      "Data model: each relation has a `from` end (`fromable_type` + `fromable_id`) and a `to` end (`toable_type` + `toable_id`). Allowed types (API 2.44.2+): Asset, Website, Procedure, AssetPassword, Company, Article, Network, IpAddress, Vlan, VlanZone, RackStorage. Use `IpAddress` (not `IPAddress`). The `is_inverse` flag distinguishes the canonical direction.\n" +
+      "Filters on getAll (all server-side query params): fromable_id, fromable_type, toable_id, toable_type, is_inverse, description, created_at, updated_at. Prefer specific ID+type pairs to keep results bounded.\n" +
       "GOTCHA: type field names are `fromable_type` / `toable_type` (NOT `froable_*` — easy typo).\n" +
       "Create requires all four: fromable_id, fromable_type, toable_id, toable_type. Optional: is_inverse, description.\n" +
       "When an asset is moved between companies via hudu_assets move, relations pointing to the original asset are NOT auto-rewritten — re-establish them using hudu_relations create after the move.\n" +

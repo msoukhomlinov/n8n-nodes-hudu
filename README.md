@@ -4,7 +4,7 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.44.0 (reference: `api-docs-v2.44.0.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.44.2 (reference: `api-docs-v2.44.2.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 > **Editions:** This package (`n8n-nodes-hudu`) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (unified per-resource AI/MCP tool) and therefore has an AI/LangChain runtime dependency, so it cannot be verified for n8n Cloud. If you run **n8n Cloud** (the hosted n8n platform) and want a verified, installable node, use **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — a zero-dependency subset with the same `Hudu` node (AI Agent tool use via `usableAsTool`) but without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
@@ -154,8 +154,8 @@ To use this node, you need to:
 
 ### Relations
 - Create and manage resource relationships
-- Support for various resource types
-- Filter by relationship types and directions
+- Support for API relation types (including Network, IpAddress, Vlan, VlanZone, RackStorage)
+- Server-side filters by entity IDs/types, direction, description, and dates
 
 ### Groups
 - Retrieve groups and retrieve a group by ID

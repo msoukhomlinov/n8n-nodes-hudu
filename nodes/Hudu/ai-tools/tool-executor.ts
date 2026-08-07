@@ -20,7 +20,6 @@ import {
   buildMutationResponse,
   buildDeleteResponse,
 } from './error-formatter';
-import { relationFilterMapping } from '../resources/relations/relations.types';
 import { publicPhotoFilterMapping } from '../resources/public_photos/public_photos.types';
 import {
   sortByTitleMatch,
@@ -540,29 +539,17 @@ export async function executeHuduAiTool(
         // records existed upstream. Skip the probe for nameResolutionBaked (already fetches a wide
         // 100-candidate pool that gets re-ranked and sliced to userLimit — its truncation note is
         // already correctly suppressed by the userLimit < 100 condition) and for resources using
-        // post-process filtering (relations, public_photos — slice happens inside handleListing)
+        // post-process filtering (public_photos — slice happens inside handleListing)
         // and for bounded-pagination paths (articles+folder_id — paginatedPostFilter owns truncation).
         const wantsProbe =
           !capturedName &&
-          resource !== 'relations' &&
           resource !== 'public_photos' &&
           articlesFolderIdPostFilter === undefined;
         const fetchLimit = wantsProbe ? effectiveLimit + 1 : effectiveLimit;
         let upstreamHasMore = false;
         let folderIdScanStats: PaginatedPostFilterResult<IDataObject> | undefined;
-        // Relations and public_photos use client-side post-process filtering (API has no server-side filters)
-        if (resource === 'relations') {
-          records = await handleGetAllOperation.call(
-            context as unknown as IExecuteFunctions,
-            config.endpoint,
-            config.pluralKey ?? undefined,
-            {},
-            false,
-            effectiveLimit,
-            filters as IDataObject,
-            relationFilterMapping,
-          );
-        } else if (resource === 'public_photos') {
+        // public_photos still uses client-side post-process filtering (API has no server-side filters)
+        if (resource === 'public_photos') {
           records = await handleGetAllOperation.call(
             context as unknown as IExecuteFunctions,
             config.endpoint,

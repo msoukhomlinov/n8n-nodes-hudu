@@ -387,11 +387,37 @@ export class HuduAiTools implements INodeType {
                     continue;
                 }
 
+                // Validate against the SAME unified zod schema supplyData()'s
+                // DynamicStructuredTool uses to gate LangChain tool calls. The execute()
+                // path (n8n 2.14+ Agent tool invocations via item.json) previously skipped
+                // schema validation entirely, silently forwarding out-of-enum/out-of-range
+                // values straight to the Hudu API. Validating `{ operation, ...params }`
+                // (rather than just `params`) mirrors exactly what LangChain validates
+                // before invoking supplyData()'s `func`.
+                const unifiedSchema = runtimeSchemas.buildUnifiedSchema(resource, effectiveOps, config);
+                const validation = unifiedSchema.safeParse({ operation: effectiveOp, ...params });
+                if (!validation.success) {
+                    const issues = validation.error.issues
+                        .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+                        .join('; ');
+                    response.push({
+                        json: parseToolResult(JSON.stringify(wrapError(
+                            resource, effectiveOp, ERROR_TYPES.VALIDATION_ERROR,
+                            `Invalid parameters: ${issues}`,
+                            'Check the field values and types, then retry with corrected parameters.',
+                        ))),
+                        pairedItem: { item: itemIndex },
+                    });
+                    continue;
+                }
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { operation: _operation, ...validatedParams } = validation.data as Record<string, unknown>;
+
                 const resultJson = await executeHuduAiTool(
                     this as unknown as ISupplyDataFunctions,
                     resource,
                     effectiveOp,
-                    params,
+                    validatedParams,
                 );
 
                 const parsed = parseToolResult(resultJson);

@@ -6,7 +6,6 @@ import {
   handleGetAllOperation,
 } from '../../utils/operations';
 import type { RelationOperation } from './relations.types';
-import { relationFilterMapping } from './relations.types';
 
 export async function handleRelationsOperation(
   this: IExecuteFunctions,
@@ -25,11 +24,9 @@ export async function handleRelationsOperation(
         this,
         resourceEndpoint,
         'relations',
-        {},
+        filters,
         returnAll,
         limit,
-        filters,
-        relationFilterMapping,
       );
     }
 

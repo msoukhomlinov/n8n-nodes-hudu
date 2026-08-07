@@ -17,7 +17,7 @@ const RESOURCE_HINTS: Record<string, string> = {
   procedure_tasks:
     "Task carries 'assignee:{id,name,initials}' only when assigned. operation=help topic=overview for cross-procedure filtering.",
   relations:
-    'fromable_/toable_ pairs declare both ends; types from RESOURCE_TYPES. operation=help topic=overview for data model.',
+    'fromable_/toable_ pairs declare both ends; types from RELATION_RECORD_TYPES (IpAddress not IPAddress). Filters are server-side. operation=help topic=overview for data model.',
   assets:
     'Use getIdByName for name→id. move recreates+deletes via /companies/{id}/assets. getByLayout labels custom fields.',
   asset_passwords: 'Use getIdByName for fuzzy name→id resolution.',
