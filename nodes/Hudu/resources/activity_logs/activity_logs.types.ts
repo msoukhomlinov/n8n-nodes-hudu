@@ -11,9 +11,9 @@ export interface IActivityLogsGetAllParams {
   user_id?: number;
   /** Filter logs by a user's email address */
   user_email?: string;
-  /** Filter logs by resource ID (matches response's record_id); must be used in conjunction with resource_type */
+  /** Filter logs by resource ID (matches response's record_id); narrows results within resource_type (requires resource_type) */
   resource_id?: number;
-  /** Filter logs by resource type (matches response's record_type - Asset, AssetPassword, Company, Article, etc.); must be used in conjunction with resource_id */
+  /** Filter logs by resource type (matches response's record_type - Asset, AssetPassword, Company, Article, etc.); can be used alone or with resource_id */
   resource_type?: string;
   /** Filter logs by the action performed (matches response's action field) */
   action_message?: string;

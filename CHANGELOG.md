@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.12.0] - 2026-09-12
+
+### Changed
+- **API alignment with Hudu 2.45.1** (reference: `api-docs-v2.45.1.json`). Activity Logs `resource_type` is now a server-side filter — selecting only *Resource Type* no longer pages through all logs and filters client-side (2.44.2-era workaround removed). `resource_id` still requires `resource_type` and is ignored on its own.
+- Activity Logs `resource_id`/`resource_type` UI and AI-tools descriptions updated to the 2.45.1 semantics; README API compatibility line now **2.45.1**.
+
 ## [2.11.0] - 2026-08-07
 
 ### Added

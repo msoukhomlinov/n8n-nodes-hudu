@@ -114,7 +114,7 @@ export const activityLogsFields: INodeProperties[] = [
         type: 'number',
         default: 0,
         description:
-          'Filter by resource ID. When used with Resource Type, enables efficient API-level filtering.',
+          'Filter by resource ID. Narrows results within the selected Resource Type; requires Resource Type to be set (ignored on its own).',
       },
       {
         displayName: 'Resource Type',
@@ -126,7 +126,7 @@ export const activityLogsFields: INodeProperties[] = [
         })),
         default: '',
         description:
-          'Filter by resource type. When used alone, pages are fetched incrementally and filtered client-side. For efficient API-level filtering, also provide Resource ID.',
+          'Filter by resource type (server-side). Can be used alone, or combined with Resource ID to narrow to a specific record.',
       },
       {
         displayName: 'Start Date',

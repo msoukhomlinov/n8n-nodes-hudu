@@ -529,12 +529,14 @@ export function getActivityLogsGetAllSchema() {
       .int()
       .min(1)
       .optional()
-      .describe('Filter by resource numeric ID (use together with resource_type)'),
+      .describe(
+        'Filter by resource numeric ID (narrows results within resource_type; requires resource_type)',
+      ),
     resource_type: z
       .string()
       .optional()
       .describe(
-        `Filter by resource type (pair with resource_id for a specific record). ${RESOURCE_TYPES_DESC}`,
+        `Filter by resource type (server-side; can be used alone or paired with resource_id). ${RESOURCE_TYPES_DESC}`,
       ),
     action_message: z
       .string()
