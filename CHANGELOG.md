@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.12.0] - 2026-09-12
+
+### Added
+- **API alignment with Hudu 2.45.1.** Reference spec: `api-docs-v2.45.1.json`. The only API change between 2.44.2 and 2.45.1 is the activity log filtering contract: `resource_type` is now a first-class server-side filter (the spec's `host` value also changed, which is docs-only).
+
+### Changed
+- **Activity Logs Get Many: `resource_type` filtering is now server-side.** Selecting only *Resource Type* no longer pages through all logs and filters client-side (the 2.44.2-era workaround for the API's `resource_id` + `resource_type` pairing requirement); the filter is now sent as a native `GET /activity_logs` query parameter. Multi-action queries run through the standard server-side listing path and are merged as before. `resource_id` still requires `resource_type` (it narrows results within it) and is ignored on its own.
+- Activity Logs `resource_id` / `resource_type` UI descriptions, type comments, and **Hudu AI Tools** schema/description text updated to the 2.45.1 semantics.
+- README API compatibility line updated to **2.45.1**.
+
 ## [2.11.0] - 2026-08-07
 
 ### Added

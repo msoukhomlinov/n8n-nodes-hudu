@@ -22,7 +22,7 @@ const RESOURCE_HINTS: Record<string, string> = {
     'Use getIdByName for name→id. move recreates+deletes via /companies/{id}/assets. getByLayout labels custom fields.',
   asset_passwords: 'Use getIdByName for fuzzy name→id resolution.',
   asset_layouts: 'Use getIdByName for EXACT name→id resolution.',
-  activity_logs: 'Filter by user, resource_type+resource_id, action_message, or date range.',
+  activity_logs: 'Filter by user, resource_type (optionally narrowed by resource_id), action_message, or date range.',
   ip_addresses: 'Filter by address, network_id, fqdn, status, or asset_id.',
   networks: 'Use getIdByName for EXACT name→id resolution.',
   vlans: 'Use getIdByName for EXACT name→id resolution.',

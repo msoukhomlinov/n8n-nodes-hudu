@@ -32,53 +32,6 @@ function applyFieldFiltering(results: IDataObject[], fields: string[] | undefine
   return results.map((item) => filterFields(item, fields));
 }
 
-/**
- * Fetch activity logs with client-side resource_type filtering
- * Uses incremental pagination to avoid fetching all logs unnecessarily
- * Uses incremental pagination to avoid fetching all logs unnecessarily
- */
-async function fetchWithResourceTypeFilter(
-  context: IExecuteFunctions,
-  endpoint: string,
-  filters: IDataObject,
-  resourceType: string,
-  returnAll: boolean,
-  limit: number,
-): Promise<IDataObject[]> {
-  const matchingResults: IDataObject[] = [];
-  let page = 1;
-  let hasMorePages = true;
-
-  while (hasMorePages) {
-    const qs = { ...filters, page, page_size: HUDU_API_CONSTANTS.PAGE_SIZE };
-    const response = await huduApiRequest.call(context, 'GET', endpoint, {}, qs);
-    const items = Array.isArray(response) 
-      ? response 
-      : ((response as IDataObject).activity_logs as IDataObject[] || []);
-
-    // Filter this page by record_type
-    const matching = items.filter((item) => item.record_type === resourceType);
-    matchingResults.push(...matching);
-
-    // Check if more pages exist
-    hasMorePages = items.length === HUDU_API_CONSTANTS.PAGE_SIZE;
-
-    // Early exit if we have enough (and not returning all)
-    if (!returnAll && matchingResults.length >= limit) {
-      break;
-    }
-
-    page++;
-  }
-
-  // Apply limit if not returning all
-  if (!returnAll && matchingResults.length > limit) {
-    return matchingResults.slice(0, limit);
-  }
-
-  return matchingResults;
-}
-
 export async function handleActivityLogsOperation(
   this: IExecuteFunctions,
   operation: ActivityLogsOperation,
@@ -97,18 +50,13 @@ export async function handleActivityLogsOperation(
       const cleanedFilters: IDataObject = { ...filters };
       delete cleanedFilters.fields; // Remove fields from API filters
 
-      // Determine filtering mode
-      const resourceType = cleanedFilters.resource_type as string | undefined;
-      const resourceId = cleanedFilters.resource_id as number | undefined;
-      const hasResourceType = resourceType && resourceType !== '';
-      const hasResourceId = resourceId && resourceId !== 0;
-      const needsClientSideResourceTypeFilter = hasResourceType && !hasResourceId;
-
-      if (needsClientSideResourceTypeFilter) {
-        delete cleanedFilters.resource_type;
-      }
-      if (!hasResourceType && hasResourceId) {
-        delete cleanedFilters.resource_id; // API requires both
+      // Hudu API 2.45.1+: resource_type is a first-class server-side filter and
+      // can be used alone; resource_id narrows results within resource_type and
+      // is ignored when resource_type is not set.
+      const hasResourceType =
+        typeof cleanedFilters.resource_type === 'string' && cleanedFilters.resource_type !== '';
+      if (!hasResourceType) {
+        delete cleanedFilters.resource_id; // resource_id requires resource_type
       }
       if (cleanedFilters.resource_id === 0) {
         delete cleanedFilters.resource_id;
@@ -128,29 +76,15 @@ export async function handleActivityLogsOperation(
           const action = actionMessages[actionIndex];
           const actionFilters = { ...cleanedFilters, action_message: action };
 
-          if (needsClientSideResourceTypeFilter) {
-            // Use incremental fetch with filter for each action
-            const actionResults = await fetchWithResourceTypeFilter(
-              this,
-              resourceEndpoint,
-              actionFilters,
-              resourceType!,
-              returnAll,
-              limit,
-            );
-            allResults.push(...actionResults);
-          } else {
-            // Use existing handleGetAllOperation
-            const actionResults = await handleGetAllOperation.call(
-              this,
-              resourceEndpoint,
-              'activity_logs',
-              actionFilters,
-              returnAll,
-              limit,
-            );
-            allResults.push(...(Array.isArray(actionResults) ? actionResults : [actionResults]));
-          }
+          const actionResults = await handleGetAllOperation.call(
+            this,
+            resourceEndpoint,
+            'activity_logs',
+            actionFilters,
+            returnAll,
+            limit,
+          );
+          allResults.push(...(Array.isArray(actionResults) ? actionResults : [actionResults]));
         }
 
         // Deduplicate by id using Map (last occurrence wins)
@@ -184,27 +118,14 @@ export async function handleActivityLogsOperation(
           cleanedFilters.action_message = actionMessages;
         }
 
-        if (needsClientSideResourceTypeFilter) {
-          // Use incremental fetch with filter
-          results = await fetchWithResourceTypeFilter(
-            this,
-            resourceEndpoint,
-            cleanedFilters,
-            resourceType!,
-            returnAll,
-            limit,
-          );
-        } else {
-          // Use existing handleGetAllOperation
-          results = await handleGetAllOperation.call(
-            this,
-            resourceEndpoint,
-            'activity_logs',
-            cleanedFilters,
-            returnAll,
-            limit,
-          );
-        }
+        results = await handleGetAllOperation.call(
+          this,
+          resourceEndpoint,
+          'activity_logs',
+          cleanedFilters,
+          returnAll,
+          limit,
+        );
       }
 
       // Apply field filtering

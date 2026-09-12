@@ -4,7 +4,7 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.44.2 (reference: `api-docs-v2.44.2.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.45.1 (reference: `api-docs-v2.45.1.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 > **Editions:** This package (`n8n-nodes-hudu`) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (unified per-resource AI/MCP tool) and therefore has an AI/LangChain runtime dependency, so it cannot be verified for n8n Cloud. If you run **n8n Cloud** (the hosted n8n platform) and want a verified, installable node, use **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — a zero-dependency subset with the same `Hudu` node (AI Agent tool use via `usableAsTool`) but without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
@@ -45,7 +45,7 @@ To use this node, you need to:
 
 ### Activity Logs
 - Get all activity logs with comprehensive filtering support
-- Filter by user (ID or email), action, resource (ID and type), and date range
+- Filter by user (ID or email), action, resource type (optionally narrowed by resource ID, filtered server-side), and date range
 - Delete activity logs by datetime with optional unassigned logs filter
 
 ### API Info
