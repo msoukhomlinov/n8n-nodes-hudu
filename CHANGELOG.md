@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **`public_photos` descriptions name the slug field as `id`**, matching `IPublicPhoto.id` and the API response (raised in review of #51). The casing rule's autofix would have written `ID`, which is not a key in the response.
 - **The Publish workflow uses `npm install` instead of `npm ci`.** `package-lock.json` is gitignored here, so `npm ci` always failed on a clean checkout — every Publish run from v2.8.1 to v2.12.1 stopped before build, lint and publish. This matches how `n8n-nodes-hudu-core` publishes.
+- **The publish lint no longer fails on `package.json` shape rules.** `@n8n/node-cli` (unpinned, no committed lockfile, so CI takes the newest) has extended the community-nodes recommended set onto `package.json` since 0.47, which activates `no-runtime-dependencies` and `valid-peer-dependencies` there. This edition cannot satisfy those two by design — it ships the LangChain runtime and declares `@langchain/core` + `@n8n/ai-utilities` as peers, which is exactly why it is not n8n-Cloud-verifiable. Both rules are now off for `package.json` only; every other rule still runs.
 
 ## [2.12.1] - 2026-09-13
 
