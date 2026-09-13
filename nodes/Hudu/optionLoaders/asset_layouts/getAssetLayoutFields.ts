@@ -250,6 +250,13 @@ export async function mapAssetLayoutFieldsForResource(
 		return getLayoutFields.call(this, includeAssetTags);
 	} catch (error) {
 		debugLog('[RESOURCE_MAPPING] Error in getAssetLayoutFields:', error);
+		// Rethrow an inner node-aware error unchanged so its type and metadata survive; only
+		// unexpected failures get wrapped. Suppressed because the ruleset has no typed-rethrow exemption.
+		if (error instanceof NodeOperationError) {
+			// eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing an existing NodeOperationError preserves its type and metadata
+			throw error;
+		}
+
 		throw new NodeOperationError(this.getNode(), `Failed to load asset layout fields: ${(error as Error).message}`);
 	}
 }
@@ -288,6 +295,13 @@ export async function getAssetLayoutFields(
 
 	} catch (error) {
 		debugLog('[OPTION_LOADING] Error in getAssetLayoutFields:', error);
+		// Rethrow an inner node-aware error unchanged so its type and metadata survive; only
+		// unexpected failures get wrapped. Suppressed because the ruleset has no typed-rethrow exemption.
+		if (error instanceof NodeOperationError) {
+			// eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing an existing NodeOperationError preserves its type and metadata
+			throw error;
+		}
+
 		throw new NodeOperationError(this.getNode(), `Failed to load asset layout fields: ${(error as Error).message}`);
 	}
 } 

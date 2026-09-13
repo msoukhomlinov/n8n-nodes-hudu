@@ -59,7 +59,10 @@ export const publicPhotosFields: INodeProperties[] = [
     },
     required: true,
     default: '',
-    description: 'Numeric ID of the photo to retrieve. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>ID</code> field — the API returns 404 for slug values.',
+    // The Get Many response exposes the slug under the lowercase key `id` (see IPublicPhoto.id) and
+    // the handler returns that response unchanged, so the field name here must stay lowercase.
+    // eslint-disable-next-line n8n-nodes-base/node-param-description-miscased-id -- the actual JSON response field is `id`, not `ID`
+    description: 'Numeric ID of the photo to retrieve. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>id</code> field — the API returns 404 for slug values.',
   },
   {
     displayName: 'Download',
@@ -213,7 +216,9 @@ export const publicPhotosFields: INodeProperties[] = [
     },
     required: true,
     default: '',
-    description: 'Numeric ID of the photo to update. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>ID</code> field — the API returns 404 for slug values.',
+    // Same as the Get operation: the slug field is named `id` (IPublicPhoto.id), so keep it lowercase.
+    // eslint-disable-next-line n8n-nodes-base/node-param-description-miscased-id -- the actual JSON response field is `id`, not `ID`
+    description: 'Numeric ID of the photo to update. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>id</code> field — the API returns 404 for slug values.',
   },
   {
     displayName: 'Record Type',

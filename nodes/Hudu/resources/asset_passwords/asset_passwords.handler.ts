@@ -205,7 +205,16 @@ export async function handleAssetPasswordOperation(
 
     return responseData;
   } catch (error) {
-    // Wrap any error in a NodeOperationError so n8n can associate it with the node
+    // huduApiRequest already reports Hudu API failures as node-aware errors carrying the HTTP
+    // status and response details. Rethrow those unchanged so n8n keeps that context; only
+    // unexpected failures are wrapped. The community-nodes ruleset has no typed-rethrow
+    // exemption, hence the scoped suppression.
+    if (error instanceof Error && (error.name === 'NodeApiError' || error.name === 'NodeOperationError')) {
+      // eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing the original NodeApiError/NodeOperationError keeps its HTTP status and API context
+      throw error;
+    }
+
+    // Wrap any other error in a NodeOperationError so n8n can associate it with the node
     throw new NodeOperationError(
       this.getNode(),
       `Failed to execute ${operation} operation: ${error.message}`,

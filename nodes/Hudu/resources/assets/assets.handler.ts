@@ -190,7 +190,14 @@ export async function handleAssetsOperation(
           });
           throw new NodeOperationError(this.getNode(), parsedErrorMessage, { itemIndex: i });
         }
-        // Not a NodeApiError: wrap it so the failure is still attributed to this node/item.
+        // Already a node-aware operation error (e.g. local validation of user input): rethrow it
+        // unchanged instead of mislabelling it as an API failure. The community-nodes ruleset has no
+        // typed-rethrow exemption, hence the scoped suppression.
+        if (error instanceof NodeOperationError) {
+          // eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing an existing NodeOperationError preserves its type and metadata
+          throw error;
+        }
+        // Not a node-aware error: wrap it so the failure is still attributed to this node/item.
         throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
       }
 
