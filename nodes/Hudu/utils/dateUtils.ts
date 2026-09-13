@@ -188,6 +188,10 @@ export function processDateRange(dateRange: IDateRange): string | undefined {
     }
 
   } catch (error) {
+    /* eslint-disable @n8n/community-nodes/require-node-api-error -- processDateRange is a pure
+       utility with no node context: it is called from resource handlers before any node
+       object is in scope, so it cannot build a NodeApiError/NodeOperationError. Callers wrap
+       the thrown Error in a node-aware error. These two throws are the only signal available. */
     if (DEBUG_CONFIG.UTIL_DATE_PROCESSING) {
       debugLog('Date Processing - Error', {
         error,
@@ -199,6 +203,7 @@ export function processDateRange(dateRange: IDateRange): string | undefined {
       throw new Error(`Date range processing error: ${error.message}`);
     }
     throw new Error('Unknown error processing date range');
+    /* eslint-enable @n8n/community-nodes/require-node-api-error */
   }
 
   return undefined;

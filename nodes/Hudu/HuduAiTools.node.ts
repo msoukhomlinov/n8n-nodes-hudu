@@ -97,6 +97,15 @@ function stripExecuteMetadata(params: Record<string, unknown>): Record<string, u
 // Node class
 // ---------------------------------------------------------------------------
 
+// This node IS the AI-tool surface: it consumes main input (inputs: []) and exposes
+// NodeConnectionTypes.AiTool, so there is nothing that n8n could additionally wrap as a tool.
+// The rule means to exempt exactly that shape ("AI-only node: non-Main output and empty
+// inputs skips usableAsTool check", see node-usable-as-tool.test.ts in
+// @n8n/eslint-plugin-community-nodes), but its detector only matches bare
+// `NodeConnectionTypes.X` array elements, not the `{ type: NodeConnectionTypes.AiTool }`
+// object form this description uses. Setting usableAsTool: true here would advertise a
+// tool wrapper for a node that has no main input, so the intent-correct fix is the disable.
+// eslint-disable-next-line @n8n/community-nodes/node-usable-as-tool -- AI-only node (AiTool output, empty inputs): no tool wrapper to declare
 export class HuduAiTools implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'Hudu AI Tools',
@@ -104,6 +113,7 @@ export class HuduAiTools implements INodeType {
         icon: 'file:hudu.svg',
         group: ['output'],
         version: 1,
+        subtitle: '={{$parameter["resource"]}}',
         description: 'Expose Hudu operations as individual AI tools for the AI Agent',
         defaults: {
             name: 'Hudu AI Tools',
@@ -424,6 +434,13 @@ export class HuduAiTools implements INodeType {
                 });
             } catch (error) {
                 const msg = error instanceof Error ? error.message : String(error);
+                if (this.continueOnFail()) {
+                    response.push({
+                        json: { error: msg },
+                        pairedItem: { item: itemIndex },
+                    });
+                    continue;
+                }
                 throw new NodeOperationError(this.getNode(), msg, { itemIndex });
             }
         }

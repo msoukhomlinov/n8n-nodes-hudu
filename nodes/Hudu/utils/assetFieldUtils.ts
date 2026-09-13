@@ -1,4 +1,4 @@
-import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, INode } from 'n8n-workflow';
 import type { IAssetLayoutFieldEntity } from '../resources/asset_layout_fields/asset_layout_fields.types';
 import { getCompanyIdForAsset } from './operations/getCompanyIdForAsset';
 import { NodeOperationError } from 'n8n-workflow';
@@ -256,10 +256,11 @@ export async function validateFieldForMappingLegacy(
  *
  * @param value The value to transform
  * @param fieldType The Hudu field type (from ASSET_LAYOUT_FIELD_TYPES)
+ * @param node The node context, used to raise NodeOperationError on invalid values
  * @returns Transformed value ready for Hudu API
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function transformFieldValueForUpdate(value: any, fieldType: string): any {
+export function transformFieldValueForUpdate(value: any, fieldType: string, node: INode): any {
   debugLog('[RESOURCE_TRANSFORM] Transforming field value', { value, fieldType, valueType: typeof value });
   
   // Normalise the field type to handle variations
@@ -279,7 +280,7 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
         debugLog('[RESOURCE_TRANSFORM] Converted string to number', { original: value, converted: numValue });
         return numValue;
       }
-      throw new Error(`Invalid value for Number field: ${value}. Expected a numeric value.`);
+      throw new NodeOperationError(node, `Invalid value for Number field: ${value}. Expected a numeric value.`);
 
     case ASSET_LAYOUT_FIELD_TYPES.CHECKBOX:
       if (typeof value === 'boolean') return value;
@@ -294,7 +295,7 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
           return false;
         }
       }
-      throw new Error(`Invalid value for CheckBox field: ${value}. Expected true/false, yes/no, or 1/0.`);
+      throw new NodeOperationError(node, `Invalid value for CheckBox field: ${value}. Expected true/false, yes/no, or 1/0.`);
 
     case ASSET_LAYOUT_FIELD_TYPES.DATE:
       // Hudu expects dates in YYYY-MM-DD format. We use native Date for robust parsing.
@@ -330,7 +331,7 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
         // Fall through to error
       }
       
-      throw new Error(`Invalid value for Date field: '${value}'. Expected a valid date string (e.g., YYYY-MM-DD or a full ISO timestamp).`);
+      throw new NodeOperationError(node, `Invalid value for Date field: '${value}'. Expected a valid date string (e.g., YYYY-MM-DD or a full ISO timestamp).`);
 
     case ASSET_LAYOUT_FIELD_TYPES.LIST_SELECT: {
       // API expects an array of item names. Normalise accordingly.
@@ -368,7 +369,7 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
         const ids = value.split(',').map(id => {
           const num = Number(id.trim());
           if (isNaN(num)) {
-            throw new Error(`Invalid non-numeric ID '${id.trim()}' found in list for AssetTag/Relation field.`);
+            throw new NodeOperationError(node, `Invalid non-numeric ID '${id.trim()}' found in list for AssetTag/Relation field.`);
           }
           return num;
         });
@@ -428,7 +429,7 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
           if (typeof parsed === 'object' && parsed !== null) {
             // Recurse through normalisation by calling self with parsed object path
             debugLog('[RESOURCE_TRANSFORM] Parsed JSON string for Address field', { original: value, parsed });
-            return transformFieldValueForUpdate(parsed, ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA);
+            return transformFieldValueForUpdate(parsed, ASSET_LAYOUT_FIELD_TYPES.ADDRESS_DATA, node);
           }
         } catch {
           // Not JSON, try CSV format: address_line_1, address_line_2, city, state, zip, country_name
@@ -453,10 +454,10 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
             }
           }
           
-          throw new Error(`Invalid address format: "${value}". Expected either:\n- JSON object: {"address_line_1":"...","city":"..."}\n- CSV format: address_line_1, address_line_2, city, state, zip, country_name (up to 6 comma-separated values)`);
+          throw new NodeOperationError(node, `Invalid address format: "${value}". Expected either:\n- JSON object: {"address_line_1":"...","city":"..."}\n- CSV format: address_line_1, address_line_2, city, state, zip, country_name (up to 6 comma-separated values)`);
         }
       }
-      throw new Error(`Invalid value for Address field: ${value}. Expected an address object, JSON string, or CSV string.`);
+      throw new NodeOperationError(node, `Invalid value for Address field: ${value}. Expected an address object, JSON string, or CSV string.`);
 
     case ASSET_LAYOUT_FIELD_TYPES.EMAIL:
     case ASSET_LAYOUT_FIELD_TYPES.PHONE:
@@ -477,11 +478,11 @@ export function transformFieldValueForUpdate(value: any, fieldType: string): any
 
     case ASSET_LAYOUT_FIELD_TYPES.HEADING:
       // Heading fields are display-only and shouldn't be updated
-      throw new Error(`Heading fields cannot be updated. Field type '${normalisedFieldType}' is for display purposes only.`);
+      throw new NodeOperationError(node, `Heading fields cannot be updated. Field type '${normalisedFieldType}' is for display purposes only.`);
 
     case ASSET_LAYOUT_FIELD_TYPES.DROPDOWN:
       // Legacy dropdown fields are not supported for updates
-      throw new Error(`Dropdown fields cannot be updated via the API. Please convert the field to a List type in Hudu to enable API updates.`);
+      throw new NodeOperationError(node, `Dropdown fields cannot be updated via the API. Please convert the field to a List type in Hudu to enable API updates.`);
 
     default:
       // For unknown field types, default to string conversion with a warning

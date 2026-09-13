@@ -8,6 +8,8 @@ import {
 	INodePropertyOptions,
 	NodeConnectionTypes,
 	NodeOperationError,
+	NodeApiError,
+	JsonObject,
 } from 'n8n-workflow';
 import { DEBUG_CONFIG, debugLog, initDebugLogger } from './utils/debugConfig';
 
@@ -496,7 +498,17 @@ export class Hudu implements INodeType {
 					returnData.push(...executionErrorData);
 					continue;
 				}
-				throw error;
+
+				// Local validation/configuration failures already carry node-aware error metadata.
+				// Re-wrapping them as NodeApiError would misclassify them as Hudu API failures and
+				// discard the original operation-error metadata. The community-nodes ruleset has no
+				// typed-rethrow exemption, so the rethrow needs a scoped suppression.
+				if (error instanceof NodeApiError || error instanceof NodeOperationError) {
+					// eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing an existing NodeApiError/NodeOperationError preserves its type and metadata
+					throw error;
+				}
+
+				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
 			}
 		}
 

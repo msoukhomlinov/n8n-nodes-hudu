@@ -66,9 +66,13 @@ export async function getCustomFieldsLayoutFields(
 		return options;
 	} catch (error) {
 		debugLog('[ASSET_OPTIONS] Error in getCustomFieldsLayoutFields:', error);
+		// Rethrow an inner node-aware error unchanged so its type and metadata survive; only
+		// unexpected failures get wrapped. Suppressed because the ruleset has no typed-rethrow exemption.
 		if (error instanceof NodeOperationError) {
+			// eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing an existing NodeOperationError preserves its type and metadata
 			throw error;
 		}
+
 		throw new NodeOperationError(this.getNode(), `Failed to load custom fields layout fields: ${(error as Error).message}`);
 	}
 } 

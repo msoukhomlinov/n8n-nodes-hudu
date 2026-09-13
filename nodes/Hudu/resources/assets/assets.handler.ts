@@ -9,7 +9,7 @@ import {
   handleGetOperation,
 } from '../../utils/operations';
 import type { AssetsOperations } from './assets.types';
-import { NodeOperationError, NodeApiError } from 'n8n-workflow';
+import { NodeOperationError, NodeApiError, JsonObject } from 'n8n-workflow';
 import { debugLog } from '../../utils/debugConfig';
 import { HUDU_API_CONSTANTS, ASSET_LAYOUT_FIELD_TYPES } from '../../utils/constants';
 import { getCompanyIdForAsset } from '../../utils/operations/getCompanyIdForAsset';
@@ -139,7 +139,7 @@ export async function handleAssetsOperation(
             typeof fieldValue,
             i
           );
-          const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
+          const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType, this.getNode());
           const fieldLabelKey = toSnakeCaseFieldLabel(fieldDef.label);
           const fieldObject: IDataObject = {
             [fieldLabelKey]: transformedValue,
@@ -190,8 +190,15 @@ export async function handleAssetsOperation(
           });
           throw new NodeOperationError(this.getNode(), parsedErrorMessage, { itemIndex: i });
         }
-        // Re-throw original error if it's not a NodeApiError
-        throw error;
+        // Already a node-aware operation error (e.g. local validation of user input): rethrow it
+        // unchanged instead of mislabelling it as an API failure. The community-nodes ruleset has no
+        // typed-rethrow exemption, hence the scoped suppression.
+        if (error instanceof NodeOperationError) {
+          // eslint-disable-next-line @n8n/community-nodes/require-node-api-error -- rethrowing an existing NodeOperationError preserves its type and metadata
+          throw error;
+        }
+        // Not a node-aware error: wrap it so the failure is still attributed to this node/item.
+        throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
       }
 
       debugLog('[API_RESPONSE] Create asset response', responseData);
@@ -418,7 +425,7 @@ export async function handleAssetsOperation(
                 typeof fieldValue,
                 i
               );
-              const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType);
+              const transformedValue = transformFieldValueForUpdate(fieldValue, fieldDef.fieldType, this.getNode());
               const fieldLabelKey = toSnakeCaseFieldLabel(fieldDef.label);
               const fieldObject: IDataObject = {
                 [fieldLabelKey]: transformedValue,
