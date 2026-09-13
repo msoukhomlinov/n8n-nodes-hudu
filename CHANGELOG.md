@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.12.2] - 2026-09-13
+
+### Fixed
+- **All 21 lint errors cleared — the repo's own lint gate is green again** (issue #50). Ten `@n8n/community-nodes/require-node-api-error` sites, five `no-unused-vars` bindings in `ai-tools/runtime.ts`, two description-casing errors, and three `HuduAiTools` node-shape errors (missing `subtitle`, `continueOnFail()` not handled, `node-usable-as-tool`).
+- **Node-aware errors are preserved instead of re-wrapped.** The top-level catch in `Hudu.node.ts`, `assets.handler.ts`, `asset_passwords.handler.ts` and both `asset_layouts` option loaders now rethrow an existing `NodeApiError`/`NodeOperationError` unchanged, so local validation and configuration failures are no longer misclassified as Hudu API failures and API failures keep their HTTP status and response context. The ruleset has no typed-rethrow exemption, so each rethrow carries a scoped, reasoned `eslint-disable`.
+- **`assetFieldUtils.ts` validation branches** throw `NodeOperationError(node, …)` and the helper takes a `node: INode` parameter, matching the n8n-Cloud-verifiable `n8n-nodes-hudu-core` edition.
+- **`.remember/**` is excluded from lint** — gitignored local tool scratch files are not package source.
+
+### Changed
+- **`public_photos` descriptions name the slug field as `id`**, matching `IPublicPhoto.id` and the API response (raised in review of #51). The casing rule's autofix would have written `ID`, which is not a key in the response.
+- **The Publish workflow uses `npm install` instead of `npm ci`.** `package-lock.json` is gitignored here, so `npm ci` always failed on a clean checkout — every Publish run from v2.8.1 to v2.12.1 stopped before build, lint and publish. This matches how `n8n-nodes-hudu-core` publishes.
+
 ## [2.12.1] - 2026-09-13
 
 ### Fixed
