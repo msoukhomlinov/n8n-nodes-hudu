@@ -443,7 +443,9 @@ export class Hudu implements INodeType {
 						);
 						break;
 					default:
-						throw new NodeOperationError(this.getNode(), `The resource "${resource}" is not known!`);
+						throw new NodeOperationError(this.getNode(), `The resource "${resource}" is not known!`, {
+							itemIndex: i,
+						});
 				}
 
 				// Handle wrapResults option for getAll operations
