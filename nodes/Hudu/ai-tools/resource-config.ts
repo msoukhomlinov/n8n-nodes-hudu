@@ -276,6 +276,27 @@ export const WRITE_OPERATIONS: HuduOperation[] = [
 ];
 
 /**
+ * Compute the effective operation set for a resource from the UI-selected operations.
+ * Shared by the supplyData() and execute() paths so both invocation paths enforce
+ * the exact same gate: write ops require allowWriteOperations, and only operations
+ * the resource config registers (`config.ops`) survive. Pure: no side effects,
+ * input order preserved.
+ */
+export function filterEnabledOperations(
+  operations: string[],
+  config: HuduResourceConfig,
+  allowWriteOperations: boolean,
+): string[] {
+  return operations.filter((op) => {
+    const typedOp = op as HuduOperation;
+    if (WRITE_OPERATIONS.includes(typedOp) && !allowWriteOperations) {
+      return false;
+    }
+    return config.ops.includes(typedOp);
+  });
+}
+
+/**
  * Per-resource map of field → values considered "default". Any field whose value
  * matches one of the listed defaults is omitted from the response envelope. The
  * tool description names the default once so the LLM can correctly interpret an

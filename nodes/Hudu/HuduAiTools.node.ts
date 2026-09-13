@@ -14,7 +14,11 @@ import type {
     SupplyData,
 } from 'n8n-workflow';
 
-import { HUDU_RESOURCE_CONFIG, WRITE_OPERATIONS } from './ai-tools/resource-config';
+import {
+  HUDU_RESOURCE_CONFIG,
+  WRITE_OPERATIONS,
+  filterEnabledOperations,
+} from './ai-tools/resource-config';
 import type { HuduOperation } from './ai-tools/resource-config';
 import { executeHuduAiTool } from './ai-tools/tool-executor';
 import { buildUnifiedDescription } from './ai-tools/description-builders';
@@ -165,13 +169,7 @@ export class HuduAiTools implements INodeType {
         }
 
         const resourceLabel = config.label;
-        const enabledOperations = operations.filter((op) => {
-            const typedOp = op as HuduOperation;
-            if (WRITE_OPERATIONS.includes(typedOp) && !allowWriteOperations) {
-                return false;
-            }
-            return config.ops.includes(typedOp);
-        });
+        const enabledOperations = filterEnabledOperations(operations, config, allowWriteOperations);
 
         // Empty-check runs BEFORE the help auto-include — a node where the user's selection
         // collapses to nothing (e.g. only write ops ticked but allowWriteOperations=false)
@@ -289,9 +287,7 @@ export class HuduAiTools implements INodeType {
             throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`);
         }
 
-        const effectiveOps = operations.filter(
-            (op) => !WRITE_OPERATIONS.includes(op as HuduOperation) || allowWriteOperations,
-        );
+        const effectiveOps = filterEnabledOperations(operations, config, allowWriteOperations);
 
         // Empty-check uses the pre-help count: a node whose user-selected ops collapse to
         // nothing should throw, not silently degrade to a help-only tool. Mirrors supplyData.
