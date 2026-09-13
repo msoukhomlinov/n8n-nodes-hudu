@@ -1,8 +1,13 @@
 name: Publish to npm
 
+# Manual only. This repo is published from the maintainer's machine, and it has no
+# NPM_TOKEN Actions secret, so a release-triggered run cannot authenticate: run
+# 34744241747 passed install, build and lint and then failed at `npm publish` with
+# `npm error code ENEEDAUTH`. The `release: [published]` trigger is deliberately gone, so
+# publishing a GitHub release cannot start a publish job. Re-add it only together with a
+# working NPM_TOKEN repository secret.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
