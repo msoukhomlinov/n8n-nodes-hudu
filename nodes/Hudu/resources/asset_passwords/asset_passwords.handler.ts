@@ -205,12 +205,7 @@ export async function handleAssetPasswordOperation(
 
     return responseData;
   } catch (error) {
-    // If it's already a NodeApiError or NodeOperationError, rethrow it
-    if (error.name === 'NodeApiError' || error.name === 'NodeOperationError') {
-      throw error;
-    }
-
-    // Handle any other unexpected errors
+    // Wrap any error in a NodeOperationError so n8n can associate it with the node
     throw new NodeOperationError(
       this.getNode(),
       `Failed to execute ${operation} operation: ${error.message}`,

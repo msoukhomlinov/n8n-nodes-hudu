@@ -102,7 +102,7 @@ function requireFromCachedTree(patterns: readonly string[], id: string): unknown
         const anchorReq = createRequire(key);
         const resolved = anchorReq(id);
         if (resolved) return resolved;
-      } catch (_) {
+      } catch {
         // This cached module can't reach `id`; try the next cached key / pattern.
       }
     }
@@ -119,7 +119,7 @@ function getMainRequire(): RuntimeRequire | null {
   if (!mainFile) return null;
   try {
     return createRequire(mainFile);
-  } catch (_) {
+  } catch {
     return null;
   }
 }
@@ -344,7 +344,7 @@ export function getLazyLogWrapper(): ((tool: unknown, context: unknown) => unkno
     try {
       const fn = extractLogWrapper(_mainReq('@n8n/ai-utilities'));
       if (fn) return (_logWrapper = fn);
-    } catch (_) {
+    } catch {
       // best-effort — @n8n/ai-utilities is not available in all n8n versions
     }
   }
@@ -353,7 +353,7 @@ export function getLazyLogWrapper(): ((tool: unknown, context: unknown) => unkno
     try {
       const fn = extractLogWrapper(_filesystemAnchorReq('@n8n/ai-utilities'));
       if (fn) return (_logWrapper = fn);
-    } catch (_) {
+    } catch {
       // best-effort — try the next resolution path
     }
   }
@@ -361,7 +361,7 @@ export function getLazyLogWrapper(): ((tool: unknown, context: unknown) => unkno
   try {
     const fn = extractLogWrapper(requireFromCachedTree(ZOD_TREE_PATTERNS, '@n8n/ai-utilities'));
     if (fn) return (_logWrapper = fn);
-  } catch (_) {
+  } catch {
     // best-effort — logWrapper is optional; supplyData falls back to the unwrapped tool
   }
 

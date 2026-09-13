@@ -250,9 +250,6 @@ export async function mapAssetLayoutFieldsForResource(
 		return getLayoutFields.call(this, includeAssetTags);
 	} catch (error) {
 		debugLog('[RESOURCE_MAPPING] Error in getAssetLayoutFields:', error);
-		if (error instanceof NodeOperationError) {
-			throw error;
-		}
 		throw new NodeOperationError(this.getNode(), `Failed to load asset layout fields: ${(error as Error).message}`);
 	}
 }
@@ -291,9 +288,6 @@ export async function getAssetLayoutFields(
 
 	} catch (error) {
 		debugLog('[OPTION_LOADING] Error in getAssetLayoutFields:', error);
-		if (error instanceof NodeOperationError) {
-			throw error;
-		}
 		throw new NodeOperationError(this.getNode(), `Failed to load asset layout fields: ${(error as Error).message}`);
 	}
 } 

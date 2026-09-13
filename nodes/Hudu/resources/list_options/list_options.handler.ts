@@ -1,4 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { handleGetOperation, handleUpdateOperation } from '../../utils/operations';
 import type { ListOptionsOperation } from './list_options.types';
 import { DEBUG_CONFIG, debugLog } from '../../utils/debugConfig';
@@ -122,7 +123,7 @@ export async function handleListOptionsOperation(
         if (DEBUG_CONFIG.RESOURCE_PROCESSING) {
           debugLog('Error fetching list options:', { error });
         }
-        throw new Error(`Error fetching list options: ${error.message}`);
+        throw new NodeOperationError(this.getNode(), `Error fetching list options: ${(error as Error).message}`);
       }
       
       break;

@@ -59,7 +59,7 @@ export const publicPhotosFields: INodeProperties[] = [
     },
     required: true,
     default: '',
-    description: 'Numeric ID of the photo to retrieve. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>id</code> field — the API returns 404 for slug values.',
+    description: 'Numeric ID of the photo to retrieve. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>ID</code> field — the API returns 404 for slug values.',
   },
   {
     displayName: 'Download',
@@ -213,7 +213,7 @@ export const publicPhotosFields: INodeProperties[] = [
     },
     required: true,
     default: '',
-    description: 'Numeric ID of the photo to update. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>id</code> field — the API returns 404 for slug values.',
+    description: 'Numeric ID of the photo to update. Use the <code>numeric_id</code> (integer) field from a prior Get Many result, NOT the slug string <code>ID</code> field — the API returns 404 for slug values.',
   },
   {
     displayName: 'Record Type',

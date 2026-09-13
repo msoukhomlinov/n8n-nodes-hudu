@@ -66,9 +66,6 @@ export async function getCustomFieldsLayoutFields(
 		return options;
 	} catch (error) {
 		debugLog('[ASSET_OPTIONS] Error in getCustomFieldsLayoutFields:', error);
-		if (error instanceof NodeOperationError) {
-			throw error;
-		}
 		throw new NodeOperationError(this.getNode(), `Failed to load custom fields layout fields: ${(error as Error).message}`);
 	}
 } 

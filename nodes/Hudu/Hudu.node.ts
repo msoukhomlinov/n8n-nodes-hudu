@@ -8,6 +8,8 @@ import {
 	INodePropertyOptions,
 	NodeConnectionTypes,
 	NodeOperationError,
+	NodeApiError,
+	JsonObject,
 } from 'n8n-workflow';
 import { DEBUG_CONFIG, debugLog, initDebugLogger } from './utils/debugConfig';
 
@@ -496,7 +498,7 @@ export class Hudu implements INodeType {
 					returnData.push(...executionErrorData);
 					continue;
 				}
-				throw error;
+				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
 			}
 		}
 

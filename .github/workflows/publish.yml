@@ -18,7 +18,10 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - run: npm ci
+      # This repo does not commit a lockfile (package-lock.json is gitignored),
+      # so `npm ci` always fails here — it requires a committed lockfile.
+      # The sibling n8n-nodes-hudu-core edition publishes the same way.
+      - run: npm install
 
       - run: npm run build
 
