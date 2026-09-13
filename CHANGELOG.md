@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.12.1] - 2026-09-13
+
+### Fixed
+- **AI Tools `execute()` operation-gate parity with `supplyData()`** (issue #46). `execute()`'s `effectiveOps` previously filtered the UI-selected `operations` only on the write-op gate, while `supplyData()`'s `enabledOperations` also required the op to be registered in the resource's `config.ops`. Both paths now derive the effective set from one shared pure helper (`filterEnabledOperations` in `ai-tools/resource-config.ts`), so a saved workflow re-pointed at a resource that no longer registers an op gets `INVALID_OPERATION` from the `execute()` path instead of the op reaching the API — matching what the `supplyData()`/LLM path always did. `execute()`'s acceptance set is a strict subset of before; no UI-legitimate selection changes behavior. Adds 6 regression tests.
+
 ## [2.12.0] - 2026-09-12
 
 ### Changed
