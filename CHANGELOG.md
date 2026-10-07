@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.13.0] - 2026-10-08
+
+### Added
+- **Flag Types resource** — full CRUD against `/flag_types` (name, color). Also exposed on Hudu AI Tools as `hudu_flag_types` (issue #52).
+- **Flags resource** — full CRUD against `/flags` (apply a flag type to a record via `flagable_type` / `flagable_id`, optional description). Also exposed on Hudu AI Tools as `hudu_flags` (issue #52).
+
 ## [2.12.2] - 2026-09-13
 
 ### Fixed
