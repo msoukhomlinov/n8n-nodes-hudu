@@ -53,7 +53,7 @@ export async function handleFlagsOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
       responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'flag');
       break;
     }
@@ -79,7 +79,7 @@ export async function handleFlagsOperation(
     }
 
     case 'update': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
       const updateFields = {
         ...(this.getNodeParameter('flagUpdateFields', i, {}) as IDataObject),
       };
@@ -117,7 +117,7 @@ export async function handleFlagsOperation(
     }
 
     case 'delete': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
       responseData = await handleDeleteOperation.call(this, resourceEndpoint, id);
       break;
     }

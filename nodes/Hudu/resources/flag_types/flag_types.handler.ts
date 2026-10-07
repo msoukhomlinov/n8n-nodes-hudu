@@ -1,4 +1,5 @@
-import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, INode } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import {
   handleCreateOperation,
   handleGetOperation,
@@ -8,6 +9,23 @@ import {
 } from '../../utils/operations';
 import type { FlagTypesOperation } from './flag_types.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+
+/**
+ * Coerce an ID field to a positive integer.
+ * Rejects malformed values (e.g. "12abc" from an expression) instead of sending NaN to the API.
+ */
+function coercePositiveInt(value: unknown, fieldName: string, itemIndex: number, node: INode): number {
+  const candidate = typeof value === 'string' ? value.trim() : value;
+  const num = typeof candidate === 'number' ? candidate : Number(candidate);
+  if (!Number.isInteger(num) || num < 1) {
+    throw new NodeOperationError(
+      node,
+      `${fieldName} must be a positive integer (got ${JSON.stringify(value)})`,
+      { itemIndex },
+    );
+  }
+  return num;
+}
 
 export async function handleFlagTypesOperation(
   this: IExecuteFunctions,
@@ -35,7 +53,7 @@ export async function handleFlagTypesOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
       responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'flag_type');
       break;
     }
@@ -51,7 +69,7 @@ export async function handleFlagTypesOperation(
     }
 
     case 'update': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
       const updateFields = {
         ...(this.getNodeParameter('flagTypeUpdateFields', i, {}) as IDataObject),
       };
@@ -63,7 +81,7 @@ export async function handleFlagTypesOperation(
     }
 
     case 'delete': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
       responseData = await handleDeleteOperation.call(this, resourceEndpoint, id);
       break;
     }
