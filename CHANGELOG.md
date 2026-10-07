@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.13.1] - 2026-10-08
+
+### Fixed
+- **Flags / Flag Types: record IDs are now validated.** Get, Update and Delete passed the ID field straight into the request path; it must now be a positive integer, and anything else (e.g. `12abc` or a path fragment) is rejected before a request is sent. Affects only the new Flags and Flag Types resources from 2.13.0.
+
 ## [2.13.0] - 2026-10-08
 
 ### Added
