@@ -62,6 +62,8 @@ export class Hudu implements INodeType {
 			...descriptions.companiesOperations,
 			...descriptions.expirationsOperations,
 			...descriptions.exportsOperations,
+			...descriptions.flagTypesOperations,
+			...descriptions.flagsOperations,
 			...descriptions.folderOperations,
 			...descriptions.groupsOperations,
 			...descriptions.ipAddressOperations,
@@ -100,6 +102,8 @@ export class Hudu implements INodeType {
 			...descriptions.companiesFields,
 			...descriptions.expirationsFields,
 			...descriptions.exportsFields,
+			...descriptions.flagTypesFields,
+			...descriptions.flagsFields,
 			...descriptions.folderFields,
 			...descriptions.groupsFields,
 			...descriptions.ipAddressFields,
@@ -136,6 +140,8 @@ export class Hudu implements INodeType {
 			getAssetLayoutFieldValues: optionLoaders.getAssetLayoutFieldValues,
 			getCustomFieldsLayoutFields: optionLoaders.getCustomFieldsLayoutFields,
 			getLists: optionLoaders.getLists,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			getFlagTypes: (optionLoaders as any).getFlagTypes as LoadOptionsHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			getLabelTypes: (optionLoaders as any).getLabelTypes as LoadOptionsHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -278,6 +284,20 @@ export class Hudu implements INodeType {
 						responseData = await resources.handleGroupsOperation.call(
 							this,
 							operation as resources.GroupsOperation,
+							i,
+						);
+						break;
+					case 'flag_types':
+						responseData = await resources.handleFlagTypesOperation.call(
+							this,
+							operation as resources.FlagTypesOperation,
+							i,
+						);
+						break;
+					case 'flags':
+						responseData = await resources.handleFlagsOperation.call(
+							this,
+							operation as resources.FlagsOperation,
 							i,
 						);
 						break;

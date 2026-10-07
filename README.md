@@ -92,6 +92,14 @@ To use this node, you need to:
 ### Expirations
 - Get all expirations with comprehensive filtering (company, expiration type, resource ID/type, date ranges)
 
+### Flag Types
+- Full CRUD for flag type definitions (name, color)
+- Filters: name, color, slug, created_at, updated_at; supports pagination
+
+### Flags
+- Full CRUD for applying flag types to records (assets, websites, articles, companies, and other supported types)
+- Filters: flag_type_id, flagable_type, flagable_id, description, created_at, updated_at; supports pagination
+
 ### Folders
 - Create and manage document folders
 - Support for nested folder structures
@@ -222,6 +230,8 @@ The AI Agent receives **one tool per resource** (e.g. `hudu_companies`, `hudu_as
 | Assets | get, getAll, create, update, delete, archive, unarchive |
 | Companies | get, getAll, create, update, delete, archive, unarchive |
 | Expirations | get, getAll, create, update, delete |
+| Flag Types | get, getAll, create, update, delete |
+| Flags | get, getAll, create, update, delete |
 | Folders | get, getAll, create, update, delete |
 | Groups | get, getAll |
 | IP Addresses | get, getAll, create, update, delete |

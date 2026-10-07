@@ -1,0 +1,1 @@
+export { getFlagTypes } from './loadFlagTypes';

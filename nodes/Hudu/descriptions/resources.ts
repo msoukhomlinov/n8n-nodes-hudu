@@ -46,6 +46,14 @@ export const resourceOptions = [
     value: 'exports',
   },
   {
+    name: 'Flag',
+    value: 'flags',
+  },
+  {
+    name: 'Flag Type',
+    value: 'flag_types',
+  },
+  {
     name: 'Folder',
     value: 'folders',
   },

@@ -8,6 +8,8 @@ export * from './assets.description';
 export * from './cards.description';
 export * from './companies.description';
 export * from './expirations.description';
+export * from './flag_types.description';
+export * from './flags.description';
 export * from './folders.description';
 export * from './ip_addresses.description';
 export * from './label_types.description';

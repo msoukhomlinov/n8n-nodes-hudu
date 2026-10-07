@@ -110,6 +110,8 @@ export const RESOURCES_WITH_PAGE_SIZE = [
   'companies',
   'companies/assets',
   'expirations',
+  'flag_types',
+  'flags',
   'folders',
   'magic_dash',
   'matchers',
@@ -229,6 +231,58 @@ export const LABEL_RECORD_TYPE_DESCRIPTIONS: Record<LabelRecordType, string> = {
   Network: 'network record',
   RackStorage: 'rack storage record',
 };
+
+/**
+ * Colour names accepted by Flag Types.
+ */
+export const FLAG_COLORS = [
+  'Red',
+  'Blue',
+  'Green',
+  'Yellow',
+  'Purple',
+  'Orange',
+  'LightPink',
+  'LightBlue',
+  'LightGreen',
+  'LightPurple',
+  'LightOrange',
+  'LightYellow',
+  'White',
+  'Grey',
+] as const;
+export type FlagColor = (typeof FLAG_COLORS)[number];
+
+/** n8n UI options for the flag type colour select. */
+export const FLAG_COLOR_OPTIONS = FLAG_COLORS.map((value) => ({
+  name: value,
+  value,
+}));
+
+/**
+ * Record types that Flags may be applied to.
+ * Casing matches the API enum (IpAddress, not IPAddress). API spelling is `flagable`.
+ */
+export const FLAGABLE_TYPES = [
+  'Asset',
+  'Website',
+  'Article',
+  'AssetPassword',
+  'Company',
+  'Procedure',
+  'RackStorage',
+  'Network',
+  'IpAddress',
+  'Vlan',
+  'VlanZone',
+] as const;
+export type FlagableType = (typeof FLAGABLE_TYPES)[number];
+
+/** n8n UI options for flagable_type selects. */
+export const FLAGABLE_TYPE_OPTIONS = FLAGABLE_TYPES.map((value) => ({
+  name: value,
+  value,
+}));
 
 /**
  * Record types allowed on Relations fromable_type / toable_type (Hudu API 2.44.2+).

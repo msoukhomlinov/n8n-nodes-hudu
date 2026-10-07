@@ -38,6 +38,10 @@ const RESOURCE_HINTS: Record<string, string> = {
     'No search — filter getAll by exact name/color/slug. Create requires name, color, applicable_record_types.',
   labels:
     'Apply a label type to a record. Create requires label_type_id, labelable_type, labelable_id. No search filter.',
+  flag_types:
+    'No search — filter getAll by exact name/color/slug. Create requires name, color (named palette, e.g. Red, LightBlue).',
+  flags:
+    'Flag a record with a flag type. Create requires flag_type_id, flagable_type, flagable_id; description optional. No search filter.',
 };
 
 const ENVELOPE_PREAMBLE =

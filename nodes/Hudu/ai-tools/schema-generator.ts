@@ -12,6 +12,8 @@ import {
   LABEL_RECORD_TYPES,
   LABEL_RECORD_TYPE_DESCRIPTIONS,
   RELATION_RECORD_TYPES,
+  FLAG_COLORS,
+  FLAGABLE_TYPES,
   RELATION_RECORD_TYPE_DESCRIPTIONS,
 } from '../utils/constants';
 
@@ -85,6 +87,12 @@ const labelRecordTypesArrayOptionalSchema = z
   .describe(
     `One or more record types this label type may be applied to. ${LABEL_RECORD_TYPES_DESC}`,
   );
+
+// Flag color / flagable record-type enums (API spelling: flagable)
+const flagColorSchema = z.enum(FLAG_COLORS).describe(`Flag color. One of: ${FLAG_COLORS.join(', ')}.`);
+const flagableTypeSchema = z
+  .enum(FLAGABLE_TYPES)
+  .describe(`Record type being flagged. One of: ${FLAGABLE_TYPES.join(', ')}.`);
 
 // Relation fromable/toable record-type enum (API 2.44.2+: IpAddress, not IPAddress)
 const RELATION_RECORD_TYPES_DESC = buildTypeDesc(
@@ -1397,6 +1405,102 @@ export function getLabelsUpdateSchema() {
   });
 }
 
+export function getFlagTypesGetAllSchema() {
+  return z.object({
+    name: optionalNameSchemaNoSearch,
+    color: flagColorSchema.optional(),
+    slug: z.string().optional().describe('Filter by exact slug value'),
+    created_at: z
+      .string()
+      .optional()
+      .describe('Filter by creation date (YYYY-MM-DD or ISO datetime)'),
+    updated_at: z
+      .string()
+      .optional()
+      .describe('Filter by update date (YYYY-MM-DD or ISO datetime)'),
+    limit: limitSchema,
+  });
+}
+
+export function getFlagsGetAllSchema() {
+  return z.object({
+    flag_type_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe(
+        'Filter by flag type ID. If unknown, call hudu_flag_types with operation getAll first.',
+      ),
+    flagable_type: flagableTypeSchema.optional(),
+    flagable_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Filter by the ID of the flagged record'),
+    description: z.string().optional().describe('Filter by exact description'),
+    created_at: z
+      .string()
+      .optional()
+      .describe('Filter by creation date (YYYY-MM-DD or ISO datetime)'),
+    updated_at: z
+      .string()
+      .optional()
+      .describe('Filter by update date (YYYY-MM-DD or ISO datetime)'),
+    limit: limitSchema,
+  });
+}
+
+export function getFlagTypesCreateSchema() {
+  return z.object({
+    name: nameSchema.describe('Flag type name'),
+    color: flagColorSchema,
+  });
+}
+
+export function getFlagsCreateSchema() {
+  return z.object({
+    flag_type_id: z
+      .number()
+      .int()
+      .min(1)
+      .describe(
+        'ID of the flag type to apply. If unknown, call hudu_flag_types with operation getAll to find it.',
+      ),
+    flagable_type: flagableTypeSchema,
+    flagable_id: z
+      .number()
+      .int()
+      .min(1)
+      .describe('Numeric ID of the record being flagged (from a prior getAll on that resource)'),
+    description: z.string().optional().describe('Optional description for the flag'),
+  });
+}
+
+export function getFlagTypesUpdateSchema() {
+  return z.object({
+    id: idSchema,
+    name: z.string().optional().describe('Flag type name'),
+    color: flagColorSchema.optional(),
+  });
+}
+
+export function getFlagsUpdateSchema() {
+  return z.object({
+    id: idSchema,
+    flag_type_id: z.number().int().min(1).optional().describe('ID of the flag type to apply'),
+    flagable_type: flagableTypeSchema.optional(),
+    flagable_id: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe('Numeric ID of the record being flagged'),
+    description: z.string().optional().describe('Description for the flag'),
+  });
+}
+
 const OPERATION_LABELS: Record<HuduOperation, string> = {
   get: 'Get by ID',
   getAll: 'Get many',
@@ -1618,6 +1722,10 @@ function getGetAllSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getLabelTypesGetAllSchema();
     case 'labels':
       return getLabelsGetAllSchema();
+    case 'flag_types':
+      return getFlagTypesGetAllSchema();
+    case 'flags':
+      return getFlagsGetAllSchema();
     case 'magic_dash':
       return getMagicDashGetAllSchema();
     default:
@@ -1655,6 +1763,10 @@ function getCreateSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getLabelTypesCreateSchema();
     case 'labels':
       return getLabelsCreateSchema();
+    case 'flag_types':
+      return getFlagTypesCreateSchema();
+    case 'flags':
+      return getFlagsCreateSchema();
     default:
       return getCompaniesCreateSchema();
   }
@@ -1692,6 +1804,10 @@ function getUpdateSchemaForResource(resource: string): z.ZodObject<z.ZodRawShape
       return getLabelTypesUpdateSchema();
     case 'labels':
       return getLabelsUpdateSchema();
+    case 'flag_types':
+      return getFlagTypesUpdateSchema();
+    case 'flags':
+      return getFlagsUpdateSchema();
     default:
       return getCompaniesUpdateSchema();
   }
