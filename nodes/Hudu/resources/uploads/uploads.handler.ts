@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing, handleBinaryDownload } from '../../utils';
+import { huduApiRequest, handleListing, handleBinaryDownload, coercePositiveInt } from '../../utils';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 import type { UploadOperation } from './uploads.types';
 
@@ -60,7 +60,7 @@ export async function handleUploadOperation(
     }
 
     case 'get': {
-      const id = this.getNodeParameter('id', i) as number;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'Upload ID', i);
       const download = this.getNodeParameter('download', i, false) as boolean;
 
       if (download) {
@@ -81,7 +81,7 @@ export async function handleUploadOperation(
     }
 
     case 'delete': {
-      const id = this.getNodeParameter('id', i) as number;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'Upload ID', i);
       responseData = await huduApiRequest.call(
         this,
         'DELETE' as IHttpRequestMethods,

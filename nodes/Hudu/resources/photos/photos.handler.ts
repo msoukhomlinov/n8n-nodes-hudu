@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
-import { huduApiRequest, handleListing, handleBinaryDownload } from '../../utils';
+import { huduApiRequest, handleListing, handleBinaryDownload, coercePositiveInt } from '../../utils';
 import {
 	handleGetOperation,
 	handleDeleteOperation,
@@ -58,7 +58,7 @@ export async function handlePhotoOperation(
 		}
 
 		case 'get': {
-			const photoId = this.getNodeParameter('photoId', i) as number;
+			const photoId = coercePositiveInt(this.getNodeParameter('photoId', i), this.getNode(), 'Photo ID', i);
 			const download = this.getNodeParameter('download', i, false) as boolean;
 
 			if (download) {
@@ -145,7 +145,7 @@ export async function handlePhotoOperation(
 		}
 
 		case 'update': {
-			const photoId = this.getNodeParameter('photoId', i) as number;
+			const photoId = coercePositiveInt(this.getNodeParameter('photoId', i), this.getNode(), 'Photo ID', i);
 			const updateFields = this.getNodeParameter('photoUpdateFields', i) as IDataObject;
 
 			const body: IDataObject = {};
@@ -165,7 +165,7 @@ export async function handlePhotoOperation(
 		}
 
 		case 'delete': {
-			const photoId = this.getNodeParameter('photoId', i) as number;
+			const photoId = coercePositiveInt(this.getNodeParameter('photoId', i), this.getNode(), 'Photo ID', i);
 			responseData = await handleDeleteOperation.call(
 				this,
 				resourceEndpoint,

@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, resolveRequiredCompanyId, validateCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId, coercePositiveInt } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -47,7 +47,7 @@ export async function handleCompaniesOperation(
     }
 
     case 'delete': {
-      const companyId = validateCompanyId(
+      const companyId = coercePositiveInt(
         this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
@@ -91,7 +91,7 @@ export async function handleCompaniesOperation(
         responseData = companies[0];
       } else {
         // Use existing handleGetOperation for ID-based retrieval
-        const validatedCompanyId = validateCompanyId(
+        const validatedCompanyId = coercePositiveInt(
           companyId,
           this.getNode(),
           'Company ID'
@@ -142,7 +142,7 @@ export async function handleCompaniesOperation(
     }
 
     case 'update': {
-      const companyId = validateCompanyId(
+      const companyId = coercePositiveInt(
         this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
@@ -167,7 +167,7 @@ export async function handleCompaniesOperation(
     }
 
     case 'archive': {
-      const companyId = validateCompanyId(
+      const companyId = coercePositiveInt(
         this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'
@@ -177,7 +177,7 @@ export async function handleCompaniesOperation(
     }
 
     case 'unarchive': {
-      const companyId = validateCompanyId(
+      const companyId = coercePositiveInt(
         this.getNodeParameter('companyId', i),
         this.getNode(),
         'Company ID'

@@ -4,7 +4,7 @@ import type {
   IHttpRequestMethods,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { huduApiRequest, handleListing, handleBinaryDownload } from '../../utils';
+import { huduApiRequest, handleListing, handleBinaryDownload, coercePositiveInt } from '../../utils';
 import type { PublicPhotoOperation, IPublicPhoto } from './public_photos.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
 
@@ -88,7 +88,7 @@ export async function handlePublicPhotoOperation(
     }
 
     case 'get': {
-      const photoId = this.getNodeParameter('id', i) as string;
+      const photoId = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'Photo ID', i);
       const download = this.getNodeParameter('download', i, false) as boolean;
 
       if (download) {
@@ -119,7 +119,7 @@ export async function handlePublicPhotoOperation(
     }
 
     case 'update': {
-      const id = this.getNodeParameter('id', i) as string;
+      const id = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'Photo ID', i);
       const formData: IDataObject = {
         record_type: this.getNodeParameter('record_type', i) as string,
         record_id: this.getNodeParameter('record_id', i) as number,

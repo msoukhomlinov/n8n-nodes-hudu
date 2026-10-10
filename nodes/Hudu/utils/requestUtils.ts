@@ -16,6 +16,7 @@ import type {
   IHttpRequestMethods,
   IHttpRequestOptions,
   ICredentialDataDecryptedObject,
+  INode,
   JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError, NodeOperationError } from 'n8n-workflow';
@@ -102,6 +103,25 @@ export function toJsonObject(obj: IDataObject): JsonObject {
     }
   }
   return result;
+}
+
+/**
+ * Every Hudu v1 endpoint is a sequence of `/segment` parts made of letters, digits and
+ * underscores (resource names and integer IDs). Anything else (`..`, `?`, `#`, `%`, `.`,
+ * whitespace, an empty segment) means a malformed value reached the path.
+ */
+const SAFE_ENDPOINT = /^(\/[A-Za-z0-9_]+)+$/;
+
+/**
+ * Reject an endpoint that is not a plain `/segment/segment` path before any request is made.
+ */
+export function assertSafeEndpoint(node: INode, endpoint: string): void {
+  if (typeof endpoint !== 'string' || !SAFE_ENDPOINT.test(endpoint)) {
+    throw new NodeOperationError(
+      node,
+      `Refusing to call Hudu API: invalid request path ${JSON.stringify(endpoint)}. Check that every ID is a positive integer.`,
+    );
+  }
 }
 
 /**
@@ -397,6 +417,7 @@ export async function huduApiRequest(
   qs: IDataObject = {},
   resourceName?: string,
 ): Promise<IDataObject | IDataObject[]> {
+  assertSafeEndpoint(this.getNode(), endpoint);
   const credentials = await this.getCredentials('huduApi');
   const requestOptions = createHuduRequest(credentials, { method, endpoint, body, qs });
   const response = await executeHuduRequest.call(this, requestOptions);
@@ -518,6 +539,7 @@ export async function handleBinaryDownload(
   binaryPropertyName: string,
   itemIndex: number,
 ): Promise<IDataObject> {
+  assertSafeEndpoint(this.getNode(), endpoint);
   const credentials = await this.getCredentials('huduApi');
   if (!credentials?.baseUrl) {
     throw new Error('Missing API credentials. Please provide the base URL.');

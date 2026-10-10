@@ -1,5 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { huduApiRequest } from '../requestUtils';
+import { coercePositiveInt } from '../validation';
 import { DEBUG_CONFIG, debugLog } from '../debugConfig';
 
 export async function handleUpdateOperation(
@@ -19,7 +20,7 @@ export async function handleUpdateOperation(
   const response = await huduApiRequest.call(
     this,
     'PUT',
-    `${resourceEndpoint}/${id}`,
+    `${resourceEndpoint}/${coercePositiveInt(id, this.getNode())}`,
     body,
   );
 

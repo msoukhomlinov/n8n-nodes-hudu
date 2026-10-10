@@ -1,5 +1,4 @@
-import type { IExecuteFunctions, IDataObject, INode } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import {
   handleCreateOperation,
   handleGetOperation,
@@ -9,23 +8,7 @@ import {
 } from '../../utils/operations';
 import type { LabelsOperation } from './labels.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-
-/**
- * Coerce an ID field to a positive integer.
- * Rejects malformed values (e.g. "12abc" from an expression) instead of sending NaN to the API.
- */
-function coercePositiveInt(value: unknown, fieldName: string, itemIndex: number, node: INode): number {
-  const candidate = typeof value === 'string' ? value.trim() : value;
-  const num = typeof candidate === 'number' ? candidate : Number(candidate);
-  if (!Number.isInteger(num) || num < 1) {
-    throw new NodeOperationError(
-      node,
-      `${fieldName} must be a positive integer (got ${JSON.stringify(value)})`,
-      { itemIndex },
-    );
-  }
-  return num;
-}
+import { coercePositiveInt } from '../../utils/validation';
 
 export async function handleLabelsOperation(
   this: IExecuteFunctions,
@@ -65,13 +48,13 @@ export async function handleLabelsOperation(
       const userId = this.getNodeParameter('user_id', i, '') as number | string;
 
       const body: IDataObject = {
-        label_type_id: coercePositiveInt(labelTypeId, 'label_type_id', i, this.getNode()),
+        label_type_id: coercePositiveInt(labelTypeId, this.getNode(), 'label_type_id', i),
         labelable_type: labelableType,
-        labelable_id: coercePositiveInt(labelableId, 'labelable_id', i, this.getNode()),
+        labelable_id: coercePositiveInt(labelableId, this.getNode(), 'labelable_id', i),
       };
 
       if (userId !== '' && userId !== undefined && userId !== null) {
-        body.user_id = coercePositiveInt(userId, 'user_id', i, this.getNode());
+        body.user_id = coercePositiveInt(userId, this.getNode(), 'user_id', i);
       }
 
       responseData = await handleCreateOperation.call(this, resourceEndpoint, { label: body });
@@ -87,9 +70,9 @@ export async function handleLabelsOperation(
       if (updateFields.label_type_id !== undefined && updateFields.label_type_id !== '') {
         updateFields.label_type_id = coercePositiveInt(
           updateFields.label_type_id,
+          this.getNode(),
           'labelUpdateFields.label_type_id',
           i,
-          this.getNode(),
         );
       } else {
         delete updateFields.label_type_id;
@@ -98,9 +81,9 @@ export async function handleLabelsOperation(
       if (updateFields.labelable_id !== undefined && updateFields.labelable_id !== '') {
         updateFields.labelable_id = coercePositiveInt(
           updateFields.labelable_id,
+          this.getNode(),
           'labelUpdateFields.labelable_id',
           i,
-          this.getNode(),
         );
       } else {
         delete updateFields.labelable_id;
@@ -109,9 +92,9 @@ export async function handleLabelsOperation(
       if (updateFields.user_id !== undefined && updateFields.user_id !== '') {
         updateFields.user_id = coercePositiveInt(
           updateFields.user_id,
+          this.getNode(),
           'labelUpdateFields.user_id',
           i,
-          this.getNode(),
         );
       } else {
         delete updateFields.user_id;

@@ -1,5 +1,6 @@
 import type { IExecuteFunctions, ILoadOptionsFunctions, IDataObject } from 'n8n-workflow';
 import { huduApiRequest } from '../requestUtils';
+import { coercePositiveInt } from '../validation';
 import { DEBUG_CONFIG, debugLog } from '../debugConfig';
 
 export async function handleGetOperation(
@@ -18,7 +19,7 @@ export async function handleGetOperation(
   const response = await huduApiRequest.call(
     this,
     'GET',
-    `${resourceEndpoint}/${id}`,
+    `${resourceEndpoint}/${coercePositiveInt(id, this.getNode())}`,
     {},
     {},
     resourceName,

@@ -21,7 +21,7 @@ export async function handleListOptionsOperation(
   switch (operation) {
     case 'get': {
       // Get list ID - should be a number from the option loader
-      const listId = this.getNodeParameter('list_id', i) as string | number;
+      const listId = this.getNodeParameter('list_id', i, undefined, { extractValue: true }) as string | number;
       
       if (DEBUG_CONFIG.RESOURCE_PARAMS) {
         debugLog('List Options Handler - Parameters', {
@@ -130,7 +130,7 @@ export async function handleListOptionsOperation(
     }
     case 'create': {
       // Get list ID
-      const listId = this.getNodeParameter('list_id', i) as string | number;
+      const listId = this.getNodeParameter('list_id', i, undefined, { extractValue: true }) as string | number;
       // Get list item name
       const name = this.getNodeParameter('name', i) as string;
       
@@ -181,7 +181,7 @@ export async function handleListOptionsOperation(
     }
     case 'update': {
       // Get list ID
-      const listId = this.getNodeParameter('list_id', i) as string | number;
+      const listId = this.getNodeParameter('list_id', i, undefined, { extractValue: true }) as string | number;
       // Get list item ID - coerce to number to match API integer requirement
       const itemId = Number(this.getNodeParameter('item_id', i));
       // Get updated name
@@ -236,7 +236,7 @@ export async function handleListOptionsOperation(
     }
     case 'delete': {
       // Get list ID
-      const listId = this.getNodeParameter('list_id', i) as string | number;
+      const listId = this.getNodeParameter('list_id', i, undefined, { extractValue: true }) as string | number;
       // Get list item ID - coerce to number to match API integer requirement
       const itemId = Number(this.getNodeParameter('item_id', i));
       

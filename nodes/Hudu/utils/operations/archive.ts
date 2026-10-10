@@ -1,5 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { huduApiRequest } from '../requestUtils';
+import { coercePositiveInt } from '../validation';
 import { DEBUG_CONFIG, debugLog } from '../debugConfig';
 
 export async function handleArchiveOperation(
@@ -18,9 +19,11 @@ export async function handleArchiveOperation(
     });
   }
 
-  const endpoint = companyId 
-    ? `/companies/${companyId}${resourceEndpoint}/${id}/${archive ? 'archive' : 'unarchive'}`
-    : `${resourceEndpoint}/${id}/${archive ? 'archive' : 'unarchive'}`;
+  const recordId = coercePositiveInt(id, this.getNode());
+  const action = archive ? 'archive' : 'unarchive';
+  const endpoint = companyId
+    ? `/companies/${coercePositiveInt(companyId, this.getNode(), 'Company ID')}${resourceEndpoint}/${recordId}/${action}`
+    : `${resourceEndpoint}/${recordId}/${action}`;
 
   const response = await huduApiRequest.call(
     this,

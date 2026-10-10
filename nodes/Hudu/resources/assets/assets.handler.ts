@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
-import { processDateRange, resolveRequiredCompanyId, resolveCompanyId, huduApiRequest } from '../../utils';
+import { processDateRange, resolveRequiredCompanyId, resolveCompanyId, huduApiRequest, coercePositiveInt } from '../../utils';
 import type { IDateRange } from '../../utils';
 import {
   handleGetAllOperation,
@@ -391,7 +391,7 @@ export async function handleAssetsOperation(
 
         debugLog('[RESOURCE_MAPPER] Using enhanced resource mapper for asset update', { assetId, mappedFields });
         // Fetch asset context
-        const assetMeta = await getAssetWithMetadata(this, Number(assetId), i);
+        const assetMeta = await getAssetWithMetadata(this, coercePositiveInt(assetId, this.getNode(), 'Asset ID', i), i);
         
         // Fetch layout fields for efficient validation
         const layoutResponse = await handleGetOperation.call(this, '/asset_layouts', String(assetMeta.assetLayoutId)) as IDataObject;
@@ -465,7 +465,7 @@ export async function handleAssetsOperation(
 
     case 'archive':
     case 'unarchive': {
-      const assetId = this.getNodeParameter('assetId', i) as string;
+      const assetId = coercePositiveInt(this.getNodeParameter('assetId', i), this.getNode(), 'Asset ID', i);
       const { companyId } = await getCompanyIdForAsset(this, assetId, i);
       responseData = await handleArchiveOperation.call(
         this,
@@ -479,7 +479,7 @@ export async function handleAssetsOperation(
     }
 
     case 'delete': {
-      const assetId = this.getNodeParameter('assetId', i) as string;
+      const assetId = coercePositiveInt(this.getNodeParameter('assetId', i), this.getNode(), 'Asset ID', i);
       const { companyId } = await getCompanyIdForAsset(this, assetId, i);
       responseData = await handleDeleteOperation.call(
         this,
@@ -493,14 +493,14 @@ export async function handleAssetsOperation(
 
     case 'moveLayout': {
       debugLog('[OPERATION_MOVE_LAYOUT] Processing move asset layout operation');
-      const assetId = this.getNodeParameter('assetId', i) as string;
+      const assetId = coercePositiveInt(this.getNodeParameter('assetId', i), this.getNode(), 'Asset ID', i);
       const newLayoutId = this.getNodeParameter('target_asset_layout_id', i) as number;
       const { companyId } = await getCompanyIdForAsset(this, assetId, i);
       const body: IDataObject = {
         asset_layout_id: newLayoutId,
       };
       debugLog('[API_REQUEST] Moving asset layout with body', { assetId, companyId, body });
-      responseData = await huduApiRequest.call(this, 'PUT', `/companies/${companyId}/assets/${assetId}/move_layout`, body);
+      responseData = await huduApiRequest.call(this, 'PUT', `/companies/${coercePositiveInt(companyId, this.getNode(), 'Company ID', i)}/assets/${assetId}/move_layout`, body);
       debugLog('[API_RESPONSE] Move asset layout response', responseData);
       break;
     }

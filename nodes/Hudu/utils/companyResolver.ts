@@ -99,7 +99,7 @@ export async function resolveCompanyId(
 
 /**
  * Same as resolveCompanyId but throws on empty — drop-in async replacement for
- * validateCompanyId at required call sites.
+ * coercePositiveInt at required call sites.
  */
 export async function resolveRequiredCompanyId(
   context: IExecuteFunctions,

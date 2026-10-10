@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { processDateRange, resolveRequiredCompanyId } from '../../utils/index';
+import { processDateRange, resolveRequiredCompanyId, coercePositiveInt } from '../../utils/index';
 import {
   handleGetAllOperation,
   handleGetOperation,
@@ -180,7 +180,7 @@ export async function handleProceduresOperation(
     
 
     case 'createFromTemplate': {
-      const templateId = this.getNodeParameter('template_id', i) as string;
+      const templateId = coercePositiveInt(this.getNodeParameter('template_id', i), this.getNode(), 'Template ID', i);
       const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
       const qs: IDataObject = {};
@@ -217,7 +217,7 @@ export async function handleProceduresOperation(
     }
 
     case 'duplicate': {
-      const procedureId = this.getNodeParameter('id', i) as string;
+      const procedureId = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'Procedure ID', i);
       const companyId = await resolveRequiredCompanyId(
         this,
         this.getNodeParameter('companyId', i),

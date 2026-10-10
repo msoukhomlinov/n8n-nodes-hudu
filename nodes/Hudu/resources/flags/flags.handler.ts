@@ -1,5 +1,4 @@
-import type { IExecuteFunctions, IDataObject, INode } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import {
   handleCreateOperation,
   handleGetOperation,
@@ -9,23 +8,7 @@ import {
 } from '../../utils/operations';
 import type { FlagsOperation } from './flags.types';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
-
-/**
- * Coerce an ID field to a positive integer.
- * Rejects malformed values (e.g. "12abc" from an expression) instead of sending NaN to the API.
- */
-function coercePositiveInt(value: unknown, fieldName: string, itemIndex: number, node: INode): number {
-  const candidate = typeof value === 'string' ? value.trim() : value;
-  const num = typeof candidate === 'number' ? candidate : Number(candidate);
-  if (!Number.isInteger(num) || num < 1) {
-    throw new NodeOperationError(
-      node,
-      `${fieldName} must be a positive integer (got ${JSON.stringify(value)})`,
-      { itemIndex },
-    );
-  }
-  return num;
-}
+import { coercePositiveInt } from '../../utils/validation';
 
 export async function handleFlagsOperation(
   this: IExecuteFunctions,
@@ -53,7 +36,7 @@ export async function handleFlagsOperation(
     }
 
     case 'get': {
-      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
+      const id = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'id', i);
       responseData = await handleGetOperation.call(this, resourceEndpoint, id, 'flag');
       break;
     }
@@ -65,9 +48,9 @@ export async function handleFlagsOperation(
       const description = this.getNodeParameter('description', i, '') as string;
 
       const body: IDataObject = {
-        flag_type_id: coercePositiveInt(flagTypeId, 'flag_type_id', i, this.getNode()),
+        flag_type_id: coercePositiveInt(flagTypeId, this.getNode(), 'flag_type_id', i),
         flagable_type: flagableType,
-        flagable_id: coercePositiveInt(flagableId, 'flagable_id', i, this.getNode()),
+        flagable_id: coercePositiveInt(flagableId, this.getNode(), 'flagable_id', i),
       };
 
       if (description !== '') {
@@ -79,7 +62,7 @@ export async function handleFlagsOperation(
     }
 
     case 'update': {
-      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
+      const id = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'id', i);
       const updateFields = {
         ...(this.getNodeParameter('flagUpdateFields', i, {}) as IDataObject),
       };
@@ -87,9 +70,9 @@ export async function handleFlagsOperation(
       if (updateFields.flag_type_id !== undefined && updateFields.flag_type_id !== '') {
         updateFields.flag_type_id = coercePositiveInt(
           updateFields.flag_type_id,
+          this.getNode(),
           'flagUpdateFields.flag_type_id',
           i,
-          this.getNode(),
         );
       } else {
         delete updateFields.flag_type_id;
@@ -98,9 +81,9 @@ export async function handleFlagsOperation(
       if (updateFields.flagable_id !== undefined && updateFields.flagable_id !== '') {
         updateFields.flagable_id = coercePositiveInt(
           updateFields.flagable_id,
+          this.getNode(),
           'flagUpdateFields.flagable_id',
           i,
-          this.getNode(),
         );
       } else {
         delete updateFields.flagable_id;
@@ -117,7 +100,7 @@ export async function handleFlagsOperation(
     }
 
     case 'delete': {
-      const id = coercePositiveInt(this.getNodeParameter('id', i), 'id', i, this.getNode());
+      const id = coercePositiveInt(this.getNodeParameter('id', i), this.getNode(), 'id', i);
       responseData = await handleDeleteOperation.call(this, resourceEndpoint, id);
       break;
     }

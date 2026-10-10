@@ -1,5 +1,6 @@
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { huduApiRequest } from '../requestUtils';
+import { coercePositiveInt } from '../validation';
 import { DEBUG_CONFIG, debugLog } from '../debugConfig';
 
 export async function handleDeleteOperation(
@@ -16,9 +17,10 @@ export async function handleDeleteOperation(
     });
   }
 
-  const endpoint = companyId 
-    ? `/companies/${companyId}${resourceEndpoint}/${id}`
-    : `${resourceEndpoint}/${id}`;
+  const recordId = coercePositiveInt(id, this.getNode());
+  const endpoint = companyId
+    ? `/companies/${coercePositiveInt(companyId, this.getNode(), 'Company ID')}${resourceEndpoint}/${recordId}`
+    : `${resourceEndpoint}/${recordId}`;
 
   const response = await huduApiRequest.call(
     this,
