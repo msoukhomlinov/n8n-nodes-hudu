@@ -68,4 +68,20 @@ describe('password_shares create: expire_in guard', () => {
     await expect(handlePasswordSharesOperation.call(ctx, 'create', 0)).rejects.toThrow(/positive integer/);
     expect(request).not.toHaveBeenCalled();
   });
+
+  it('rejects expire_in above the 1-year maximum (31536001) before any request', async () => {
+    const { ctx, request } = makeContext({ asset_password_id: 42, expire_in: 31536001, additionalFields: {} });
+    await expect(handlePasswordSharesOperation.call(ctx, 'create', 0)).rejects.toThrow(/1 and 31536000/);
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('accepts expire_in at the 1-year maximum (31536000 boundary)', async () => {
+    const { wire } = await createShare({ asset_password_id: 42, expire_in: 31536000, additionalFields: {} });
+    expect(wire.expire_in).toBe(31536000);
+  });
+
+  it('still accepts expire_in: 1', async () => {
+    const { wire } = await createShare({ asset_password_id: 42, expire_in: 1, additionalFields: {} });
+    expect(wire.expire_in).toBe(1);
+  });
 });

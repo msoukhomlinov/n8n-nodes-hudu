@@ -253,7 +253,7 @@ The AI Agent receives **one tool per resource** (e.g. `hudu_companies`, `hudu_as
 
 ### Notes
 
-- **Read-only by default**: write operations (create, update, delete, archive, unarchive) are hidden until `Allow Write Operations` is enabled
+- **Read-only by default**: write operations (create, update, delete, archive, unarchive, move, pin, unpin) are hidden until `Allow Write Operations` is enabled
 - **Error handling**: all errors are returned as structured JSON with an `error`, `errorType`, and `nextAction` field so the LLM can self-correct without crashing the workflow
 - **Assets**: require `company_id` for create/update/delete/archive because Hudu's API routes asset mutations through the company endpoint
 - **Matchers**: `getAll` requires an `integration_id` parameter

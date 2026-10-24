@@ -479,7 +479,7 @@ export const assetLayoutManageFields: INodeProperties[] = [
             },
             default: '',
             placeholder: 'USD',
-            description: 'ISO 4217 currency code (e.g. USD). Only used when Number Type is Currency.',
+            description: 'ISO 4217 currency code (e.g. USD). Required when Number Type is Currency.',
           },
           // eslint-disable-next-line n8n-nodes-base/node-param-default-missing
           {
@@ -620,7 +620,7 @@ export const assetLayoutManageFields: INodeProperties[] = [
               },
             ],
             default: 'number',
-            description: 'How Number field values are displayed. Only used by Number fields.',
+            description: 'Values: number (plain number display), currency (currency display, uses Currency Code), percentage (percentage display)',
           },
           {
             displayName: 'Position',

@@ -43,11 +43,21 @@ export async function handlePasswordSharesOperation(
     }
 
     case 'create': {
+      // Hudu's expire_in is an unbounded int64; the 1-year cap is set by the
+      // node so the "never-expire links are not permitted" guarantee holds.
+      const MAX_EXPIRE_IN = 31536000; // 1 year in seconds
       const expireIn = this.getNodeParameter('expire_in', i) as number;
       if (!Number.isFinite(expireIn) || expireIn <= 0 || !Number.isInteger(expireIn)) {
         throw new NodeOperationError(
           this.getNode(),
           'expire_in must be a positive integer (seconds until the link expires). Never-expire links are not permitted.',
+          { itemIndex: i },
+        );
+      }
+      if (expireIn > MAX_EXPIRE_IN) {
+        throw new NodeOperationError(
+          this.getNode(),
+          `expire_in must be between 1 and ${MAX_EXPIRE_IN} seconds (1 year). Never-expire links are not permitted.`,
           { itemIndex: i },
         );
       }

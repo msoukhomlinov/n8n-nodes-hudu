@@ -127,9 +127,10 @@ export const passwordSharesFields: INodeProperties[] = [
     },
     typeOptions: {
       minValue: 1,
+      maxValue: 31536000,
     },
     default: 86400,
-    description: 'Number of seconds until the link expires. Must be greater than 0. Never-expire links are not permitted.',
+    description: 'Number of seconds until the link expires. Must be between 1 and 31536000 (1 year). Never-expire links are not permitted.',
   },
   {
     displayName: 'Additional Fields',

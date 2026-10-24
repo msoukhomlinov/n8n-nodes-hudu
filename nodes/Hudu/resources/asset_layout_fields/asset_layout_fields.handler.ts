@@ -94,11 +94,16 @@ export async function handleAssetLayoutFieldOperation(
 			const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 			debugLog('[RESOURCE_PARAMS] Create field parameters', { fieldType, label, additionalFields });
 
+			// Additional fields may supply extra keys, but the declared
+			// label/field_type win, and the vendor create contract accepts no
+			// client-chosen field id (API 2.48.1: POST /asset_layouts field
+			// items have no 'id' property).
 			const newField: Partial<IAssetLayoutFieldEntity> = {
+				...additionalFields,
 				label,
 				field_type: fieldType,
-				...additionalFields,
 			};
+			delete newField.id;
 
 			if (newField.field_type !== 'ListSelect') {
 				delete newField.list_id;
@@ -128,6 +133,10 @@ export async function handleAssetLayoutFieldOperation(
 			}
 
 			const updatedField = { ...fields[fieldIndex], ...updateFields };
+			// Pin the write to the located field: an id carried by
+			// updateFields would retarget the whole-layout PUT to a record
+			// the caller never named.
+			updatedField.id = fields[fieldIndex].id;
 			if (updatedField.field_type !== 'ListSelect') {
 				delete updatedField.list_id;
 				delete updatedField.multiple_options;
