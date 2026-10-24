@@ -51,10 +51,22 @@ export const articlesOperations: INodeProperties[] = [
         action: 'Get version history',
       },
       {
+        name: 'Pin',
+        value: 'pin',
+        description: 'Pin article to the top of the list',
+        action: 'Pin article',
+      },
+      {
         name: 'Unarchive',
         value: 'unarchive',
         description: 'Unarchive article',
         action: 'Unarchive article',
+      },
+      {
+        name: 'Unpin',
+        value: 'unpin',
+        description: 'Unpin article from the top of the list',
+        action: 'Unpin article',
       },
       {
         name: 'Update',
@@ -105,7 +117,7 @@ export const articlesFields: INodeProperties[] = [
     displayOptions: {
       show: {
         resource: ['articles'],
-        operation: ['get', 'update', 'delete', 'archive', 'unarchive', 'getVersionHistory'],
+        operation: ['get', 'update', 'delete', 'archive', 'unarchive', 'pin', 'unpin', 'getVersionHistory'],
       },
     },
     default: '',

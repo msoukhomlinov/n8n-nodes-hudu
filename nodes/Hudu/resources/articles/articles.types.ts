@@ -12,6 +12,7 @@ export interface IArticles extends IDataObject {
   folder_id?: number; // The unique folder ID where the article lives
   enable_sharing: boolean; // A flag that signifies if the article is shareable
   share_url?: string; // A url for shareable articles
+  list_pinned?: boolean; // Whether the article is pinned to the top of the list (API 2.46+)
   company_id?: number; // The unique company ID for non-global articles
   created_at?: string; // The date and time when the article was created
   updated_at?: string; // The date and time when the article was last updated
@@ -34,7 +35,9 @@ export type ArticlesOperation =
   | 'get'
   | 'getAll'
   | 'getVersionHistory'
+  | 'pin'
   | 'unarchive'
+  | 'unpin'
   | 'update';
 
 export interface IArticlePostProcessFilters extends IDataObject {

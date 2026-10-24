@@ -7,6 +7,8 @@ import {
   handleDeleteOperation,
   handleArchiveOperation,
 } from '../utils/operations';
+import { huduApiRequest } from '../utils/requestUtils';
+import { coercePositiveInt } from '../utils/validation';
 import { HUDU_RESOURCE_CONFIG, type HuduResourceConfig } from './resource-config';
 import {
   wrapError,
@@ -801,6 +803,31 @@ export async function executeHuduAiTool(
         return JSON.stringify(buildMutationResponse(
           operation === 'archive' ? 'archived' : 'unarchived',
           { id: params.id },
+        ));
+      }
+
+      case 'pin':
+      case 'unpin': {
+        if (resource !== 'articles') {
+          return JSON.stringify(wrapError(
+            resource, operation, ERROR_TYPES.INVALID_OPERATION,
+            `${operation} is only supported for articles, not ${resource}.`,
+            "Call hudu_articles with operation 'pin' or 'unpin'.",
+          ));
+        }
+        if (!params.id) {
+          return JSON.stringify(formatMissingIdError(resource, operation, supportsSearch));
+        }
+        const recordId = coercePositiveInt(params.id as number | string, (context as unknown as IExecuteFunctions).getNode());
+        const response = await huduApiRequest.call(
+          context as unknown as IExecuteFunctions,
+          'PUT',
+          `${config.endpoint}/${recordId}/${operation}`,
+        );
+        const entity = (response as IDataObject)?.article ?? response;
+        return JSON.stringify(buildMutationResponse(
+          operation === 'pin' ? 'pinned' : 'unpinned',
+          { id: params.id, ...(entity as IDataObject) },
         ));
       }
 

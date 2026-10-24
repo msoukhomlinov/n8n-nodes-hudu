@@ -32,6 +32,8 @@ export interface IWebsite extends IDataObject {
   enable_dmarc_tracking?: boolean; // Indicates whether DMARC checks are enabled for the website
   enable_dkim_tracking?: boolean; // Indicates whether DKIM checks are enabled for the website
   enable_spf_tracking?: boolean; // Indicates whether SPF checks are enabled for the website
+  potentially_proxied?: boolean; // Whether the site appears to be behind a proxy (e.g. Cloudflare)
+  cloudflare_details?: object; // Cloudflare zone details associated with the website (optional)
 }
 
 export interface IWebsiteResponse extends IDataObject {

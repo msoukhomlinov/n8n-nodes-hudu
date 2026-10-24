@@ -8,6 +8,8 @@ import {
   handleDeleteOperation,
   handleArchiveOperation,
 } from '../../utils/operations';
+import { huduApiRequest } from '../../utils/requestUtils';
+import { coercePositiveInt } from '../../utils/validation';
 import type { ArticlesOperation, IArticlePostProcessFilters } from './articles.types';
 import type { FilterMapping } from '../../utils/types';
 import { articleFilterMapping } from './articles.types';
@@ -487,6 +489,18 @@ export async function handleArticlesOperation(
         resourceEndpoint,
         articleId,
         false,
+      );
+      break;
+    }
+
+    case 'pin':
+    case 'unpin': {
+      const articleId = this.getNodeParameter('articleId', i) as string;
+      const recordId = coercePositiveInt(articleId, this.getNode());
+      responseData = await huduApiRequest.call(
+        this,
+        'PUT',
+        `${resourceEndpoint}/${recordId}/${operation}`,
       );
       break;
     }

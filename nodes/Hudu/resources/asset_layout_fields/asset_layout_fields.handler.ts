@@ -1,4 +1,4 @@
-import type { IExecuteFunctions, IDataObject, INodeExecutionData } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, INode, INodeExecutionData } from 'n8n-workflow';
 import {
 	handleGetOperation,
 	handleUpdateOperation,
@@ -6,6 +6,50 @@ import {
 import type { AssetLayoutFieldOperation, IAssetLayoutFieldEntity } from './asset_layout_fields.types';
 import { debugLog } from '../../utils/debugConfig';
 import { NodeOperationError } from 'n8n-workflow';
+
+/** Number display types accepted by the API for Number fields (API 2.48+). */
+const NUMBER_TYPES = ['number', 'currency', 'percentage'];
+
+/**
+ * Strip number display options when not a Number field, validate number_type
+ * against the API enum (number | currency | percentage), and require a
+ * non-empty string currency_code when number_type is currency (avoids
+ * invalid values reaching the API).
+ */
+export function sanitizeNumberFieldDisplayOptions(
+	field: Partial<IAssetLayoutFieldEntity> | IDataObject,
+	node: INode,
+	itemIndex?: number,
+): void {
+	if (field.field_type !== 'Number') {
+		delete field.number_type;
+		delete field.currency_code;
+		return;
+	}
+	if (field.number_type !== undefined && field.number_type !== null) {
+		const numberType = field.number_type;
+		if (typeof numberType !== 'string' || !NUMBER_TYPES.includes(numberType)) {
+			throw new NodeOperationError(
+				node,
+				`number_type must be one of: ${NUMBER_TYPES.join(', ')} (API enum values are lowercase).`,
+				itemIndex === undefined ? {} : { itemIndex },
+			);
+		}
+	}
+	if (field.number_type !== 'currency') {
+		delete field.currency_code;
+		return;
+	}
+	const raw = field.currency_code;
+	if (typeof raw !== 'string' || raw.trim() === '') {
+		throw new NodeOperationError(
+			node,
+			'currency_code is required when number_type is currency and must be a non-empty string (ISO 4217, e.g. USD).',
+			itemIndex === undefined ? {} : { itemIndex },
+		);
+	}
+	field.currency_code = raw.trim();
+}
 
 export async function handleAssetLayoutFieldOperation(
 	this: IExecuteFunctions,
@@ -50,16 +94,22 @@ export async function handleAssetLayoutFieldOperation(
 			const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 			debugLog('[RESOURCE_PARAMS] Create field parameters', { fieldType, label, additionalFields });
 
+			// Additional fields may supply extra keys, but the declared
+			// label/field_type win, and the vendor create contract accepts no
+			// client-chosen field id (API 2.48.1: POST /asset_layouts field
+			// items have no 'id' property).
 			const newField: Partial<IAssetLayoutFieldEntity> = {
+				...additionalFields,
 				label,
 				field_type: fieldType,
-				...additionalFields,
 			};
+			delete newField.id;
 
 			if (newField.field_type !== 'ListSelect') {
 				delete newField.list_id;
 				delete newField.multiple_options;
 			}
+			sanitizeNumberFieldDisplayOptions(newField, this.getNode(), i);
 
 			const allFields = [...fields, newField];
 			debugLog('[API_REQUEST] Updating asset layout with new field', { assetLayoutId, fields: allFields });
@@ -83,10 +133,15 @@ export async function handleAssetLayoutFieldOperation(
 			}
 
 			const updatedField = { ...fields[fieldIndex], ...updateFields };
+			// Pin the write to the located field: an id carried by
+			// updateFields would retarget the whole-layout PUT to a record
+			// the caller never named.
+			updatedField.id = fields[fieldIndex].id;
 			if (updatedField.field_type !== 'ListSelect') {
 				delete updatedField.list_id;
 				delete updatedField.multiple_options;
 			}
+			sanitizeNumberFieldDisplayOptions(updatedField, this.getNode(), i);
 
 			const allFields = [...fields];
 			allFields[fieldIndex] = updatedField;

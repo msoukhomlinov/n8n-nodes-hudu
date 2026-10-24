@@ -468,6 +468,19 @@ export const assetLayoutManageFields: INodeProperties[] = [
             },
             description: 'Whether to allow selecting multiple options from the list',
           },
+          {
+            displayName: 'Currency Code',
+            name: 'currency_code',
+            type: 'string',
+            displayOptions: {
+              show: {
+                field_type: [ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+              },
+            },
+            default: '',
+            placeholder: 'USD',
+            description: 'ISO 4217 currency code (e.g. USD). Required when Number Type is Currency.',
+          },
           // eslint-disable-next-line n8n-nodes-base/node-param-default-missing
           {
             displayName: 'Field Type',
@@ -579,6 +592,35 @@ export const assetLayoutManageFields: INodeProperties[] = [
               },
             ],
             description: 'The List to use for this ListSelect field',
+          },
+          {
+            displayName: 'Number Type',
+            name: 'number_type',
+            type: 'options',
+            displayOptions: {
+              show: {
+                field_type: [ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+              },
+            },
+            options: [
+              {
+                name: 'Number',
+                value: 'number',
+                description: 'Plain number display',
+              },
+              {
+                name: 'Currency',
+                value: 'currency',
+                description: 'Currency display (uses Currency Code)',
+              },
+              {
+                name: 'Percentage',
+                value: 'percentage',
+                description: 'Percentage display',
+              },
+            ],
+            default: 'number',
+            description: 'Values: number (plain number display), currency (currency display, uses Currency Code), percentage (percentage display)',
           },
           {
             displayName: 'Position',

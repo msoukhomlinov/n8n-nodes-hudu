@@ -7,6 +7,8 @@ export type HuduOperation =
   | 'delete'
   | 'archive'
   | 'unarchive'
+  | 'pin'
+  | 'unpin'
   | 'getIdByName'
   | 'move'
   | 'getByLayout'
@@ -57,7 +59,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'articles',
     singularKey: 'article',
     bodyKey: 'article',
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'help'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'pin', 'unpin', 'help'],
     supportsPagination: true,
     label: 'Article',
     supportsContentField: true,
@@ -290,6 +292,8 @@ export const WRITE_OPERATIONS: HuduOperation[] = [
   'delete',
   'archive',
   'unarchive',
+  'pin',
+  'unpin',
   'move',
 ];
 
@@ -330,6 +334,7 @@ export const DEFAULT_FIELD_VALUES: Record<string, Record<string, unknown[]>> = {
     share_url: [null, ''],
     archived: [false],
     draft: [null, false],
+    list_pinned: [null, false],
   },
   companies: {
     parent_company_id: [null],
@@ -344,6 +349,7 @@ export const DEFAULT_FIELD_VALUES: Record<string, Record<string, unknown[]>> = {
     asset_field_id: [null],
     archived: [false],
     paused: [false],
+    potentially_proxied: [null, false],
   },
   procedures: {
     parent_procedure: [null],

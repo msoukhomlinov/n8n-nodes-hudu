@@ -1510,6 +1510,8 @@ const OPERATION_LABELS: Record<HuduOperation, string> = {
   delete: 'Delete',
   archive: 'Archive',
   unarchive: 'Unarchive',
+  pin: 'Pin',
+  unpin: 'Unpin',
   getIdByName: 'Resolve name to ID',
   move: 'Move asset',
   getByLayout: 'Assets by layout',
@@ -1526,6 +1528,8 @@ const SUPPORTED_OPERATIONS: ReadonlySet<HuduOperation> = new Set([
   'delete',
   'archive',
   'unarchive',
+  'pin',
+  'unpin',
   'getIdByName',
   'move',
   'getByLayout',
@@ -1838,6 +1842,9 @@ function getSchemaForOperation(
     case 'archive':
     case 'unarchive':
       return config.requiresCompanyEndpoint ? getArchiveWithCompanySchema() : getArchiveSchema();
+    case 'pin':
+    case 'unpin':
+      return getArchiveSchema();
     case 'getIdByName':
       return getGetIdByNameSchema(resource);
     case 'move':

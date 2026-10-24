@@ -38,6 +38,8 @@ const OPERATION_LABELS: Record<string, string> = {
     delete: 'Delete',
     archive: 'Archive',
     unarchive: 'Unarchive',
+    pin: 'Pin',
+    unpin: 'Unpin',
     getIdByName: 'Resolve name to ID',
     move: 'Move asset between companies',
     getByLayout: 'List assets by layout (labelled custom fields)',
@@ -149,7 +151,7 @@ export class HuduAiTools implements INodeType {
                 name: 'allowWriteOperations',
                 type: 'boolean',
                 default: false,
-                description: 'Whether to enable mutating tools (create, update, delete, archive, unarchive, move). Disabled = read-only.',
+                description: 'Whether to enable mutating tools (create, update, delete, archive, unarchive, move, pin, unpin). Disabled = read-only.',
             },
         ],
     };

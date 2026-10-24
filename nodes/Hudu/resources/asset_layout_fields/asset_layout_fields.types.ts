@@ -9,6 +9,10 @@ export interface IAssetLayoutFieldEntity extends IDataObject {
 	hint: string;
 	min?: number;
 	max?: number;
+	/** Number fields only: plain number, currency, or percentage (API 2.48+) */
+	number_type?: 'number' | 'currency' | 'percentage';
+	/** ISO 4217 code when number_type is currency (API 2.48+) */
+	currency_code?: string | null;
 	linkable_id: number;
 	expiration: boolean;
 	options: string;

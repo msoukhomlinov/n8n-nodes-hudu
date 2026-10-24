@@ -13,6 +13,7 @@ import { handlePublicPhotoOperation } from '../../resources/public_photos/public
 import { handleUploadOperation } from '../../resources/uploads/uploads.handler';
 import { handleListOptionsOperation } from '../../resources/list_options/list_options.handler';
 import { handleFlagsOperation } from '../../resources/flags/flags.handler';
+import { handlePasswordSharesOperation } from '../../resources/password_shares/password_shares.handler';
 import { getAssetLayoutFields } from '../../optionLoaders/asset_layouts/getAssetLayoutFields';
 
 const BASE = 'https://hudu.example/api/v1';
@@ -81,6 +82,20 @@ const cases: Case[] = [
     params: (id) => ({ articleId: id }),
     method: 'PUT',
     url: '/articles/12/archive',
+  },
+  {
+    name: 'articles pin (nested route)',
+    run: (c) => handleArticlesOperation.call(c, 'pin', 0),
+    params: (id) => ({ articleId: id }),
+    method: 'PUT',
+    url: '/articles/12/pin',
+  },
+  {
+    name: 'articles unpin (nested route)',
+    run: (c) => handleArticlesOperation.call(c, 'unpin', 0),
+    params: (id) => ({ articleId: id }),
+    method: 'PUT',
+    url: '/articles/12/unpin',
   },
   {
     name: 'company-scoped delete helper (assets delete)',
@@ -193,6 +208,34 @@ const cases: Case[] = [
     params: (id) => ({ asset_layout_id: id }),
     method: 'GET',
     url: '/asset_layouts/12',
+  },
+  {
+    name: 'password_shares shares list (nested endpoint)',
+    run: (c) => handlePasswordSharesOperation.call(c, 'getAll', 0),
+    params: (id) => ({ asset_password_id: id, returnAll: true }),
+    method: 'GET',
+    url: '/asset_passwords/12/shares',
+  },
+  {
+    name: 'password_shares shares create (nested endpoint)',
+    run: (c) => handlePasswordSharesOperation.call(c, 'create', 0),
+    params: (id) => ({ asset_password_id: id, expire_in: 3600 }),
+    method: 'POST',
+    url: '/asset_passwords/12/shares',
+  },
+  {
+    name: 'password_shares share get (nested share id)',
+    run: (c) => handlePasswordSharesOperation.call(c, 'get', 0),
+    params: (id) => ({ asset_password_id: 12, shareId: id }),
+    method: 'GET',
+    url: '/asset_passwords/12/shares/12',
+  },
+  {
+    name: 'password_shares share delete (nested share id)',
+    run: (c) => handlePasswordSharesOperation.call(c, 'delete', 0),
+    params: (id) => ({ asset_password_id: 12, shareId: id }),
+    method: 'DELETE',
+    url: '/asset_passwords/12/shares/12',
   },
 ];
 
