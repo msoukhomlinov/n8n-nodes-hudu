@@ -11,6 +11,7 @@ import type { AssetLayoutOperation } from './asset_layouts.types';
 import type { DateRangePreset } from '../../utils/dateUtils';
 import { debugLog } from '../../utils/debugConfig';
 import { HUDU_API_CONSTANTS } from '../../utils/constants';
+import { sanitizeNumberFieldDisplayOptions } from '../asset_layout_fields/asset_layout_fields.handler';
 
 export async function handleAssetLayoutOperation(
   this: IExecuteFunctions,
@@ -136,12 +137,7 @@ export async function handleAssetLayoutOperation(
             const listIdObj = processedField.list_id as IDataObject;
             processedField.list_id = Number(listIdObj.value);
           }
-          if (processedField.field_type !== 'Number') {
-            delete processedField.number_type;
-            delete processedField.currency_code;
-          } else if (processedField.number_type !== 'currency') {
-            delete processedField.currency_code;
-          }
+          sanitizeNumberFieldDisplayOptions(processedField, this.getNode(), i);
           return processedField;
         });
         body.fields = processedFields;

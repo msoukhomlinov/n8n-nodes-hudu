@@ -1,4 +1,4 @@
-import type { IExecuteFunctions, IDataObject, INodeExecutionData } from 'n8n-workflow';
+import type { IExecuteFunctions, IDataObject, INode, INodeExecutionData } from 'n8n-workflow';
 import {
 	handleGetOperation,
 	handleUpdateOperation,
@@ -6,6 +6,36 @@ import {
 import type { AssetLayoutFieldOperation, IAssetLayoutFieldEntity } from './asset_layout_fields.types';
 import { debugLog } from '../../utils/debugConfig';
 import { NodeOperationError } from 'n8n-workflow';
+
+/**
+ * Strip number display options when not a Number field, and require a non-empty
+ * currency_code when number_type is currency (avoids empty/null codes reaching the API).
+ */
+export function sanitizeNumberFieldDisplayOptions(
+	field: Partial<IAssetLayoutFieldEntity> | IDataObject,
+	node: INode,
+	itemIndex?: number,
+): void {
+	if (field.field_type !== 'Number') {
+		delete field.number_type;
+		delete field.currency_code;
+		return;
+	}
+	if (field.number_type !== 'currency') {
+		delete field.currency_code;
+		return;
+	}
+	const raw = field.currency_code;
+	const code = typeof raw === 'string' ? raw.trim() : raw;
+	if (code === undefined || code === null || code === '') {
+		throw new NodeOperationError(
+			node,
+			'currency_code is required when number_type is currency (ISO 4217, e.g. USD).',
+			itemIndex === undefined ? {} : { itemIndex },
+		);
+	}
+	field.currency_code = code as string;
+}
 
 export async function handleAssetLayoutFieldOperation(
 	this: IExecuteFunctions,
@@ -60,12 +90,7 @@ export async function handleAssetLayoutFieldOperation(
 				delete newField.list_id;
 				delete newField.multiple_options;
 			}
-			if (newField.field_type !== 'Number') {
-				delete newField.number_type;
-				delete newField.currency_code;
-			} else if (newField.number_type !== 'currency') {
-				delete newField.currency_code;
-			}
+			sanitizeNumberFieldDisplayOptions(newField, this.getNode(), i);
 
 			const allFields = [...fields, newField];
 			debugLog('[API_REQUEST] Updating asset layout with new field', { assetLayoutId, fields: allFields });
@@ -93,12 +118,7 @@ export async function handleAssetLayoutFieldOperation(
 				delete updatedField.list_id;
 				delete updatedField.multiple_options;
 			}
-			if (updatedField.field_type !== 'Number') {
-				delete updatedField.number_type;
-				delete updatedField.currency_code;
-			} else if (updatedField.number_type !== 'currency') {
-				delete updatedField.currency_code;
-			}
+			sanitizeNumberFieldDisplayOptions(updatedField, this.getNode(), i);
 
 			const allFields = [...fields];
 			allFields[fieldIndex] = updatedField;
