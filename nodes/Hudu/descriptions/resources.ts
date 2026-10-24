@@ -98,6 +98,10 @@ export const resourceOptions = [
     value: 'password_folders',
   },
   {
+    name: 'Password Share',
+    value: 'password_shares',
+  },
+  {
     name: 'Photo',
     value: 'photos',
   },

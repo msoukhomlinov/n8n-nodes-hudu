@@ -9,6 +9,10 @@ export interface IAssetLayoutField extends IDataObject {
   hint: string; // Help text for the field
   min?: number; // Minimum value for the field (Can be null)
   max?: number; // Maximum value for the field (Can be null)
+  /** Number fields only: plain number, currency, or percentage (API 2.48+) */
+  number_type?: 'number' | 'currency' | 'percentage';
+  /** ISO 4217 code when number_type is currency (API 2.48+) */
+  currency_code?: string | null;
   linkable_id: number; // The ID of the linked item
   expiration: boolean; // Whether this field has expiration tracking
   options: string; // Field options

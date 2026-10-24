@@ -20,6 +20,7 @@ export * from './magic_dash.description';
 export * from './matchers.description';
 export * from './networks.description';
 export * from './passwordFolders.descriptions';
+export * from './password_shares.description';
 export * from './groups.description';
 export * from './photos.description';
 export * from './procedures.description';

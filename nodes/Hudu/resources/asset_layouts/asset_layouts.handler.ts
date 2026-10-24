@@ -136,6 +136,12 @@ export async function handleAssetLayoutOperation(
             const listIdObj = processedField.list_id as IDataObject;
             processedField.list_id = Number(listIdObj.value);
           }
+          if (processedField.field_type !== 'Number') {
+            delete processedField.number_type;
+            delete processedField.currency_code;
+          } else if (processedField.number_type !== 'currency') {
+            delete processedField.currency_code;
+          }
           return processedField;
         });
         body.fields = processedFields;

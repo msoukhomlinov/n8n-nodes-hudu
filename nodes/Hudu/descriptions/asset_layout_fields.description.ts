@@ -199,6 +199,19 @@ export const assetLayoutFieldFields: INodeProperties[] = [
     },
     options: [
       {
+        displayName: 'Currency Code',
+        name: 'currency_code',
+        type: 'string',
+        displayOptions: {
+          show: {
+            field_type: [ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+          },
+        },
+        default: '',
+        placeholder: 'USD',
+        description: 'ISO 4217 currency code (e.g. USD). Only used when Number Type is Currency.',
+      },
+      {
         displayName: 'Expiration',
         name: 'expiration',
         type: 'boolean',
@@ -273,6 +286,35 @@ export const assetLayoutFieldFields: INodeProperties[] = [
         description: 'Whether to allow multiple selections for ListSelect fields',
       },
       {
+        displayName: 'Number Type',
+        name: 'number_type',
+        type: 'options',
+        displayOptions: {
+          show: {
+            field_type: [ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+          },
+        },
+        options: [
+          {
+            name: 'Number',
+            value: 'number',
+            description: 'Plain number display',
+          },
+          {
+            name: 'Currency',
+            value: 'currency',
+            description: 'Currency display (uses Currency Code)',
+          },
+          {
+            name: 'Percentage',
+            value: 'percentage',
+            description: 'Percentage display',
+          },
+        ],
+        default: 'number',
+        description: 'How Number field values are displayed. Only used by Number fields.',
+      },
+      {
         displayName: 'Options',
         name: 'options',
         type: 'string',
@@ -317,6 +359,14 @@ export const assetLayoutFieldFields: INodeProperties[] = [
       },
     },
     options: [
+      {
+        displayName: 'Currency Code',
+        name: 'currency_code',
+        type: 'string',
+        default: '',
+        placeholder: 'USD',
+        description: 'ISO 4217 currency code (e.g. USD). Only used when Number Type is Currency.',
+      },
       {
         displayName: 'Expiration',
         name: 'expiration',
@@ -451,6 +501,30 @@ export const assetLayoutFieldFields: INodeProperties[] = [
         },
         default: false,
         description: 'Whether to allow multiple selections for ListSelect fields',
+      },
+      {
+        displayName: 'Number Type',
+        name: 'number_type',
+        type: 'options',
+        options: [
+          {
+            name: 'Number',
+            value: 'number',
+            description: 'Plain number display',
+          },
+          {
+            name: 'Currency',
+            value: 'currency',
+            description: 'Currency display (uses Currency Code)',
+          },
+          {
+            name: 'Percentage',
+            value: 'percentage',
+            description: 'Percentage display',
+          },
+        ],
+        default: 'number',
+        description: 'How Number field values are displayed. Only used by Number fields.',
       },
       {
         displayName: 'Options',

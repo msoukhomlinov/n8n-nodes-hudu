@@ -41,6 +41,8 @@ export * from './networks/networks.handler';
 export * from './networks/networks.types';
 export * from './password_folders/password_folders.handler';
 export * from './password_folders/password_folders.types';
+export * from './password_shares/password_shares.handler';
+export * from './password_shares/password_shares.types';
 export * from './groups/groups.handler';
 export * from './groups/groups.types';
 export * from './photos/photos.handler';

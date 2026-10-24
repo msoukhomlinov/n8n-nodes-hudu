@@ -75,6 +75,7 @@ export class Hudu implements INodeType {
 			...descriptions.matchersOperations,
 			...descriptions.networksOperations,
 			...descriptions.passwordFoldersOperations,
+			...descriptions.passwordSharesOperations,
 			...descriptions.photosOperations,
 			...descriptions.proceduresOperations,
 			...descriptions.procedureTasksOperations,
@@ -115,6 +116,7 @@ export class Hudu implements INodeType {
 			...descriptions.matchersFields,
 			...descriptions.networksFields,
 			...descriptions.passwordFoldersFields,
+			...descriptions.passwordSharesFields,
 			...descriptions.photosFields,
 			...descriptions.proceduresFields,
 			...descriptions.procedureTasksFields,
@@ -361,6 +363,13 @@ export class Hudu implements INodeType {
 						responseData = await resources.handlePasswordFoldersOperation.call(
 							this,
 							operation as resources.PasswordFoldersOperations,
+							i,
+						);
+						break;
+					case 'password_shares':
+						responseData = await resources.handlePasswordSharesOperation.call(
+							this,
+							operation as resources.PasswordSharesOperation,
 							i,
 						);
 						break;

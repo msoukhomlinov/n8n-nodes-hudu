@@ -7,6 +7,8 @@ export type HuduOperation =
   | 'delete'
   | 'archive'
   | 'unarchive'
+  | 'pin'
+  | 'unpin'
   | 'getIdByName'
   | 'move'
   | 'getByLayout'
@@ -57,7 +59,7 @@ export const HUDU_RESOURCE_CONFIG: Record<string, HuduResourceConfig> = {
     pluralKey: 'articles',
     singularKey: 'article',
     bodyKey: 'article',
-    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'help'],
+    ops: ['get', 'getAll', 'create', 'update', 'delete', 'archive', 'unarchive', 'pin', 'unpin', 'help'],
     supportsPagination: true,
     label: 'Article',
     supportsContentField: true,
@@ -290,6 +292,8 @@ export const WRITE_OPERATIONS: HuduOperation[] = [
   'delete',
   'archive',
   'unarchive',
+  'pin',
+  'unpin',
   'move',
 ];
 

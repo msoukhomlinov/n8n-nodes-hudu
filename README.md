@@ -4,7 +4,7 @@ This community node enables seamless integration with the Hudu documentation pla
 ![n8n-nodes-hudu](https://img.shields.io/badge/n8n--nodes--hudu-latest-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **API Compatibility:** This node is aligned with Hudu API version 2.45.1 (reference: `api-docs-v2.45.1.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
+> **API Compatibility:** This node is aligned with Hudu API version 2.48.1 (reference: `api-docs-v2.48.1.json` in this repository). Some features require specific API versions. Compatibility with future Hudu versions is not guaranteed without further updates.
 
 > **Editions:** This package (`n8n-nodes-hudu`) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (unified per-resource AI/MCP tool) and therefore has an AI/LangChain runtime dependency, so it cannot be verified for n8n Cloud. If you run **n8n Cloud** (the hosted n8n platform) and want a verified, installable node, use **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — a zero-dependency subset with the same `Hudu` node (AI Agent tool use via `usableAsTool`) but without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
@@ -52,7 +52,7 @@ To use this node, you need to:
 - Get API information and version details
 
 ### Articles
-- Create, update, archive, unarchive, delete, and retrieve articles
+- Create, update, archive, unarchive, pin, unpin, delete, and retrieve articles
 - Get operation supports numeric ID or slug selection via Identifier Type toggle
 - List all articles with comprehensive filtering (company, draft, sharing, folder, name, fuzzy search, updated date range)
 - Get article version history
@@ -70,7 +70,7 @@ To use this node, you need to:
 - Get operation supports numeric ID or slug selection via Identifier Type toggle
 - Get layout fields and configurations
 - List all layouts with filtering support
-- **Advanced custom field support:** Add hints, min/max, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties
+- **Advanced custom field support:** Add hints, min/max, number type (number/currency/percentage) with currency code, linkable asset layout IDs, expiration, options, and more to your custom fields. Use the "Other Data" input to specify any additional API-supported properties
 
 ### Asset Passwords
 - Create and manage asset-related passwords
@@ -144,6 +144,11 @@ To use this node, you need to:
 - Security modes: all users or specific groups (`allowed_groups` when `security = specific`)
 - Filter by name, company, search
 - Pick allowed groups with an option loader
+
+### Password Shares
+- Create, list, get, and delete time-limited public sharing links for asset passwords
+- Required `expire_in` (seconds); optional notes, one-time expire, and include_* visibility flags
+- Response includes the public `url` ready to send to a recipient
 
 ### Exports
 - Initiate company exports with format options: PDF, CSV, or S3
@@ -224,7 +229,7 @@ The AI Agent receives **one tool per resource** (e.g. `hudu_companies`, `hudu_as
 | Resource | Operations |
 |---|---|
 | Activity Logs | getAll |
-| Articles | get, getAll, create, update, delete, archive, unarchive |
+| Articles | get, getAll, create, update, delete, archive, unarchive, pin, unpin |
 | Asset Layouts | get, getAll |
 | Asset Passwords | get, getAll, create, update, delete, archive, unarchive |
 | Assets | get, getAll, create, update, delete, archive, unarchive |

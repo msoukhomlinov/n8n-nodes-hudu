@@ -45,13 +45,13 @@
                         "name": "resource_id",
                         "type": "number",
                         "in": "query",
-                        "description": "Filter logs by resource ID; must be used in conjunction with resource_type"
+                        "description": "Filter logs by resource ID; optional and narrows results within resource_type"
                     },
                     {
                         "name": "resource_type",
                         "type": "string",
                         "in": "query",
-                        "description": "Filter logs by resource type (Asset, AssetPassword, Company, Article, etc.); must be used in conjunction with resource_id"
+                        "description": "Filter logs by resource type (Asset, AssetPassword, Company, Article, etc.); can be used alone or with resource_id"
                     },
                     {
                         "name": "action_message",
@@ -530,6 +530,83 @@
                 }
             }
         },
+        "/articles/{id}/pin": {
+            "put": {
+                "tags": [
+                    "Articles"
+                ],
+                "operationId": "put_articles_id_pin",
+                "summary": "Pin a Knowledge Base Article to the top of the list",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "type": "integer",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the requested article"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article pinned successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "article": {
+                                    "$ref": "#/definitions/Article"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Cannot pin an archived article"
+                    }
+                }
+            }
+        },
+        "/articles/{id}/unpin": {
+            "put": {
+                "tags": [
+                    "Articles"
+                ],
+                "operationId": "put_articles_id_unpin",
+                "summary": "Unpin a Knowledge Base Article from the top of the list",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "type": "integer",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the requested article"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article unpinned successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "article": {
+                                    "$ref": "#/definitions/Article"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/asset_layouts": {
             "get": {
                 "tags": [
@@ -598,7 +675,7 @@
                         "description": "Unable to process request"
                     }
                 },
-                "description": "Retrieve a list of available Asset Layouts."
+                "description": "Retrieve a list of available Asset Layouts. Available to keys restricted to a company. Asset layouts are shared across all companies."
             },
             "post": {
                 "tags": [
@@ -612,71 +689,117 @@
                 "parameters": [
                     {
                         "in": "body",
-                        "name": "asset_layout",
+                        "name": "body",
                         "description": "Asset layout object that needs to be added to the store",
                         "required": true,
                         "schema": {
                             "type": "object",
+                            "required": [
+                                "asset_layout"
+                            ],
                             "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "description": "Name of the Asset Layout"
-                                },
-                                "icon": {
-                                    "type": "string",
-                                    "description": "Icon class name"
-                                },
-                                "color": {
-                                    "type": "string",
-                                    "description": "Hex code for the background color"
-                                },
-                                "icon_color": {
-                                    "type": "string",
-                                    "description": "Hex code for the icon color"
-                                },
-                                "include_passwords": {
-                                    "type": "boolean",
-                                    "description": "If true, include passwords in the Asset Layout"
-                                },
-                                "include_photos": {
-                                    "type": "boolean",
-                                    "description": "If true, include photos in the Asset Layout"
-                                },
-                                "include_comments": {
-                                    "type": "boolean",
-                                    "description": "If true, include comments in the Asset Layout"
-                                },
-                                "include_files": {
-                                    "type": "boolean",
-                                    "description": "If true, include files in the Asset Layout"
-                                },
-                                "password_types": {
-                                    "type": "string",
-                                    "description": "List of password types, separated with new line characters"
-                                },
-                                "fields": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "label": {
-                                                "type": "string"
+                                "asset_layout": {
+                                    "type": "object",
+                                    "required": [
+                                        "name"
+                                    ],
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name of the Asset Layout"
+                                        },
+                                        "icon": {
+                                            "type": "string",
+                                            "description": "Icon class name"
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "description": "Hex code for the background color"
+                                        },
+                                        "icon_color": {
+                                            "type": "string",
+                                            "description": "Hex code for the icon color"
+                                        },
+                                        "include_passwords": {
+                                            "type": "boolean",
+                                            "description": "If true, include passwords in the Asset Layout"
+                                        },
+                                        "include_photos": {
+                                            "type": "boolean",
+                                            "description": "If true, include photos in the Asset Layout"
+                                        },
+                                        "include_comments": {
+                                            "type": "boolean",
+                                            "description": "If true, include comments in the Asset Layout"
+                                        },
+                                        "include_files": {
+                                            "type": "boolean",
+                                            "description": "If true, include files in the Asset Layout"
+                                        },
+                                        "password_types": {
+                                            "type": "string",
+                                            "description": "List of password types, separated with new line characters"
+                                        },
+                                        "fields": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "field_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "required": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "show_in_list": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "position": {
+                                                        "type": "integer"
+                                                    },
+                                                    "min": {
+                                                        "oneOf": [
+                                                            {
+                                                                "type": "integer"
+                                                            },
+                                                            {
+                                                                "type": "string"
+                                                            }
+                                                        ],
+                                                        "description": "Minimum value for Number fields. Whole values are JSON integers; fractional values are plain decimal strings (e.g. \"1.5\")."
+                                                    },
+                                                    "max": {
+                                                        "oneOf": [
+                                                            {
+                                                                "type": "integer"
+                                                            },
+                                                            {
+                                                                "type": "string"
+                                                            }
+                                                        ],
+                                                        "description": "Maximum value for Number fields. Whole values are JSON integers; fractional values are plain decimal strings (e.g. \"99.99\")."
+                                                    },
+                                                    "number_type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "number",
+                                                            "currency",
+                                                            "percentage"
+                                                        ],
+                                                        "description": "For Number fields: how the value is displayed. Defaults to \"number\"."
+                                                    },
+                                                    "currency_code": {
+                                                        "type": "string",
+                                                        "description": "ISO 4217 currency code (e.g. \"USD\"). Required for Number fields when number_type is \"currency\"."
+                                                    }
+                                                }
                                             },
-                                            "field_type": {
-                                                "type": "string"
-                                            },
-                                            "required": {
-                                                "type": "boolean"
-                                            },
-                                            "show_in_list": {
-                                                "type": "boolean"
-                                            },
-                                            "position": {
-                                                "type": "integer"
-                                            }
+                                            "description": "An array of fields for the Asset Layout"
                                         }
-                                    },
-                                    "description": "An array of fields for the Asset Layout"
+                                    }
                                 }
                             },
                             "example": {
@@ -706,6 +829,15 @@
                                             "show_in_list": false,
                                             "multiple_options": true,
                                             "position": 2
+                                        },
+                                        {
+                                            "label": "Number-field-name-here E.g. Monthly Cost",
+                                            "field_type": "Number",
+                                            "number_type": "currency",
+                                            "currency_code": "USD",
+                                            "required": false,
+                                            "show_in_list": false,
+                                            "position": 3
                                         }
                                     ]
                                 }
@@ -735,7 +867,7 @@
                         "description": "Unable to process request"
                     }
                 },
-                "description": "Create a new Asset Layout with the specified properties."
+                "description": "Create a new Asset Layout with the specified properties. Not available to keys restricted to a company."
             }
         },
         "/asset_layouts/{id}": {
@@ -745,6 +877,7 @@
                 ],
                 "operationId": "get_asset_layouts_id",
                 "summary": "Get an Asset Layout",
+                "description": "Available to keys restricted to a company. Asset layouts are shared across all companies.",
                 "parameters": [
                     {
                         "name": "id",
@@ -781,7 +914,7 @@
                 ],
                 "operationId": "put_asset_layouts_id",
                 "summary": "Update an Asset Layout",
-                "description": "Update an Asset Layout including its fields. To update existing fields, include the field 'id' in the fields array. NOTE: If you change the 'list_id' value of a ListSelect field, this will automatically clear all existing asset data for that specific field across all assets.",
+                "description": "Update an Asset Layout including its fields. To update existing fields, include the field 'id' in the fields array. NOTE: If you change the 'list_id' value of a ListSelect field, this will automatically clear all existing asset data for that specific field across all assets. Not available to keys restricted to a company.",
                 "consumes": [
                     "application/json"
                 ],
@@ -876,12 +1009,26 @@
                                                 "description": "Hint shown below input"
                                             },
                                             "min": {
-                                                "type": "integer",
-                                                "description": "Minimum value (for Number fields)"
+                                                "oneOf": [
+                                                    {
+                                                        "type": "integer"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ],
+                                                "description": "Minimum value for Number fields. Whole values are JSON integers; fractional values are plain decimal strings (e.g. \"1.5\")."
                                             },
                                             "max": {
-                                                "type": "integer",
-                                                "description": "Maximum value (for Number fields)"
+                                                "oneOf": [
+                                                    {
+                                                        "type": "integer"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ],
+                                                "description": "Maximum value for Number fields. Whole values are JSON integers; fractional values are plain decimal strings (e.g. \"99.99\")."
                                             },
                                             "options": {
                                                 "type": "string",
@@ -902,6 +1049,19 @@
                                             "list_id": {
                                                 "type": "integer",
                                                 "description": "ID of List to pull values from. Required for ListSelect field type. Can be updated to change the associated list. WARNING: Changing this value will clear all existing asset field values for this field."
+                                            },
+                                            "number_type": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "number",
+                                                    "currency",
+                                                    "percentage"
+                                                ],
+                                                "description": "For Number fields: how the value is displayed. Defaults to \"number\"."
+                                            },
+                                            "currency_code": {
+                                                "type": "string",
+                                                "description": "ISO 4217 currency code (e.g. \"USD\"). Required for Number fields when number_type is \"currency\"."
                                             }
                                         }
                                     },
@@ -1563,7 +1723,7 @@
                         "name": "asset",
                         "in": "body",
                         "required": true,
-                        "description": "Create a new asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a key-value pair, where the **key** must exactly match the name of the custom field you've created in your Asset Layout (converted to snake case: lowercase letters and underscores in place of spaces).\n\nExamples of custom field types and formats:\n\n* **Text fields:** A simple string value.\n  * Example: `{ \"your_custom_text_field\": \"Some text here\" }`\n\n* **Date fields:** Date formatted as YYYY/MM/DD.\n  * Example: `{ \"your_due_date\": \"2024/01/15\" }`\n\n* **Checkbox fields:** Boolean as a string (\"true\" or \"false\").\n  * Example: `{ \"is_active\": \"true\" }`\n\n* **Number fields:** Numeric value as a string.\n  * Example: `{ \"your_score\": \"5\" }`\n\n* **Address fields:** Object containing required address components.\n  * Example: `{ \"office_location\": { \"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\" } }`\n\n* **Asset tag fields:** Array of asset IDs.\n  * Example: `{ \"your_linked_assets\": [456, 789] }`\n\n* **List select fields:** Array of item names.\n  * Example: `{ \"your_categories\": [\"Item 1\", \"Item 2\"] }`\n\nReplace placeholder keys (like `your_custom_text_field`) with the exact name of your Asset Layout's custom fields.",
+                        "description": "Create a new asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a key-value pair, where the **key** must exactly match the name of the custom field you've created in your Asset Layout (converted to snake case: lowercase letters and underscores in place of spaces).\n\nExamples of custom field types and formats:\n\n* **Text fields:** A simple string value.\n  * Example: `{ \"your_custom_text_field\": \"Some text here\" }`\n\n* **Date fields:** Date formatted as YYYY/MM/DD.\n  * Example: `{ \"your_due_date\": \"2024/01/15\" }`\n\n* **Checkbox fields:** Boolean as a string (\"true\" or \"false\").\n  * Example: `{ \"is_active\": \"true\" }`\n\n* **Number fields:** Numeric value as a string. Decimals are supported.\n  * Example: `{ \"your_score\": \"5\" }` or `{ \"your_score\": \"45.5\" }`\n\n* **Address fields:** Object containing required address components.\n  * Example: `{ \"office_location\": { \"address_line_1\": \"123 Main St\", \"city\": \"Denver\", \"state\": \"CO\", \"zip\": \"80202\", \"country_name\": \"USA\" } }`\n\n* **Asset tag fields:** Array of asset IDs.\n  * Example: `{ \"your_linked_assets\": [456, 789] }`\n\n* **List select fields:** Array of item names.\n  * Example: `{ \"your_categories\": [\"Item 1\", \"Item 2\"] }`\n\nReplace placeholder keys (like `your_custom_text_field`) with the exact name of your Asset Layout's custom fields.",
                         "schema": {
                             "type": "object",
                             "example": {
@@ -1710,7 +1870,7 @@
                         "name": "asset",
                         "in": "body",
                         "required": true,
-                        "description": "Update an existing asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a hash keyed by the field's label (case-insensitive, spaces or underscores allowed).\n\nExamples of field types and formats:\n\n* **Text fields:** `{ \"your_custom_text_field_one\": \"Some updated text\" }`\n* **Date fields:** `{ \"your_due_date\": \"2025/02/15\" }`\n* **Checkbox fields:** `{ \"is_active\": true }`\n* **Number fields:** `{ \"your_score\": 8 }`\n* **Asset tag fields:** `{ \"your_linked_assets\": [123, 456] }`\n* **List select fields:** `{ \"your_categories\": [\"Item 2\", \"Item 3\"] }`\n* **Address fields:** `{ \"office_location\": { \"address_line_1\": \"123 Test Street\", \"address_line_2\": \"Suite 1\", \"city\": \"Boulder\", \"state\": \"CO\", \"zip\": \"80301\", \"country_name\": \"US\" } }`",
+                        "description": "Update an existing asset by sending asset data in the request body formatted as JSON.\n\n**Important:** Use the `custom_fields` key to specify values for the asset's custom fields. Each custom field should be provided as a hash keyed by the field's label (case-insensitive, spaces or underscores allowed).\n\nExamples of field types and formats:\n\n* **Text fields:** `{ \"your_custom_text_field_one\": \"Some updated text\" }`\n* **Date fields:** `{ \"your_due_date\": \"2025/02/15\" }`\n* **Checkbox fields:** `{ \"is_active\": true }`\n* **Number fields:** `{ \"your_score\": 8 }` (decimals are supported, e.g. `{ \"your_score\": 45.5 }`)\n* **Asset tag fields:** `{ \"your_linked_assets\": [123, 456] }`\n* **List select fields:** `{ \"your_categories\": [\"Item 2\", \"Item 3\"] }`\n* **Address fields:** `{ \"office_location\": { \"address_line_1\": \"123 Test Street\", \"address_line_2\": \"Suite 1\", \"city\": \"Boulder\", \"state\": \"CO\", \"zip\": \"80301\", \"country_name\": \"US\" } }`",
                         "schema": {
                             "type": "object",
                             "example": {
@@ -2081,7 +2241,7 @@
                         "description": "Not Found"
                     }
                 },
-                "description": "The `/cards/jump` endpoint provides an easy way to create links from external integrations to Hudu. Below are examples of how to jump from a Syncro contact and a Watchman Monitoring computer to the corresponding asset in Hudu:\n- Syncro example:\n  ```\n  https://[MY_URL_HERE]/api/v1/cards/jump?integration_id=XXXX\u0026integration_slug=syncro\u0026integration_type=contact\n  ```\n\n- Watchman Monitoring example (using identifier instead of ID):\n  ```\n  https://[MY_URL_HERE]/api/v1/cards/jump?integration_identifier=XXXX\u0026integration_slug=watchman\u0026integration_type=computer\n  ```"
+                "description": "The `/cards/jump` endpoint provides an easy way to create links from external integrations to Hudu. Below are examples of how to jump from a Syncro contact and a Watchman Monitoring computer to the corresponding asset in Hudu:\n- Syncro example:\n  ```\n  https://[MY_URL_HERE]/api/v1/cards/jump?integration_id=XXXX&integration_slug=syncro&integration_type=contact\n  ```\n\n- Watchman Monitoring example (using identifier instead of ID):\n  ```\n  https://[MY_URL_HERE]/api/v1/cards/jump?integration_identifier=XXXX&integration_slug=watchman&integration_type=computer\n  ```"
             }
         },
         "/companies": {
@@ -3384,6 +3544,7 @@
                 ],
                 "operationId": "get_flags",
                 "summary": "Get a list of Flags",
+                "description": "Keys restricted to a company only see flags on that company and its records.",
                 "parameters": [
                     {
                         "name": "flag_type_id",
@@ -3463,7 +3624,7 @@
                 ],
                 "operationId": "create_flag",
                 "summary": "Create a new Flag",
-                "description": "Creates a flag for a specific record. The flagable_type must be one of: Asset, Website, Article, AssetPassword, Company, Procedure, RackStorage, Network, IpAddress, Vlan, VlanZone. The flagable record must exist.",
+                "description": "Creates a flag for a specific record. The flagable_type must be one of: Asset, Website, Article, AssetPassword, Company, Procedure, RackStorage, Network, IpAddress, Vlan, VlanZone. The flagable record must exist. Keys restricted to a company can only flag that company and its records.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3554,6 +3715,7 @@
                 ],
                 "operationId": "get_flag",
                 "summary": "Get a specific Flag",
+                "description": "Keys restricted to a company can only access flags on that company and its records.",
                 "parameters": [
                     {
                         "name": "id",
@@ -3592,7 +3754,7 @@
                 ],
                 "operationId": "update_flag",
                 "summary": "Update a Flag",
-                "description": "Updates a flag. If updating the flagable association, the flagable_type must be valid and the record must exist.",
+                "description": "Updates a flag's type or description. The flagged record cannot be changed. Keys restricted to a company can only update flags on that company and its records.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3684,6 +3846,7 @@
                 ],
                 "operationId": "delete_flag",
                 "summary": "Delete a Flag",
+                "description": "Keys restricted to a company can only delete flags on that company and its records.",
                 "parameters": [
                     {
                         "name": "id",
@@ -4037,7 +4200,7 @@
                 ],
                 "operationId": "get_groups",
                 "summary": "Retrieve a list of groups",
-                "description": "Retrieve a list of groups. Member lists exclude admins and super admins.",
+                "description": "Retrieve a list of groups. Member lists exclude admins and super admins. Not available to API keys scoped to a company.",
                 "parameters": [
                     {
                         "name": "name",
@@ -4101,7 +4264,7 @@
                 ],
                 "operationId": "get_group_by_id",
                 "summary": "Retrieve a group by ID",
-                "description": "Retrieve a group by its ID. Member lists exclude admins and super admins.",
+                "description": "Retrieve a group by its ID. Member lists exclude admins and super admins. Not available to API keys scoped to a company.",
                 "parameters": [
                     {
                         "name": "id",
@@ -4229,11 +4392,71 @@
                 "parameters": [
                     {
                         "in": "body",
-                        "name": "ip_address",
+                        "name": "body",
                         "description": "IP Address object that needs to be added",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/IpAddress"
+                            "type": "object",
+                            "required": [
+                                "ip_address"
+                            ],
+                            "properties": {
+                                "ip_address": {
+                                    "type": "object",
+                                    "required": [
+                                        "address",
+                                        "network_id"
+                                    ],
+                                    "properties": {
+                                        "address": {
+                                            "type": "string",
+                                            "description": "The IP address. Must fall within the network's range."
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "description": "The status of the IP address. Must be one of: unassigned, assigned, reserved, deprecated, dhcp, or slaac"
+                                        },
+                                        "fqdn": {
+                                            "type": "string",
+                                            "description": "The Fully Qualified Domain Name associated with the IP address."
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "description": "A brief description of the IP address."
+                                        },
+                                        "notes": {
+                                            "type": "string",
+                                            "description": "Additional comments about the IP address."
+                                        },
+                                        "asset_id": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "description": "The identifier of the asset associated with this IP address."
+                                        },
+                                        "network_id": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "description": "Required. The address must fall within this network's range."
+                                        },
+                                        "company_id": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "description": "Optional. Defaults to the network's company; if provided it must match."
+                                        },
+                                        "skip_dns_validation": {
+                                            "type": "boolean",
+                                            "description": "If true, the server will **not** attempt to verify that the FQDN resolves to the address when the record is created or updated. Use for internal-only hostnames."
+                                        }
+                                    }
+                                }
+                            },
+                            "example": {
+                                "ip_address": {
+                                    "address": "10.0.0.5",
+                                    "network_id": 1,
+                                    "status": "unassigned"
+                                }
+                            }
                         }
                     }
                 ],
@@ -4368,6 +4591,689 @@
                     },
                     "404": {
                         "description": "IP address not found"
+                    }
+                }
+            }
+        },
+        "/label_types": {
+            "get": {
+                "tags": [
+                    "Label Types"
+                ],
+                "operationId": "get_label_types",
+                "summary": "Get a list of Label Types",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by exact label type name"
+                    },
+                    {
+                        "name": "color",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by exact color value (e.g., #0000ff)"
+                    },
+                    {
+                        "name": "slug",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by exact slug value"
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by creation date (YYYY-MM-DD or ISO datetime)"
+                    },
+                    {
+                        "name": "updated_at",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by update date (YYYY-MM-DD or ISO datetime)"
+                    },
+                    {
+                        "name": "page",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Page number for pagination"
+                    },
+                    {
+                        "name": "page_size",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Number of results per page (1-1000, default: 25)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label_types": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/LabelType"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Label Types"
+                ],
+                "operationId": "create_label_type",
+                "summary": "Create a new Label Type",
+                "description": "Creates a label type. applicable_record_types must contain one or more valid record types. When access_level is specific_companies, allowed_company_ids must contain at least one company ID; when all_companies, allowed_company_ids is ignored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label_type": {
+                                    "type": "object",
+                                    "required": [
+                                        "name",
+                                        "color",
+                                        "applicable_record_types"
+                                    ],
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name of the label type (must be unique)"
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "description": "Hex color value (e.g., #0000ff). Accepts 3- or 6-digit hex."
+                                        },
+                                        "access_level": {
+                                            "type": "string",
+                                            "enum": [
+                                                "all_companies",
+                                                "specific_companies"
+                                            ],
+                                            "description": "Availability scope. Defaults to all_companies."
+                                        },
+                                        "applicable_record_types": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "Article",
+                                                    "Asset",
+                                                    "AssetPassword",
+                                                    "Website",
+                                                    "IpAddress",
+                                                    "Vlan",
+                                                    "VlanZone",
+                                                    "Procedure",
+                                                    "Network",
+                                                    "RackStorage"
+                                                ]
+                                            },
+                                            "description": "Record types this label type may be applied to"
+                                        },
+                                        "allowed_company_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            },
+                                            "description": "Company IDs to restrict the label type to. Required when access_level is specific_companies."
+                                        }
+                                    }
+                                }
+                            },
+                            "example": {
+                                "label_type": {
+                                    "name": "Critical",
+                                    "color": "#ff0000",
+                                    "access_level": "all_companies",
+                                    "applicable_record_types": [
+                                        "Asset",
+                                        "Website"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Label type created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label_type": {
+                                    "$ref": "#/definitions/LabelType"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                }
+            }
+        },
+        "/label_types/{id}": {
+            "get": {
+                "tags": [
+                    "Label Types"
+                ],
+                "operationId": "get_label_type",
+                "summary": "Get a specific Label Type",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "description": "ID of the Label Type to retrieve"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label_type": {
+                                    "$ref": "#/definitions/LabelType"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Label type not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Label Types"
+                ],
+                "operationId": "update_label_type",
+                "summary": "Update a Label Type",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "description": "ID of the Label Type to update"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label_type": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name of the label type (must be unique)"
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "description": "Hex color value (e.g., #0000ff). Accepts 3- or 6-digit hex."
+                                        },
+                                        "access_level": {
+                                            "type": "string",
+                                            "enum": [
+                                                "all_companies",
+                                                "specific_companies"
+                                            ],
+                                            "description": "Availability scope"
+                                        },
+                                        "applicable_record_types": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "Article",
+                                                    "Asset",
+                                                    "AssetPassword",
+                                                    "Website",
+                                                    "IpAddress",
+                                                    "Vlan",
+                                                    "VlanZone",
+                                                    "Procedure",
+                                                    "Network",
+                                                    "RackStorage"
+                                                ]
+                                            },
+                                            "description": "Record types this label type may be applied to"
+                                        },
+                                        "allowed_company_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            },
+                                            "description": "Company IDs to restrict the label type to. Required when access_level is specific_companies."
+                                        }
+                                    }
+                                }
+                            },
+                            "example": {
+                                "label_type": {
+                                    "name": "Updated Label",
+                                    "color": "#123456"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Label type updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label_type": {
+                                    "$ref": "#/definitions/LabelType"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Label type not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Label Types"
+                ],
+                "operationId": "delete_label_type",
+                "summary": "Delete a Label Type",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "description": "ID of the Label Type to delete"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Label type deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Label type not found"
+                    },
+                    "422": {
+                        "description": "Error deleting label type"
+                    }
+                }
+            }
+        },
+        "/labels": {
+            "get": {
+                "tags": [
+                    "Labels"
+                ],
+                "operationId": "get_labels",
+                "summary": "Get a list of Labels",
+                "parameters": [
+                    {
+                        "name": "label_type_id",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Filter by label type ID"
+                    },
+                    {
+                        "name": "labelable_type",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by labelable type (Article, Asset, AssetPassword, Website, IpAddress, Vlan, VlanZone, Procedure, Network, RackStorage)"
+                    },
+                    {
+                        "name": "labelable_id",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Filter by labelable record ID"
+                    },
+                    {
+                        "name": "user_id",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Filter by the ID of the user who applied the label"
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by creation date (YYYY-MM-DD or ISO datetime)"
+                    },
+                    {
+                        "name": "updated_at",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by update date (YYYY-MM-DD or ISO datetime)"
+                    },
+                    {
+                        "name": "page",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Page number for pagination"
+                    },
+                    {
+                        "name": "page_size",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Number of results per page (1-1000, default: 25)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "labels": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/Label"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Labels"
+                ],
+                "operationId": "create_label",
+                "summary": "Create a new Label",
+                "description": "Applies a label to a specific record. The label_type's applicable_record_types must include the labelable_type, and (for specific_companies label types) the record's company must be allowed. A record can only carry a given label type once.",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "object",
+                                    "required": [
+                                        "label_type_id",
+                                        "labelable_type",
+                                        "labelable_id"
+                                    ],
+                                    "properties": {
+                                        "label_type_id": {
+                                            "type": "integer",
+                                            "description": "ID of the label type to apply"
+                                        },
+                                        "labelable_type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Article",
+                                                "Asset",
+                                                "AssetPassword",
+                                                "Website",
+                                                "IpAddress",
+                                                "Vlan",
+                                                "VlanZone",
+                                                "Procedure",
+                                                "Network",
+                                                "RackStorage"
+                                            ],
+                                            "description": "The type of record being labeled"
+                                        },
+                                        "labelable_id": {
+                                            "type": "integer",
+                                            "description": "The ID of the record being labeled"
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "description": "Optional ID of the user applying the label"
+                                        }
+                                    }
+                                }
+                            },
+                            "example": {
+                                "label": {
+                                    "label_type_id": 1,
+                                    "labelable_type": "Asset",
+                                    "labelable_id": 123
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Label created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "$ref": "#/definitions/Label"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation failed (e.g., label type cannot be applied to this record, or label already exists)"
+                    }
+                }
+            }
+        },
+        "/labels/{id}": {
+            "get": {
+                "tags": [
+                    "Labels"
+                ],
+                "operationId": "get_label",
+                "summary": "Get a specific Label",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "description": "ID of the Label to retrieve"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "$ref": "#/definitions/Label"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Labels"
+                ],
+                "operationId": "update_label",
+                "summary": "Update a Label",
+                "description": "Updates a label. The same applicability and uniqueness rules as creation apply.",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "description": "ID of the Label to update"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label_type_id": {
+                                            "type": "integer",
+                                            "description": "ID of the label type to apply"
+                                        },
+                                        "labelable_type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Article",
+                                                "Asset",
+                                                "AssetPassword",
+                                                "Website",
+                                                "IpAddress",
+                                                "Vlan",
+                                                "VlanZone",
+                                                "Procedure",
+                                                "Network",
+                                                "RackStorage"
+                                            ],
+                                            "description": "The type of record being labeled"
+                                        },
+                                        "labelable_id": {
+                                            "type": "integer",
+                                            "description": "The ID of the record being labeled"
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "description": "Optional ID of the user applying the label"
+                                        }
+                                    }
+                                }
+                            },
+                            "example": {
+                                "label": {
+                                    "labelable_type": "Asset",
+                                    "labelable_id": 456
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Label updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "$ref": "#/definitions/Label"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Labels"
+                ],
+                "operationId": "delete_label",
+                "summary": "Delete a Label",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "description": "ID of the Label to delete"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Label deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "422": {
+                        "description": "Error deleting label"
                     }
                 }
             }
@@ -4807,7 +5713,7 @@
                         "description": "Unable to process request"
                     }
                 },
-                "description": "  \u003cp\u003eYou can delete a Magic Dash item by sending the same parameters you do to create a magic dash item, but with a DELETE REST request.\u003c/p\u003e\n  \u003cpre\u003e\n  {\n    \"title\": \"Microsoft 365\",\n    \"company_name\": \"AcmeCorp\"\n  }\n  \u003c/pre\u003e\n"
+                "description": "  <p>You can delete a Magic Dash item by sending the same parameters you do to create a magic dash item, but with a DELETE REST request.</p>\n  <pre>\n  {\n    \"title\": \"Microsoft 365\",\n    \"company_name\": \"AcmeCorp\"\n  }\n  </pre>\n"
             }
         },
         "/magic_dash/{id}": {
@@ -6536,7 +7442,7 @@
                     "Procedures"
                 ],
                 "summary": "Get a list of Processes and Runs",
-                "description": "Retrieve a list of processes and runs.\n\n**Understanding the Types:**\n- **Process** (`run: false`): A template. Can be global (company_id: null) or company-specific.\n- **Run** (`run: true`): An active instance created from a process via the `/kickoff` endpoint.\n\n**How to Create Each:**\n- **Global Template**: `POST /procedures` with `company_id: null`\n- **Company Process**: `POST /procedures` with `company_id: \u003cid\u003e`\n- **Run**: `POST /procedures/{id}/kickoff` on a company process\n\nUse the `type` parameter to filter between processes and runs.",
+                "description": "Retrieve a list of processes and runs.\n\n**Understanding the Types:**\n- **Process** (`run: false`): A template. Can be global (company_id: null) or company-specific.\n- **Run** (`run: true`): An active instance created from a process via the `/kickoff` endpoint.\n\n**How to Create Each:**\n- **Global Template**: `POST /procedures` with `company_id: null`\n- **Company Process**: `POST /procedures` with `company_id: <id>`\n- **Run**: `POST /procedures/{id}/kickoff` on a company process\n\nUse the `type` parameter to filter between processes and runs.",
                 "operationId": "getProcedures",
                 "consumes": [
                     "application/json"
@@ -6683,7 +7589,7 @@
                     "Procedures"
                 ],
                 "summary": "Create a new Process (Template)",
-                "description": "Creates a new process template without any tasks. This endpoint creates **processes only** - you cannot create runs (active instances) with this endpoint. Use the `/kickoff` endpoint to create runs from processes.\n\n**Process Types:**\n- **Global Template** (`company_id: null`): Available to all companies as a template. Cannot be kicked off directly - must first be copied to a company.\n- **Company Process** (`company_id: \u003cid\u003e`): A company-specific process that can be kicked off to create runs.\n\n**Note:** Runs cannot be created via POST. Use `POST /procedures/{id}/kickoff` to create runs from processes.",
+                "description": "Creates a new process template without any tasks. This endpoint creates **processes only** - you cannot create runs (active instances) with this endpoint. Use the `/kickoff` endpoint to create runs from processes.\n\n**Process Types:**\n- **Global Template** (`company_id: null`): Available to all companies as a template. Cannot be kicked off directly - must first be copied to a company.\n- **Company Process** (`company_id: <id>`): A company-specific process that can be kicked off to create runs.\n\n**Note:** Runs cannot be created via POST. Use `POST /procedures/{id}/kickoff` to create runs from processes.",
                 "operationId": "createProcedure",
                 "produces": [
                     "application/json"
@@ -7842,24 +8748,72 @@
                 "tags": [
                     "Relations"
                 ],
-                "summary": "Get a list of all relations",
-                "description": "Retrieve a list of relations with filtering options.",
                 "operationId": "get_relations",
+                "summary": "Get a list of Relations",
+                "description": "Retrieve a paginated list of relations with optional filtering. Not available to keys restricted to a company.",
                 "produces": [
                     "application/json"
                 ],
                 "parameters": [
                     {
+                        "name": "fromable_type",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by the FROM record type (Asset, Website, Procedure, AssetPassword, Company, Article, Network, IpAddress, Vlan, VlanZone, RackStorage)"
+                    },
+                    {
+                        "name": "fromable_id",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Filter by the FROM record id"
+                    },
+                    {
+                        "name": "toable_type",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by the TO record type (Asset, Website, Procedure, AssetPassword, Company, Article, Network, IpAddress, Vlan, VlanZone, RackStorage)"
+                    },
+                    {
+                        "name": "toable_id",
+                        "type": "integer",
+                        "in": "query",
+                        "description": "Filter by the TO record id"
+                    },
+                    {
+                        "name": "is_inverse",
+                        "type": "boolean",
+                        "in": "query",
+                        "description": "Filter by whether the relation is the inverse side"
+                    },
+                    {
+                        "name": "description",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by description"
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by creation date (YYYY-MM-DD or ISO datetime)"
+                    },
+                    {
+                        "name": "updated_at",
+                        "type": "string",
+                        "in": "query",
+                        "description": "Filter by update date (YYYY-MM-DD or ISO datetime)"
+                    },
+                    {
                         "name": "page",
                         "type": "integer",
                         "in": "query",
-                        "description": "Get the current page of results"
+                        "description": "Page number for pagination"
                     },
                     {
                         "name": "page_size",
                         "type": "integer",
                         "in": "query",
-                        "description": "Number of results to return per page"
+                        "description": "Number of results per page (1-1000, default: 25)"
                     }
                 ],
                 "responses": {
@@ -7879,9 +8833,6 @@
                     },
                     "401": {
                         "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found"
                     }
                 }
             },
@@ -7889,44 +8840,90 @@
                 "tags": [
                     "Relations"
                 ],
+                "operationId": "create_relation",
                 "summary": "Create a Relation",
-                "description": "Create a new relation between two entities.",
-                "operationId": "post_relations",
+                "description": "Create a new relation between two records. A relation has a FROM record and a TO record; both are required. Keys restricted to a company can only relate records that belong to that company, or the company itself.",
                 "consumes": [
                     "application/json"
                 ],
                 "parameters": [
                     {
-                        "name": "relation",
+                        "name": "body",
                         "in": "body",
-                        "description": "Relation to create",
                         "required": true,
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "toable_id": {
-                                    "type": "integer",
-                                    "description": "The ID of the destination entity in the relation"
-                                },
-                                "toable_type": {
-                                    "type": "string",
-                                    "description": "The type of the destination entity in the relation (Asset, Website, Procedure, AssetPassword, Company, Article)"
-                                },
-                                "fromable_id": {
-                                    "type": "integer",
-                                    "description": "The ID of the origin entity in the relation"
-                                },
-                                "fromable_type": {
-                                    "type": "string",
-                                    "description": "The type of the origin entity in the relation (Asset, Website, Procedure, AssetPassword, Company, Article)"
-                                },
-                                "description": {
-                                    "type": "string",
-                                    "description": "Provide a description for the relation to explain the relationship between the two entities"
-                                },
-                                "is_inverse": {
-                                    "type": "boolean",
-                                    "description": "When a relation is created, it will also create another relation that is the inverse. When this is true, this relation is the inverse."
+                                "relation": {
+                                    "type": "object",
+                                    "required": [
+                                        "fromable_type",
+                                        "fromable_id",
+                                        "toable_type",
+                                        "toable_id"
+                                    ],
+                                    "properties": {
+                                        "fromable_type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Asset",
+                                                "Website",
+                                                "Procedure",
+                                                "AssetPassword",
+                                                "Company",
+                                                "Article",
+                                                "Network",
+                                                "IpAddress",
+                                                "Vlan",
+                                                "VlanZone",
+                                                "RackStorage"
+                                            ],
+                                            "description": "The type of the FROM record"
+                                        },
+                                        "fromable_id": {
+                                            "type": "integer",
+                                            "description": "The ID of the FROM record"
+                                        },
+                                        "toable_type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Asset",
+                                                "Website",
+                                                "Procedure",
+                                                "AssetPassword",
+                                                "Company",
+                                                "Article",
+                                                "Network",
+                                                "IpAddress",
+                                                "Vlan",
+                                                "VlanZone",
+                                                "RackStorage"
+                                            ],
+                                            "description": "The type of the TO record"
+                                        },
+                                        "toable_id": {
+                                            "type": "integer",
+                                            "description": "The ID of the TO record"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "description": "Optional description explaining why the two records are related"
+                                        },
+                                        "is_inverse": {
+                                            "type": "boolean",
+                                            "description": "When a relation is created, it will also create another relation that is the inverse. When this is true, this relation is the inverse."
+                                        }
+                                    }
+                                }
+                            },
+                            "example": {
+                                "relation": {
+                                    "fromable_type": "Asset",
+                                    "fromable_id": 1,
+                                    "toable_type": "Asset",
+                                    "toable_id": 3,
+                                    "is_inverse": false,
+                                    "description": "These records are related because..."
                                 }
                             }
                         }
@@ -7947,11 +8944,8 @@
                     "401": {
                         "description": "Unauthorized"
                     },
-                    "404": {
-                        "description": "Not Found"
-                    },
                     "422": {
-                        "description": "Unable to process request"
+                        "description": "Validation failed"
                     }
                 }
             }
@@ -7961,9 +8955,9 @@
                 "tags": [
                     "Relations"
                 ],
+                "operationId": "delete_relation",
                 "summary": "Delete a Relation",
-                "description": "Remove a relation between two entities by its ID.",
-                "operationId": "delete_relations_id",
+                "description": "Delete a relation by its ID. Keys restricted to a company can only delete relations where both records belong to that company.",
                 "produces": [
                     "application/json"
                 ],
@@ -7973,7 +8967,7 @@
                         "type": "integer",
                         "in": "path",
                         "required": true,
-                        "description": "ID of the Relation to be deleted"
+                        "description": "ID of the Relation to delete"
                     }
                 ],
                 "responses": {
@@ -7984,7 +8978,253 @@
                         "description": "Unauthorized"
                     },
                     "404": {
+                        "description": "Relation not found"
+                    }
+                }
+            }
+        },
+        "/asset_passwords/{asset_password_id}/shares": {
+            "get": {
+                "tags": [
+                    "Shares"
+                ],
+                "operationId": "get_asset_passwords_asset_password_id_shares",
+                "summary": "Get a list of Sharing Links for a Password",
+                "description": "Retrieve every sharing link that has been created for a password, ordered by ID. Results are paginated at 25 per page by default. Requires an API key with access to passwords.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "asset_password_id",
+                        "type": "integer",
+                        "format": "int64",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the Password the sharing links belong to"
+                    },
+                    {
+                        "name": "page",
+                        "type": "integer",
+                        "format": "int32",
+                        "in": "query",
+                        "description": "Get current page of results"
+                    },
+                    {
+                        "name": "page_size",
+                        "type": "integer",
+                        "format": "int32",
+                        "in": "query",
+                        "description": "Number of results to return per page (1-1000, defaults to 25)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "shares": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/Share"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
                         "description": "Not Found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Shares"
+                ],
+                "operationId": "post_asset_passwords_asset_password_id_shares",
+                "summary": "Create a Sharing Link for a Password",
+                "description": "Create a time-limited public link to a password. Requires an API key with access to passwords.\n\n`expire_in` is required and must be a positive number of seconds; links that never expire are not permitted. The response includes a `url` field containing the full public link, ready to send to a recipient.\n\nReturns a 403 when external sharing is disabled for the account, since the resulting link would not be viewable.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "asset_password_id",
+                        "type": "integer",
+                        "format": "int64",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the Password to share"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Share data",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "share": {
+                                    "type": "object",
+                                    "required": [
+                                        "expire_in"
+                                    ],
+                                    "properties": {
+                                        "expire_in": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "description": "Number of seconds until the link expires. Must be greater than 0."
+                                        },
+                                        "notes": {
+                                            "type": "string",
+                                            "description": "Message displayed to the recipient on the sharing page"
+                                        },
+                                        "one_time_expire": {
+                                            "type": "boolean",
+                                            "description": "When true, the link expires after it has been viewed once"
+                                        },
+                                        "include_username": {
+                                            "type": "boolean",
+                                            "description": "Show the username on the sharing page"
+                                        },
+                                        "include_otp": {
+                                            "type": "boolean",
+                                            "description": "Show the one-time password code on the sharing page"
+                                        },
+                                        "include_url": {
+                                            "type": "boolean",
+                                            "description": "Show the password URL on the sharing page"
+                                        },
+                                        "include_notes": {
+                                            "type": "boolean",
+                                            "description": "Show the password description on the sharing page"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "share": {
+                                    "$ref": "#/definitions/Share"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Sharing is disabled for this account"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Unable to process request"
+                    }
+                }
+            }
+        },
+        "/asset_passwords/{asset_password_id}/shares/{id}": {
+            "get": {
+                "tags": [
+                    "Shares"
+                ],
+                "operationId": "get_asset_passwords_asset_password_id_shares_id",
+                "summary": "Get a Sharing Link",
+                "description": "Retrieve a single sharing link for a password. Requires an API key with access to passwords.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "asset_password_id",
+                        "type": "integer",
+                        "format": "int64",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the Password the sharing link belongs to"
+                    },
+                    {
+                        "name": "id",
+                        "type": "integer",
+                        "format": "int64",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the requested sharing link"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "share": {
+                                    "$ref": "#/definitions/Share"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Shares"
+                ],
+                "operationId": "delete_asset_passwords_asset_password_id_shares_id",
+                "summary": "Delete a Sharing Link",
+                "description": "Delete a sharing link, immediately revoking access to the shared password. Requires an API key with access to passwords and destructive actions enabled.",
+                "parameters": [
+                    {
+                        "name": "asset_password_id",
+                        "type": "integer",
+                        "format": "int64",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the Password the sharing link belongs to"
+                    },
+                    {
+                        "name": "id",
+                        "type": "integer",
+                        "format": "int64",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the sharing link to delete"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Unable to process request"
                     }
                 }
             }
@@ -7996,6 +9236,7 @@
                 ],
                 "operationId": "get_uploads",
                 "summary": "Get a list of all uploads",
+                "description": "Keys restricted to a company only see uploads attached to that company's records. Uploads attached to passwords are only included when the key has password access.",
                 "parameters": [
                     {
                         "name": "page",
@@ -8033,6 +9274,7 @@
                 ],
                 "operationId": "post_uploads",
                 "summary": "Upload a file",
+                "description": "Keys restricted to a company can only attach files to that company's records. Attaching to a password requires password access.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -8056,7 +9298,19 @@
                         "type": "string",
                         "in": "formData",
                         "required": true,
-                        "description": "Type of record to be attached to. (Asset, Website, AssetPassword, Article)"
+                        "enum": [
+                            "Article",
+                            "AssetPassword",
+                            "Asset",
+                            "IpAddress",
+                            "Network",
+                            "Procedure",
+                            "RackStorage",
+                            "VlanZone",
+                            "Vlan",
+                            "Website"
+                        ],
+                        "description": "Type of record to be attached to. One of: Article, AssetPassword, Asset, IpAddress, Network, Procedure, RackStorage, VlanZone, Vlan, Website"
                     }
                 ],
                 "responses": {
@@ -8085,7 +9339,7 @@
                 ],
                 "operationId": "get_uploads_id",
                 "summary": "Get a specific upload or download the file",
-                "description": "Returns upload metadata by default. Set download=true to download the file directly.\n\n**CORS Configuration for Browser Testing**: If you experience CORS errors or \"Failed to fetch\" when testing the download endpoint in browser-based tools (e.g., Swagger UI), you need to configure CORS on your cloud storage bucket (DigitalOcean Spaces/S3) with: (1) Origin: `https://your-domain.com`, (2) Allowed Methods: `GET`, `HEAD`, (3) Allowed Headers: `*`",
+                "description": "Returns upload metadata by default. Set download=true to download the file directly.\n\nKeys restricted to a company can only access uploads attached to that company's records. Uploads attached to passwords require password access.\n\n**CORS Configuration for Browser Testing**: If you experience CORS errors or \"Failed to fetch\" when testing the download endpoint in browser-based tools (e.g., Swagger UI), you need to configure CORS on your cloud storage bucket (DigitalOcean Spaces/S3) with: (1) Origin: `https://your-domain.com`, (2) Allowed Methods: `GET`, `HEAD`, (3) Allowed Headers: `*`",
                 "parameters": [
                     {
                         "name": "id",
@@ -8126,6 +9380,7 @@
                 ],
                 "operationId": "delete_uploads_id",
                 "summary": "Delete an upload",
+                "description": "Keys restricted to a company can only delete uploads attached to that company's records. Uploads attached to passwords require password access.",
                 "parameters": [
                     {
                         "name": "id",
@@ -8262,7 +9517,12 @@
                     "200": {
                         "description": "User retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "type": "object",
+                            "properties": {
+                                "user": {
+                                    "$ref": "#/definitions/User"
+                                }
+                            }
                         }
                     },
                     "401": {
@@ -8370,7 +9630,7 @@
                                 },
                                 "vlan_id_ranges": {
                                     "type": "string",
-                                    "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start \u003c= end."
+                                    "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start <= end."
                                 },
                                 "company_id": {
                                     "type": "integer",
@@ -8490,7 +9750,7 @@
                                 },
                                 "vlan_id_ranges": {
                                     "type": "string",
-                                    "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start \u003c= end."
+                                    "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start <= end."
                                 },
                                 "company_id": {
                                     "type": "integer",
@@ -9026,6 +10286,22 @@
                                         "disable_whois": {
                                             "type": "boolean",
                                             "description": "When true, WHOIS monitoring is paused"
+                                        },
+                                        "enable_dmarc_tracking": {
+                                            "type": "boolean",
+                                            "description": "When true, DMARC monitoring is enabled"
+                                        },
+                                        "enable_dkim_tracking": {
+                                            "type": "boolean",
+                                            "description": "When true, DKIM monitoring is enabled"
+                                        },
+                                        "enable_spf_tracking": {
+                                            "type": "boolean",
+                                            "description": "When true, SPF monitoring is enabled"
+                                        },
+                                        "archived": {
+                                            "type": "boolean",
+                                            "description": "When true, website is archived"
                                         }
                                     }
                                 }
@@ -9137,6 +10413,22 @@
                                         "disable_whois": {
                                             "type": "boolean",
                                             "description": "When true, WHOIS monitoring is paused"
+                                        },
+                                        "enable_dmarc_tracking": {
+                                            "type": "boolean",
+                                            "description": "When true, DMARC monitoring is enabled"
+                                        },
+                                        "enable_dkim_tracking": {
+                                            "type": "boolean",
+                                            "description": "When true, DKIM monitoring is enabled"
+                                        },
+                                        "enable_spf_tracking": {
+                                            "type": "boolean",
+                                            "description": "When true, SPF monitoring is enabled"
+                                        },
+                                        "archived": {
+                                            "type": "boolean",
+                                            "description": "When true, website is archived"
                                         }
                                     }
                                 }
@@ -9241,6 +10533,10 @@
                     "type": "integer",
                     "format": "int64",
                     "description": "The unique company ID for non-global articles."
+                },
+                "list_pinned": {
+                    "type": "boolean",
+                    "description": "Whether the article is pinned to the top of the list."
                 },
                 "created_at": {
                     "type": "string",
@@ -9446,14 +10742,39 @@
                     "type": "string"
                 },
                 "min": {
-                    "type": "integer",
-                    "format": "int64",
-                    "description": "Can be null."
+                    "oneOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Minimum value for Number fields. Whole values are JSON integers; fractional values are plain decimal strings (e.g. \"1.5\") so precision is preserved. Can be null."
                 },
                 "max": {
-                    "type": "integer",
-                    "format": "int64",
-                    "description": "Can be null."
+                    "oneOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Maximum value for Number fields. Whole values are JSON integers; fractional values are plain decimal strings (e.g. \"99.99\") so precision is preserved. Can be null."
+                },
+                "number_type": {
+                    "type": "string",
+                    "enum": [
+                        "number",
+                        "currency",
+                        "percentage"
+                    ],
+                    "description": "Only used by Number fields. Controls how the value is displayed: plain number, currency (with currency_code symbol), or percentage. Defaults to \"number\"."
+                },
+                "currency_code": {
+                    "type": "string",
+                    "description": "ISO 4217 currency code (e.g. \"USD\"). Only used by Number fields when number_type is \"currency\". Can be null."
                 },
                 "linkable_id": {
                     "type": "integer",
@@ -10146,6 +11467,112 @@
                 "skip_dns_validation": {
                     "type": "boolean",
                     "description": "If true, the server will **not** attempt to verify that the FQDN resolves to the address when the record is created or updated. Use for internal-only hostnames."
+                }
+            }
+        },
+        "Label": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "The unique ID of the label."
+                },
+                "label_type_id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "The ID of the label type this label belongs to."
+                },
+                "labelable_type": {
+                    "type": "string",
+                    "description": "The type of record this label is attached to (Article, Asset, AssetPassword, Website, IpAddress, Vlan, VlanZone, Procedure, Network, RackStorage)."
+                },
+                "labelable_id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "The ID of the record this label is attached to."
+                },
+                "user_id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "The ID of the user who applied the label. Optional."
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time when the label was created."
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time when the label was last updated."
+                }
+            }
+        },
+        "LabelType": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "The unique ID of the label type."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the label type."
+                },
+                "color": {
+                    "type": "string",
+                    "description": "The label type color as a hex value (e.g., #0000ff). Accepts 3- or 6-digit hex."
+                },
+                "slug": {
+                    "type": "string",
+                    "description": "The URL-friendly slug for the label type."
+                },
+                "applicable_record_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "Article",
+                            "Asset",
+                            "AssetPassword",
+                            "Website",
+                            "IpAddress",
+                            "Vlan",
+                            "VlanZone",
+                            "Procedure",
+                            "Network",
+                            "RackStorage"
+                        ]
+                    },
+                    "description": "The record types this label type may be applied to."
+                },
+                "access_level": {
+                    "type": "string",
+                    "enum": [
+                        "all_companies",
+                        "specific_companies"
+                    ],
+                    "description": "Whether the label type is available to all companies or only specific companies."
+                },
+                "allowed_company_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "description": "The company IDs the label type is restricted to. Only relevant when access_level is specific_companies; otherwise empty."
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time when the label type was created."
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time when the label type was last updated."
                 }
             }
         },
@@ -10968,8 +12395,101 @@
                 "toable_url": {
                     "type": "string",
                     "description": "The URL of the destination entity involved in the relation."
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time the relation was created, in ISO 8601 format."
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time the relation was last updated, in ISO 8601 format."
                 }
             }
+        },
+        "Share": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Unique identifier of the sharing link"
+                },
+                "shareable_id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "ID of the record being shared"
+                },
+                "shareable_type": {
+                    "type": "string",
+                    "description": "Type of the record being shared (e.g., 'AssetPassword')"
+                },
+                "expire_in": {
+                    "type": "integer",
+                    "format": "int64",
+                    "x-nullable": true,
+                    "nullable": true,
+                    "description": "Number of seconds from creation until the link expires. May be null on legacy links created before an expiry was required; such links are treated as expired."
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Message displayed to the recipient on the sharing page. Can be null."
+                },
+                "one_time_expire": {
+                    "type": "boolean",
+                    "description": "When true, the link expires after it has been viewed once"
+                },
+                "include_username": {
+                    "type": "boolean",
+                    "description": "Whether the username is shown on the sharing page"
+                },
+                "include_otp": {
+                    "type": "boolean",
+                    "description": "Whether the one-time password code is shown on the sharing page"
+                },
+                "include_url": {
+                    "type": "boolean",
+                    "description": "Whether the password URL is shown on the sharing page"
+                },
+                "include_notes": {
+                    "type": "boolean",
+                    "description": "Whether the password description is shown on the sharing page"
+                },
+                "include_passwords": {
+                    "type": "boolean",
+                    "description": "Not configurable for password links; always true. Retained for compatibility."
+                },
+                "include_files": {
+                    "type": "boolean",
+                    "description": "Not configurable for password links; always true. Retained for compatibility."
+                },
+                "viewed_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the link was first viewed. Null if it has not been viewed."
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the sharing link was created"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the sharing link was last updated"
+                },
+                "url": {
+                    "type": "string",
+                    "description": "Full public URL of the sharing link, ready to send to a recipient"
+                }
+            },
+            "required": [
+                "id",
+                "shareable_id",
+                "shareable_type",
+                "url"
+            ]
         },
         "Upload": {
             "type": "object",
@@ -11225,7 +12745,7 @@
                 },
                 "vlan_id_ranges": {
                     "type": "string",
-                    "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start \u003c= end."
+                    "description": "Comma-separated list of numeric ranges (e.g. \"100-500,1000-1500\"). Each range must be inside 1-4094 and start <= end."
                 },
                 "company_id": {
                     "type": "integer",
@@ -11360,6 +12880,14 @@
                     "type": "boolean",
                     "description": "Indicates whether SPF checks are enabled for the website"
                 },
+                "potentially_proxied": {
+                    "type": "boolean",
+                    "description": "Indicates whether the website appears to be behind a proxy (e.g. Cloudflare)"
+                },
+                "cloudflare_details": {
+                    "type": "object",
+                    "description": "Cloudflare zone details associated with the website (optional)"
+                },
                 "notes": {
                     "type": "string",
                     "description": "Additional notes related to the website"
@@ -11379,6 +12907,10 @@
                 "company_name": {
                     "type": "string",
                     "description": "The name of the associated company"
+                },
+                "archived": {
+                    "type": "boolean",
+                    "description": "Indicates whether the website is archived"
                 },
                 "url": {
                     "type": "string",
@@ -11403,11 +12935,11 @@
             "APIKeyHeader": []
         }
     ],
-    "host": "hudu.intellectit.com.au",
+    "host": "hudu.yourserver.com",
     "info": {
         "title": "Hudu API Documentation",
-        "description": "\u003ch1\u003eWelcome to the Hudu REST API\u003c/h1\u003e\n\u003cp\u003eThe Hudu REST API enables seamless automation of your IT documentation. It's organized into various resources, each with its own specific endpoint.\u003c/p\u003e\n\n\u003ch2\u003eAuthentication\u003c/h2\u003e\n\u003cp\u003eAll API requests require authentication using an API key. To obtain a key, go to \u003cstrong\u003eHudu Admin → Basic Information → API Keys\u003c/strong\u003e.\u003c/p\u003e\n\u003cp\u003eInclude your API key in the request header, like so:\u003c/p\u003e\n\u003cpre\u003e\u003ccode\u003ecurl https://[YOUR_DOMAIN]/api/v1/companies?page=1 \\\n  -H \"x-api-key: YOUR_API_KEY_HERE\"\u003c/code\u003e\u003c/pre\u003e\n\u003cp\u003eYou can create and delete API keys at any time.\u003c/p\u003e\n\n\u003ch2\u003eScoping API Keys\u003c/h2\u003e\n\u003cp\u003eWhen creating an API key, you can configure the following permissions:\u003c/p\u003e\n\u003cul\u003e\n  \u003cli\u003eAccess to passwords (all REST actions)\u003c/li\u003e\n  \u003cli\u003eDestructive actions (DELETE)\u003c/li\u003e\n  \u003cli\u003eExport capabilities\u003c/li\u003e\n  \u003cli\u003eWhitelisted IPs\u003c/li\u003e\n  \u003cli\u003eCompany-specific access\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003eWe recommend only granting the minimum required access for each application.\u003c/p\u003e\n\n\u003ch2\u003eFormat\u003c/h2\u003e\n\u003cp\u003eAll API requests must use \u003cstrong\u003eJSON\u003c/strong\u003e format unless otherwise specified.\u003c/p\u003e\n\n\u003ch2\u003eTerminology\u003c/h2\u003e\n\u003cp\u003eSome names in the API differ from those in the Hudu UI:\u003c/p\u003e\n\u003ctable\u003e\n  \u003cthead\u003e\n    \u003ctr\u003e\n      \u003cth\u003eName in Hudu\u003c/th\u003e\n      \u003cth\u003eName in API\u003c/th\u003e\n    \u003c/tr\u003e\n  \u003c/thead\u003e\n  \u003ctbody\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eCompany (customizable)\u003c/td\u003e\n      \u003ctd\u003eCompany\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003ePassword\u003c/td\u003e\n      \u003ctd\u003eAssetPassword\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eKnowledge Base Article\u003c/td\u003e\n      \u003ctd\u003eArticle\u003c/td\u003e\n    \u003c/tr\u003e\n    \u003ctr\u003e\n      \u003ctd\u003eProcess\u003c/td\u003e\n      \u003ctd\u003eProcedure\u003c/td\u003e\n    \u003c/tr\u003e\n  \u003c/tbody\u003e\n\u003c/table\u003e\n\n\u003ch2\u003ePagination\u003c/h2\u003e\n\u003cp\u003eAll responses are paginated with 25 results per page. Use the \u003ccode\u003e?page=X\u003c/code\u003e query parameter to navigate.\u003c/p\u003e\n\n\u003ch2\u003eRate Limiting\u003c/h2\u003e\n\u003cp\u003eThe API supports up to \u003cstrong\u003e300 requests per minute\u003c/strong\u003e.\u003c/p\u003e\n\n\u003cp\u003e\u0026copy; 2023 Hudu Technologies, Inc. All rights reserved.\u003c/p\u003e",
+        "description": "<h1>Welcome to the Hudu REST API</h1>\n<p>The Hudu REST API enables seamless automation of your IT documentation. It's organized into various resources, each with its own specific endpoint.</p>\n\n<h2>Authentication</h2>\n<p>All API requests require authentication using an API key. To obtain a key, go to <strong>Hudu Admin → Basic Information → API Keys</strong>.</p>\n<p>Include your API key in the request header, like so:</p>\n<pre><code>curl https://[YOUR_DOMAIN]/api/v1/companies?page=1 \\\n  -H \"x-api-key: YOUR_API_KEY_HERE\"</code></pre>\n<p>You can create and delete API keys at any time.</p>\n\n<h2>Scoping API Keys</h2>\n<p>When creating an API key, you can configure the following permissions:</p>\n<ul>\n  <li>Access to passwords (all REST actions)</li>\n  <li>Destructive actions (DELETE)</li>\n  <li>Export capabilities</li>\n  <li>Whitelisted IPs</li>\n  <li>Company-specific access</li>\n</ul>\n<p>We recommend only granting the minimum required access for each application.</p>\n\n<h2>Format</h2>\n<p>All API requests must use <strong>JSON</strong> format unless otherwise specified.</p>\n\n<h2>Terminology</h2>\n<p>Some names in the API differ from those in the Hudu UI:</p>\n<table>\n  <thead>\n    <tr>\n      <th>Name in Hudu</th>\n      <th>Name in API</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Company (customizable)</td>\n      <td>Company</td>\n    </tr>\n    <tr>\n      <td>Password</td>\n      <td>AssetPassword</td>\n    </tr>\n    <tr>\n      <td>Knowledge Base Article</td>\n      <td>Article</td>\n    </tr>\n    <tr>\n      <td>Process</td>\n      <td>Procedure</td>\n    </tr>\n  </tbody>\n</table>\n\n<h2>Pagination</h2>\n<p>All responses are paginated with 25 results per page. Use the <code>?page=X</code> query parameter to navigate.</p>\n\n<h2>Rate Limiting</h2>\n<p>The API supports up to <strong>300 requests per minute</strong>.</p>\n\n<p>&copy; 2023 Hudu Technologies, Inc. All rights reserved.</p>",
         "version": "1.0",
-        "x-copyright": "\u0026copy; 2023 Hudu Technologies, Inc. All rights reserved."
+        "x-copyright": "&copy; 2023 Hudu Technologies, Inc. All rights reserved."
     }
 }

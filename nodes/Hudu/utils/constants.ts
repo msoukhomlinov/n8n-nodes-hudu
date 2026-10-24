@@ -100,6 +100,8 @@ export const INTEGRATION_SLUGS = [
  * Note: For /companies endpoints, only the main listing endpoint and the nested assets endpoint
  * support pagination (i.e., /companies and /companies/{id}/assets).
  * Other nested endpoints under /companies do not support pagination.
+ * Nested password shares (/asset_passwords/{id}/shares) are handled via path-suffix
+ * matching in handleListing, same pattern as companies/{id}/assets.
  */
 export const RESOURCES_WITH_PAGE_SIZE = [
   'activity_logs',

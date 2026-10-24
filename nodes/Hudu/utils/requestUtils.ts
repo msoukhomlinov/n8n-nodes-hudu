@@ -456,11 +456,13 @@ export async function handleListing<T extends IDataObject>(
 
   // Check if this resource supports pagination
   const resourcePath = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-  // Handle dynamic nested endpoints like companies/{id}/assets where pagination is supported
+  // Handle dynamic nested endpoints like companies/{id}/assets and
+  // asset_passwords/{id}/shares where pagination is supported
   const supportsPagination =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RESOURCES_WITH_PAGE_SIZE.includes(resourcePath as any) ||
-    (resourcePath.startsWith('companies/') && resourcePath.endsWith('/assets'));
+    (resourcePath.startsWith('companies/') && resourcePath.endsWith('/assets')) ||
+    (resourcePath.startsWith('asset_passwords/') && resourcePath.endsWith('/shares'));
 
   // Keep fetching until we have enough filtered results or no more data
   while (hasMore) {

@@ -60,6 +60,12 @@ export async function handleAssetLayoutFieldOperation(
 				delete newField.list_id;
 				delete newField.multiple_options;
 			}
+			if (newField.field_type !== 'Number') {
+				delete newField.number_type;
+				delete newField.currency_code;
+			} else if (newField.number_type !== 'currency') {
+				delete newField.currency_code;
+			}
 
 			const allFields = [...fields, newField];
 			debugLog('[API_REQUEST] Updating asset layout with new field', { assetLayoutId, fields: allFields });
@@ -86,6 +92,12 @@ export async function handleAssetLayoutFieldOperation(
 			if (updatedField.field_type !== 'ListSelect') {
 				delete updatedField.list_id;
 				delete updatedField.multiple_options;
+			}
+			if (updatedField.field_type !== 'Number') {
+				delete updatedField.number_type;
+				delete updatedField.currency_code;
+			} else if (updatedField.number_type !== 'currency') {
+				delete updatedField.currency_code;
 			}
 
 			const allFields = [...fields];
