@@ -209,7 +209,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
         },
         default: '',
         placeholder: 'USD',
-        description: 'ISO 4217 currency code (e.g. USD). Only used when Number Type is Currency.',
+        description: 'ISO 4217 currency code (e.g. USD). Required when Number Type is Currency.',
       },
       {
         displayName: 'Expiration',
@@ -312,7 +312,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
           },
         ],
         default: 'number',
-        description: 'How Number field values are displayed. Only used by Number fields.',
+        description: 'Values: number (plain number display), currency (currency display, uses Currency Code), percentage (percentage display)',
       },
       {
         displayName: 'Options',
@@ -363,9 +363,14 @@ export const assetLayoutFieldFields: INodeProperties[] = [
         displayName: 'Currency Code',
         name: 'currency_code',
         type: 'string',
+        displayOptions: {
+          show: {
+            field_type: [ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+          },
+        },
         default: '',
         placeholder: 'USD',
-        description: 'ISO 4217 currency code (e.g. USD). Only used when Number Type is Currency.',
+        description: 'ISO 4217 currency code (e.g. USD). Required when Number Type is Currency.',
       },
       {
         displayName: 'Expiration',
@@ -506,6 +511,11 @@ export const assetLayoutFieldFields: INodeProperties[] = [
         displayName: 'Number Type',
         name: 'number_type',
         type: 'options',
+        displayOptions: {
+          show: {
+            field_type: [ASSET_LAYOUT_FIELD_TYPES.NUMBER],
+          },
+        },
         options: [
           {
             name: 'Number',
@@ -524,7 +534,7 @@ export const assetLayoutFieldFields: INodeProperties[] = [
           },
         ],
         default: 'number',
-        description: 'How Number field values are displayed. Only used by Number fields.',
+        description: 'Values: number (plain number display), currency (currency display, uses Currency Code), percentage (percentage display)',
       },
       {
         displayName: 'Options',

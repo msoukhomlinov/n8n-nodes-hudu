@@ -7,9 +7,14 @@ import type { AssetLayoutFieldOperation, IAssetLayoutFieldEntity } from './asset
 import { debugLog } from '../../utils/debugConfig';
 import { NodeOperationError } from 'n8n-workflow';
 
+/** Number display types accepted by the API for Number fields (API 2.48+). */
+const NUMBER_TYPES = ['number', 'currency', 'percentage'];
+
 /**
- * Strip number display options when not a Number field, and require a non-empty
- * currency_code when number_type is currency (avoids empty/null codes reaching the API).
+ * Strip number display options when not a Number field, validate number_type
+ * against the API enum (number | currency | percentage), and require a
+ * non-empty string currency_code when number_type is currency (avoids
+ * invalid values reaching the API).
  */
 export function sanitizeNumberFieldDisplayOptions(
 	field: Partial<IAssetLayoutFieldEntity> | IDataObject,
@@ -21,20 +26,29 @@ export function sanitizeNumberFieldDisplayOptions(
 		delete field.currency_code;
 		return;
 	}
+	if (field.number_type !== undefined && field.number_type !== null) {
+		const numberType = field.number_type;
+		if (typeof numberType !== 'string' || !NUMBER_TYPES.includes(numberType)) {
+			throw new NodeOperationError(
+				node,
+				`number_type must be one of: ${NUMBER_TYPES.join(', ')} (API enum values are lowercase).`,
+				itemIndex === undefined ? {} : { itemIndex },
+			);
+		}
+	}
 	if (field.number_type !== 'currency') {
 		delete field.currency_code;
 		return;
 	}
 	const raw = field.currency_code;
-	const code = typeof raw === 'string' ? raw.trim() : raw;
-	if (code === undefined || code === null || code === '') {
+	if (typeof raw !== 'string' || raw.trim() === '') {
 		throw new NodeOperationError(
 			node,
-			'currency_code is required when number_type is currency (ISO 4217, e.g. USD).',
+			'currency_code is required when number_type is currency and must be a non-empty string (ISO 4217, e.g. USD).',
 			itemIndex === undefined ? {} : { itemIndex },
 		);
 	}
-	field.currency_code = code as string;
+	field.currency_code = raw.trim();
 }
 
 export async function handleAssetLayoutFieldOperation(

@@ -58,6 +58,9 @@ export async function handlePasswordSharesOperation(
 
       const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
       for (const [key, value] of Object.entries(additionalFields)) {
+        // The validated expire_in above is the only value allowed to reach the
+        // wire; an expire_in smuggled through additionalFields would bypass it.
+        if (key === 'expire_in') continue;
         if (value !== undefined && value !== null && value !== '') {
           body[key] = value;
         }
