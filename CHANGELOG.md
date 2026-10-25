@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## [2.14.0] - 2026-10-25
+
+### Added
+- **API alignment with Hudu 2.48.1** (reference: `api-docs-v2.48.1.json`; the older v2.40.0–v2.44.2 spec files are removed from the repo). New/changed fields surfaced in descriptions and AI-tool schemas, e.g. articles `list_pinned` and asset layout fields `potentially_proxied`.
+- **Password Shares resource** — manage shares of an asset password's public link against `/asset_passwords/{id}/shares`: get, getAll, create, delete (Hudu node only — not exposed on Hudu AI Tools). Create requires `expire_in` (seconds until the share link expires): a positive integer capped at 1 year, so never-expiring links are not permitted; an `expire_in` smuggled through additional fields is dropped.
+- **Articles pin/unpin** — new operations pinning/unpinning an article in its folder list (`PUT /articles/{id}/pin` / `PUT /articles/{id}/unpin`), on both the Hudu node and Hudu AI Tools. They are write operations, so they require `allowWriteOperations` on the AI tools node.
+- **Number field display options** on Asset Layout Fields create/update: `number_type` (`number` | `currency` | `percentage`) and `currency_code`. Options are stripped from non-Number fields, `number_type` is validated against the API enum, and a non-empty ISO 4217 `currency_code` (e.g. `USD`) is required when `number_type` is `currency`.
+
+### Fixed
+- **Asset Layout Fields writes pin the field identity**: create no longer accepts a client-chosen field `id` (the API 2.48.1 create contract has none), and update re-pins the located field's `id`, so an `id` carried in the update payload can no longer retarget the whole-layout PUT to a different record.
+
 ## [2.13.2] - 2026-10-10
 
 ### Fixed
