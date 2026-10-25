@@ -20,6 +20,15 @@ export default [
 		rules: {
 			'@n8n/community-nodes/no-runtime-dependencies': 'off',
 			'@n8n/community-nodes/valid-peer-dependencies': 'off',
+			// `@n8n/node-cli` 0.53+ bans the `overrides` field in community
+			// packages. This package keeps one deliberate override: `handlebars`
+			// pinned to ^4.7.10, the release that fixes the critical Handlebars
+			// JS-injection advisories (GHSA-8r5x-fm3f-whwj, GHSA-p8wg-vrv2-v86f).
+			// `@n8n/node-cli` itself pins handlebars 4.7.9 exactly in its nested
+			// tree, so the dev tree cannot dedupe to the fixed version any other
+			// way. Non-root `overrides` have no effect when the package is
+			// installed by consumers — this only hardens the dev/CI tree.
+			'@n8n/community-nodes/no-overrides-field': 'off',
 		},
 	},
 ];
