@@ -2,7 +2,7 @@
   "node": "n8n-nodes-hudu.huduAiTools",
   "nodeVersion": "1.0",
   "codexVersion": "1.0",
-  "categories": ["AI"],
+  "categories": ["Utility"],
   "resources": {
     "primaryDocumentation": [
       { "url": "https://github.com/msoukhomlinov/n8n-nodes-hudu" }

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 `n8n-nodes-hudu` (this package) is the **full, self-hosted** edition — it includes the dedicated **Hudu AI Tools** node (`HuduAiTools`, a unified per-resource AI/MCP tool) and therefore carries an AI/LangChain runtime dependency, so it cannot be verified for **n8n Cloud** (the hosted n8n platform). A zero-dependency subset that *is* n8n-Cloud-verifiable is published separately as **[n8n-nodes-hudu-core](https://github.com/msoukhomlinov/n8n-nodes-hudu-core)** — same `Hudu` node (AI Agent tool use via `usableAsTool`), without the dedicated AI Tools node. Both talk to the same Hudu API regardless of how your Hudu instance is hosted.
 
+## Unreleased
+
+### Changed
+- **Dev toolchain hardened** (dev-scope only; runtime `dependencies` unchanged): `vitest` bumped to v5 (clears the vitest/@vitest/mocker path-traversal advisories and the tinypool RCE advisories, and pulls a Vite outside the advised range), `release-it` to v21 (clears its basic-ftp/get-uri/proxy-agent/undici advisory chain), `n8n-workflow` test copy to `^2.16.0` (resolves to the same version the @n8n toolchain installs), `@types/node` to v22 to match the Node 22 runtime CI publishes from, and `@n8n/node-cli` pinned to `^0.53.4` so CI no longer drifts to unpublished releases.
+- **`handlebars` pinned to `^4.7.10` via `overrides`** — the release that fixes the critical Handlebars JS-injection advisories (GHSA-8r5x-fm3f-whwj, GHSA-p8wg-vrv2-v86f) reachable through the dev toolchain; `@n8n/node-cli` pins handlebars 4.7.9 exactly in its nested tree, so no dedupe-free route reaches the fixed version. `@n8n/community-nodes/no-overrides-field` is disabled for `package.json` only (with the existing shape-rule exemptions) because the community ruleset forbids `overrides` by default; non-root overrides have no effect on consumers, so this only hardens the dev/CI tree.
+- **`HuduAiTools` codex category corrected to a supported community category** (`AI` → `Utility`): the current `@n8n/node-cli` `valid-node-categories` rule rejects `AI` in `.node.json` codex files.
+- **Remaining advisories are documented as accepted risk**: `zod` (<4.6.6, fixed only in the zod 4 line — the n8n ecosystem is on zod 3) and dev/peer-scope packages with no upstream fix yet (`@langchain/core` dev copy pinned to the 0.3 line this code targets, `@n8n/ai-utilities`, `@n8n/config`, `openai`, `@browserbasehq/stagehand`, `@langchain/community`/`classic`, `zod-to-json-schema`, `uuid`).
+
 ## [2.14.0] - 2026-10-25
 
 ### Added
